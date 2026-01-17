@@ -269,3 +269,79 @@ footer p {
     padding: 0 10px;
   }
 }
+/* Navigation Tabs */
+.nav-tabs {
+  border-bottom: 2px solid var(--primary-green);
+}
+
+.nav-tabs .nav-link {
+  color: var(--text-dark);
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.nav-tabs .nav-link:hover {
+  color: var(--primary-green);
+  border-bottom: 3px solid var(--primary-green);
+  background-color: var(--bg-light);
+}
+
+.nav-tabs .nav-link.active {
+  color: var(--bg-white);
+  background-color: var(--primary-green);
+  border-bottom: 3px solid var(--primary-green);
+}
+
+/* Tab Content */
+.tab-content {
+  padding: 1.5rem 0;
+}
+
+.tab-pane {
+  display: block !important;
+  opacity: 0;
+  visibility: hidden;
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.tab-pane.show {
+  opacity: 1;
+  visibility: visible;
+  position: static;
+  width: auto;
+  height: auto;
+}
+
+/* Form Labels */
+.form-label {
+  color: var(--text-dark);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+/* Form Controls */
+.form-control,
+.form-select {
+  border: 1px solid var(--border-light);
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--primary-green);
+  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+.form-control::placeholder {
+  color: var(--text-muted);
+}

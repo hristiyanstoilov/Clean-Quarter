@@ -16,74 +16,305 @@
     
     <!-- Custom Styles -->
     <link rel="stylesheet" href="/src/style.css">
+    
+    <style>
+        .auth-page {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-container {
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .auth-card {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            overflow: hidden;
+        }
+
+        .auth-header {
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+            color: white;
+            padding: 2rem 1.5rem;
+            text-align: center;
+        }
+
+        .auth-header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: white;
+        }
+
+        .auth-header p {
+            margin: 0;
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+
+        .auth-body {
+            padding: 2rem 1.5rem;
+        }
+
+        .nav-tabs {
+            border-bottom: 2px solid #e9ecef;
+            margin-bottom: 2rem;
+            gap: 0.5rem;
+        }
+
+        .nav-tabs .nav-link {
+            color: #6c757d;
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-weight: 600;
+            padding: 0.75rem 1.25rem;
+            transition: all 0.3s ease;
+            background-color: transparent;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: #28a745;
+            border-bottom: 3px solid #28a745;
+            background-color: rgba(40, 167, 69, 0.05);
+        }
+
+        .nav-tabs .nav-link.active {
+            color: white;
+            background-color: #28a745;
+            border-bottom: 3px solid #28a745;
+            border-radius: 6px 6px 0 0;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            color: #212529;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .form-control,
+        .form-select {
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            padding: 0.75rem;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #28a745;
+            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+            outline: none;
+        }
+
+        .form-control::placeholder {
+            color: #adb5bd;
+        }
+
+        .btn-auth {
+            width: 100%;
+            padding: 0.75rem;
+            font-weight: 600;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .btn-login {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-login:hover {
+            background-color: #218838;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-register {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .btn-register:hover {
+            background-color: #138496;
+            box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+        }
+
+        .tab-pane {
+            display: block !important;
+            opacity: 0;
+            visibility: hidden;
+            position: absolute;
+            width: 0;
+            height: 0;
+            overflow: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .tab-pane.show {
+            opacity: 1;
+            visibility: visible;
+            position: static;
+            width: auto;
+            height: auto;
+        }
+    </style>
 </head>
 <body>
-    <div class="d-flex justify-content-center align-items-center min-vh-100">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-md-6">
-                    <div class="card shadow-lg">
-                        <div class="card-body">
-                            <!-- Nav Tabs -->
-                            <ul class="nav nav-tabs" id="authTabs" role="tablist">
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button" role="tab">Вход</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button" role="tab">Регистрация</button>
-                                </li>
-                            </ul>
+    <div class="auth-page">
+        <div class="auth-container">
+            <div class="auth-card">
+                <!-- Header -->
+                <div class="auth-header">
+                    <h1>♻️ Clean Quarter</h1>
+                    <p>Чист Квартал</p>
+                </div>
 
-                            <!-- Tab Content -->
-                            <div class="tab-content" id="authTabContent">
-                                <!-- Login Tab -->
-                                <div class="tab-pane fade show active" id="login" role="tabpanel">
-                                    <form id="loginForm" class="mt-4">
-                                        <div class="mb-3">
-                                            <label for="loginEmail" class="form-label">Имейл</label>
-                                            <input type="email" class="form-control" id="loginEmail" required>
+                <!-- Body -->
+                <div class="auth-body">
+                    <!-- Nav Tabs -->
+                    <ul class="nav nav-tabs" id="authTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button" role="tab">🔑 Вход</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button" role="tab">👤 Регистрация</button>
+                        </li>
+                    </ul>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content" id="authTabContent">
+                        <!-- Login Tab -->
+                        <div class="tab-pane fade show active" id="login" role="tabpanel">
+                            <form id="loginForm">
+                                <div class="form-group">
+                                    <label for="loginEmail" class="form-label">Имейл</label>
+                                    <input type="email" class="form-control" id="loginEmail" placeholder="your@email.com" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="loginPassword" class="form-label">Парола</label>
+                                    <input type="password" class="form-control" id="loginPassword" placeholder="Въведи парола" required>
+                                </div>
+                                <div class="form-check" style="margin-bottom: 1.5rem;">
+                                    <input class="form-check-input" type="checkbox" id="rememberMe" style="cursor: pointer;">
+                                    <label class="form-check-label" for="rememberMe" style="cursor: pointer; font-size: 0.95rem; color: #6c757d;">
+                                        Запомни ме
+                                    </label>
+                                </div>
+                                <button type="submit" class="btn-auth btn-login">Вход</button>
+                                <div style="text-align: center; margin-top: 1rem;">
+                                    <a href="#" style="color: #28a745; text-decoration: none; font-size: 0.9rem; transition: color 0.3s ease;" onmouseover="this.style.color='#218838'" onmouseout="this.style.color='#28a745'" onclick="handleForgotPassword(event)">
+                                        Забравена парола?
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Register Tab -->
+                        <div class="tab-pane fade" id="register" role="tabpanel">
+                            <form id="registerForm">
+                                <div class="form-group">
+                                    <label for="registerEmail" class="form-label">Имейл</label>
+                                    <input type="email" class="form-control" id="registerEmail" placeholder="your@email.com" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="registerPassword" class="form-label">Парола</label>
+                                    <input type="password" class="form-control" id="registerPassword" placeholder="Минимум 6 символа" required onkeyup="checkPasswordStrength()">
+                                    <div style="margin-top: 0.5rem;">
+                                        <div style="height: 6px; background-color: #e9ecef; border-radius: 3px; overflow: hidden;">
+                                            <div id="passwordStrengthBar" style="height: 100%; width: 0%; background-color: #dc3545; transition: all 0.3s ease;"></div>
                                         </div>
-                                        <div class="mb-3">
-                                            <label for="loginPassword" class="form-label">Парола</label>
-                                            <input type="password" class="form-control" id="loginPassword" required>
+                                        <div id="passwordStrengthText" style="font-size: 0.85rem; color: #6c757d; margin-top: 0.25rem;">
+                                            Парола трябва да има: главни букви, малки букви, числа
                                         </div>
-                                        <button type="submit" class="btn btn-primary w-100">Вход</button>
-                                    </form>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="registerPasswordConfirm" class="form-label">Потвърди парола</label>
+                                    <input type="password" class="form-control" id="registerPasswordConfirm" placeholder="Повтори паролата" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="registerNeighborhood" class="form-label">Твой квартал</label>
+                                    <select class="form-select" id="registerNeighborhood" required>
+                                        <option value="">Избери квартал...</option>
+                                        <option value="Studentski Grad">Студентски град</option>
+                                        <option value="Darvenitsa">Дарвеница</option>
+                                        <option value="Musagenitsa">Мусагенитса</option>
+                                        <option value="Vitosha">Витоша (ВЕЦ)</option>
+                                        <option value="Malinova Dolina">Малинова долина</option>
+                                    </select>
                                 </div>
 
-                                <!-- Register Tab -->
-                                <div class="tab-pane fade" id="register" role="tabpanel">
-                                    <form id="registerForm" class="mt-4">
-                                        <div class="mb-3">
-                                            <label for="registerEmail" class="form-label">Имейл</label>
-                                            <input type="email" class="form-control" id="registerEmail" required>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="registerPassword" class="form-label">Парола</label>
-                                            <input type="password" class="form-control" id="registerPassword" required>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="registerPasswordConfirm" class="form-label">Потвърди парола</label>
-                                            <input type="password" class="form-control" id="registerPasswordConfirm" required>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="registerNeighborhood" class="form-label">Квартал</label>
-                                            <select class="form-select" id="registerNeighborhood" required>
-                                                <option value="">Избери квартал</option>
-                                                <option value="Studentski Grad">Студентски град</option>
-                                                <option value="Darvenitsa">Дарвеница</option>
-                                                <option value="Musagenitsa">Мусагенитса</option>
-                                                <option value="Vitosha">Витоша (ВЕЦ)</option>
-                                                <option value="Malinova Dolina">Малинова долина</option>
-                                            </select>
-                                        </div>
-                                        <button type="submit" class="btn btn-success w-100">Регистрация</button>
-                                    </form>
+                                <!-- Terms and Conditions Checkboxes -->
+                                <div style="background-color: #f8f9fa; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem;">
+                                    <p style="font-weight: 600; color: #212529; margin-bottom: 1rem; font-size: 0.95rem;">Задължителни полета:</p>
+                                    
+                                    <div class="form-check" style="margin-bottom: 1rem;">
+                                        <input class="form-check-input" type="checkbox" id="acceptTerms" required style="cursor: pointer; width: 1.2rem; height: 1.2rem;">
+                                        <label class="form-check-label" for="acceptTerms" style="cursor: pointer; font-size: 0.9rem; color: #212529; margin-left: 0.75rem; padding-top: 0.1rem;">
+                                            Запознат съм и приемам 
+                                            <a href="#" onclick="showTermsModal(event)" style="color: #28a745; text-decoration: none; font-weight: 600;">Общите условия и Политиката за поверителност</a>.
+                                        </label>
+                                    </div>
+
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="acceptRisk" required style="cursor: pointer; width: 1.2rem; height: 1.2rem;">
+                                        <label class="form-check-label" for="acceptRisk" style="cursor: pointer; font-size: 0.9rem; color: #212529; margin-left: 0.75rem; padding-top: 0.1rem;">
+                                            Потвърждавам, че имам навършени 16 години. Разбирам, че участието в почистването е напълно доброволно и на мой собствен риск, като Организаторът не носи отговорност за злополуки.
+                                        </label>
+                                    </div>
                                 </div>
-                            </div>
+
+                                <button type="submit" class="btn-auth btn-register" id="registerBtn">Регистрация</button>
+                            </form>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Terms and Conditions Modal -->
+    <div id="termsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto; padding: 20px;">
+        <div style="background: white; max-width: 600px; margin: 50px auto; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.2);">
+            <div style="background: linear-gradient(135deg, #28a745 0%, #218838 100%); color: white; padding: 2rem; border-radius: 12px 12px 0 0;">
+                <h2 style="margin: 0; color: white;">📋 Условия за използване</h2>
+            </div>
+            
+            <div id="termsContent" style="padding: 2rem; max-height: 400px; overflow-y: auto;">
+                <!-- PLACEHOLDER - Replace with your actual Terms and Conditions text -->
+                <h4>1. Общи условия</h4>
+                <p>Това е placeholder текст. Моля, замени го със своите реални условия за използване.</p>
+                
+                <h4>2. Отговорност на потребителя</h4>
+                <p>Потребителят е отговорен за всички действия, извършени под своя акаунт.</p>
+                
+                <h4>3. Авторски права</h4>
+                <p>Всички материали са собственост на Clean Quarter.</p>
+                
+                <h4>4. Отказ от отговорност</h4>
+                <p>Услугата се предоставя "такава, каквато е" без никакви гаранции.</p>
+                
+                <h4>5. Ограничение на отговорността</h4>
+                <p>Clean Quarter не отговаря за преки или непреки щети.</p>
+            </div>
+
+            <div style="padding: 1.5rem 2rem; border-top: 1px solid #e9ecef; background: #f8f9fa; border-radius: 0 0 12px 12px; text-align: right;">
+                <button onclick="closeTermsModal()" style="margin-right: 0.5rem; padding: 0.5rem 1.5rem; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">Затвори</button>
+                <button onclick="acceptTerms()" style="padding: 0.5rem 1.5rem; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">Приемам</button>
             </div>
         </div>
     </div>
@@ -96,5 +327,157 @@
     
     <!-- Main App Script -->
     <script type="module" src="/src/main.js"></script>
+    
+    <script>
+        /**
+         * Handle forgot password link
+         */
+        function handleForgotPassword(e) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Забравена парола',
+                html: '<p>Въведи своя имейл адрес и ще изпратим линк за восстановление.</p>' +
+                      '<input type="email" id="resetEmail" class="swal2-input" placeholder="your@email.com">',
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Изпрати линк',
+                cancelButtonText: 'Отмяна'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const email = document.getElementById('resetEmail').value;
+                    if (email) {
+                        Swal.fire({
+                            title: 'Проверка на имейла',
+                            text: `Линк за восстановление е изпратен на ${email}`,
+                            icon: 'success',
+                            confirmButtonColor: '#28a745'
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Грешка',
+                            text: 'Моля, въведи имейл адрес',
+                            icon: 'error'
+                        });
+                    }
+                }
+            });
+        }
+
+        /**
+         * Check password strength
+         */
+        function checkPasswordStrength() {
+            const password = document.getElementById('registerPassword').value;
+            const strengthBar = document.getElementById('passwordStrengthBar');
+            const strengthText = document.getElementById('passwordStrengthText');
+            
+            let strength = 0;
+            let feedback = [];
+
+            // Check length
+            if (password.length >= 6) strength += 1;
+            if (password.length >= 8) strength += 1;
+            if (password.length >= 12) strength += 1;
+
+            // Check lowercase
+            if (/[a-z]/.test(password)) strength += 1;
+            else feedback.push('малки букви');
+
+            // Check uppercase
+            if (/[A-Z]/.test(password)) strength += 1;
+            else feedback.push('главни букви');
+
+            // Check numbers
+            if (/[0-9]/.test(password)) strength += 1;
+            else feedback.push('числа');
+
+            // Check special characters
+            if (/[!@#$%^&*]/.test(password)) strength += 1;
+
+            // Update visual bar
+            const percentage = (strength / 7) * 100;
+            strengthBar.style.width = percentage + '%';
+
+            // Update color and text
+            if (strength <= 2) {
+                strengthBar.style.backgroundColor = '#dc3545'; // Red - Weak
+                strengthText.textContent = '🔴 Слаба парола - Липсват: ' + feedback.join(', ');
+                strengthText.style.color = '#dc3545';
+            } else if (strength <= 4) {
+                strengthBar.style.backgroundColor = '#ffc107'; // Orange - Medium
+                strengthText.textContent = '🟡 Средна парола - Липсват: ' + feedback.join(', ');
+                strengthText.style.color = '#ffc107';
+            } else {
+                strengthBar.style.backgroundColor = '#28a745'; // Green - Strong
+                strengthText.textContent = '🟢 Силна парола ✓';
+                strengthText.style.color = '#28a745';
+            }
+        }
+
+        /**
+         * Show Terms and Conditions modal
+         */
+        function showTermsModal(e) {
+            e.preventDefault();
+            document.getElementById('termsModal').style.display = 'block';
+        }
+
+        /**
+         * Close Terms and Conditions modal
+         */
+        function closeTermsModal() {
+            document.getElementById('termsModal').style.display = 'none';
+        }
+
+        /**
+         * Accept Terms and Conditions
+         */
+        function acceptTerms() {
+            document.getElementById('acceptTerms').checked = true;
+            closeTermsModal();
+        }
+
+        /**
+         * Close modal when clicking outside
+         */
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('termsModal');
+            if (event.target === modal) {
+                closeTermsModal();
+            }
+        });
+
+        /**
+         * Validate register form - check if both Terms are accepted
+         */
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            const acceptTerms = document.getElementById('acceptTerms');
+            const acceptRisk = document.getElementById('acceptRisk');
+            
+            if (!acceptTerms.checked) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Грешка',
+                    text: 'Трябва да приемеш Общите условия и Политиката за поверителност',
+                    icon: 'error',
+                    confirmButtonColor: '#28a745'
+                });
+                return;
+            }
+            
+            if (!acceptRisk.checked) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Грешка',
+                    text: 'Трябва да потвърдиш, че разбираш рисковете и условията на участие',
+                    icon: 'error',
+                    confirmButtonColor: '#28a745'
+                });
+                return;
+            }
+        });
+    </script>
 </body>
 </html>
