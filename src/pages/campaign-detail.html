@@ -172,6 +172,128 @@
             opacity: 0.6;
         }
         
+        .btn-join {
+            padding: 0.75rem 1.5rem;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        
+        .btn-join:hover {
+            background-color: #218838;
+        }
+        
+        .btn-join:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .upload-form-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            border-left: 4px solid #28a745;
+        }
+        
+        .upload-form-section h3 {
+            margin-bottom: 1.5rem;
+            color: #28a745;
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 0.5rem;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+        
+        .btn-file-input {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            background-color: #28a745;
+            color: white;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+        
+        .btn-file-input:hover {
+            background-color: #218838;
+            text-decoration: none;
+        }
+        
+        .file-name {
+            margin-left: 0.5rem;
+            color: #666;
+            font-size: 0.875rem;
+        }
+        
+        .photo-preview {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 6px;
+            margin-top: 1rem;
+        }
+        
+        .btn-upload {
+            padding: 0.75rem 1.5rem;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.95rem;
+            margin-top: 1rem;
+        }
+        
+        .btn-upload:hover {
+            background-color: #218838;
+        }
+        
+        .btn-upload:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .status-message {
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+            font-weight: bold;
+        }
+        
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .status-approved {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-rejected {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
         .participation-stats {
             background-color: #f0f8ff;
             padding: 1rem;
@@ -313,6 +435,44 @@
                 <div id="map"></div>
             </div>
 
+            <!-- Join Campaign Section -->
+            <div class="details-section" id="joinSection" style="display: none;">
+                <h3>🤝 Join Campaign</h3>
+                <p>Click the button below to join this cleanup campaign and help make a difference!</p>
+                <button class="btn-join" id="joinBtn" onclick="handleJoin()">Join Campaign</button>
+            </div>
+
+            <!-- Upload After Photo Section -->
+            <div class="upload-form-section" id="uploadSection" style="display: none;">
+                <h3>📷 Upload After Photo</h3>
+                <p>Show us the result of your cleanup work! Upload a photo after you've finished cleaning.</p>
+                
+                <form id="uploadPhotoForm">
+                    <div class="mb-3">
+                        <label for="afterPhoto" class="form-label">After Photo</label>
+                        <div class="file-input-wrapper">
+                            <label class="btn-file-input">
+                                📁 Choose File
+                                <input 
+                                    type="file" 
+                                    id="afterPhoto" 
+                                    accept="image/*"
+                                    required
+                                >
+                            </label>
+                            <span class="file-name" id="afterPhotoName">No file chosen</span>
+                        </div>
+                        <img id="afterPhotoPreview" class="photo-preview" style="display:none;">
+                    </div>
+                </form>
+                
+                <button class="btn-upload" id="uploadBtn" onclick="handleUploadPhoto()" disabled>
+                    ✅ Submit Proof
+                </button>
+                
+                <div id="submissionStatus" class="status-message" style="display: none;"></div>
+            </div>
+
             <!-- Action Buttons -->
             <div class="action-buttons">
                 <a href="/src/pages/dashboard.html" class="btn-back">← Back to Dashboard</a>
@@ -342,11 +502,14 @@
     <script type="module">
         import supabase from '../services/supabase.js';
         import { initializeMap } from '../services/map.js';
+        import { uploadCampaignPhoto } from '../services/storage.js';
 
         // Global variables
         let campaign = null;
         let currentUser = null;
         let map = null;
+        let userParticipation = null;
+        let afterPhotoFile = null;
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', async () => {
@@ -409,11 +572,29 @@
                     console.error('Error fetching participations:', participationError);
                 }
 
+                // Fetch current user's participation
+                const { data: userPart, error: userPartError } = await supabase
+                    .from('participations')
+                    .select('*')
+                    .eq('campaign_id', campaignId)
+                    .eq('user_id', currentUser.id)
+                    .single();
+
+                if (!userPartError && userPart) {
+                    userParticipation = userPart;
+                }
+
                 // Display the campaign details
                 displayCampaignDetails(campaign, participations || []);
 
                 // Check delete eligibility and show button if applicable
                 await checkDeleteEligibility(campaignId, participations || []);
+
+                // Show participation UI
+                showParticipationUI();
+
+                // Setup file input listener
+                document.getElementById('afterPhoto').addEventListener('change', handleAfterPhotoSelect);
 
                 // Hide loading, show content
                 document.getElementById('loadingState').style.display = 'none';
@@ -517,6 +698,204 @@
         }
 
         /**
+         * Show participation UI based on user status
+         */
+        function showParticipationUI() {
+            const isCreator = currentUser.id === campaign.created_by;
+            const joinSection = document.getElementById('joinSection');
+            const uploadSection = document.getElementById('uploadSection');
+
+            // Hide both sections by default
+            joinSection.style.display = 'none';
+            uploadSection.style.display = 'none';
+
+            // If user is the creator, don't show participation UI
+            if (isCreator) {
+                return;
+            }
+
+            // If user has not joined yet
+            if (!userParticipation) {
+                joinSection.style.display = 'block';
+            } else {
+                // User has joined, show upload section
+                uploadSection.style.display = 'block';
+                
+                // Show status message if participation status is not pending
+                if (userParticipation.status !== 'pending') {
+                    showSubmissionStatus(userParticipation.status);
+                }
+            }
+        }
+
+        /**
+         * Handle joining campaign
+         */
+        async function handleJoin() {
+            const joinBtn = document.getElementById('joinBtn');
+            
+            try {
+                joinBtn.disabled = true;
+
+                const campaignId = getCampaignIdFromUrl();
+
+                // Create participation record
+                const { data: participation, error: joinError } = await supabase
+                    .from('participations')
+                    .insert([{
+                        campaign_id: campaignId,
+                        user_id: currentUser.id,
+                        status: 'pending'
+                    }])
+                    .select();
+
+                if (joinError) {
+                    throw new Error(`Failed to join campaign: ${joinError.message}`);
+                }
+
+                // Update local state
+                userParticipation = participation[0];
+
+                // Show success message
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Joined!',
+                    text: 'You have successfully joined the campaign!'
+                });
+
+                // Update UI
+                showParticipationUI();
+
+            } catch (error) {
+                console.error('Error joining campaign:', error);
+
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'Failed to join campaign. Please try again.'
+                });
+
+                joinBtn.disabled = false;
+            }
+        }
+
+        /**
+         * Handle after photo file selection
+         */
+        function handleAfterPhotoSelect(e) {
+            afterPhotoFile = e.target.files[0];
+            const fileName = afterPhotoFile ? afterPhotoFile.name : 'No file chosen';
+            
+            document.getElementById('afterPhotoName').textContent = fileName;
+            
+            // Show preview
+            if (afterPhotoFile) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const preview = document.getElementById('afterPhotoPreview');
+                    preview.src = event.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(afterPhotoFile);
+                
+                // Enable upload button
+                document.getElementById('uploadBtn').disabled = false;
+            } else {
+                document.getElementById('uploadBtn').disabled = true;
+            }
+        }
+
+        /**
+         * Handle uploading after photo
+         */
+        async function handleUploadPhoto() {
+            const uploadBtn = document.getElementById('uploadBtn');
+            
+            try {
+                if (!afterPhotoFile) {
+                    throw new Error('No file selected');
+                }
+
+                uploadBtn.disabled = true;
+
+                // Show loading state
+                await Swal.fire({
+                    title: 'Uploading photo...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Upload the photo
+                const photoUrl = await uploadCampaignPhoto(afterPhotoFile, 'after');
+
+                Swal.close();
+
+                // Update participation record
+                const { error: updateError } = await supabase
+                    .from('participations')
+                    .update({
+                        after_photo_url: photoUrl,
+                        status: 'pending'
+                    })
+                    .eq('id', userParticipation.id);
+
+                if (updateError) {
+                    throw new Error(`Failed to update participation: ${updateError.message}`);
+                }
+
+                // Update local state
+                userParticipation.after_photo_url = photoUrl;
+                userParticipation.status = 'pending';
+
+                // Show success
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Proof Submitted!',
+                    text: 'Your cleanup proof has been submitted for admin approval.'
+                });
+
+                // Show status message
+                showSubmissionStatus('pending');
+
+                // Disable upload form
+                document.getElementById('uploadPhotoForm').style.opacity = '0.6';
+                document.getElementById('uploadPhotoForm').style.pointerEvents = 'none';
+
+            } catch (error) {
+                console.error('Error uploading photo:', error);
+
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'Failed to upload photo. Please try again.'
+                });
+
+                uploadBtn.disabled = false;
+            }
+        }
+
+        /**
+         * Show submission status message
+         */
+        function showSubmissionStatus(status) {
+            const statusDiv = document.getElementById('submissionStatus');
+            statusDiv.style.display = 'block';
+            
+            if (status === 'pending') {
+                statusDiv.className = 'status-message status-pending';
+                statusDiv.textContent = '⏳ Waiting for admin approval...';
+            } else if (status === 'approved') {
+                statusDiv.className = 'status-message status-approved';
+                statusDiv.textContent = '✅ Your proof has been approved! Points awarded.';
+            } else if (status === 'rejected') {
+                statusDiv.className = 'status-message status-rejected';
+                statusDiv.textContent = '❌ Your proof was rejected. Please try again with better photo.';
+            }
+        }
+
+        /**
          * Handle campaign deletion
          */
         async function handleDelete() {
@@ -604,6 +983,8 @@
         // Expose functions to window for onclick handlers
         window.handleLogout = handleLogout;
         window.handleDelete = handleDelete;
+        window.handleJoin = handleJoin;
+        window.handleUploadPhoto = handleUploadPhoto;
     </script>
 </body>
 </html>
