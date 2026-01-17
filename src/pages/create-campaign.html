@@ -4,8 +4,494 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Campaign - Clean Quarter</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        
+        .navbar {
+            background-color: #28a745;
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        
+        .navbar a {
+            color: white !important;
+            margin-left: 1rem;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin-top: 2rem;
+        }
+        
+        .form-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .form-section h3 {
+            margin-bottom: 1.5rem;
+            color: #28a745;
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 0.5rem;
+        }
+        
+        .map-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        #map {
+            height: 400px;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+        
+        .coordinates-display {
+            background-color: #e7f3ff;
+            padding: 1rem;
+            border-radius: 6px;
+            border-left: 4px solid #28a745;
+            margin-top: 1rem;
+        }
+        
+        .photo-preview {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 6px;
+            margin-top: 1rem;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+        
+        .btn-file-input {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            background-color: #28a745;
+            color: white;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+        
+        .btn-file-input:hover {
+            background-color: #218838;
+            text-decoration: none;
+        }
+        
+        .file-name {
+            margin-left: 0.5rem;
+            color: #666;
+            font-size: 0.875rem;
+        }
+        
+        .btn-submit {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1rem;
+            font-weight: bold;
+            background-color: #28a745;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .btn-submit:hover {
+            background-color: #218838;
+        }
+        
+        .btn-submit:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .loading-spinner {
+            display: none;
+            margin-left: 0.5rem;
+        }
+    </style>
 </head>
 <body>
-    <div id="create-campaign-content"></div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/src/pages/dashboard.html">♻️ Clean Quarter</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="ms-auto">
+                    <a href="/src/pages/dashboard.html">Dashboard</a>
+                    <a href="/src/pages/rewards.html">Rewards</a>
+                    <a href="/src/pages/profile.html">Profile</a>
+                    <a href="#" onclick="handleLogout()">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        <h1 class="mb-4">Create New Campaign</h1>
+        
+        <!-- Campaign Form -->
+        <div class="form-section">
+            <h3>Campaign Details</h3>
+            
+            <form id="createCampaignForm">
+                <!-- Title -->
+                <div class="mb-3">
+                    <label for="campaignTitle" class="form-label">Campaign Title</label>
+                    <input 
+                        type="text" 
+                        class="form-control" 
+                        id="campaignTitle" 
+                        placeholder="e.g., Clean the Park on Sunday"
+                        required
+                    >
+                </div>
+
+                <!-- Description -->
+                <div class="mb-3">
+                    <label for="campaignDescription" class="form-label">Description</label>
+                    <textarea 
+                        class="form-control" 
+                        id="campaignDescription" 
+                        rows="3" 
+                        placeholder="Describe the area you want to clean up..."
+                        required
+                    ></textarea>
+                </div>
+
+                <!-- Neighborhood -->
+                <div class="mb-3">
+                    <label for="campaignNeighborhood" class="form-label">Neighborhood</label>
+                    <select class="form-control" id="campaignNeighborhood" required>
+                        <option value="">Select neighborhood...</option>
+                        <option value="Studentski Grad">Studentski Grad</option>
+                        <option value="Darvenitsa">Darvenitsa</option>
+                        <option value="Musagenitsa">Musagenitsa</option>
+                        <option value="Vitosha (VEC)">Vitosha (VEC)</option>
+                        <option value="Malinova Dolina">Malinova Dolina</option>
+                    </select>
+                </div>
+
+                <!-- Before Photo Upload -->
+                <div class="mb-3">
+                    <label for="beforePhoto" class="form-label">Before Photo</label>
+                    <div class="file-input-wrapper">
+                        <label class="btn-file-input">
+                            📁 Choose File
+                            <input 
+                                type="file" 
+                                id="beforePhoto" 
+                                accept="image/*"
+                                required
+                            >
+                        </label>
+                        <span class="file-name" id="beforePhotoName">No file chosen</span>
+                    </div>
+                    <img id="beforePhotoPreview" class="photo-preview" style="display:none;">
+                </div>
+            </form>
+        </div>
+
+        <!-- Map Section -->
+        <div class="map-container">
+            <h3>📍 Select Location on Map</h3>
+            <p class="text-muted">Click on the map to set the cleanup location coordinates</p>
+            <div id="map"></div>
+            <div class="coordinates-display" id="coordinatesDisplay" style="display:none;">
+                <strong>Selected Location:</strong><br>
+                Latitude: <span id="latitude">-</span><br>
+                Longitude: <span id="longitude">-</span>
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="form-section">
+            <button 
+                type="submit" 
+                class="btn-submit" 
+                id="submitBtn"
+                form="createCampaignForm"
+                disabled
+            >
+                Create Campaign
+                <span class="loading-spinner" id="loadingSpinner">
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                </span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Main Script -->
+    <script type="module">
+        import { initializeMap } from '../services/map.js';
+        import { uploadCampaignPhoto } from '../services/storage.js';
+        import supabase from '../services/supabase.js';
+
+        // Global variables
+        let map = null;
+        let selectedCoordinates = { lat: null, lng: null };
+        let beforePhotoFile = null;
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkAuth();
+            initMap();
+            setupEventListeners();
+        });
+
+        /**
+         * Check if user is authenticated
+         */
+        async function checkAuth() {
+            const { data: { user }, error } = await supabase.auth.getUser();
+            
+            if (error || !user) {
+                window.location.href = '/index.html';
+            }
+        }
+
+        /**
+         * Initialize the map
+         */
+        function initMap() {
+            map = initializeMap();
+            
+            // Add click event to map to select coordinates
+            map.on('click', (e) => {
+                const { lat, lng } = e.latlng;
+                selectedCoordinates = { lat, lng };
+                
+                // Update display
+                document.getElementById('latitude').textContent = lat.toFixed(6);
+                document.getElementById('longitude').textContent = lng.toFixed(6);
+                document.getElementById('coordinatesDisplay').style.display = 'block';
+                
+                // Add or update marker
+                const existingMarker = document.querySelector('[data-marker="selection"]');
+                if (existingMarker && window.selectionMarker) {
+                    map.removeLayer(window.selectionMarker);
+                }
+                
+                window.selectionMarker = L.marker([lat, lng], {
+                    icon: L.icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                    })
+                }).addTo(map).bindPopup('Campaign Location');
+                
+                checkFormCompletion();
+            });
+        }
+
+        /**
+         * Setup event listeners
+         */
+        function setupEventListeners() {
+            // File input change
+            document.getElementById('beforePhoto').addEventListener('change', handleFileSelect);
+            
+            // Form submission
+            document.getElementById('createCampaignForm').addEventListener('submit', handleFormSubmit);
+            
+            // Enable submit button when all fields are filled
+            document.getElementById('campaignTitle').addEventListener('input', checkFormCompletion);
+            document.getElementById('campaignDescription').addEventListener('input', checkFormCompletion);
+            document.getElementById('campaignNeighborhood').addEventListener('change', checkFormCompletion);
+        }
+
+        /**
+         * Handle file selection for before photo
+         */
+        function handleFileSelect(e) {
+            beforePhotoFile = e.target.files[0];
+            const fileName = beforePhotoFile ? beforePhotoFile.name : 'No file chosen';
+            
+            document.getElementById('beforePhotoName').textContent = fileName;
+            
+            // Show preview
+            if (beforePhotoFile) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const preview = document.getElementById('beforePhotoPreview');
+                    preview.src = event.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(beforePhotoFile);
+            }
+            
+            checkFormCompletion();
+        }
+
+        /**
+         * Check if form is complete and enable submit button
+         */
+        function checkFormCompletion() {
+            const title = document.getElementById('campaignTitle').value.trim();
+            const description = document.getElementById('campaignDescription').value.trim();
+            const neighborhood = document.getElementById('campaignNeighborhood').value;
+            const hasFile = beforePhotoFile !== null;
+            const hasCoordinates = selectedCoordinates.lat !== null && selectedCoordinates.lng !== null;
+            
+            const isComplete = title && description && neighborhood && hasFile && hasCoordinates;
+            document.getElementById('submitBtn').disabled = !isComplete;
+        }
+
+        /**
+         * Handle form submission
+         */
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const spinner = document.getElementById('loadingSpinner');
+            
+            try {
+                // Disable submit button and show spinner
+                submitBtn.disabled = true;
+                spinner.style.display = 'inline';
+                
+                // Get current user
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
+                if (userError || !user) {
+                    throw new Error('User not authenticated');
+                }
+                
+                // Get user profile to fetch neighborhood if not selected
+                const { data: profile, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('neighborhood')
+                    .eq('id', user.id)
+                    .single();
+                
+                if (profileError) {
+                    throw new Error('Failed to fetch user profile');
+                }
+                
+                // Collect form data
+                const title = document.getElementById('campaignTitle').value;
+                const description = document.getElementById('campaignDescription').value;
+                const neighborhood = document.getElementById('campaignNeighborhood').value;
+                const { lat, lng } = selectedCoordinates;
+                
+                // Upload before photo
+                await Swal.fire({
+                    title: 'Uploading photo...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                
+                const beforePhotoUrl = await uploadCampaignPhoto(beforePhotoFile, 'before');
+                
+                Swal.close();
+                
+                // Insert campaign into database
+                const { data: campaign, error: campaignError } = await supabase
+                    .from('campaigns')
+                    .insert([
+                        {
+                            title,
+                            description,
+                            location_lat: lat,
+                            location_lng: lng,
+                            before_photo_url: beforePhotoUrl,
+                            created_by: user.id,
+                            neighborhood: neighborhood,
+                            status: 'active'
+                        }
+                    ])
+                    .select();
+                
+                if (campaignError) {
+                    throw new Error(`Failed to create campaign: ${campaignError.message}`);
+                }
+                
+                // Success notification
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Campaign Created!',
+                    text: 'Your cleanup campaign has been created successfully.',
+                    confirmButtonText: 'View Campaign'
+                });
+                
+                // Redirect to campaign detail or dashboard
+                window.location.href = '/src/pages/dashboard.html';
+                
+            } catch (error) {
+                console.error('Error creating campaign:', error);
+                
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'Failed to create campaign. Please try again.'
+                });
+            } finally {
+                // Re-enable submit button and hide spinner
+                submitBtn.disabled = false;
+                spinner.style.display = 'none';
+                checkFormCompletion();
+            }
+        }
+
+        /**
+         * Handle logout
+         */
+        async function handleLogout() {
+            const { error } = await supabase.auth.signOut();
+            if (!error) {
+                localStorage.removeItem('user');
+                window.location.href = '/index.html';
+            }
+        }
+
+        // Expose handleLogout to window for onclick handler
+        window.handleLogout = handleLogout;
+    </script>
 </body>
 </html>
