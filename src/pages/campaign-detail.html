@@ -4,8 +4,606 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Campaign Details - Clean Quarter</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        
+        .navbar {
+            background-color: #28a745;
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        
+        .navbar a {
+            color: white !important;
+            margin-left: 1rem;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin-top: 2rem;
+        }
+        
+        .photo-section {
+            background: white;
+            padding: 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+        
+        .before-photo {
+            width: 100%;
+            max-height: 500px;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .photo-label {
+            background-color: #28a745;
+            color: white;
+            padding: 0.75rem 1rem;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .details-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .details-section h3 {
+            margin-bottom: 1.5rem;
+            color: #28a745;
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 0.5rem;
+        }
+        
+        .detail-row {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .detail-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .detail-label {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+        
+        .detail-value {
+            color: #212529;
+            font-size: 1.05rem;
+        }
+        
+        .badge-status {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        
+        .badge-active {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-completed {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .badge-cancelled {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        #map {
+            height: 300px;
+            border-radius: 6px;
+            margin-top: 1rem;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn-back {
+            padding: 0.75rem 1.5rem;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+        }
+        
+        .btn-back:hover {
+            background-color: #5a6268;
+            text-decoration: none;
+            color: white;
+        }
+        
+        .btn-delete {
+            padding: 0.75rem 1.5rem;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .btn-delete:hover {
+            background-color: #c82333;
+        }
+        
+        .btn-delete:disabled {
+            background-color: #c82333;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .participation-stats {
+            background-color: #f0f8ff;
+            padding: 1rem;
+            border-radius: 6px;
+            border-left: 4px solid #28a745;
+            margin-bottom: 1.5rem;
+        }
+        
+        .stat-item {
+            display: inline-block;
+            margin-right: 2rem;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+            font-size: 1.3rem;
+            color: #28a745;
+        }
+        
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 300px;
+        }
+        
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 1.5rem;
+            border-radius: 6px;
+            margin-top: 2rem;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
 </head>
 <body>
-    <div id="campaign-detail-content"></div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/src/pages/dashboard.html">♻️ Clean Quarter</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="ms-auto">
+                    <a href="/src/pages/dashboard.html">Dashboard</a>
+                    <a href="/src/pages/rewards.html">Rewards</a>
+                    <a href="/src/pages/profile.html">Profile</a>
+                    <a href="#" onclick="handleLogout()">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Loading State -->
+        <div class="loading-spinner" id="loadingState">
+            <div class="spinner-border text-success" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <!-- Campaign Detail Content (hidden until loaded) -->
+        <div id="campaignContent" style="display: none;">
+            <!-- Before Photo -->
+            <div class="photo-section">
+                <div class="photo-label">📸 Before Photo</div>
+                <img id="beforePhoto" class="before-photo" src="" alt="Before photo">
+            </div>
+
+            <!-- Campaign Details -->
+            <div class="details-section">
+                <h3 id="campaignTitle"></h3>
+                
+                <div class="detail-row">
+                    <div class="detail-label">Status</div>
+                    <div class="detail-value">
+                        <span class="badge-status" id="statusBadge"></span>
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Description</div>
+                    <div class="detail-value" id="campaignDescription"></div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Neighborhood</div>
+                    <div class="detail-value" id="campaignNeighborhood"></div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Created Date</div>
+                    <div class="detail-value" id="campaignDate"></div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Created By</div>
+                    <div class="detail-value" id="createdBy"></div>
+                </div>
+            </div>
+
+            <!-- Participation Stats -->
+            <div class="details-section">
+                <h3>📊 Participation</h3>
+                <div class="participation-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Total Participants</div>
+                        <div class="stat-value" id="participantCount">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Approved</div>
+                        <div class="stat-value" id="approvedCount">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Pending</div>
+                        <div class="stat-value" id="pendingCount">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Location Map -->
+            <div class="details-section">
+                <h3>📍 Location</h3>
+                <div>
+                    <p>
+                        <strong>Coordinates:</strong><br>
+                        Latitude: <span id="latitude"></span><br>
+                        Longitude: <span id="longitude"></span>
+                    </p>
+                </div>
+                <div id="map"></div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <a href="/src/pages/dashboard.html" class="btn-back">← Back to Dashboard</a>
+                <button class="btn-delete" id="deleteBtn" style="display: none;" onclick="handleDelete()">
+                    🗑️ Delete Campaign
+                </button>
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" style="display: none;">
+            <div class="error-message">
+                <h4>Unable to Load Campaign</h4>
+                <p id="errorMessage"></p>
+                <a href="/src/pages/dashboard.html" class="btn-back" style="display: inline-block; margin-top: 1rem;">← Back to Dashboard</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Main Script -->
+    <script type="module">
+        import supabase from '../services/supabase.js';
+        import { initializeMap } from '../services/map.js';
+
+        // Global variables
+        let campaign = null;
+        let currentUser = null;
+        let map = null;
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkAuth();
+            await loadCampaignDetail();
+        });
+
+        /**
+         * Check if user is authenticated
+         */
+        async function checkAuth() {
+            const { data: { user }, error } = await supabase.auth.getUser();
+            
+            if (error || !user) {
+                window.location.href = '/index.html';
+            }
+            
+            currentUser = user;
+        }
+
+        /**
+         * Get campaign ID from URL parameters
+         */
+        function getCampaignIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('id');
+        }
+
+        /**
+         * Load and display campaign details
+         */
+        async function loadCampaignDetail() {
+            try {
+                const campaignId = getCampaignIdFromUrl();
+                
+                if (!campaignId) {
+                    throw new Error('Campaign ID not provided in URL');
+                }
+
+                // Fetch campaign data
+                const { data: campaignData, error: campaignError } = await supabase
+                    .from('campaigns')
+                    .select('*')
+                    .eq('id', campaignId)
+                    .single();
+
+                if (campaignError) {
+                    throw new Error(`Campaign not found: ${campaignError.message}`);
+                }
+
+                campaign = campaignData;
+
+                // Fetch participation statistics
+                const { data: participations, error: participationError } = await supabase
+                    .from('participations')
+                    .select('id, status')
+                    .eq('campaign_id', campaignId);
+
+                if (participationError) {
+                    console.error('Error fetching participations:', participationError);
+                }
+
+                // Display the campaign details
+                displayCampaignDetails(campaign, participations || []);
+
+                // Check delete eligibility and show button if applicable
+                await checkDeleteEligibility(campaignId, participations || []);
+
+                // Hide loading, show content
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('campaignContent').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error loading campaign:', error);
+                showError(error.message);
+            }
+        }
+
+        /**
+         * Display campaign details on the page
+         */
+        function displayCampaignDetails(campaignData, participations) {
+            // Title
+            document.getElementById('campaignTitle').textContent = campaignData.title;
+
+            // Before Photo
+            const photoElement = document.getElementById('beforePhoto');
+            photoElement.src = campaignData.before_photo_url;
+            photoElement.alt = `Before photo for ${campaignData.title}`;
+
+            // Status
+            const statusBadge = document.getElementById('statusBadge');
+            statusBadge.textContent = campaignData.status.charAt(0).toUpperCase() + campaignData.status.slice(1);
+            statusBadge.className = `badge-status badge-${campaignData.status}`;
+
+            // Description
+            document.getElementById('campaignDescription').textContent = campaignData.description;
+
+            // Neighborhood
+            document.getElementById('campaignNeighborhood').textContent = campaignData.neighborhood;
+
+            // Created date
+            const createdDate = new Date(campaignData.created_at);
+            document.getElementById('campaignDate').textContent = createdDate.toLocaleDateString('bg-BG', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            // Created by
+            document.getElementById('createdBy').textContent = campaignData.created_by;
+
+            // Participation stats
+            const totalParticipants = participations.length;
+            const approvedCount = participations.filter(p => p.status === 'approved').length;
+            const pendingCount = participations.filter(p => p.status === 'pending').length;
+
+            document.getElementById('participantCount').textContent = totalParticipants;
+            document.getElementById('approvedCount').textContent = approvedCount;
+            document.getElementById('pendingCount').textContent = pendingCount;
+
+            // Location
+            document.getElementById('latitude').textContent = campaignData.location_lat.toFixed(6);
+            document.getElementById('longitude').textContent = campaignData.location_lng.toFixed(6);
+
+            // Initialize map with campaign location
+            initializeDetailMap(campaignData.location_lat, campaignData.location_lng);
+        }
+
+        /**
+         * Initialize map with campaign location
+         */
+        function initializeDetailMap(lat, lng) {
+            map = initializeMap();
+            
+            // Add marker for campaign location
+            L.marker([lat, lng], {
+                icon: L.icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34],
+                    shadowSize: [41, 41]
+                })
+            }).addTo(map).bindPopup(`Campaign Location: ${campaign.title}`);
+
+            // Center map on campaign location
+            map.setView([lat, lng], 15);
+        }
+
+        /**
+         * Check if current user can delete the campaign
+         * Requirements:
+         * 1. Current user must be the campaign creator
+         * 2. Campaign must have 0 participations
+         */
+        async function checkDeleteEligibility(campaignId, participations) {
+            const isCreator = currentUser.id === campaign.created_by;
+            const hasNoParticipations = participations.length === 0;
+
+            // Show delete button only if BOTH conditions are true
+            if (isCreator && hasNoParticipations) {
+                document.getElementById('deleteBtn').style.display = 'inline-block';
+            }
+        }
+
+        /**
+         * Handle campaign deletion
+         */
+        async function handleDelete() {
+            const result = await Swal.fire({
+                title: 'Delete Campaign?',
+                text: 'Are you sure you want to delete this campaign? This action cannot be undone.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Delete It',
+                cancelButtonText: 'Cancel'
+            });
+
+            if (!result.isConfirmed) {
+                return;
+            }
+
+            try {
+                // Show loading state
+                await Swal.fire({
+                    title: 'Deleting campaign...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                const campaignId = getCampaignIdFromUrl();
+
+                // Delete the campaign from database
+                // Note: CASCADE will delete related records
+                const { error: deleteError } = await supabase
+                    .from('campaigns')
+                    .delete()
+                    .eq('id', campaignId);
+
+                if (deleteError) {
+                    throw new Error(`Failed to delete campaign: ${deleteError.message}`);
+                }
+
+                // Success notification
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Campaign Deleted',
+                    text: 'The campaign has been successfully deleted.',
+                    confirmButtonText: 'OK'
+                });
+
+                // Redirect to dashboard
+                window.location.href = '/src/pages/dashboard.html';
+
+            } catch (error) {
+                console.error('Error deleting campaign:', error);
+
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'Failed to delete campaign. Please try again.'
+                });
+            }
+        }
+
+        /**
+         * Show error state
+         */
+        function showError(message) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('campaignContent').style.display = 'none';
+            document.getElementById('errorState').style.display = 'block';
+            document.getElementById('errorMessage').textContent = message;
+        }
+
+        /**
+         * Handle logout
+         */
+        async function handleLogout() {
+            const { error } = await supabase.auth.signOut();
+            if (!error) {
+                localStorage.removeItem('user');
+                window.location.href = '/index.html';
+            }
+        }
+
+        // Expose functions to window for onclick handlers
+        window.handleLogout = handleLogout;
+        window.handleDelete = handleDelete;
+    </script>
 </body>
 </html>
