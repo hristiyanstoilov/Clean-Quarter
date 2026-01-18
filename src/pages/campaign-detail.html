@@ -721,9 +721,14 @@
                 // User has joined, show upload section
                 uploadSection.style.display = 'block';
                 
-                // Show status message if participation status is not pending
-                if (userParticipation.status !== 'pending') {
-                    showSubmissionStatus(userParticipation.status);
+                // Show status message based on participation status
+                showSubmissionStatus(userParticipation.status);
+                
+                // If photo already uploaded and status is not rejected, disable upload
+                if (userParticipation.after_photo_url && userParticipation.status !== 'rejected') {
+                    document.getElementById('uploadPhotoForm').style.opacity = '0.6';
+                    document.getElementById('uploadPhotoForm').style.pointerEvents = 'none';
+                    document.getElementById('uploadBtn').disabled = true;
                 }
             }
         }
@@ -739,13 +744,13 @@
 
                 const campaignId = getCampaignIdFromUrl();
 
-                // Create participation record
+                // Create participation record with 'joined' status (no photo yet)
                 const { data: participation, error: joinError } = await supabase
                     .from('participations')
                     .insert([{
                         campaign_id: campaignId,
                         user_id: currentUser.id,
-                        status: 'pending'
+                        status: 'joined'
                     }])
                     .select();
 
@@ -760,7 +765,7 @@
                 await Swal.fire({
                     icon: 'success',
                     title: 'Joined!',
-                    text: 'You have successfully joined the campaign!'
+                    text: 'You have successfully joined the campaign! Now upload your after photo.'
                 });
 
                 // Update UI
@@ -883,7 +888,10 @@
             const statusDiv = document.getElementById('submissionStatus');
             statusDiv.style.display = 'block';
             
-            if (status === 'pending') {
+            if (status === 'joined') {
+                statusDiv.className = 'status-message status-pending';
+                statusDiv.textContent = '📝 Upload your after photo to submit proof.';
+            } else if (status === 'pending') {
                 statusDiv.className = 'status-message status-pending';
                 statusDiv.textContent = '⏳ Waiting for admin approval...';
             } else if (status === 'approved') {
