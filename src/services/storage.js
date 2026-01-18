@@ -1,4 +1,5 @@
 import supabase from './supabase.js';
+import { handleError } from '../utils/helpers.js';
 
 /**
  * Upload an image to the 'campaign-photos' bucket
@@ -19,14 +20,11 @@ export async function uploadCampaignPhoto(file, folderName = 'photos') {
     const filePath = `${folderName}/${fileName}`;
 
     // Upload file to Supabase Storage
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from('campaign-photos')
       .upload(filePath, file);
 
-    if (error) {
-      console.error('Upload error:', error);
-      throw new Error(`Upload failed: ${error.message}`);
-    }
+    if (error) throw new Error(`Upload failed: ${error.message}`);
 
     // Get public URL
     const { data: publicUrlData } = supabase.storage
@@ -35,7 +33,7 @@ export async function uploadCampaignPhoto(file, folderName = 'photos') {
 
     return publicUrlData.publicUrl;
   } catch (error) {
-    console.error('Error uploading campaign photo:', error);
+    await handleError('uploadCampaignPhoto', error, 'Failed to upload photo. Please try again.');
     throw error;
   }
 }
@@ -55,7 +53,7 @@ export async function deleteCampaignPhoto(filePath) {
       throw new Error(`Delete failed: ${error.message}`);
     }
   } catch (error) {
-    console.error('Error deleting campaign photo:', error);
+    await handleError('deleteCampaignPhoto', error, 'Failed to delete photo. Please try again.');
     throw error;
   }
 }

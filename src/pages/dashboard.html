@@ -195,85 +195,85 @@
         import { initializeMap, loadMapData } from '../services/map.js';
         import { logout } from '../services/auth.js';
         import supabase from '../services/supabase.js';
+        import {
+          requireAuth,
+          removeUser,
+          showLoading,
+          hideLoading,
+          handleError,
+          isEmpty
+        } from '../utils/helpers.js';
 
-        // Check if user is logged in
-        const currentUser = JSON.parse(localStorage.getItem('user'));
-        if (!currentUser) {
-            window.location.href = '/index.html';
-        }
+        // Require authentication
+        requireAuth();
 
-        // Initialize map on page load
+        // Initialize on page load
         window.addEventListener('DOMContentLoaded', async () => {
             const map = initializeMap();
             await loadMapData(map);
             await loadCampaignsList();
         });
 
-        // Load and display campaigns list
+        /**
+         * Load and display campaigns list
+         */
         async function loadCampaignsList() {
-            const loadingSpinner = document.getElementById('loadingSpinner');
-            const campaignsContainer = document.getElementById('campaignsContainer');
-            const noCampaignsMessage = document.getElementById('noCampaignsMessage');
+            const loadingSpinnerId = 'loadingSpinner';
+            const campaignsContainerId = 'campaignsContainer';
+            const noCampaignsMessageId = 'noCampaignsMessage';
 
             try {
-                // Show loading spinner
-                loadingSpinner.style.display = 'flex';
-                campaignsContainer.innerHTML = '';
-                noCampaignsMessage.style.display = 'none';
+                showLoading(loadingSpinnerId, [campaignsContainerId, noCampaignsMessageId]);
 
-                // Fetch campaigns
+                // Fetch active campaigns
                 const { data: campaigns, error } = await supabase
                     .from('campaigns')
                     .select('id, title, neighborhood, before_photo_url, status')
                     .eq('status', 'active');
 
-                if (error) {
-                    console.error('Error fetching campaigns:', error);
-                    throw error;
-                }
+                if (error) throw error;
 
-                // Hide loading spinner
-                loadingSpinner.style.display = 'none';
+                hideLoading(loadingSpinnerId, {
+                    [campaignsContainerId]: 'grid',
+                    [noCampaignsMessageId]: 'none'
+                });
 
-                if (!campaigns || campaigns.length === 0) {
-                    noCampaignsMessage.style.display = 'block';
+                if (isEmpty(campaigns)) {
+                    document.getElementById(noCampaignsMessageId).style.display = 'block';
                     return;
                 }
 
                 // Render campaign cards
-                campaigns.forEach(campaign => {
-                    const cardHTML = `
-                        <div class="campaign-card-wrapper">
-                            <div class="card campaign-card">
-                                ${campaign.before_photo_url ? `
-                                    <img src="${campaign.before_photo_url}" class="card-img-top" alt="${campaign.title}">
-                                ` : `
-                                    <div class="card-img-top bg-secondary" style="height: 200px; display: flex; align-items: center; justify-content: center;">
-                                        <span class="text-white">Няма снимка</span>
-                                    </div>
-                                `}
-                                <div class="card-body d-flex flex-column">
-                                    <h5 class="card-title">${campaign.title}</h5>
-                                    <p class="card-text text-muted">
-                                        <small>📍 ${campaign.neighborhood || 'Студентски град'}</small>
-                                    </p>
-                                    <div class="mt-auto">
-                                        <a href="/src/pages/campaign-detail.html?id=${campaign.id}" class="btn btn-primary w-100">
-                                            Преглед
-                                        </a>
-                                    </div>
+                const campaignsContainer = document.getElementById(campaignsContainerId);
+                campaignsContainer.innerHTML = campaigns.map(campaign => `
+                    <div class="campaign-card-wrapper">
+                        <div class="card campaign-card">
+                            ${campaign.before_photo_url ? `
+                                <img src="${campaign.before_photo_url}" class="card-img-top" alt="${campaign.title}">
+                            ` : `
+                                <div class="card-img-top bg-secondary" style="height: 200px; display: flex; align-items: center; justify-content: center;">
+                                    <span class="text-white">Няма снимка</span>
+                                </div>
+                            `}
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">${campaign.title}</h5>
+                                <p class="card-text text-muted">
+                                    <small>📍 ${campaign.neighborhood || 'Студентски град'}</small>
+                                </p>
+                                <div class="mt-auto">
+                                    <a href="/src/pages/campaign-detail.html?id=${campaign.id}" class="btn btn-primary w-100">
+                                        Преглед
+                                    </a>
                                 </div>
                             </div>
                         </div>
-                    `;
-                    campaignsContainer.innerHTML += cardHTML;
-                });
+                    </div>
+                `).join('');
 
-                console.log(`Loaded ${campaigns.length} campaigns for list view`);
             } catch (error) {
-                console.error('Error loading campaigns list:', error);
-                loadingSpinner.style.display = 'none';
-                campaignsContainer.innerHTML = `
+                hideLoading(loadingSpinnerId);
+                await handleError('loadCampaignsList', error, 'Failed to load campaigns. Please try again later.');
+                document.getElementById(campaignsContainerId).innerHTML = `
                     <div class="col-12">
                         <div class="alert alert-danger" role="alert">
                             Грешка при зареждане на кампаниите. Опитайте отново по-късно.
@@ -283,14 +283,16 @@
             }
         }
 
-        // Logout button handler
+        /**
+         * Handle logout
+         */
         document.getElementById('logoutBtn').addEventListener('click', async () => {
             try {
                 await logout();
-                localStorage.removeItem('user');
+                removeUser();
                 window.location.href = '/index.html';
             } catch (error) {
-                console.error('Logout error:', error);
+                await handleError('logout', error, 'Failed to logout. Please try again.');
             }
         });
     </script>

@@ -1,4 +1,5 @@
 import supabase from './supabase.js';
+import { showSuccess, showError } from '../utils/helpers.js';
 
 /**
  * Register a new user with email, password, and metadata (neighborhood)
@@ -15,45 +16,26 @@ export async function register(email, password, meta) {
       password,
     });
 
-    if (authError) {
-      await Swal.fire({
-        icon: 'error',
-        title: 'Грешка при регистрация',
-        text: authError.message,
-      });
-      throw authError;
-    }
+    if (authError) throw authError;
 
     // Create profile in database with metadata
     const userId = authData.user.id;
     const { error: profileError } = await supabase.from('profiles').insert([
       {
         id: userId,
-        username: email.split('@')[0], // Use part before @ as username
-        role: 'user', // Default role
+        username: email.split('@')[0],
+        role: 'user',
         points_balance: 0,
         neighborhood: meta.neighborhood || null,
       },
     ]);
 
-    if (profileError) {
-      await Swal.fire({
-        icon: 'error',
-        title: 'Грешка при създаване на профил',
-        text: profileError.message,
-      });
-      throw profileError;
-    }
+    if (profileError) throw profileError;
 
-    await Swal.fire({
-      icon: 'success',
-      title: 'Успешна регистрация!',
-      text: 'Вашият акаунт е създаден.',
-    });
-
+    await showSuccess('Registration Successful!', 'Your account has been created.');
     return authData.user;
   } catch (error) {
-    console.error('Register error:', error);
+    await showError('Registration Error', error);
     throw error;
   }
 }
@@ -71,24 +53,12 @@ export async function login(email, password) {
       password,
     });
 
-    if (error) {
-      await Swal.fire({
-        icon: 'error',
-        title: 'Грешка при влизане',
-        text: error.message,
-      });
-      throw error;
-    }
+    if (error) throw error;
 
-    await Swal.fire({
-      icon: 'success',
-      title: 'Успешно влизане!',
-      text: `Добре дошли, ${email}`,
-    });
-
+    await showSuccess('Login Successful!', `Welcome, ${email}`);
     return data.user;
   } catch (error) {
-    console.error('Login error:', error);
+    await showError('Login Error', error);
     throw error;
   }
 }
@@ -101,22 +71,11 @@ export async function logout() {
   try {
     const { error } = await supabase.auth.signOut();
 
-    if (error) {
-      await Swal.fire({
-        icon: 'error',
-        title: 'Грешка при излизане',
-        text: error.message,
-      });
-      throw error;
-    }
+    if (error) throw error;
 
-    await Swal.fire({
-      icon: 'success',
-      title: 'Излязохте успешно',
-      text: 'До скоро!',
-    });
+    await showSuccess('Logout Successful', 'See you soon!');
   } catch (error) {
-    console.error('Logout error:', error);
+    await showError('Logout Error', error);
     throw error;
   }
 }
@@ -127,10 +86,7 @@ export async function logout() {
  */
 export async function getUser() {
   try {
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
+    const { data: { user }, error } = await supabase.auth.getUser();
 
     if (error) {
       console.error('Get user error:', error);

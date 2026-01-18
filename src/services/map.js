@@ -1,9 +1,30 @@
 import supabase from './supabase.js';
+import { isEmpty } from '../utils/helpers.js';
 
 // Studentski Grad center coordinates
 const STUDENTSKI_GRAD_CENTER = {
   lat: 42.6977,
   lng: 23.3219
+};
+
+// Marker icon configurations
+const MARKER_ICONS = {
+  campaign: {
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+    color: 'red'
+  },
+  disposal: {
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+    color: 'green'
+  }
+};
+
+const MARKER_CONFIG = {
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
 };
 
 /**
@@ -13,13 +34,35 @@ const STUDENTSKI_GRAD_CENTER = {
 export function initializeMap() {
   const map = L.map('map').setView([STUDENTSKI_GRAD_CENTER.lat, STUDENTSKI_GRAD_CENTER.lng], 13);
 
-  // Add OpenStreetMap tiles
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: 19,
   }).addTo(map);
 
   return map;
+}
+
+/**
+ * Create a marker with icon and popup
+ * @private
+ * @param {Object} map - Leaflet map instance
+ * @param {number} lat - Latitude
+ * @param {number} lng - Longitude
+ * @param {string} iconType - Type of icon ('campaign' or 'disposal')
+ * @param {string} popupContent - HTML content for popup
+ */
+function createMarker(map, lat, lng, iconType, popupContent) {
+  const iconConfig = MARKER_ICONS[iconType];
+  
+  const marker = L.marker([lat, lng], {
+    icon: L.icon({
+      iconUrl: iconConfig.iconUrl,
+      ...MARKER_CONFIG
+    })
+  }).addTo(map);
+
+  marker.bindPopup(popupContent);
+  return marker;
 }
 
 /**
@@ -33,32 +76,20 @@ export async function loadCampaignMarkers(map) {
       .select('id, title, location_lat, location_lng, status')
       .eq('status', 'active');
 
-    if (error) {
-      console.error('Error fetching campaigns:', error);
-      return;
-    }
+    if (error) throw error;
 
-    campaigns.forEach((campaign) => {
-      const marker = L.marker([campaign.location_lat, campaign.location_lng], {
-        icon: L.icon({
-          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-          iconSize: [25, 41],
-          iconAnchor: [12, 41],
-          popupAnchor: [1, -34],
-          shadowSize: [41, 41]
-        })
-      }).addTo(map);
+    if (isEmpty(campaigns)) return;
 
-      // Add popup with campaign info
-      marker.bindPopup(`
+    campaigns.forEach(campaign => {
+      const popupContent = `
         <strong>${campaign.title}</strong><br>
         Status: ${campaign.status}<br>
-        <small>Campaign ID: ${campaign.id}</small>
-      `);
+        <small>ID: ${campaign.id}</small>
+      `;
+      
+      createMarker(map, campaign.location_lat, campaign.location_lng, 'campaign', popupContent);
     });
 
-    console.log(`Loaded ${campaigns.length} active campaigns`);
   } catch (error) {
     console.error('Error loading campaign markers:', error);
   }
@@ -74,32 +105,20 @@ export async function loadDisposalPointMarkers(map) {
       .from('disposal_points')
       .select('id, name, description, latitude, longitude');
 
-    if (error) {
-      console.error('Error fetching disposal points:', error);
-      return;
-    }
+    if (error) throw error;
 
-    disposalPoints.forEach((point) => {
-      const marker = L.marker([point.latitude, point.longitude], {
-        icon: L.icon({
-          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-          iconSize: [25, 41],
-          iconAnchor: [12, 41],
-          popupAnchor: [1, -34],
-          shadowSize: [41, 41]
-        })
-      }).addTo(map);
+    if (isEmpty(disposalPoints)) return;
 
-      // Add popup with disposal point info
-      marker.bindPopup(`
+    disposalPoints.forEach(point => {
+      const popupContent = `
         <strong>${point.name}</strong><br>
         ${point.description ? `${point.description}<br>` : ''}
         <small>ID: ${point.id}</small>
-      `);
+      `;
+      
+      createMarker(map, point.latitude, point.longitude, 'disposal', popupContent);
     });
 
-    console.log(`Loaded ${disposalPoints.length} disposal points`);
   } catch (error) {
     console.error('Error loading disposal point markers:', error);
   }
