@@ -4,8 +4,539 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - Clean Quarter</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        
+        .navbar {
+            background-color: #dc3545;
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        
+        .navbar a {
+            color: white !important;
+            margin-left: 1rem;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin-top: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .admin-header {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .admin-header h1 {
+            color: #dc3545;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .admin-header p {
+            color: #6c757d;
+            margin: 0.5rem 0 0 0;
+        }
+        
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-card .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #dc3545;
+        }
+        
+        .stat-card .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        
+        .pending-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .pending-section h2 {
+            color: #dc3545;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #dc3545;
+            padding-bottom: 0.5rem;
+        }
+        
+        .table-responsive {
+            margin-top: 1rem;
+        }
+        
+        .table {
+            background: white;
+        }
+        
+        .table thead {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .table thead th {
+            border: none;
+            font-weight: 600;
+            padding: 1rem;
+            vertical-align: middle;
+        }
+        
+        .table tbody td {
+            vertical-align: middle;
+            padding: 1rem;
+        }
+        
+        .photo-thumbnail {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .photo-thumbnail:hover {
+            transform: scale(1.05);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn-approve {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.875rem;
+        }
+        
+        .btn-approve:hover {
+            background-color: #218838;
+        }
+        
+        .btn-reject {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.875rem;
+        }
+        
+        .btn-reject:hover {
+            background-color: #c82333;
+        }
+        
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 300px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        .access-denied {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            text-align: center;
+        }
+        
+        .access-denied h1 {
+            color: #dc3545;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .access-denied p {
+            color: #6c757d;
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+        
+        /* Photo Modal */
+        .photo-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            cursor: pointer;
+        }
+        
+        .photo-modal img {
+            display: block;
+            margin: auto;
+            max-width: 90%;
+            max-height: 90%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .photo-modal .close {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            color: white;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-    <div id="admin-content"></div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/src/pages/admin.html">🛡️ Admin Panel</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="ms-auto">
+                    <a href="/src/pages/dashboard.html">Dashboard</a>
+                    <a href="/src/pages/profile.html">Profile</a>
+                    <a href="#" onclick="handleLogout()">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Loading State -->
+        <div class="loading-spinner" id="loadingState">
+            <div class="spinner-border text-danger" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <!-- Admin Content (hidden until loaded) -->
+        <div id="adminContent" style="display: none;">
+            <!-- Header -->
+            <div class="admin-header">
+                <h1>🛡️ Admin Panel</h1>
+                <p>Review and approve cleanup submissions from users</p>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalPendingCount">0</div>
+                    <div class="stat-label">Pending Reviews</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalApprovedCount">0</div>
+                    <div class="stat-label">Total Approved</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalRejectedCount">0</div>
+                    <div class="stat-label">Total Rejected</div>
+                </div>
+            </div>
+
+            <!-- Pending Participations Section -->
+            <div class="pending-section">
+                <h2>⏳ Pending Approvals</h2>
+                
+                <div id="pendingTableContainer">
+                    <!-- Table will be inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Access Denied State -->
+        <div id="accessDenied" style="display: none;">
+            <div class="access-denied">
+                <h1>🚫 Access Denied</h1>
+                <p>You don't have permission to access this page.</p>
+                <a href="/src/pages/dashboard.html" class="btn btn-primary btn-lg">Go to Dashboard</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Photo Modal -->
+    <div id="photoModal" class="photo-modal" onclick="closePhotoModal()">
+        <span class="close" onclick="closePhotoModal()">&times;</span>
+        <img id="modalPhoto" src="" alt="Full size photo">
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Main Script -->
+    <script type="module">
+        import supabase from '../services/supabase.js';
+
+        // Global variables
+        let currentUser = null;
+        let pendingParticipations = [];
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkAuth();
+            await loadAdminData();
+        });
+
+        /**
+         * Check if user is authenticated and has admin role
+         */
+        async function checkAuth() {
+            const { data: { user }, error } = await supabase.auth.getUser();
+            
+            if (error || !user) {
+                window.location.href = '/index.html';
+                return;
+            }
+            
+            currentUser = user;
+
+            // Fetch user profile to check role
+            const { data: profile, error: profileError } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', user.id)
+                .single();
+
+            if (profileError || !profile || profile.role !== 'admin') {
+                // User is not an admin, show access denied
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('accessDenied').style.display = 'block';
+                return;
+            }
+        }
+
+        /**
+         * Load admin data
+         */
+        async function loadAdminData() {
+            try {
+                // Fetch all participations with related data
+                const { data: allParticipations, error: allError } = await supabase
+                    .from('participations')
+                    .select(`
+                        id,
+                        status,
+                        after_photo_url,
+                        created_at,
+                        user_id,
+                        campaign_id,
+                        campaigns (
+                            id,
+                            title,
+                            before_photo_url
+                        ),
+                        profiles (
+                            username
+                        )
+                    `)
+                    .order('created_at', { ascending: false });
+
+                if (allError) {
+                    throw new Error(`Failed to fetch participations: ${allError.message}`);
+                }
+
+                // Filter pending participations
+                pendingParticipations = allParticipations.filter(p => p.status === 'pending');
+
+                // Calculate statistics
+                const totalApproved = allParticipations.filter(p => p.status === 'approved').length;
+                const totalRejected = allParticipations.filter(p => p.status === 'rejected').length;
+
+                // Update stats
+                document.getElementById('totalPendingCount').textContent = pendingParticipations.length;
+                document.getElementById('totalApprovedCount').textContent = totalApproved;
+                document.getElementById('totalRejectedCount').textContent = totalRejected;
+
+                // Render pending table
+                renderPendingTable();
+
+                // Show admin content
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('adminContent').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error loading admin data:', error);
+
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'Failed to load admin data. Please try again.'
+                });
+
+                document.getElementById('loadingState').style.display = 'none';
+            }
+        }
+
+        /**
+         * Render pending participations table
+         */
+        function renderPendingTable() {
+            const container = document.getElementById('pendingTableContainer');
+
+            if (pendingParticipations.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 4rem; margin-bottom: 1rem;">✅</div>
+                        <h3>No Pending Reviews</h3>
+                        <p>All submissions have been reviewed. Great job!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let tableHTML = `
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Campaign</th>
+                                <th>Before Photo</th>
+                                <th>After Photo</th>
+                                <th>Submitted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            pendingParticipations.forEach(participation => {
+                const username = participation.profiles?.username || 'Unknown User';
+                const campaignTitle = participation.campaigns?.title || 'Unknown Campaign';
+                const beforePhoto = participation.campaigns?.before_photo_url || '';
+                const afterPhoto = participation.after_photo_url || '';
+                const submittedDate = new Date(participation.created_at).toLocaleDateString('bg-BG', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+
+                tableHTML += `
+                    <tr>
+                        <td><strong>${username}</strong></td>
+                        <td>${campaignTitle}</td>
+                        <td>
+                            ${beforePhoto ? `<img src="${beforePhoto}" class="photo-thumbnail" alt="Before" onclick="showPhotoModal('${beforePhoto}')">` : 'N/A'}
+                        </td>
+                        <td>
+                            ${afterPhoto ? `<img src="${afterPhoto}" class="photo-thumbnail" alt="After" onclick="showPhotoModal('${afterPhoto}')">` : 'N/A'}
+                        </td>
+                        <td>${submittedDate}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-approve" onclick="handleApprove('${participation.id}', '${username}')">
+                                    ✅ Approve
+                                </button>
+                                <button class="btn-reject" onclick="handleReject('${participation.id}', '${username}')">
+                                    ❌ Reject
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            container.innerHTML = tableHTML;
+        }
+
+        /**
+         * Show photo in modal
+         */
+        function showPhotoModal(photoUrl) {
+            document.getElementById('modalPhoto').src = photoUrl;
+            document.getElementById('photoModal').style.display = 'block';
+        }
+
+        /**
+         * Close photo modal
+         */
+        function closePhotoModal() {
+            document.getElementById('photoModal').style.display = 'none';
+        }
+
+        /**
+         * Handle logout
+         */
+        async function handleLogout() {
+            const { error } = await supabase.auth.signOut();
+            if (!error) {
+                localStorage.removeItem('user');
+                window.location.href = '/index.html';
+            }
+        }
+
+        // Expose functions to window for onclick handlers
+        window.handleLogout = handleLogout;
+        window.showPhotoModal = showPhotoModal;
+        window.closePhotoModal = closePhotoModal;
+    </script>
 </body>
 </html>
