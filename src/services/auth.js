@@ -10,13 +10,33 @@ import { showSuccess, showError } from '../utils/helpers.js';
  */
 export async function register(email, password, meta) {
   try {
+    // Validate inputs
+    if (!email || !password) {
+      throw new Error('Email and password are required');
+    }
+
+    if (!meta?.neighborhood) {
+      throw new Error('Neighborhood is required');
+    }
+
+    console.log('📝 Starting registration for:', email);
+    
     // Register user with Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
     });
 
-    if (authError) throw authError;
+    if (authError) {
+      console.error('❌ Auth signup error:', authError);
+      throw new Error(authError.message || 'Registration failed');
+    }
+
+    if (!authData?.user?.id) {
+      throw new Error('No user ID returned from registration');
+    }
+
+    console.log('✅ Auth signup successful, user ID:', authData.user.id);
 
     // Create profile in database with metadata
     const userId = authData.user.id;
@@ -30,11 +50,17 @@ export async function register(email, password, meta) {
       },
     ]);
 
-    if (profileError) throw profileError;
+    if (profileError) {
+      console.error('❌ Profile creation error:', profileError);
+      throw new Error(profileError.message || 'Failed to create profile');
+    }
+
+    console.log('✅ Profile created successfully');
 
     await showSuccess('Registration Successful!', 'Your account has been created.');
     return authData.user;
   } catch (error) {
+    console.error('❌ Register error:', error);
     await showError('Registration Error', error);
     throw error;
   }

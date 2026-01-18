@@ -55,10 +55,20 @@ async function handleLogin(e) {
 async function handleRegister(e) {
   e.preventDefault()
   
-  const email = document.getElementById('registerEmail').value
-  const password = document.getElementById('registerPassword').value
-  const passwordConfirm = document.getElementById('registerPasswordConfirm').value
-  const neighborhood = document.getElementById('registerNeighborhood').value
+  const email = document.getElementById('registerEmail')?.value
+  const password = document.getElementById('registerPassword')?.value
+  const passwordConfirm = document.getElementById('registerPasswordConfirm')?.value
+  const neighborhood = document.getElementById('registerNeighborhood')?.value
+
+  // Validate inputs
+  if (!email || !password || !passwordConfirm || !neighborhood) {
+    await Swal.fire({
+      icon: 'error',
+      title: 'Грешка',
+      text: 'Все полета са задължителни!',
+    })
+    return
+  }
 
   // Validate passwords match
   if (password !== passwordConfirm) {
@@ -70,8 +80,22 @@ async function handleRegister(e) {
     return
   }
 
+  // Validate password strength (minimum 6 characters)
+  if (password.length < 6) {
+    await Swal.fire({
+      icon: 'error',
+      title: 'Слаба парола',
+      text: 'Паролата трябва да има минимум 6 символа!',
+    })
+    return
+  }
+
   try {
+    console.log('🔄 Registering user:', { email, neighborhood })
+    
     const user = await register(email, password, { neighborhood })
+    
+    console.log('✅ Registration successful:', user)
     
     // Store user data in localStorage
     localStorage.setItem('user', JSON.stringify(user))
@@ -79,7 +103,14 @@ async function handleRegister(e) {
     // Redirect to dashboard
     window.location.href = '/src/pages/dashboard.html'
   } catch (error) {
-    console.error('Registration failed:', error)
+    console.error('❌ Registration failed:', error)
+    
+    // Show detailed error
+    await Swal.fire({
+      icon: 'error',
+      title: 'Регистрацията неуспешна',
+      text: error.message || 'Възникна грешка при регистрацията. Провери конзолата (F12).',
+    })
   }
 }
 
