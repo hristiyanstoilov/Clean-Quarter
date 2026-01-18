@@ -14,62 +14,105 @@
     <style>
         body {
             background-color: #f8f9fa;
-            padding-top: 56px;
         }
         
         .navbar {
-            background-color: rgba(255, 255, 255, 0.95);
-            z-index: 1000;
+            background-color: #28a745;
         }
         
-        .profile-container {
-            max-width: 800px;
-            margin: 2rem auto;
-            padding: 0 1rem;
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+            color: white !important;
         }
         
+        .navbar a {
+            color: white !important;
+            margin-left: 1rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin-top: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        /* Avatar & Rank */
         .profile-header {
-            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
             color: white;
             padding: 2rem;
             border-radius: 12px;
             margin-bottom: 2rem;
             box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            flex-wrap: wrap;
         }
         
-        .profile-header h1 {
-            margin: 0;
-            font-size: 2rem;
-            font-weight: 600;
-        }
-        
-        .profile-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
+        .avatar-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             gap: 1rem;
-            margin-top: 1.5rem;
         }
         
-        .stat-item {
-            text-align: center;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 1rem;
-            border-radius: 8px;
-            backdrop-filter: blur(10px);
+        .avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            border: 3px solid white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
         
-        .stat-number {
-            font-size: 1.8rem;
-            font-weight: 700;
-            display: block;
-        }
-        
-        .stat-label {
+        .rank-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
             font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        
+        .rank-bronze {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+        
+        .rank-silver {
+            background-color: #e8e8e8;
+            color: #495057;
+        }
+        
+        .rank-gold {
+            background-color: #ffd700;
+            color: #212529;
+        }
+        
+        .profile-info {
+            flex: 1;
+        }
+        
+        .profile-info h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+        
+        .profile-info p {
+            margin: 0.3rem 0;
             opacity: 0.9;
         }
         
-        .settings-section {
+        .section {
             background: white;
             border-radius: 12px;
             padding: 2rem;
@@ -77,176 +120,259 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
         
-        .section-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: #212529;
+        .section h2 {
+            color: #28a745;
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 1rem;
             margin-bottom: 1.5rem;
-            padding-bottom: 0.5rem;
+            font-size: 1.4rem;
+        }
+        
+        .info-row {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .info-value {
+            color: #212529;
+        }
+        
+        /* Transactions Table */
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        .table {
+            margin: 0;
+            background: white;
+        }
+        
+        .table thead {
+            background-color: #f8f9fa;
             border-bottom: 2px solid #28a745;
         }
         
-        .profile-info-row {
-            display: grid;
-            grid-template-columns: 120px 1fr;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            align-items: center;
-        }
-        
-        .profile-info-label {
+        .table thead th {
             font-weight: 600;
-            color: #495057;
-            font-size: 0.95rem;
+            color: #28a745;
+            padding: 1rem;
         }
         
-        .profile-info-value {
-            color: #212529;
-            font-size: 1rem;
+        .table tbody td {
+            padding: 1rem;
+            vertical-align: middle;
         }
         
-        .danger-zone {
-            background-color: #fff5f5;
-            border: 1px solid #f5c2c7;
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin-top: 2rem;
+        .badge-earned {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
         }
         
-        .danger-zone-title {
+        .badge-spent {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .amount-positive {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .amount-negative {
             color: #dc3545;
-            font-weight: 600;
+            font-weight: bold;
+        }
+        
+        /* Participations List */
+        .participation-item {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
             margin-bottom: 1rem;
-            font-size: 1.1rem;
+            border-left: 4px solid #28a745;
         }
         
-        .danger-zone-text {
-            color: #495057;
-            font-size: 0.95rem;
+        .participation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .participation-title {
+            font-weight: bold;
+            color: #212529;
+            font-size: 1.05rem;
+        }
+        
+        .participation-status {
+            font-size: 0.85rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+        }
+        
+        .status-joined {
+            background-color: #e7f3ff;
+            color: #0056b3;
+        }
+        
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-approved {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-rejected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .participation-details {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .participation-details p {
+            margin: 0.3rem 0;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #6c757d;
+        }
+        
+        .empty-state-icon {
+            font-size: 3rem;
             margin-bottom: 1rem;
         }
         
-        .delete-account-btn {
-            background-color: #dc3545;
-            border-color: #dc3545;
-            padding: 0.75rem 1.5rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        
-        .delete-account-btn:hover {
-            background-color: #c82333;
-            border-color: #bd2130;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
-        }
-        
-        .delete-account-btn:active {
-            transform: translateY(0);
-        }
-        
-        .spinner-container {
+        .loading-spinner {
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 300px;
+            height: 400px;
         }
     </style>
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/src/pages/dashboard.html">
-                <strong>Чист Квартал</strong>
-            </a>
+            <a class="navbar-brand" href="/src/pages/dashboard.html">♻️ Clean Quarter</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/src/pages/create-campaign.html">Нова кампания</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/src/pages/rewards.html">Награди</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/src/pages/profile.html">Профил</a>
-                    </li>
-                    <li class="nav-item">
-                        <button class="btn btn-danger btn-sm" id="logoutBtn">Излизане</button>
-                    </li>
-                </ul>
+                <div class="ms-auto">
+                    <a href="/src/pages/dashboard.html">Dashboard</a>
+                    <a href="/src/pages/rewards.html">Rewards</a>
+                    <a href="/src/pages/profile.html">Profile</a>
+                    <a href="#" onclick="handleLogout()">Logout</a>
+                </div>
             </div>
         </div>
     </nav>
 
-    <!-- Profile Content -->
-    <div class="profile-container">
-        <!-- Loading Spinner -->
-        <div id="loadingSpinner" class="spinner-container">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Зареждане...</span>
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Loading State -->
+        <div class="loading-spinner" id="loadingState">
+            <div class="spinner-border text-success" role="status">
+                <span class="visually-hidden">Loading...</span>
             </div>
         </div>
 
-        <!-- Profile Content (Hidden Initially) -->
+        <!-- Profile Content (hidden until loaded) -->
         <div id="profileContent" style="display: none;">
-            <!-- Profile Header -->
+            <!-- Profile Header with Avatar & Rank -->
             <div class="profile-header">
-                <h1 id="userEmail">✉️ user@example.com</h1>
-                <div class="profile-stats">
-                    <div class="stat-item">
-                        <span class="stat-number" id="pointsBalance">0</span>
-                        <span class="stat-label">Точки</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number" id="campaignsCount">0</span>
-                        <span class="stat-label">Кампании</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number" id="participationsCount">0</span>
-                        <span class="stat-label">Участия</span>
+                <div class="avatar-section">
+                    <div class="avatar">👤</div>
+                    <div class="rank-badge" id="rankBadge"></div>
+                </div>
+                <div class="profile-info">
+                    <h1 id="userEmail">-</h1>
+                    <p><strong>Neighborhood:</strong> <span id="neighborhoodDisplay">-</span></p>
+                    <p><strong>Points Balance:</strong> <span id="pointsDisplay" style="font-size: 1.2rem; font-weight: bold; color: #ffd700;">0 ⭐</span></p>
+                </div>
+            </div>
+
+            <!-- Account Info Section -->
+            <div class="section">
+                <h2>📋 Account Information</h2>
+                
+                <div class="info-row">
+                    <div class="info-label">Email:</div>
+                    <div class="info-value" id="emailValue">-</div>
+                </div>
+                
+                <div class="info-row">
+                    <div class="info-label">Neighborhood:</div>
+                    <div class="info-value" id="neighborhoodValue">-</div>
+                </div>
+                
+                <div class="info-row">
+                    <div class="info-label">Points Balance:</div>
+                    <div class="info-value"><strong id="pointsValue">0</strong> ⭐</div>
+                </div>
+                
+                <div class="info-row">
+                    <div class="info-label">Rank:</div>
+                    <div class="info-value"><span id="rankValue">-</span></div>
+                </div>
+            </div>
+
+            <!-- Point Transactions Section -->
+            <div class="section">
+                <h2>💳 Transaction History</h2>
+                
+                <div id="transactionsContainer">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📊</div>
+                        <p>No transactions yet</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Account Settings Section -->
-            <div class="settings-section">
-                <h2 class="section-title">⚙️ Настройки на профила</h2>
+            <!-- My Participations Section -->
+            <div class="section">
+                <h2>🤝 My Participations</h2>
                 
-                <div class="profile-info-row">
-                    <div class="profile-info-label">Имейл:</div>
-                    <div class="profile-info-value" id="displayEmail">—</div>
-                </div>
-                
-                <div class="profile-info-row">
-                    <div class="profile-info-label">Квартал:</div>
-                    <div class="profile-info-value" id="displayNeighborhood">—</div>
-                </div>
-                
-                <div class="profile-info-row">
-                    <div class="profile-info-label">Точки:</div>
-                    <div class="profile-info-value" id="displayPoints">0</div>
-                </div>
-                
-                <div class="profile-info-row">
-                    <div class="profile-info-label">Статус:</div>
-                    <div class="profile-info-value">
-                        <span class="badge bg-success">Активен</span>
+                <div id="participationsContainer">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🎪</div>
+                        <p>You haven't joined any campaigns yet</p>
                     </div>
-                </div>
-
-                <!-- Danger Zone -->
-                <div class="danger-zone">
-                    <div class="danger-zone-title">⚠️ Опасна зона</div>
-                    <div class="danger-zone-text">
-                        Изтриването на профила е необратимо действие. Всички ваши данни, включително кампании, участия и история на точки, ще бъдат окончателно премахнати от базата данни.
-                    </div>
-                    <button class="btn delete-account-btn" id="deleteAccountBtn">
-                        🗑️ Изтрий профил
-                    </button>
                 </div>
             </div>
         </div>
@@ -255,209 +381,293 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Profile Script -->
+    <!-- Main Script -->
     <script type="module">
         import supabase from '../services/supabase.js';
-        import { logout } from '../services/auth.js';
 
+        // Global variables
         let currentUser = null;
+        let userProfile = null;
 
-        // Check if user is logged in
-        window.addEventListener('DOMContentLoaded', async () => {
-            const userJSON = localStorage.getItem('user');
-            if (!userJSON) {
-                window.location.href = '/index.html';
-                return;
-            }
-
-            currentUser = JSON.parse(userJSON);
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkAuth();
             await loadProfileData();
         });
 
-        // Load profile data
+        /**
+         * Check if user is authenticated
+         */
+        async function checkAuth() {
+            const { data: { user }, error } = await supabase.auth.getUser();
+            
+            if (error || !user) {
+                window.location.href = '/index.html';
+                return;
+            }
+            
+            currentUser = user;
+        }
+
+        /**
+         * Load profile data and transactions
+         */
         async function loadProfileData() {
             try {
-                const loadingSpinner = document.getElementById('loadingSpinner');
-                const profileContent = document.getElementById('profileContent');
-
                 // Fetch user profile
                 const { data: profile, error: profileError } = await supabase
                     .from('profiles')
-                    .select('username, neighborhood, points_balance')
+                    .select('*')
                     .eq('id', currentUser.id)
                     .single();
 
                 if (profileError) {
-                    console.error('Error fetching profile:', profileError);
-                    throw profileError;
+                    throw new Error(`Failed to fetch profile: ${profileError.message}`);
                 }
 
-                // Fetch user campaigns count
-                const { data: campaigns, error: campaignsError } = await supabase
-                    .from('campaigns')
-                    .select('id', { count: 'exact' })
-                    .eq('created_by', currentUser.id);
+                userProfile = profile;
 
-                if (campaignsError) console.error('Error fetching campaigns:', campaignsError);
+                // Display profile info
+                document.getElementById('userEmail').textContent = currentUser.email;
+                document.getElementById('emailValue').textContent = currentUser.email;
+                document.getElementById('neighborhoodDisplay').textContent = profile.neighborhood || 'Not set';
+                document.getElementById('neighborhoodValue').textContent = profile.neighborhood || 'Not set';
+                document.getElementById('pointsDisplay').textContent = (profile.points_balance || 0) + ' ⭐';
+                document.getElementById('pointsValue').textContent = profile.points_balance || 0;
 
-                // Fetch user participations count
-                const { data: participations, error: participationsError } = await supabase
-                    .from('participations')
-                    .select('id', { count: 'exact' })
-                    .eq('user_id', currentUser.id);
+                // Display rank
+                displayRank(profile.points_balance || 0);
 
-                if (participationsError) console.error('Error fetching participations:', participationsError);
+                // Load transactions
+                await loadTransactions();
 
-                // Update UI
-                document.getElementById('userEmail').textContent = `✉️ ${currentUser.email}`;
-                document.getElementById('displayEmail').textContent = currentUser.email;
-                document.getElementById('displayNeighborhood').textContent = profile?.neighborhood || 'Не е зададено';
-                document.getElementById('displayPoints').textContent = profile?.points_balance || 0;
-                document.getElementById('pointsBalance').textContent = profile?.points_balance || 0;
-                document.getElementById('campaignsCount').textContent = campaigns?.length || 0;
-                document.getElementById('participationsCount').textContent = participations?.length || 0;
+                // Load participations
+                await loadParticipations();
 
-                // Hide loading spinner and show content
-                loadingSpinner.style.display = 'none';
-                profileContent.style.display = 'block';
+                // Show content
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('profileContent').style.display = 'block';
+
             } catch (error) {
-                console.error('Error loading profile data:', error);
-                Swal.fire({
-                    title: 'Грешка',
-                    text: 'Не можахме да зареждим данните на профила. Опитайте отново.',
-                    icon: 'error',
-                    confirmButtonColor: '#28a745'
-                });
-            }
-        }
+                console.error('Error loading profile:', error);
 
-        // Delete Account Button Handler
-        document.getElementById('deleteAccountBtn').addEventListener('click', async () => {
-            // First confirmation
-            const result1 = await Swal.fire({
-                title: 'Сигурен ли си?',
-                text: 'Това действие не може да бъде отменено. Всички твои данни ще бъдат изтрити.',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#dc3545',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Да, изтрий профила ми',
-                cancelButtonText: 'Отказ'
-            });
-
-            if (!result1.isConfirmed) return;
-
-            // Second confirmation with password verification
-            const result2 = await Swal.fire({
-                title: 'Потвърди с имейл',
-                text: 'За безопасност, моля потвърди със своя имейл адрес:',
-                input: 'email',
-                inputValue: currentUser.email,
-                inputAttributes: {
-                    autocapitalize: 'off',
-                    autocorrect: 'off'
-                },
-                showCancelButton: true,
-                confirmButtonColor: '#dc3545',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Да, изтрий всичко',
-                cancelButtonText: 'Отказ',
-                inputValidator: (value) => {
-                    if (value !== currentUser.email) {
-                        return 'Имейлът не съответства на регистрирания.';
-                    }
-                }
-            });
-
-            if (!result2.isConfirmed) return;
-
-            // Perform deletion
-            await deleteUserAccount();
-        });
-
-        // Delete user account and all related data
-        async function deleteUserAccount() {
-            try {
-                // Show loading
-                Swal.fire({
-                    title: 'Изтривам профила...',
-                    icon: 'info',
-                    allowOutsideClick: false,
-                    didOpen: () => Swal.showLoading()
-                });
-
-                const userId = currentUser.id;
-
-                // 1. Delete participations
-                const { error: partError } = await supabase
-                    .from('participations')
-                    .delete()
-                    .eq('user_id', userId);
-
-                if (partError) throw new Error('Грешка при изтриване на участия: ' + partError.message);
-
-                // 2. Delete campaigns (will cascade delete related participations if any)
-                const { error: campaignError } = await supabase
-                    .from('campaigns')
-                    .delete()
-                    .eq('created_by', userId);
-
-                if (campaignError) throw new Error('Грешка при изтриване на кампании: ' + campaignError.message);
-
-                // 3. Delete point transactions
-                const { error: transError } = await supabase
-                    .from('point_transactions')
-                    .delete()
-                    .eq('user_id', userId);
-
-                if (transError) throw new Error('Грешка при изтриване на история: ' + transError.message);
-
-                // 4. Delete profile
-                const { error: profileError } = await supabase
-                    .from('profiles')
-                    .delete()
-                    .eq('id', userId);
-
-                if (profileError) throw new Error('Грешка при изтриване на профила: ' + profileError.message);
-
-                // 5. Sign out from Supabase Auth
-                const { error: signoutError } = await supabase.auth.signOut();
-                if (signoutError) console.warn('Signout warning:', signoutError);
-
-                // Clear local storage
-                localStorage.removeItem('user');
-
-                // Success message
                 await Swal.fire({
-                    title: 'Профилът е изтрит',
-                    text: 'Всички твои данни са успешно премахнати. Ще бъдеш пренасочен към начална страница.',
-                    icon: 'success',
-                    confirmButtonColor: '#28a745'
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'Failed to load profile. Please try again.'
                 });
 
-                // Redirect to home
-                window.location.href = '/index.html';
-            } catch (error) {
-                console.error('Error deleting account:', error);
-                Swal.fire({
-                    title: 'Грешка при изтриване',
-                    text: error.message || 'Не можахме да изтрием профила. Опитайте отново по-късно.',
-                    icon: 'error',
-                    confirmButtonColor: '#28a745'
-                });
+                document.getElementById('loadingState').style.display = 'none';
             }
         }
 
-        // Logout button handler
-        document.getElementById('logoutBtn').addEventListener('click', async () => {
+        /**
+         * Display rank based on points
+         */
+        function displayRank(points) {
+            let rank, rankText, emoji;
+
+            if (points < 50) {
+                rank = 'bronze';
+                rankText = 'Bronze';
+                emoji = '🥉';
+            } else if (points < 100) {
+                rank = 'silver';
+                rankText = 'Silver';
+                emoji = '🥈';
+            } else {
+                rank = 'gold';
+                rankText = 'Gold';
+                emoji = '🥇';
+            }
+
+            const rankBadge = document.getElementById('rankBadge');
+            rankBadge.className = `rank-badge rank-${rank}`;
+            rankBadge.innerHTML = `<span>${emoji}</span> ${rankText} (${points} ⭐)`;
+
+            document.getElementById('rankValue').textContent = `${rankText} - ${points} points`;
+        }
+
+        /**
+         * Load and display transactions
+         */
+        async function loadTransactions() {
             try {
-                await logout();
+                const { data: transactions, error } = await supabase
+                    .from('point_transactions')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .order('created_at', { ascending: false })
+                    .limit(20);
+
+                if (error) throw error;
+
+                if (!transactions || transactions.length === 0) {
+                    document.getElementById('transactionsContainer').innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📊</div>
+                            <p>No transactions yet</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = `
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Reason</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                transactions.forEach(transaction => {
+                    const date = new Date(transaction.created_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+
+                    const typeBadge = transaction.type === 'earned'
+                        ? '<span class="badge-earned">✓ Earned</span>'
+                        : '<span class="badge-spent">✗ Spent</span>';
+
+                    const amount = transaction.type === 'earned'
+                        ? `<span class="amount-positive">+${transaction.amount}</span>`
+                        : `<span class="amount-negative">${transaction.amount}</span>`;
+
+                    html += `
+                        <tr>
+                            <td>${date}</td>
+                            <td>${typeBadge}</td>
+                            <td>${amount} ⭐</td>
+                            <td>${transaction.reason}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                document.getElementById('transactionsContainer').innerHTML = html;
+
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+                document.getElementById('transactionsContainer').innerHTML = `
+                    <div class="empty-state" style="color: #dc3545;">
+                        <p>Failed to load transactions</p>
+                    </div>
+                `;
+            }
+        }
+
+        /**
+         * Load and display user participations
+         */
+        async function loadParticipations() {
+            try {
+                const { data: participations, error } = await supabase
+                    .from('participations')
+                    .select(`
+                        id,
+                        status,
+                        created_at,
+                        campaigns (
+                            id,
+                            title,
+                            neighborhood
+                        )
+                    `)
+                    .eq('user_id', currentUser.id)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (!participations || participations.length === 0) {
+                    document.getElementById('participationsContainer').innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🎪</div>
+                            <p>You haven't joined any campaigns yet</p>
+                            <a href="/src/pages/dashboard.html" style="color: #28a745; text-decoration: none; font-weight: bold;">Browse campaigns →</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+
+                participations.forEach(participation => {
+                    const campaign = participation.campaigns;
+                    const date = new Date(participation.created_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+
+                    let statusBadge = '';
+                    switch (participation.status) {
+                        case 'joined':
+                            statusBadge = '<span class="participation-status status-joined">📝 Joined</span>';
+                            break;
+                        case 'pending':
+                            statusBadge = '<span class="participation-status status-pending">⏳ Pending</span>';
+                            break;
+                        case 'approved':
+                            statusBadge = '<span class="participation-status status-approved">✅ Approved</span>';
+                            break;
+                        case 'rejected':
+                            statusBadge = '<span class="participation-status status-rejected">❌ Rejected</span>';
+                            break;
+                    }
+
+                    html += `
+                        <div class="participation-item">
+                            <div class="participation-header">
+                                <div class="participation-title">${campaign?.title || 'Unknown Campaign'}</div>
+                                ${statusBadge}
+                            </div>
+                            <div class="participation-details">
+                                <p><strong>Neighborhood:</strong> ${campaign?.neighborhood || 'Unknown'}</p>
+                                <p><strong>Joined:</strong> ${date}</p>
+                                <p><strong>Status:</strong> ${participation.status.charAt(0).toUpperCase() + participation.status.slice(1)}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                document.getElementById('participationsContainer').innerHTML = html;
+
+            } catch (error) {
+                console.error('Error loading participations:', error);
+                document.getElementById('participationsContainer').innerHTML = `
+                    <div class="empty-state" style="color: #dc3545;">
+                        <p>Failed to load participations</p>
+                    </div>
+                `;
+            }
+        }
+
+        /**
+         * Handle logout
+         */
+        async function handleLogout() {
+            const { error } = await supabase.auth.signOut();
+            if (!error) {
                 localStorage.removeItem('user');
                 window.location.href = '/index.html';
-            } catch (error) {
-                console.error('Logout error:', error);
             }
-        });
+        }
+
+        // Expose functions to window for onclick handlers
+        window.handleLogout = handleLogout;
     </script>
 </body>
 </html>

@@ -1,6 +1,10 @@
 // Main entry point for the application
 import './assets/style.css'
 import { login, register } from './services/auth.js'
+import { initializePWA } from './services/pwa.js'
+
+// Initialize PWA
+initializePWA()
 
 // Check if user is logged in
 const currentUser = JSON.parse(localStorage.getItem('user'))

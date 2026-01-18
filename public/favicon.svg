@@ -1,0 +1,24 @@
+<!-- Favicon for Clean Quarter -->
+<!-- This is a simple SVG favicon. In production, use proper PNG icons -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <!-- Background -->
+  <rect width="192" height="192" fill="#28a745" rx="40"/>
+  
+  <!-- Recycle symbol -->
+  <g transform="translate(96, 96)">
+    <!-- Outer circle -->
+    <circle cx="0" cy="0" r="60" fill="none" stroke="white" stroke-width="8"/>
+    
+    <!-- Arrow 1 (top right) -->
+    <path d="M 42,-24 L 52,-4 L 32,-14 Z" fill="white"/>
+    <path d="M 45,-30 Q 55,-20 50,-5" stroke="white" stroke-width="6" fill="none" stroke-linecap="round"/>
+    
+    <!-- Arrow 2 (bottom right) -->
+    <path d="M 42,24 L 32,14 L 52,4 Z" fill="white"/>
+    <path d="M 45,30 Q 35,20 40,5" stroke="white" stroke-width="6" fill="none" stroke-linecap="round"/>
+    
+    <!-- Arrow 3 (left) -->
+    <path d="M -52,0 L -42,-10 L -42,10 Z" fill="white"/>
+    <path d="M -55,0 Q -45,-15 -35,-10" stroke="white" stroke-width="6" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>
