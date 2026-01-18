@@ -523,6 +523,198 @@
         }
 
         /**
+         * Handle approve action
+         */
+        async function handleApprove(participationId, username) {
+            try {
+                // Find the participation record
+                const participation = pendingParticipations.find(p => p.id === participationId);
+                if (!participation) {
+                    throw new Error('Participation not found');
+                }
+
+                // Show confirmation
+                const result = await Swal.fire({
+                    title: 'Approve Submission?',
+                    text: `Award 20 points to ${username}?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, Approve',
+                    cancelButtonText: 'Cancel'
+                });
+
+                if (!result.isConfirmed) {
+                    return;
+                }
+
+                // Show loading
+                await Swal.fire({
+                    title: 'Processing...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Get user ID from participation
+                const userId = participation.user_id;
+
+                // Update participation status to 'approved'
+                const { error: updateParticipationError } = await supabase
+                    .from('participations')
+                    .update({ status: 'approved' })
+                    .eq('id', participationId);
+
+                if (updateParticipationError) {
+                    throw new Error(`Failed to update participation: ${updateParticipationError.message}`);
+                }
+
+                // Get current user points
+                const { data: profile, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('points_balance')
+                    .eq('id', userId)
+                    .single();
+
+                if (profileError) {
+                    throw new Error(`Failed to fetch user profile: ${profileError.message}`);
+                }
+
+                const POINTS_AWARDED = 20;
+                const newPointsBalance = (profile.points_balance || 0) + POINTS_AWARDED;
+
+                // Update user points
+                const { error: updatePointsError } = await supabase
+                    .from('profiles')
+                    .update({ points_balance: newPointsBalance })
+                    .eq('id', userId);
+
+                if (updatePointsError) {
+                    throw new Error(`Failed to update points: ${updatePointsError.message}`);
+                }
+
+                // Record transaction
+                const { error: transactionError } = await supabase
+                    .from('point_transactions')
+                    .insert([{
+                        user_id: userId,
+                        amount: POINTS_AWARDED,
+                        type: 'earned',
+                        reason: `Cleanup proof approved - ${participation.campaigns?.title || 'Campaign'}`,
+                        participation_id: participationId
+                    }]);
+
+                if (transactionError) {
+                    console.warn('Warning: Transaction record failed:', transactionError);
+                }
+
+                Swal.close();
+
+                // Show success
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Approved!',
+                    text: `${username} earned 20 points ✅`,
+                    confirmButtonColor: '#28a745'
+                });
+
+                // Reload admin data
+                await loadAdminData();
+
+            } catch (error) {
+                console.error('Error approving participation:', error);
+
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'Failed to approve. Please try again.'
+                });
+            }
+        }
+
+        /**
+         * Handle reject action
+         */
+        async function handleReject(participationId, username) {
+            try {
+                // Find the participation record
+                const participation = pendingParticipations.find(p => p.id === participationId);
+                if (!participation) {
+                    throw new Error('Participation not found');
+                }
+
+                // Prompt for rejection reason
+                const result = await Swal.fire({
+                    title: 'Reject Submission?',
+                    input: 'textarea',
+                    inputLabel: 'Reason for rejection (optional)',
+                    inputPlaceholder: 'e.g., Photo quality is poor, location unclear, etc.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, Reject',
+                    cancelButtonText: 'Cancel',
+                    inputAttributes: {
+                        'aria-label': 'Rejection reason'
+                    }
+                });
+
+                if (!result.isConfirmed) {
+                    return;
+                }
+
+                const rejectionReason = result.value || 'No reason provided';
+
+                // Show loading
+                await Swal.fire({
+                    title: 'Processing...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Update participation status to 'rejected'
+                const { error: updateError } = await supabase
+                    .from('participations')
+                    .update({ 
+                        status: 'rejected',
+                        rejection_reason: rejectionReason
+                    })
+                    .eq('id', participationId);
+
+                if (updateError) {
+                    throw new Error(`Failed to reject participation: ${updateError.message}`);
+                }
+
+                Swal.close();
+
+                // Show success
+                await Swal.fire({
+                    icon: 'info',
+                    title: 'Rejected',
+                    text: `${username}'s submission was rejected.`,
+                    confirmButtonColor: '#dc3545'
+                });
+
+                // Reload admin data
+                await loadAdminData();
+
+            } catch (error) {
+                console.error('Error rejecting participation:', error);
+
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'Failed to reject. Please try again.'
+                });
+            }
+        }
+
+        /**
          * Handle logout
          */
         async function handleLogout() {
@@ -535,6 +727,8 @@
 
         // Expose functions to window for onclick handlers
         window.handleLogout = handleLogout;
+        window.handleApprove = handleApprove;
+        window.handleReject = handleReject;
         window.showPhotoModal = showPhotoModal;
         window.closePhotoModal = closePhotoModal;
     </script>
