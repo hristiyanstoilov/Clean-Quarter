@@ -435,26 +435,9 @@
                 submitBtn.disabled = true;
                 spinner.style.display = 'inline';
                 
-                // Get current user
-                const { data: { user }, error: userError } = await supabase.auth.getUser();
-                if (userError || !user) {
-                    throw new Error('User not authenticated');
-                }
-                
-                // Get user profile to fetch neighborhood if not selected
-                const { data: profile, error: profileError } = await supabase
-                    .from('profiles')
-                    .select('neighborhood')
-                    .eq('id', user.id)
-                    .single();
-                
-                if (profileError) {
-                    throw new Error('Failed to fetch user profile');
-                }
-                
                 // Collect form data
-                const title = document.getElementById('campaignTitle').value;
-                const description = document.getElementById('campaignDescription').value;
+                const title = document.getElementById('campaignTitle').value.trim();
+                const description = document.getElementById('campaignDescription').value.trim();
                 const neighborhood = document.getElementById('campaignNeighborhood').value;
                 const { lat, lng } = selectedCoordinates;
                 
@@ -463,49 +446,102 @@
                     throw new Error('Please fill all fields and select a location on the map');
                 }
                 
-                // Upload before photo
-                await Swal.fire({
-                    title: 'Uploading photo...',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
+                // Check if we're in demo mode
+                const localUser = localStorage.getItem('user');
+                const isDemoMode = localUser && currentUser.email === 'admin@demo.com';
+                
+                if (isDemoMode) {
+                    // DEMO MODE: Create campaign in localStorage
+                    const demoCampaigns = JSON.parse(localStorage.getItem('campaigns') || '[]');
+                    const newCampaignId = 'demo_' + Date.now();
+                    
+                    // Create demo photo URL (SVG data URL)
+                    const beforePhotoUrl = 'data:image/svg+xml;base64,' + btoa(`
+                        <svg xmlns="http://www.w3.org/2000/svg" width="400" height="300">
+                            <rect width="400" height="300" fill="#90EE90"/>
+                            <text x="200" y="150" font-size="24" text-anchor="middle" fill="#333">Before Photo</text>
+                            <text x="200" y="180" font-size="16" text-anchor="middle" fill="#666">${title}</text>
+                        </svg>
+                    `);
+                    
+                    const newCampaign = {
+                        id: newCampaignId,
+                        title,
+                        description,
+                        location_lat: lat,
+                        location_lng: lng,
+                        before_photo_url: beforePhotoUrl,
+                        created_by: currentUser.id,
+                        creator_username: currentUser.username || 'admin_demo',
+                        neighborhood,
+                        status: 'active',
+                        created_at: new Date().toISOString(),
+                        participation_count: 0
+                    };
+                    
+                    demoCampaigns.push(newCampaign);
+                    localStorage.setItem('campaigns', JSON.stringify(demoCampaigns));
+                    
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Campaign Created!',
+                        text: 'Your cleanup campaign has been created successfully.',
+                        confirmButtonText: 'View Campaign'
+                    });
+                    
+                    window.location.href = './dashboard.html';
+                    
+                } else {
+                    // REAL MODE: Use Supabase
+                    const { data: { user }, error: userError } = await supabase.auth.getUser();
+                    if (userError || !user) {
+                        throw new Error('User not authenticated');
                     }
-                });
-                
-                const beforePhotoUrl = await uploadCampaignPhoto(beforePhotoFile, 'before');
-                
-                Swal.close();
-                
-                // Insert campaign into database
-                const { data: campaign, error: campaignError } = await supabase
-                    .from('campaigns')
-                    .insert([
-                        {
-                            title,
-                            description,
-                            location_lat: lat,
-                            location_lng: lng,
-                            before_photo_url: beforePhotoUrl,
-                            created_by: user.id,
-                            neighborhood: neighborhood,
-                            status: 'active'
+                    
+                    // Upload before photo
+                    await Swal.fire({
+                        title: 'Uploading photo...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
                         }
-                    ])
-                    .select();
-                
-                if (campaignError) {
-                    throw new Error(`Failed to create campaign: ${campaignError.message}`);
+                    });
+                    
+                    const beforePhotoUrl = await uploadCampaignPhoto(beforePhotoFile, 'before');
+                    
+                    Swal.close();
+                    
+                    // Insert campaign into database
+                    const { data: campaign, error: campaignError } = await supabase
+                        .from('campaigns')
+                        .insert([
+                            {
+                                title,
+                                description,
+                                location_lat: lat,
+                                location_lng: lng,
+                                before_photo_url: beforePhotoUrl,
+                                created_by: user.id,
+                                neighborhood: neighborhood,
+                                status: 'active'
+                            }
+                        ])
+                        .select();
+                    
+                    if (campaignError) {
+                        throw new Error(`Failed to create campaign: ${campaignError.message}`);
+                    }
+                    
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Campaign Created!',
+                        text: 'Your cleanup campaign has been created successfully.',
+                        confirmButtonText: 'View Campaign'
+                    });
+                    
+                    // Redirect to dashboard
+                    window.location.href = './dashboard.html';
                 }
-                
-                await Swal.fire({
-                    icon: 'success',
-                    title: 'Campaign Created!',
-                    text: 'Your cleanup campaign has been created successfully.',
-                    confirmButtonText: 'View Campaign'
-                });
-                
-                // Redirect to dashboard
-                window.location.href = './dashboard.html';
                 
             } catch (error) {
                 

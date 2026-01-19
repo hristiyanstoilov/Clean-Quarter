@@ -363,6 +363,26 @@
          * Check if user is authenticated and has admin role
          */
         async function checkAuth() {
+            // Check for demo mode user first
+            const localUser = localStorage.getItem('user');
+            if (localUser) {
+                try {
+                    currentUser = JSON.parse(localUser);
+                    // Check if demo user is admin
+                    if (currentUser.role === 'admin') {
+                        return; // Demo admin, allow access
+                    } else {
+                        // Demo user but not admin
+                        document.getElementById('loadingState').style.display = 'none';
+                        document.getElementById('accessDenied').style.display = 'block';
+                        return;
+                    }
+                } catch (e) {
+                    console.error('Error parsing local user', e);
+                }
+            }
+            
+            // Check Supabase auth for real users
             const { data: { user }, error } = await supabase.auth.getUser();
             
             if (error || !user) {
@@ -392,32 +412,66 @@
          */
         async function loadAdminData() {
             try {
-                // Fetch all participations with related data
-                const { data: allParticipations, error: allError } = await supabase
-                    .from('participations')
-                    .select(`
-                        id,
-                        status,
-                        after_photo_url,
-                        created_at,
-                        user_id,
-                        campaign_id,
-                        campaigns (
+                // Check if we're in demo mode
+                const localUser = localStorage.getItem('user');
+                const isDemoMode = localUser && currentUser.role === 'admin';
+
+                let allParticipationsData = [];
+
+                if (isDemoMode) {
+                    // DEMO MODE: Load from localStorage
+                    const participations = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_PARTICIPATIONS') || '[]');
+                    const campaigns = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_CAMPAIGNS') || '[]');
+                    const users = [currentUser]; // In demo, only admin user exists
+
+                    // Join participations with campaigns and users
+                    allParticipationsData = participations.map(p => {
+                        const campaign = campaigns.find(c => c.id === p.campaign_id);
+                        return {
+                            id: p.id,
+                            status: p.status,
+                            after_photo_url: p.after_photo_url,
+                            created_at: p.created_at,
+                            user_id: p.user_id,
+                            campaign_id: p.campaign_id,
+                            campaigns: campaign ? {
+                                id: campaign.id,
+                                title: campaign.title,
+                                before_photo_url: campaign.before_photo_url
+                            } : null,
+                            profiles: {
+                                username: currentUser.username // Demo user
+                            }
+                        };
+                    });
+                } else {
+                    // REAL MODE: Fetch from Supabase
+                    const { data: allParticipations, error: allError } = await supabase
+                        .from('participations')
+                        .select(`
                             id,
-                            title,
-                            before_photo_url
-                        ),
-                        profiles (
-                            username
-                        )
-                    `)
-                    .order('created_at', { ascending: false });
+                            status,
+                            after_photo_url,
+                            created_at,
+                            user_id,
+                            campaign_id,
+                            campaigns (
+                                id,
+                                title,
+                                before_photo_url
+                            ),
+                            profiles (
+                                username
+                            )
+                        `)
+                        .order('created_at', { ascending: false });
 
-                if (allError) {
-                    throw new Error(`Failed to fetch participations: ${allError.message}`);
+                    if (allError) {
+                        throw new Error(`Failed to fetch participations: ${allError.message}`);
+                    }
+
+                    allParticipationsData = allParticipations || [];
                 }
-
-                const allParticipationsData = allParticipations || [];
 
                 // Filter pending participations
                 pendingParticipations = allParticipationsData.filter(p => p.status === 'pending');
@@ -578,67 +632,110 @@
                     }
                 });
 
-                // Get user ID from participation
-                const userId = participation.user_id;
-
-                // Update participation status to 'approved'
-                const { error: updateParticipationError } = await supabase
-                    .from('participations')
-                    .update({ status: 'approved' })
-                    .eq('id', participationId);
-
-                if (updateParticipationError) {
-                    throw new Error(`Failed to update participation: ${updateParticipationError.message}`);
-                }
-
-                // Get current user points
-                const { data: profile, error: profileError } = await supabase
-                    .from('profiles')
-                    .select('points_balance')
-                    .eq('id', userId)
-                    .single();
-
-                if (profileError) {
-                    throw new Error(`Failed to fetch user profile: ${profileError.message}`);
-                }
-
+                // Check if we're in demo mode
+                const localUser = localStorage.getItem('user');
+                const isDemoMode = localUser && currentUser.role === 'admin';
                 const POINTS_AWARDED = 20;
-                const newPointsBalance = (profile.points_balance || 0) + POINTS_AWARDED;
 
-                // Update user points
-                const { error: updatePointsError } = await supabase
-                    .from('profiles')
-                    .update({ points_balance: newPointsBalance })
-                    .eq('id', userId);
+                if (isDemoMode) {
+                    // DEMO MODE: Update localStorage
+                    const participations = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_PARTICIPATIONS') || '[]');
+                    const transactions = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_TRANSACTIONS') || '[]');
 
-                if (updatePointsError) {
-                    throw new Error(`Failed to update points: ${updatePointsError.message}`);
-                }
+                    // Update participation status
+                    const pIndex = participations.findIndex(p => p.id === participationId);
+                    if (pIndex !== -1) {
+                        participations[pIndex].status = 'approved';
+                        localStorage.setItem('CLEAN_QUARTER_DEMO_PARTICIPATIONS', JSON.stringify(participations));
+                    }
 
-                // Record transaction
-                const { error: transactionError } = await supabase
-                    .from('point_transactions')
-                    .insert([{
-                        user_id: userId,
+                    // Update demo user points (admin is the only user in demo)
+                    currentUser.points_balance = (currentUser.points_balance || 0) + POINTS_AWARDED;
+                    localStorage.setItem('user', JSON.stringify(currentUser));
+
+                    // Add transaction record
+                    const newTransaction = {
+                        id: 'demo_trans_' + Date.now(),
+                        user_id: currentUser.id,
                         amount: POINTS_AWARDED,
                         type: 'earned',
                         reason: `Cleanup proof approved - ${participation.campaigns?.title || 'Campaign'}`,
-                        participation_id: participationId
-                    }]);
+                        participation_id: participationId,
+                        created_at: new Date().toISOString()
+                    };
+                    transactions.push(newTransaction);
+                    localStorage.setItem('CLEAN_QUARTER_DEMO_TRANSACTIONS', JSON.stringify(transactions));
 
-                if (transactionError) {
-                    console.warn('Warning: Transaction record failed', transactionError.message);
+                    Swal.close();
+
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Approved!',
+                        text: `${username} earned 20 points ✅`,
+                        confirmButtonColor: '#28a745'
+                    });
+
+                } else {
+                    // REAL MODE: Use Supabase
+                    const userId = participation.user_id;
+
+                    // Update participation status to 'approved'
+                    const { error: updateParticipationError } = await supabase
+                        .from('participations')
+                        .update({ status: 'approved' })
+                        .eq('id', participationId);
+
+                    if (updateParticipationError) {
+                        throw new Error(`Failed to update participation: ${updateParticipationError.message}`);
+                    }
+
+                    // Get current user points
+                    const { data: profile, error: profileError } = await supabase
+                        .from('profiles')
+                        .select('points_balance')
+                        .eq('id', userId)
+                        .single();
+
+                    if (profileError) {
+                        throw new Error(`Failed to fetch user profile: ${profileError.message}`);
+                    }
+
+                    const newPointsBalance = (profile.points_balance || 0) + POINTS_AWARDED;
+
+                    // Update user points
+                    const { error: updatePointsError } = await supabase
+                        .from('profiles')
+                        .update({ points_balance: newPointsBalance })
+                        .eq('id', userId);
+
+                    if (updatePointsError) {
+                        throw new Error(`Failed to update points: ${updatePointsError.message}`);
+                    }
+
+                    // Record transaction
+                    const { error: transactionError } = await supabase
+                        .from('point_transactions')
+                        .insert([{
+                            user_id: userId,
+                            amount: POINTS_AWARDED,
+                            type: 'earned',
+                            reason: `Cleanup proof approved - ${participation.campaigns?.title || 'Campaign'}`,
+                            participation_id: participationId
+                        }]);
+
+                    if (transactionError) {
+                        console.warn('Warning: Transaction record failed', transactionError.message);
+                    }
+
+                    Swal.close();
+
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Approved!',
+                        text: `${username} earned 20 points ✅`,
+                        confirmButtonColor: '#28a745'
+                    });
                 }
-
-                Swal.close();
-
-                // Show success
-                await Swal.fire({
-                    icon: 'success',
-                    title: 'Approved!',
-                    text: `${username} earned 20 points ✅`,
-                    confirmButtonColor: '#28a745'
-                });
 
                 // Reload admin data
                 await loadAdminData();
@@ -696,28 +793,54 @@
                     }
                 });
 
-                // Update participation status to 'rejected'
-                const { error: updateError } = await supabase
-                    .from('participations')
-                    .update({ 
-                        status: 'rejected',
-                        rejection_reason: rejectionReason
-                    })
-                    .eq('id', participationId);
+                // Check if we're in demo mode
+                const localUser = localStorage.getItem('user');
+                const isDemoMode = localUser && currentUser.role === 'admin';
 
-                if (updateError) {
-                    throw new Error(`Failed to reject participation: ${updateError.message}`);
+                if (isDemoMode) {
+                    // DEMO MODE: Update localStorage
+                    const participations = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_PARTICIPATIONS') || '[]');
+
+                    // Update participation status
+                    const pIndex = participations.findIndex(p => p.id === participationId);
+                    if (pIndex !== -1) {
+                        participations[pIndex].status = 'rejected';
+                        participations[pIndex].rejection_reason = rejectionReason;
+                        localStorage.setItem('CLEAN_QUARTER_DEMO_PARTICIPATIONS', JSON.stringify(participations));
+                    }
+
+                    Swal.close();
+
+                    await Swal.fire({
+                        icon: 'info',
+                        title: 'Rejected',
+                        text: `${username}'s submission was rejected.`,
+                        confirmButtonColor: '#dc3545'
+                    });
+
+                } else {
+                    // REAL MODE: Use Supabase
+                    const { error: updateError } = await supabase
+                        .from('participations')
+                        .update({ 
+                            status: 'rejected',
+                            rejection_reason: rejectionReason
+                        })
+                        .eq('id', participationId);
+
+                    if (updateError) {
+                        throw new Error(`Failed to reject participation: ${updateError.message}`);
+                    }
+
+                    Swal.close();
+
+                    await Swal.fire({
+                        icon: 'info',
+                        title: 'Rejected',
+                        text: `${username}'s submission was rejected.`,
+                        confirmButtonColor: '#dc3545'
+                    });
                 }
-
-                Swal.close();
-
-                // Show success
-                await Swal.fire({
-                    icon: 'info',
-                    title: 'Rejected',
-                    text: `${username}'s submission was rejected.`,
-                    confirmButtonColor: '#dc3545'
-                });
 
                 // Reload admin data
                 await loadAdminData();
