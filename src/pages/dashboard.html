@@ -138,16 +138,22 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/src/pages/create-campaign.html">Нова кампания</a>
+                        <a class="nav-link" href="/src/pages/create-campaign.html" data-i18n="nav.createCampaign">Нова кампания</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/src/pages/rewards.html">Награди</a>
+                        <a class="nav-link" href="/src/pages/rewards.html" data-i18n="nav.rewards">Награди</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/src/pages/profile.html">Профил</a>
+                        <a class="nav-link" href="/src/pages/profile.html" data-i18n="nav.profile">Профил</a>
                     </li>
                     <li class="nav-item">
-                        <button class="btn btn-danger btn-sm" id="logoutBtn">Излизане</button>
+                        <select id="languageSelector" class="form-select form-select-sm" style="max-width: 150px; margin-right: 0.5rem;">
+                            <option value="bg">🇧🇬 Български</option>
+                            <option value="en">🇬🇧 English</option>
+                        </select>
+                    </li>
+                    <li class="nav-item">
+                        <button class="btn btn-danger btn-sm" id="logoutBtn" data-i18n="nav.logout">Излизане</button>
                     </li>
                 </ul>
             </div>
@@ -163,13 +169,13 @@
         <div class="campaigns-section">
             <div class="container-fluid">
                 <div class="campaigns-header">
-                    <h2 class="mb-4">Почистване в близост до вас</h2>
+                    <h2 class="mb-4" data-i18n="dashboard.nearYou">Почистване в близост до вас</h2>
                 </div>
 
                 <!-- Loading Spinner -->
                 <div id="loadingSpinner" class="spinner-container">
                     <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Зареждане...</span>
+                        <span class="visually-hidden" data-i18n="common.loading">Зареждане...</span>
                     </div>
                 </div>
 
@@ -178,7 +184,7 @@
 
                 <!-- No Campaigns Message -->
                 <div id="noCampaignsMessage" class="no-campaigns-message" style="display: none;">
-                    <p>Няма налични почистване кампании в момента.</p>
+                    <p data-i18n="dashboard.noCampaigns">Няма активни кампании</p>
                 </div>
             </div>
         </div>
@@ -194,6 +200,7 @@
     <script type="module">
         import { initializeMap, loadMapData } from '../services/map.js';
         import { logout } from '../services/auth.js';
+        import { initI18n, applyLanguage, setLanguage, t } from '../utils/i18n.js';
         import supabase from '../services/supabase.js';
         import {
           requireAuth,
@@ -206,6 +213,17 @@
 
         // Require authentication
         requireAuth();
+
+        // Initialize i18n
+        await initI18n();
+        applyLanguage(localStorage.getItem('language') || 'bg');
+
+        // Language selector
+        document.getElementById('languageSelector').value = localStorage.getItem('language') || 'bg';
+        document.getElementById('languageSelector').addEventListener('change', (e) => {
+            setLanguage(e.target.value);
+            location.reload();
+        });
 
         // Initialize on page load
         window.addEventListener('DOMContentLoaded', async () => {

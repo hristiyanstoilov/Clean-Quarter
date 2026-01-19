@@ -1,6 +1,7 @@
 {
   "nav": {
     "dashboard": "Home",
+    "createCampaign": "New Campaign",
     "profile": "Profile",
     "rewards": "Rewards",
     "admin": "Admin",
@@ -20,9 +21,10 @@
   },
   "dashboard": {
     "title": "Campaigns",
-    "nearYou": "Cleanup nearby",
+    "nearYou": "Cleanups Near You",
     "viewCampaign": "View",
-    "noCampaigns": "No active campaigns"
+    "noCampaigns": "No active campaigns",
+    "loading": "Loading campaigns..."
   },
   "campaign": {
     "title": "Campaign Details",
@@ -34,7 +36,11 @@
     "participate": "Participate",
     "uploadPhoto": "Upload Photo",
     "submit": "Submit",
-    "participants": "Participants"
+    "participants": "Participants",
+    "create": "Create Campaign",
+    "createdBy": "Created by",
+    "startDate": "Start Date",
+    "points": "Points"
   },
   "profile": {
     "title": "My Profile",
@@ -47,7 +53,9 @@
     "date": "Date",
     "type": "Type",
     "amount": "Amount",
-    "reason": "Reason"
+    "reason": "Reason",
+    "noTransactions": "No transactions",
+    "noParticipations": "No participations"
   },
   "rewards": {
     "title": "Rewards",
@@ -55,7 +63,8 @@
     "category": "Category",
     "buy": "Buy",
     "yourPoints": "Your Points",
-    "noRewards": "No rewards"
+    "noRewards": "No rewards",
+    "purchased": "Purchased"
   },
   "admin": {
     "title": "Admin Panel",
@@ -73,6 +82,8 @@
     "success": "Success",
     "confirm": "Confirm",
     "cancel": "Cancel",
-    "delete": "Delete"
+    "delete": "Delete",
+    "username": "Username",
+    "submit": "Submit"
   }
 }

@@ -344,11 +344,15 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <div class="ms-auto">
-                    <a href="/src/pages/dashboard.html">Dashboard</a>
-                    <a href="/src/pages/rewards.html">Rewards</a>
-                    <a href="/src/pages/profile.html">Profile</a>
-                    <a href="#" onclick="handleLogout()">Logout</a>
+                <div class="ms-auto" style="display: flex; gap: 1rem; align-items: center;">
+                    <a href="/src/pages/dashboard.html" data-i18n="nav.dashboard">Dashboard</a>
+                    <a href="/src/pages/rewards.html" data-i18n="nav.rewards">Rewards</a>
+                    <a href="/src/pages/profile.html" data-i18n="nav.profile">Profile</a>
+                    <select id="languageSelector" class="form-select form-select-sm" style="max-width: 150px;">
+                        <option value="bg">🇧🇬 Български</option>
+                        <option value="en">🇬🇧 English</option>
+                    </select>
+                    <a href="#" onclick="handleLogout()" data-i18n="nav.logout">Logout</a>
                 </div>
             </div>
         </div>
@@ -503,6 +507,18 @@
         import supabase from '../services/supabase.js';
         import { initializeMap } from '../services/map.js';
         import { uploadCampaignPhoto } from '../services/storage.js';
+        import { initI18n, applyLanguage, setLanguage } from '../utils/i18n.js';
+
+        // Initialize i18n
+        await initI18n();
+        applyLanguage(localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg');
+
+        // Language selector
+        document.getElementById('languageSelector').value = localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg';
+        document.getElementById('languageSelector').addEventListener('change', (e) => {
+            setLanguage(e.target.value);
+            location.reload();
+        });
 
         // Global variables
         let campaign = null;

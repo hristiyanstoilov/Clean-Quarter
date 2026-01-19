@@ -3,6 +3,18 @@ import './assets/style.css'
 import { login, register } from './services/auth.js'
 import { initializePWA } from './services/pwa.js'
 import { initDemoMode, getDemoUser } from './utils/demoMode.js'
+import { initI18n, setLanguage } from './utils/i18n.js'
+
+// Initialize i18n first
+await initI18n()
+
+// Setup language selector event
+const langSelector = document.getElementById('languageSelector')
+if (langSelector) {
+  langSelector.addEventListener('change', (e) => {
+    setLanguage(e.target.value)
+  })
+}
 
 // Handle demo login - MUST BE DEFINED EARLY AND ASSIGNED TO WINDOW
 async function handleDemoLogin(e) {

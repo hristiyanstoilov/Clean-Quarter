@@ -1,6 +1,7 @@
 {
   "nav": {
     "dashboard": "Начало",
+    "createCampaign": "Нова кампания",
     "profile": "Профил",
     "rewards": "Награди",
     "admin": "Админ",
@@ -22,7 +23,8 @@
     "title": "Кампании",
     "nearYou": "Почистване в близост до вас",
     "viewCampaign": "Преглед",
-    "noCampaigns": "Няма активни кампании"
+    "noCampaigns": "Няма активни кампании",
+    "loading": "Зареждане на кампаниите..."
   },
   "campaign": {
     "title": "Детали на кампанията",
@@ -34,7 +36,11 @@
     "participate": "Участвай",
     "uploadPhoto": "Качи снимка",
     "submit": "Изпрати",
-    "participants": "Участници"
+    "participants": "Участници",
+    "create": "Създай кампания",
+    "createdBy": "Създана от",
+    "startDate": "Начало",
+    "points": "Точки"
   },
   "profile": {
     "title": "Мой профил",
@@ -47,7 +53,9 @@
     "date": "Дата",
     "type": "Тип",
     "amount": "Размер",
-    "reason": "Причина"
+    "reason": "Причина",
+    "noTransactions": "Няма транзакции",
+    "noParticipations": "Няма участия"
   },
   "rewards": {
     "title": "Награди",
@@ -55,7 +63,8 @@
     "category": "Категория",
     "buy": "Купи",
     "yourPoints": "Твоите точки",
-    "noRewards": "Няма награди"
+    "noRewards": "Няма награди",
+    "purchased": "Закупено"
   },
   "admin": {
     "title": "Админ панел",
@@ -73,6 +82,8 @@
     "success": "Успех",
     "confirm": "Потвърди",
     "cancel": "Отмени",
-    "delete": "Изтрий"
+    "delete": "Изтрий",
+    "username": "Потребител",
+    "submit": "Изпрати"
   }
 }
