@@ -2,6 +2,48 @@
 import './assets/style.css'
 import { login, register } from './services/auth.js'
 import { initializePWA } from './services/pwa.js'
+import { initDemoMode, getDemoUser } from './utils/demoMode.js'
+
+// Handle demo login - MUST BE DEFINED EARLY AND ASSIGNED TO WINDOW
+async function handleDemoLogin(e) {
+  if (e) e.preventDefault()
+  console.log('🎮 Demo Login clicked')
+  
+  try {
+    console.log('📝 Initializing demo data...')
+    initDemoMode()
+    console.log('✅ Demo data initialized')
+    
+    const demoUser = getDemoUser()
+    console.log('👤 Demo user:', demoUser)
+    
+    if (demoUser && demoUser.id) {
+      localStorage.setItem('user', JSON.stringify(demoUser))
+      console.log('✅ User saved')
+      
+      await Swal.fire({
+        icon: 'success',
+        title: '🎮 Demo Mode Active',
+        text: `Welcome ${demoUser.username}!`,
+        timer: 1500
+      })
+      
+      window.location.href = './src/pages/dashboard.html'
+    } else {
+      throw new Error('Demo user not found')
+    }
+  } catch (error) {
+    console.error('❌ Error:', error)
+    await Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: error.message
+    })
+  }
+}
+
+// CRITICAL: Make globally available for onclick
+window.handleDemoLogin = handleDemoLogin
 
 // Initialize PWA
 initializePWA()
@@ -10,14 +52,12 @@ initializePWA()
 const currentUser = JSON.parse(localStorage.getItem('user'))
 
 if (!currentUser) {
-  // Initialize auth forms
   initAuthForms()
 } else {
-  // Redirect to dashboard
-  window.location.href = '/src/pages/dashboard.html'
+  window.location.href = './src/pages/dashboard.html'
 }
 
-// Initialize auth forms on login/register page
+// Initialize auth forms
 function initAuthForms() {
   const loginForm = document.getElementById('loginForm')
   const registerForm = document.getElementById('registerForm')
@@ -40,14 +80,15 @@ async function handleLogin(e) {
 
   try {
     const user = await login(email, password)
-    
-    // Store user data in localStorage
     localStorage.setItem('user', JSON.stringify(user))
-    
-    // Redirect to dashboard
-    window.location.href = '/src/pages/dashboard.html'
+    window.location.href = './src/pages/dashboard.html'
   } catch (error) {
     console.error('Login failed:', error)
+    await Swal.fire({
+      icon: 'error',
+      title: 'Login Error',
+      text: error.message
+    })
   }
 }
 
@@ -60,7 +101,6 @@ async function handleRegister(e) {
   const passwordConfirm = document.getElementById('registerPasswordConfirm')?.value
   const neighborhood = document.getElementById('registerNeighborhood')?.value
 
-  // Validate inputs
   if (!email || !password || !passwordConfirm || !neighborhood) {
     await Swal.fire({
       icon: 'error',
@@ -70,7 +110,6 @@ async function handleRegister(e) {
     return
   }
 
-  // Validate passwords match
   if (password !== passwordConfirm) {
     await Swal.fire({
       icon: 'error',
@@ -80,7 +119,6 @@ async function handleRegister(e) {
     return
   }
 
-  // Validate password strength (minimum 6 characters)
   if (password.length < 6) {
     await Swal.fire({
       icon: 'error',
@@ -91,25 +129,16 @@ async function handleRegister(e) {
   }
 
   try {
-    console.log('🔄 Registering user:', { email, neighborhood })
-    
     const user = await register(email, password, { neighborhood })
-    
-    console.log('✅ Registration successful:', user)
-    
-    // Store user data in localStorage
     localStorage.setItem('user', JSON.stringify(user))
-    
-    // Redirect to dashboard
-    window.location.href = '/src/pages/dashboard.html'
+    window.location.href = './src/pages/dashboard.html'
   } catch (error) {
-    console.error('❌ Registration failed:', error)
+    console.error('Registration failed:', error)
     
-    // Show detailed error
     await Swal.fire({
       icon: 'error',
       title: 'Регистрацията неуспешна',
-      text: error.message || 'Възникна грешка при регистрацията. Провери конзолата (F12).',
+      text: error.message || 'Възникна грешка.',
     })
   }
 }
@@ -117,17 +146,15 @@ async function handleRegister(e) {
 // Navigation function
 function loadPage(pageName) {
   const pages = {
-    'index': '/src/pages/index.html',
-    'dashboard': '/src/pages/dashboard.html',
-    'create-campaign': '/src/pages/create-campaign.html',
-    'detail': '/src/pages/campaign-detail.html',
-    'profile': '/src/pages/profile.html',
-    'admin': '/src/pages/admin.html',
-    'rewards': '/src/pages/rewards.html'
+    'index': './src/pages/index.html',
+    'dashboard': './src/pages/dashboard.html',
+    'create-campaign': './src/pages/create-campaign.html',
+    'detail': './src/pages/campaign-detail.html',
+    'profile': './src/pages/profile.html',
+    'admin': './src/pages/admin.html',
+    'rewards': './src/pages/rewards.html'
   }
-  
-  window.location.href = pages[pageName] || '/'
+  window.location.href = pages[pageName] || './'
 }
 
-// Global navigation function
 window.navigateTo = loadPage

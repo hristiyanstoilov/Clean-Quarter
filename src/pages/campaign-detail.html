@@ -549,35 +549,68 @@
                     throw new Error('Campaign ID not provided in URL');
                 }
 
-                // Fetch campaign data
-                const { data: campaignData, error: campaignError } = await supabase
-                    .from('campaigns')
-                    .select('*')
-                    .eq('id', campaignId)
-                    .single();
+                // Check if in demo mode
+                let campaignData = null;
+                let participations = [];
+                let userPart = null;
+                
+                if (currentUser && currentUser.id === 'demo-admin-001') {
+                    // Load demo campaign from localStorage
+                    console.log('📝 Loading demo campaign:', campaignId);
+                    const allCampaigns = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_CAMPAIGNS') || '[]');
+                    campaignData = allCampaigns.find(c => c.id === campaignId);
+                    
+                    if (!campaignData) {
+                        throw new Error('Campaign not found in demo data');
+                    }
+                    
+                    console.log('✅ Loaded demo campaign:', campaignData);
+                    
+                    // Load demo participations
+                    participations = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_PARTICIPATIONS') || '[]')
+                        .filter(p => p.campaign_id === campaignId);
+                    
+                    userPart = participations.find(p => p.user_id === currentUser.id) || null;
+                } else {
+                    // Fetch campaign data from Supabase
+                    const { data, error: campaignError } = await supabase
+                        .from('campaigns')
+                        .select('*')
+                        .eq('id', campaignId)
+                        .single();
 
-                if (campaignError) {
-                    throw new Error(`Campaign not found: ${campaignError.message}`);
+                    if (campaignError) {
+                        throw new Error(`Campaign not found: ${campaignError.message}`);
+                    }
+
+                    campaignData = data;
+
+                    // Fetch participation statistics
+                    const { data: parts, error: participationError } = await supabase
+                        .from('participations')
+                        .select('id, status')
+                        .eq('campaign_id', campaignId);
+
+                    if (participationError) {
+                        console.error('Error fetching participations:', participationError);
+                    } else {
+                        participations = parts;
+                    }
+
+                    // Fetch current user's participation
+                    const { data: userPartData, error: userPartError } = await supabase
+                        .from('participations')
+                        .select('*')
+                        .eq('campaign_id', campaignId)
+                        .eq('user_id', currentUser.id)
+                        .single();
+
+                    if (!userPartError) {
+                        userPart = userPartData;
+                    }
                 }
 
                 campaign = campaignData;
-
-                // Fetch participation statistics
-                const { data: participations, error: participationError } = await supabase
-                    .from('participations')
-                    .select('id, status')
-                    .eq('campaign_id', campaignId);
-
-                if (participationError) {
-                    console.error('Error fetching participations:', participationError);
-                }
-
-                // Fetch current user's participation
-                const { data: userPart, error: userPartError } = await supabase
-                    .from('participations')
-                    .select('*')
-                    .eq('campaign_id', campaignId)
-                    .eq('user_id', currentUser.id)
                     .single();
 
                 if (!userPartError && userPart) {

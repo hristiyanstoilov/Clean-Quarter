@@ -216,6 +216,17 @@
             font-weight: 600;
         }
     </style>
+
+    <!-- Demo Mode Script - must be inline and BEFORE module script -->
+    <script>
+        // This will be properly implemented in main.js
+        // But we need it available immediately for onclick
+        window.handleDemoLogin = async function() {
+            console.log('🎮 handleDemoLogin called');
+            // Will be overridden by main.js implementation
+            alert('Loading demo mode...');
+        };
+    </script>
 </head>
 <body>
     <div class="auth-page">
@@ -263,6 +274,12 @@
                                     <a href="#" style="color: #28a745; text-decoration: none; font-size: 0.9rem; transition: color 0.3s ease;" onmouseover="this.style.color='#218838'" onmouseout="this.style.color='#28a745'" onclick="handleForgotPassword(event)">
                                         Забравена парола?
                                     </a>
+                                </div>
+                                <div style="text-align: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e9ecef;">
+                                    <p style="font-size: 0.9rem; color: #6c757d; margin-bottom: 0.75rem;">Или разгледай приложението като админ:</p>
+                                    <button type="button" onclick="handleDemoLogin()" class="btn btn-success w-100" style="border-width: 2px; font-weight: 600; padding: 0.8rem; font-size: 1rem;">
+                                        🎮 Demo Mode (Админ)
+                                    </button>
                                 </div>
                             </form>
                         </div>

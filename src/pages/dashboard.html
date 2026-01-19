@@ -225,13 +225,25 @@
             try {
                 showLoading(loadingSpinnerId, [campaignsContainerId, noCampaignsMessageId]);
 
-                // Fetch active campaigns
-                const { data: campaigns, error } = await supabase
-                    .from('campaigns')
-                    .select('id, title, neighborhood, before_photo_url, status')
-                    .eq('status', 'active');
+                // Check if in demo mode
+                const user = JSON.parse(localStorage.getItem('user'));
+                let campaigns = [];
+                
+                if (user && user.id === 'demo-admin-001') {
+                    // Load demo campaigns from localStorage
+                    console.log('📝 Loading demo campaigns from localStorage');
+                    campaigns = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_CAMPAIGNS') || '[]');
+                    console.log('✅ Loaded', campaigns.length, 'demo campaigns');
+                } else {
+                    // Fetch from Supabase
+                    const { data, error } = await supabase
+                        .from('campaigns')
+                        .select('id, title, neighborhood, before_photo_url, status')
+                        .eq('status', 'active');
 
-                if (error) throw error;
+                    if (error) throw error;
+                    campaigns = data;
+                }
 
                 hideLoading(loadingSpinnerId, {
                     [campaignsContainerId]: 'grid',
@@ -261,7 +273,7 @@
                                     <small>📍 ${campaign.neighborhood || 'Студентски град'}</small>
                                 </p>
                                 <div class="mt-auto">
-                                    <a href="/src/pages/campaign-detail.html?id=${campaign.id}" class="btn btn-primary w-100">
+                                    <a href="./campaign-detail.html?id=${campaign.id}" class="btn btn-primary w-100">
                                         Преглед
                                     </a>
                                 </div>
