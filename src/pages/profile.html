@@ -414,15 +414,25 @@
          */
         async function loadProfileData() {
             try {
-                // Fetch user profile
-                const { data: profile, error: profileError } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', currentUser.id)
-                    .single();
+                let profile;
+                
+                // Check if in demo mode
+                if (currentUser.id === 'demo-admin-001') {
+                    console.log('📝 Loading demo profile data');
+                    profile = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_USER'));
+                    console.log('✅ Loaded demo profile:', profile);
+                } else {
+                    // Fetch user profile
+                    const { data, error: profileError } = await supabase
+                        .from('profiles')
+                        .select('*')
+                        .eq('id', currentUser.id)
+                        .single();
 
-                if (profileError) {
-                    throw new Error(`Failed to fetch profile: ${profileError.message}`);
+                    if (profileError) {
+                        throw new Error(`Failed to fetch profile: ${profileError.message}`);
+                    }
+                    profile = data;
                 }
 
                 userProfile = profile;
@@ -493,14 +503,24 @@
          */
         async function loadTransactions() {
             try {
-                const { data: transactions, error } = await supabase
-                    .from('point_transactions')
-                    .select('*')
-                    .eq('user_id', currentUser.id)
-                    .order('created_at', { ascending: false })
-                    .limit(20);
+                let transactions = [];
+                
+                // Check if in demo mode
+                if (currentUser.id === 'demo-admin-001') {
+                    console.log('📝 Loading demo transactions');
+                    transactions = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_TRANSACTIONS') || '[]');
+                    console.log('✅ Loaded', transactions.length, 'demo transactions');
+                } else {
+                    const { data, error } = await supabase
+                        .from('point_transactions')
+                        .select('*')
+                        .eq('user_id', currentUser.id)
+                        .order('created_at', { ascending: false })
+                        .limit(20);
 
-                if (error) throw error;
+                    if (error) throw error;
+                    transactions = data || [];
+                }
 
                 if (!transactions || transactions.length === 0) {
                     document.getElementById('transactionsContainer').innerHTML = `
