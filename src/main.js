@@ -5,7 +5,14 @@ import { initializePWA } from './services/pwa.js'
 import { initDemoMode, getDemoUser } from './utils/demoMode.js'
 import { initI18n, setLanguage } from './utils/i18n.js'
 
-// Initialize i18n first
+// Initialize Architecture (NEW - Step 7 & 8)
+import { initializeArchitecture, logger, errorHandler, store } from './architecture/index.js'
+
+// Initialize architecture FIRST
+console.log('🏗️ Initializing application architecture...')
+await initializeArchitecture()
+
+// Initialize i18n
 await initI18n()
 
 // Setup language selector event
@@ -143,9 +150,17 @@ async function handleRegister(e) {
   try {
     const user = await register(email, password, { neighborhood })
     localStorage.setItem('user', JSON.stringify(user))
+    
+    // Log to architecture logger
+    logger.info('User registered successfully', { username: email })
+    
     window.location.href = './src/pages/dashboard.html'
   } catch (error) {
     console.error('Registration failed:', error)
+    logger.error('Registration failed', { error: error.message })
+    
+    // Use error handler for consistent error processing
+    errorHandler.handle(error)
     
     await Swal.fire({
       icon: 'error',

@@ -198,6 +198,7 @@
 
     <!-- Dashboard Script -->
     <script type="module">
+        // STEP 9: Refactored Dashboard with New Architecture
         import { initializeMap, loadMapData } from '../services/map.js';
         import { logout } from '../services/auth.js';
         import { initI18n, applyLanguage, setLanguage, t } from '../utils/i18n.js';
@@ -210,6 +211,16 @@
           handleError,
           isEmpty
         } from '../utils/helpers.js';
+
+        // ✨ NEW: Import from architecture
+        import { 
+          useFetch, 
+          useAsync, 
+          store, 
+          logger, 
+          errorHandler,
+          notify 
+        } from '../architecture/index.js';
 
         // Require authentication
         requireAuth();
@@ -233,7 +244,7 @@
         });
 
         /**
-         * Load and display campaigns list
+         * Load and display campaigns list - REFACTORED WITH ARCHITECTURE
          */
         async function loadCampaignsList() {
             const loadingSpinnerId = 'loadingSpinner';
@@ -243,33 +254,40 @@
             try {
                 showLoading(loadingSpinnerId, [campaignsContainerId, noCampaignsMessageId]);
 
-                // Check if in demo mode
-                const user = JSON.parse(localStorage.getItem('user'));
-                let campaigns = [];
-                
-                if (user && user.id === 'demo-admin-001') {
-                    // Load demo campaigns from localStorage
-                    console.log('📝 Loading demo campaigns from localStorage');
-                    campaigns = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_CAMPAIGNS') || '[]');
-                    console.log('✅ Loaded', campaigns.length, 'demo campaigns');
-                } else {
-                    // Fetch from Supabase
-                    const { data, error } = await supabase
-                        .from('campaigns')
-                        .select('id, title, neighborhood, before_photo_url, status')
-                        .eq('status', 'active');
+                // ✨ NEW: Use useAsync from architecture
+                const { data: campaigns, error, loading } = await useAsync(async () => {
+                    const user = JSON.parse(localStorage.getItem('user'));
+                    
+                    if (user && user.id === 'demo-admin-001') {
+                        // Demo mode
+                        logger.info('Loading demo campaigns');
+                        const demoCampaigns = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_CAMPAIGNS') || '[]');
+                        return demoCampaigns;
+                    } else {
+                        // Real data from Supabase
+                        logger.info('Loading campaigns from Supabase');
+                        const { data, error } = await supabase
+                            .from('campaigns')
+                            .select('id, title, neighborhood, before_photo_url, status')
+                            .eq('status', 'active');
 
-                    if (error) throw error;
-                    campaigns = data;
-                }
+                        if (error) throw error;
+                        return data;
+                    }
+                }, []);
 
                 hideLoading(loadingSpinnerId, {
                     [campaignsContainerId]: 'grid',
                     [noCampaignsMessageId]: 'none'
                 });
 
+                // ✨ NEW: Store campaigns in global state
+                store.setByPath('campaigns.list', campaigns);
+                logger.debug('Campaigns stored in global state', { count: campaigns.length });
+
                 if (isEmpty(campaigns)) {
                     document.getElementById(noCampaignsMessageId).style.display = 'block';
+                    notify('Няма активни кампании', 'info');
                     return;
                 }
 
@@ -300,8 +318,15 @@
                     </div>
                 `).join('');
 
+                logger.info('Dashboard campaigns rendered', { count: campaigns.length });
+
             } catch (error) {
                 hideLoading(loadingSpinnerId);
+                
+                // ✨ NEW: Use error handler
+                errorHandler.handle(error);
+                logger.error('Failed to load campaigns', { error: error.message });
+                
                 await handleError('loadCampaignsList', error, 'Failed to load campaigns. Please try again later.');
                 document.getElementById(campaignsContainerId).innerHTML = `
                     <div class="col-12">
@@ -314,14 +339,22 @@
         }
 
         /**
-         * Handle logout
+         * Handle logout - REFACTORED WITH LOGGER
          */
         document.getElementById('logoutBtn').addEventListener('click', async () => {
             try {
+                logger.info('User logout initiated');
                 await logout();
                 removeUser();
+                
+                // ✨ NEW: Store logout event
+                store.setState({ auth: { isAuthenticated: false, user: null } });
+                logger.info('User logged out successfully');
+                
                 window.location.href = '/index.html';
             } catch (error) {
+                logger.error('Logout failed', { error: error.message });
+                errorHandler.handle(error);
                 await handleError('logout', error, 'Failed to logout. Please try again.');
             }
         });

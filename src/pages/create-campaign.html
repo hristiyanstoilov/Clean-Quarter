@@ -266,12 +266,25 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Main Script -->
+    <!-- Main Script - REFACTORED WITH ARCHITECTURE -->
     <script type="module">
         import { initializeMap } from '../services/map.js';
         import { uploadCampaignPhoto } from '../services/storage.js';
         import { initI18n, applyLanguage, setLanguage } from '../utils/i18n.js';
         import supabase from '../services/supabase.js';
+
+        // ✨ NEW: Import from architecture
+        import { 
+          useForm, 
+          useAsync,
+          useDebounce,
+          validateWithSchema,
+          store, 
+          logger, 
+          errorHandler,
+          notify,
+          schemas
+        } from '../architecture/index.js';
 
         // Initialize i18n
         await initI18n();
@@ -288,12 +301,48 @@
         let map = null;
         let selectedCoordinates = { lat: null, lng: null };
         let beforePhotoFile = null;
+        
+        // ✨ NEW: Initialize form with validation
+        const campaignSchema = {
+          title: { type: 'string', required: true, minLength: 3, maxLength: 100 },
+          description: { type: 'string', required: true, minLength: 10, maxLength: 500 },
+          neighborhood: { type: 'string', required: true },
+          beforePhoto: { type: 'file', required: true }
+        };
 
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', async () => {
-            await checkAuth();
-            initMap();
-            setupEventListeners();
+        // ✨ NEW: Form state hook
+        const form = useForm(
+          {
+            title: '',
+            description: '',
+            neighborhood: '',
+            beforePhoto: null
+          },
+          campaignSchema,
+          async (values) => {
+            await handleFormSubmit(values);
+          }
+        );
+
+        // ✨ NEW: Debounced validation
+        const debouncedValidate = useDebounce(() => {
+          checkFormCompletion();
+        }, 300);
+
+        /**
+         * Initialize the page on load
+         */
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                logger.info('Create Campaign page loaded');
+                await checkAuth();
+                initMap();
+                setupEventListeners();
+                logger.debug('Page initialization complete');
+            } catch (error) {
+                logger.error('Page initialization failed', { error: error.message });
+                errorHandler.handle(error);
+            }
         });
 
         /**
@@ -303,6 +352,7 @@
             const { data: { user }, error } = await supabase.auth.getUser();
             
             if (error || !user) {
+                logger.warn('User not authenticated, redirecting to login');
                 window.location.href = '/index.html';
             }
         }
@@ -317,6 +367,9 @@
             map.on('click', (e) => {
                 const { lat, lng } = e.latlng;
                 selectedCoordinates = { lat, lng };
+                
+                // ✨ NEW: Log map interaction
+                logger.debug('Map clicked', { lat, lng });
                 
                 // Update display
                 document.getElementById('latitude').textContent = lat.toFixed(6);
@@ -355,9 +408,9 @@
             document.getElementById('createCampaignForm').addEventListener('submit', handleFormSubmit);
             
             // Enable submit button when all fields are filled
-            document.getElementById('campaignTitle').addEventListener('input', checkFormCompletion);
-            document.getElementById('campaignDescription').addEventListener('input', checkFormCompletion);
-            document.getElementById('campaignNeighborhood').addEventListener('change', checkFormCompletion);
+            document.getElementById('campaignTitle').addEventListener('input', debouncedValidate);
+            document.getElementById('campaignDescription').addEventListener('input', debouncedValidate);
+            document.getElementById('campaignNeighborhood').addEventListener('change', debouncedValidate);
         }
 
         /**
@@ -368,6 +421,11 @@
             const fileName = beforePhotoFile ? beforePhotoFile.name : 'No file chosen';
             
             document.getElementById('beforePhotoName').textContent = fileName;
+            
+            // ✨ NEW: Log file selection
+            if (beforePhotoFile) {
+                logger.debug('Photo selected', { name: beforePhotoFile.name, size: beforePhotoFile.size, type: beforePhotoFile.type });
+            }
             
             // Show preview
             if (beforePhotoFile) {
@@ -398,10 +456,12 @@
         }
 
         /**
-         * Handle form submission
+         * Handle form submission - REFACTORED WITH ARCHITECTURE
          */
         async function handleFormSubmit(e) {
-            e.preventDefault();
+            if (e && e.preventDefault) {
+                e.preventDefault();
+            }
             
             const submitBtn = document.getElementById('submitBtn');
             const spinner = document.getElementById('loadingSpinner');
@@ -410,6 +470,9 @@
                 // Disable submit button and show spinner
                 submitBtn.disabled = true;
                 spinner.style.display = 'inline';
+                
+                // ✨ NEW: Log form submission
+                logger.info('Campaign form submission started');
                 
                 // Get current user
                 const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -434,6 +497,21 @@
                 const neighborhood = document.getElementById('campaignNeighborhood').value;
                 const { lat, lng } = selectedCoordinates;
                 
+                // ✨ NEW: Validate form data before submission
+                const campaignData = {
+                    title,
+                    description,
+                    neighborhood,
+                    coordinates: { lat, lng }
+                };
+                
+                const validation = validateWithSchema(campaignData, campaignSchema);
+                if (!validation.isValid) {
+                    logger.warn('Campaign validation failed', { errors: validation.errors });
+                    notify(`Validation error: ${validation.errors[0]}`, 'warning');
+                    throw new Error(validation.errors[0] || 'Validation failed');
+                }
+                
                 // Upload before photo
                 await Swal.fire({
                     title: 'Uploading photo...',
@@ -444,6 +522,7 @@
                 });
                 
                 const beforePhotoUrl = await uploadCampaignPhoto(beforePhotoFile, 'before');
+                logger.debug('Photo uploaded successfully', { url: beforePhotoUrl.substring(0, 50) });
                 
                 Swal.close();
                 
@@ -468,7 +547,13 @@
                     throw new Error(`Failed to create campaign: ${campaignError.message}`);
                 }
                 
+                // ✨ NEW: Store campaign in global state
+                store.setByPath('campaigns.currentCampaign', campaign[0]);
+                logger.info('Campaign created successfully', { id: campaign[0].id, title });
+                
                 // Success notification
+                notify('🎉 Кампания успешно създадена!', 'success', 2000);
+                
                 await Swal.fire({
                     icon: 'success',
                     title: 'Campaign Created!',
@@ -480,7 +565,8 @@
                 window.location.href = '/src/pages/dashboard.html';
                 
             } catch (error) {
-                console.error('Error creating campaign:', error);
+                logger.error('Campaign creation failed', { error: error.message });
+                errorHandler.handle(error);
                 
                 await Swal.fire({
                     icon: 'error',
@@ -496,13 +582,23 @@
         }
 
         /**
-         * Handle logout
+         * Handle logout - REFACTORED WITH LOGGER
          */
         async function handleLogout() {
-            const { error } = await supabase.auth.signOut();
-            if (!error) {
-                localStorage.removeItem('user');
-                window.location.href = '/index.html';
+            try {
+                logger.info('User logout initiated');
+                const { error } = await supabase.auth.signOut();
+                if (!error) {
+                    localStorage.removeItem('user');
+                    store.setState({ auth: { isAuthenticated: false, user: null } });
+                    logger.info('User logged out successfully');
+                    window.location.href = '/index.html';
+                } else {
+                    throw error;
+                }
+            } catch (error) {
+                logger.error('Logout failed', { error: error.message });
+                errorHandler.handle(error);
             }
         }
 
