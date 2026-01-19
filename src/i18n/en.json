@@ -1,0 +1,78 @@
+{
+  "nav": {
+    "dashboard": "Home",
+    "profile": "Profile",
+    "rewards": "Rewards",
+    "admin": "Admin",
+    "logout": "Logout",
+    "language": "Language"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "neighborhood": "Neighborhood",
+    "demoMode": "Demo Mode (Admin)",
+    "forgotPassword": "Forgot Password?",
+    "rememberMe": "Remember me"
+  },
+  "dashboard": {
+    "title": "Campaigns",
+    "nearYou": "Cleanup nearby",
+    "viewCampaign": "View",
+    "noCampaigns": "No active campaigns"
+  },
+  "campaign": {
+    "title": "Campaign Details",
+    "description": "Description",
+    "location": "Location",
+    "status": "Status",
+    "beforePhoto": "Before Photo",
+    "afterPhoto": "After Photo",
+    "participate": "Participate",
+    "uploadPhoto": "Upload Photo",
+    "submit": "Submit",
+    "participants": "Participants"
+  },
+  "profile": {
+    "title": "My Profile",
+    "email": "Email",
+    "neighborhood": "Neighborhood",
+    "points": "Points",
+    "rank": "Rank",
+    "transactions": "Transactions",
+    "participations": "Participations",
+    "date": "Date",
+    "type": "Type",
+    "amount": "Amount",
+    "reason": "Reason"
+  },
+  "rewards": {
+    "title": "Rewards",
+    "cost": "Cost",
+    "category": "Category",
+    "buy": "Buy",
+    "yourPoints": "Your Points",
+    "noRewards": "No rewards"
+  },
+  "admin": {
+    "title": "Admin Panel",
+    "pendingApprovals": "Pending Approvals",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "approve": "Approve",
+    "reject": "Reject",
+    "rejectionReason": "Rejection Reason",
+    "noParticipations": "No participations"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "delete": "Delete"
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "nav": {
+    "dashboard": "Начало",
+    "profile": "Профил",
+    "rewards": "Награди",
+    "admin": "Админ",
+    "logout": "Изход",
+    "language": "Език"
+  },
+  "auth": {
+    "login": "Вход",
+    "register": "Регистрация",
+    "email": "Имейл",
+    "password": "Парола",
+    "confirmPassword": "Потвърди парола",
+    "neighborhood": "Квартал",
+    "demoMode": "Demo режим (Админ)",
+    "forgotPassword": "Забравена парола?",
+    "rememberMe": "Запомни ме"
+  },
+  "dashboard": {
+    "title": "Кампании",
+    "nearYou": "Почистване в близост до вас",
+    "viewCampaign": "Преглед",
+    "noCampaigns": "Няма активни кампании"
+  },
+  "campaign": {
+    "title": "Детали на кампанията",
+    "description": "Описание",
+    "location": "Местоположение",
+    "status": "Статус",
+    "beforePhoto": "Снимка преди",
+    "afterPhoto": "Снимка след",
+    "participate": "Участвай",
+    "uploadPhoto": "Качи снимка",
+    "submit": "Изпрати",
+    "participants": "Участници"
+  },
+  "profile": {
+    "title": "Мой профил",
+    "email": "Имейл",
+    "neighborhood": "Квартал",
+    "points": "Точки",
+    "rank": "Ранг",
+    "transactions": "Транзакции",
+    "participations": "Участия",
+    "date": "Дата",
+    "type": "Тип",
+    "amount": "Размер",
+    "reason": "Причина"
+  },
+  "rewards": {
+    "title": "Награди",
+    "cost": "Цена",
+    "category": "Категория",
+    "buy": "Купи",
+    "yourPoints": "Твоите точки",
+    "noRewards": "Няма награди"
+  },
+  "admin": {
+    "title": "Админ панел",
+    "pendingApprovals": "Очаквани одобрения",
+    "approved": "Одобрени",
+    "rejected": "Отхвърлени",
+    "approve": "Одобри",
+    "reject": "Отхвърли",
+    "rejectionReason": "Причина за отхвърляне",
+    "noParticipations": "Няма участия"
+  },
+  "common": {
+    "loading": "Зареждане...",
+    "error": "Грешка",
+    "success": "Успех",
+    "confirm": "Потвърди",
+    "cancel": "Отмени",
+    "delete": "Изтрий"
+  }
+}
