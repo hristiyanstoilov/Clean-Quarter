@@ -49,14 +49,25 @@
     "loading": "Loading campaigns..."
   },
   "profile": {
-    "title": "Profile",
+    "title": "My Profile",
     "editProfile": "✏️ Edit Profile",
     "editProfileTitle": "✏️ Edit Profile",
     "username": "Username",
     "neighborhood": "Neighborhood",
     "avatar": "Avatar",
     "saveChanges": "💾 Save Changes",
-    "cancel": "❌ Cancel"
+    "cancel": "❌ Cancel",
+    "email": "Email",
+    "points": "Points",
+    "rank": "Rank",
+    "transactions": "Transactions",
+    "participations": "Participations",
+    "date": "Date",
+    "type": "Type",
+    "amount": "Amount",
+    "reason": "Reason",
+    "noTransactions": "No transactions",
+    "noParticipations": "No participations"
   },
   "campaign": {
     "title": "Campaign Details",
@@ -73,21 +84,6 @@
     "createdBy": "Created by",
     "startDate": "Start Date",
     "points": "Points"
-  },
-  "profile": {
-    "title": "My Profile",
-    "email": "Email",
-    "neighborhood": "Neighborhood",
-    "points": "Points",
-    "rank": "Rank",
-    "transactions": "Transactions",
-    "participations": "Participations",
-    "date": "Date",
-    "type": "Type",
-    "amount": "Amount",
-    "reason": "Reason",
-    "noTransactions": "No transactions",
-    "noParticipations": "No participations"
   },
   "rewards": {
     "title": "Rewards",
