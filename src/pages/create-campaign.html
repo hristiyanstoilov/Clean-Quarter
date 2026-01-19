@@ -273,9 +273,6 @@
         import { initI18n, applyLanguage, setLanguage } from '../utils/i18n.js';
         import supabase from '../services/supabase.js';
 
-        // Logger for debugging
-        const logger = console;
-
         // Global variables
         let map = null;
         let selectedCoordinates = { lat: null, lng: null };
@@ -298,13 +295,11 @@
                     console.log('Language changes only from Profile page');
                 });
 
-                logger.log('Create Campaign page loaded');
                 await checkAuth();
                 initMap();
                 setupEventListeners();
-                logger.log('Page initialization complete');
             } catch (error) {
-                logger.error('Page initialization failed', error);
+                console.error('Page initialization failed', error);
             }
         });
 
@@ -317,10 +312,9 @@
             if (localUser) {
                 try {
                     currentUser = JSON.parse(localUser);
-                    logger.log('Demo user authenticated:', currentUser.username);
                     return;
                 } catch (e) {
-                    logger.error('Error parsing local user', e);
+                    console.error('Error parsing local user', e);
                 }
             }
             
@@ -328,13 +322,11 @@
             const { data: { user }, error } = await supabase.auth.getUser();
             
             if (error || !user) {
-                logger.log('User not authenticated, redirecting to login');
                 window.location.href = '../../index.html';
                 return;
             }
             
             currentUser = user;
-            logger.log('User authenticated:', user.id);
         }
 
         /**
@@ -347,8 +339,6 @@
             map.on('click', (e) => {
                 const { lat, lng } = e.latlng;
                 selectedCoordinates = { lat, lng };
-                
-                logger.log('Map clicked', lat, lng);
                 
                 // Update display
                 document.getElementById('latitude').textContent = lat.toFixed(6);
@@ -401,10 +391,6 @@
             
             document.getElementById('beforePhotoName').textContent = fileName;
             
-            if (beforePhotoFile) {
-                logger.log('Photo selected:', beforePhotoFile.name);
-            }
-            
             // Show preview
             if (beforePhotoFile) {
                 const reader = new FileReader();
@@ -449,9 +435,6 @@
                 submitBtn.disabled = true;
                 spinner.style.display = 'inline';
                 
-                // ✨ NEW: Log form submission
-                logger.info('Campaign form submission started');
-                
                 // Get current user
                 const { data: { user }, error: userError } = await supabase.auth.getUser();
                 if (userError || !user) {
@@ -490,7 +473,6 @@
                 });
                 
                 const beforePhotoUrl = await uploadCampaignPhoto(beforePhotoFile, 'before');
-                logger.log('Photo uploaded successfully');
                 
                 Swal.close();
                 
@@ -515,8 +497,6 @@
                     throw new Error(`Failed to create campaign: ${campaignError.message}`);
                 }
                 
-                logger.log('Campaign created successfully', campaign[0].id, title);
-                
                 await Swal.fire({
                     icon: 'success',
                     title: 'Campaign Created!',
@@ -528,7 +508,6 @@
                 window.location.href = './dashboard.html';
                 
             } catch (error) {
-                logger.error('Campaign creation failed', error);
                 
                 await Swal.fire({
                     icon: 'error',
@@ -548,17 +527,15 @@
          */
         async function handleLogout() {
             try {
-                logger.log('User logout initiated');
                 const { error } = await supabase.auth.signOut();
                 if (!error) {
                     localStorage.removeItem('user');
-                    logger.log('User logged out successfully');
                     window.location.href = '../../index.html';
                 } else {
                     throw error;
                 }
             } catch (error) {
-                logger.error('Logout failed', error);
+                console.error('Logout failed', error);
             }
         }
 

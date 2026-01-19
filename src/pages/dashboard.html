@@ -211,9 +211,6 @@
           isEmpty
         } from '../utils/helpers.js';
 
-        // Logger for debugging (optional - can be console if architecture is not working)
-        const logger = console;
-
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', async () => {
             try {
@@ -235,8 +232,7 @@
                 await loadMapData(map);
                 await loadCampaignsList();
             } catch (error) {
-                logger.error('Failed to initialize dashboard:', { error: error.message });
-                errorHandler.handle(error);
+                console.error('Failed to initialize dashboard:', error.message);
             }
         });
 
@@ -257,11 +253,9 @@
                 
                 if (user && user.id === 'demo-admin-001') {
                     // Demo mode
-                    logger.info('Loading demo campaigns');
                     campaigns = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_CAMPAIGNS') || '[]');
                 } else {
                     // Real data from Supabase
-                    logger.info('Loading campaigns from Supabase');
                     const { data, error } = await supabase
                         .from('campaigns')
                         .select('id, title, neighborhood, before_photo_url, status')
@@ -275,8 +269,6 @@
                     [campaignsContainerId]: 'grid',
                     [noCampaignsMessageId]: 'none'
                 });
-
-                logger.log('Campaigns loaded:', campaigns.length);
 
                 if (isEmpty(campaigns)) {
                     document.getElementById(noCampaignsMessageId).style.display = 'block';
@@ -310,12 +302,8 @@
                     </div>
                 `).join('');
 
-                logger.info('Dashboard campaigns rendered', { count: campaigns.length });
-
             } catch (error) {
                 hideLoading(loadingSpinnerId);
-                
-                logger.error('Failed to load campaigns', error);
                 
                 await handleError('loadCampaignsList', error, 'Failed to load campaigns. Please try again later.');
                 document.getElementById(campaignsContainerId).innerHTML = `
@@ -333,15 +321,11 @@
          */
         document.getElementById('logoutBtn').addEventListener('click', async () => {
             try {
-                logger.log('User logout initiated');
                 await logout();
                 removeUser();
                 
-                logger.log('User logged out successfully');
-                
                 window.location.href = '../../index.html';
             } catch (error) {
-                logger.error('Logout failed', error);
                 await handleError('logout', error, 'Failed to logout. Please try again.');
             }
         });

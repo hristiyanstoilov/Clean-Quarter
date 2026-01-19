@@ -342,9 +342,6 @@
         import supabase from '../services/supabase.js';
         import { initI18n, applyLanguage, setLanguage } from '../utils/i18n.js';
 
-        // Logger for debugging
-        const logger = console;
-
         // Global variables
         let currentUser = null;
         let userProfile = null;
@@ -364,12 +361,10 @@
                     console.log('Language changes only from Profile page');
                 });
 
-                logger.log('Rewards page loaded');
                 await checkAuth();
                 await loadRewardsData();
-                logger.log('Rewards page initialization complete');
             } catch (error) {
-                logger.error('Rewards page initialization failed', error);
+                console.error('Rewards page initialization failed', error);
             }
         });
 
@@ -382,10 +377,9 @@
             if (localUser) {
                 try {
                     currentUser = JSON.parse(localUser);
-                    logger.log('Demo user authenticated:', currentUser.username);
                     return;
                 } catch (e) {
-                    logger.error('Error parsing local user', e);
+                    console.error('Error parsing local user', e);
                 }
             }
             
@@ -393,13 +387,11 @@
             const { data: { user }, error } = await supabase.auth.getUser();
             
             if (error || !user) {
-                logger.log('User not authenticated, redirecting to login');
                 window.location.href = '../../index.html';
                 return;
             }
             
             currentUser = user;
-            logger.log('User authenticated:', user.id);
         }
 
         /**
@@ -414,7 +406,6 @@
                     rewards = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_REWARDS') || '[]');
                 } else {
                     // Real mode - fetch from Supabase
-                    logger.log('Fetching user profile');
                     const { data: profile, error: profileError } = await supabase
                         .from('profiles')
                         .select('points_balance')
@@ -426,7 +417,6 @@
                     }
                     userProfile = profile;
 
-                    logger.log('Fetching rewards');
                     const { data: rewardsData, error: rewardsError } = await supabase
                         .from('rewards')
                         .select('*')
@@ -437,8 +427,6 @@
                     }
                     rewards = rewardsData || [];
                 }
-
-                logger.log('Rewards data loaded', rewards.length, 'rewards');
 
                 // Display user points
                 document.getElementById('pointsBalance').textContent = userProfile.points_balance || 0;
@@ -451,7 +439,6 @@
                 document.getElementById('rewardsContent').style.display = 'block';
 
             } catch (error) {
-                logger.error('Error loading rewards', error);
 
                 const errorDiv = document.getElementById('errorMessage');
                 errorDiv.textContent = error.message || 'Failed to load rewards. Please try again.';
@@ -542,12 +529,8 @@
          */
         async function handleBuy(rewardId, rewardTitle, rewardCost) {
             try {
-                logger.info('Reward purchase initiated', { rewardId, rewardTitle, cost: rewardCost });
-                
                 // Check if user has enough points
                 if ((userProfile.points_balance || 0) < rewardCost) {
-                    logger.log('Insufficient points for purchase', userProfile.points_balance, '<', rewardCost);
-                    
                     await Swal.fire({
                         icon: 'error',
                         title: 'Insufficient Points',
@@ -569,7 +552,6 @@
                 });
 
                 if (!result.isConfirmed) {
-                    logger.debug('Purchase cancelled by user', { rewardId });
                     return;
                 }
 
@@ -594,8 +576,6 @@
                     throw new Error(`Failed to deduct points: ${updateError.message}`);
                 }
 
-                logger.debug('Points deducted', { newBalance: newPointsBalance });
-
                 // Create transaction record
                 const { error: transactionError } = await supabase
                     .from('point_transactions')
@@ -608,14 +588,12 @@
                     }]);
 
                 if (transactionError) {
-                    logger.log('Warning: Transaction record failed', transactionError.message);
+                    console.warn('Warning: Transaction record failed', transactionError.message);
                 }
 
                 // Update user profile points
                 userProfile.points_balance = newPointsBalance;
                 
-                logger.log('Reward purchased successfully', rewardId, 'New balance:', newPointsBalance);
-
                 Swal.close();
 
                 await Swal.fire({
@@ -637,8 +615,6 @@
                 renderRewards();
 
             } catch (error) {
-                logger.error('Reward purchase failed', error);
-
                 await Swal.fire({
                     icon: 'error',
                     title: 'Error',

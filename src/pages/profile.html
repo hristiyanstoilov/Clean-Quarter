@@ -390,9 +390,6 @@
         import supabase from '../services/supabase.js';
         import { initI18n, applyLanguage, setLanguage } from '../utils/i18n.js';
 
-        // Logger for debugging
-        const logger = console;
-
         // Global variables
         let currentUser = null;
         let userProfile = null;
@@ -411,12 +408,10 @@
                     location.reload();
                 });
 
-                logger.log('Profile page loaded');
                 await checkAuth();
                 await loadProfileData();
-                logger.log('Profile page initialization complete');
             } catch (error) {
-                logger.error('Profile page initialization failed', error);
+                console.error('Profile page initialization failed', error);
             }
         });
 
@@ -429,10 +424,9 @@
             if (localUser) {
                 try {
                     currentUser = JSON.parse(localUser);
-                    logger.log('Demo user authenticated:', currentUser.username);
                     return;
                 } catch (e) {
-                    logger.error('Error parsing local user', e);
+                    console.error('Error parsing local user', e);
                 }
             }
             
@@ -440,13 +434,11 @@
             const { data: { user }, error } = await supabase.auth.getUser();
             
             if (error || !user) {
-                logger.log('User not authenticated, redirecting to login');
                 window.location.href = '../../index.html';
                 return;
             }
             
             currentUser = user;
-            logger.log('User authenticated:', user.id);
         }
 
         /**
@@ -454,13 +446,10 @@
          */
         async function loadProfileData() {
             try {
-                logger.log('Loading user profile');
-                
                 let profile;
                 
                 // Check if in demo mode
                 if (currentUser.id === 'demo-admin-001') {
-                    logger.log('Loading demo profile data');
                     profile = currentUser;
                 } else {
                     // Fetch user profile from Supabase
@@ -477,7 +466,6 @@
                 }
                 
                 userProfile = profile;
-                logger.log('Profile loaded', userProfile);
 
                 // Display profile info
                 document.getElementById('userEmail').textContent = currentUser.email || currentUser.username;
@@ -501,8 +489,6 @@
                 document.getElementById('profileContent').style.display = 'block';
 
             } catch (error) {
-                logger.error('Error loading profile', error);
-
                 await Swal.fire({
                     icon: 'error',
                     title: 'Error',
@@ -545,13 +531,10 @@
          */
         async function loadTransactions() {
             try {
-                logger.debug('Loading transactions');
-                
                 let transactions = [];
                 
                 // Check if in demo mode
                 if (currentUser.id === 'demo-admin-001') {
-                    logger.info('Loading demo transactions');
                     transactions = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_TRANSACTIONS') || '[]');
                 } else {
                     const { data, error } = await supabase
@@ -564,8 +547,6 @@
                     if (error) throw error;
                     transactions = data || [];
                 }
-
-                logger.info('Transactions loaded', { count: transactions.length });
 
                 if (!transactions || transactions.length === 0) {
                     document.getElementById('transactionsContainer').innerHTML = `
@@ -625,8 +606,6 @@
                 document.getElementById('transactionsContainer').innerHTML = html;
 
             } catch (error) {
-                logger.error('Error loading transactions', error);
-                
                 document.getElementById('transactionsContainer').innerHTML = `
                     <div class="empty-state" style="color: #dc3545;">
                         <p>Failed to load transactions</p>
@@ -640,8 +619,6 @@
          */
         async function loadParticipations() {
             try {
-                logger.debug('Loading participations');
-                
                 const { data: participations, error } = await supabase
                     .from('participations')
                     .select(`
@@ -711,11 +688,9 @@
                     `;
                 });
 
-                logger.log('Participations loaded', participations.length);
                 document.getElementById('participationsContainer').innerHTML = html;
 
             } catch (error) {
-                logger.error('Error loading participations', error);
                 
                 document.getElementById('participationsContainer').innerHTML = `
                     <div class="empty-state" style="color: #dc3545;">
@@ -730,17 +705,15 @@
          */
         async function handleLogout() {
             try {
-                logger.log('User logout initiated');
                 const { error } = await supabase.auth.signOut();
                 if (!error) {
                     localStorage.removeItem('user');
-                    logger.log('User logged out successfully');
                     window.location.href = '../../index.html';
                 } else {
                     throw error;
                 }
             } catch (error) {
-                logger.error('Logout failed', error);
+                console.error('Logout failed', error);
             }
         }
 

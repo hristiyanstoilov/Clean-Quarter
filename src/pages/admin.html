@@ -334,9 +334,6 @@
         import supabase from '../services/supabase.js';
         import { initI18n, applyLanguage, setLanguage } from '../utils/i18n.js';
 
-        // Logger for debugging
-        const logger = console;
-
         // Global variables
         let currentUser = null;
         let pendingParticipations = [];
@@ -355,13 +352,10 @@
                     console.log('Language changes only from Profile page');
                 });
 
-                logger.info('Admin page loaded');
                 await checkAuth();
                 await loadAdminData();
-                logger.debug('Admin page initialization complete');
             } catch (error) {
-                logger.error('Admin page initialization failed', { error: error.message });
-                errorHandler.handle(error);
+                console.error('Admin page initialization failed', error);
             }
         });
 
@@ -372,13 +366,11 @@
             const { data: { user }, error } = await supabase.auth.getUser();
             
             if (error || !user) {
-                logger.warn('User not authenticated, redirecting to login');
                 window.location.href = '/index.html';
                 return;
             }
             
             currentUser = user;
-            logger.debug('User authenticated', { userId: user.id });
 
             // Fetch user profile to check role
             const { data: profile, error: profileError } = await supabase
@@ -388,80 +380,56 @@
                 .single();
 
             if (profileError || !profile || profile.role !== 'admin') {
-                logger.warn('User is not admin, access denied', { userId: user.id });
                 // User is not an admin, show access denied
                 document.getElementById('loadingState').style.display = 'none';
                 document.getElementById('accessDenied').style.display = 'block';
                 return;
             }
-
-            logger.info('Admin access granted', { userId: user.id });
         }
 
         /**
-         * Load admin data - REFACTORED WITH useAsync
+         * Load admin data
          */
         async function loadAdminData() {
             try {
-                // ✨ NEW: Use useAsync for loading admin data
-                const adminDataAsync = useAsync(
-                    async () => {
-                        logger.debug('Loading admin data');
-                        
-                        // Fetch all participations with related data
-                        const { data: allParticipations, error: allError } = await supabase
-                            .from('participations')
-                            .select(`
-                                id,
-                                status,
-                                after_photo_url,
-                                created_at,
-                                user_id,
-                                campaign_id,
-                                campaigns (
-                                    id,
-                                    title,
-                                    before_photo_url
-                                ),
-                                profiles (
-                                    username
-                                )
-                            `)
-                            .order('created_at', { ascending: false });
+                // Fetch all participations with related data
+                const { data: allParticipations, error: allError } = await supabase
+                    .from('participations')
+                    .select(`
+                        id,
+                        status,
+                        after_photo_url,
+                        created_at,
+                        user_id,
+                        campaign_id,
+                        campaigns (
+                            id,
+                            title,
+                            before_photo_url
+                        ),
+                        profiles (
+                            username
+                        )
+                    `)
+                    .order('created_at', { ascending: false });
 
-                        if (allError) {
-                            throw new Error(`Failed to fetch participations: ${allError.message}`);
-                        }
+                if (allError) {
+                    throw new Error(`Failed to fetch participations: ${allError.message}`);
+                }
 
-                        return allParticipations || [];
-                    },
-                    []
-                );
-
-                const allParticipations = await adminDataAsync.execute();
-                logger.info('Admin data loaded', { totalParticipations: allParticipations.length });
+                const allParticipationsData = allParticipations || [];
 
                 // Filter pending participations
-                pendingParticipations = allParticipations.filter(p => p.status === 'pending');
+                pendingParticipations = allParticipationsData.filter(p => p.status === 'pending');
 
                 // Calculate statistics
-                const totalApproved = allParticipations.filter(p => p.status === 'approved').length;
-                const totalRejected = allParticipations.filter(p => p.status === 'rejected').length;
-
-                logger.debug('Statistics calculated', {
-                    pending: pendingParticipations.length,
-                    approved: totalApproved,
-                    rejected: totalRejected
-                });
+                const totalApproved = allParticipationsData.filter(p => p.status === 'approved').length;
+                const totalRejected = allParticipationsData.filter(p => p.status === 'rejected').length;
 
                 // Update stats
                 document.getElementById('totalPendingCount').textContent = pendingParticipations.length;
                 document.getElementById('totalApprovedCount').textContent = totalApproved;
                 document.getElementById('totalRejectedCount').textContent = totalRejected;
-
-                // ✨ NEW: Store admin data in global state
-                store.setByPath('admin.pendingCount', pendingParticipations.length);
-                store.setByPath('admin.stats', { pending: pendingParticipations.length, approved: totalApproved, rejected: totalRejected });
 
                 // Render pending table
                 renderPendingTable();
@@ -471,9 +439,6 @@
                 document.getElementById('adminContent').style.display = 'block';
 
             } catch (error) {
-                logger.error('Error loading admin data', { error: error.message });
-                errorHandler.handle(error);
-
                 await Swal.fire({
                     icon: 'error',
                     title: 'Error',
@@ -613,8 +578,6 @@
                     }
                 });
 
-                logger.info('Approving participation', { participationId, username });
-
                 // Get user ID from participation
                 const userId = participation.user_id;
 
@@ -652,8 +615,6 @@
                     throw new Error(`Failed to update points: ${updatePointsError.message}`);
                 }
 
-                logger.debug('Points awarded', { userId, newBalance: newPointsBalance });
-
                 // Record transaction
                 const { error: transactionError } = await supabase
                     .from('point_transactions')
@@ -666,13 +627,10 @@
                     }]);
 
                 if (transactionError) {
-                    logger.warn('Warning: Transaction record failed', { error: transactionError.message });
+                    console.warn('Warning: Transaction record failed', transactionError.message);
                 }
 
                 Swal.close();
-
-                // ✨ NEW: Use notify for success
-                notify(`✅ ${username} approved! +20 points awarded`, 'success', 2000);
 
                 // Show success
                 await Swal.fire({
@@ -686,8 +644,6 @@
                 await loadAdminData();
 
             } catch (error) {
-                logger.error('Error approving participation', { error: error.message });
-                errorHandler.handle(error);
 
                 await Swal.fire({
                     icon: 'error',
@@ -726,12 +682,10 @@
                 });
 
                 if (!result.isConfirmed) {
-                    logger.debug('Rejection cancelled by user', { participationId });
                     return;
                 }
 
                 const rejectionReason = result.value || 'No reason provided';
-                logger.info('Rejecting participation', { participationId, username, reason: rejectionReason });
 
                 // Show loading
                 await Swal.fire({
@@ -755,12 +709,8 @@
                     throw new Error(`Failed to reject participation: ${updateError.message}`);
                 }
 
-                logger.debug('Participation rejected', { participationId });
-
                 Swal.close();
 
-                // ✨ NEW: Use notify for success
-                notify(`❌ ${username}'s submission rejected`, 'info', 2000);
                 // Show success
                 await Swal.fire({
                     icon: 'info',
@@ -773,9 +723,6 @@
                 await loadAdminData();
 
             } catch (error) {
-                logger.error('Error rejecting participation', { error: error.message });
-                errorHandler.handle(error);
-
                 await Swal.fire({
                     icon: 'error',
                     title: 'Error',
@@ -785,23 +732,19 @@
         }
 
         /**
-         * Handle logout - REFACTORED WITH LOGGER
+         * Handle logout
          */
         async function handleLogout() {
             try {
-                logger.info('Admin logout initiated');
                 const { error } = await supabase.auth.signOut();
                 if (!error) {
                     localStorage.removeItem('user');
-                    store.setState({ auth: { isAuthenticated: false, user: null } });
-                    logger.info('Admin logged out successfully');
                     window.location.href = '/index.html';
                 } else {
                     throw error;
                 }
             } catch (error) {
-                logger.error('Logout failed', { error: error.message });
-                errorHandler.handle(error);
+                console.error('Logout failed', error);
             }
         }
 
