@@ -377,7 +377,12 @@
 
             <!-- Campaign Details -->
             <div class="details-section">
-                <h3 id="campaignTitle"></h3>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 id="campaignTitle"></h3>
+                    <button class="btn btn-outline-success btn-sm" id="editCampaignBtn" style="display: none;" onclick="toggleEditCampaign()">
+                        ✏️ Edit Campaign
+                    </button>
+                </div>
                 
                 <div class="detail-row">
                     <div class="detail-label">Status</div>
@@ -405,6 +410,51 @@
                     <div class="detail-label">Created By</div>
                     <div class="detail-value" id="createdBy"></div>
                 </div>
+            </div>
+
+            <!-- Edit Campaign Form (hidden by default) -->
+            <div class="details-section" id="editCampaignSection" style="display: none;">
+                <h3>✏️ Edit Campaign</h3>
+                
+                <form id="editCampaignForm">
+                    <div class="mb-3">
+                        <label for="editTitle" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="editTitle" placeholder="Campaign title" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="editDescription" rows="4" placeholder="Describe the cleanup area..." required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editNeighborhood" class="form-label">Neighborhood</label>
+                        <select class="form-select" id="editNeighborhood" required>
+                            <option value="Studentski Grad">Studentski Grad</option>
+                            <option value="Darvenitsa">Darvenitsa</option>
+                            <option value="Musagenitsa">Musagenitsa</option>
+                            <option value="Vitosha (VEC)">Vitosha (VEC)</option>
+                            <option value="Malinova Dolina">Malinova Dolina</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editStatus" class="form-label">Status</label>
+                        <select class="form-select" id="editStatus" required>
+                            <option value="active">Active</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            💾 Save Changes
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="toggleEditCampaign()">
+                            ❌ Cancel
+                        </button>
+                    </div>
+                </form>
             </div>
 
             <!-- Participation Stats -->
@@ -745,6 +795,11 @@
             const isCreator = currentUser.id === campaign.created_by;
             const hasNoParticipations = participations.length === 0;
 
+            // Show edit button if user is creator
+            if (isCreator) {
+                document.getElementById('editCampaignBtn').style.display = 'inline-block';
+            }
+
             // Show delete button only if BOTH conditions are true
             if (isCreator && hasNoParticipations) {
                 document.getElementById('deleteBtn').style.display = 'inline-block';
@@ -1042,11 +1097,161 @@
             }
         }
 
+        /**
+         * Toggle edit campaign form
+         */
+        function toggleEditCampaign() {
+            const editSection = document.getElementById('editCampaignSection');
+            
+            if (editSection.style.display === 'none') {
+                // Show edit form
+                editSection.style.display = 'block';
+                
+                // Pre-fill form with current values
+                document.getElementById('editTitle').value = campaign?.title || '';
+                document.getElementById('editDescription').value = campaign?.description || '';
+                document.getElementById('editNeighborhood').value = campaign?.neighborhood || 'Studentski Grad';
+                document.getElementById('editStatus').value = campaign?.status || 'active';
+                
+                // Scroll to edit form
+                editSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                // Hide edit form
+                editSection.style.display = 'none';
+            }
+        }
+
+        /**
+         * Handle save campaign changes
+         */
+        async function handleSaveCampaign(e) {
+            e.preventDefault();
+            
+            const newTitle = document.getElementById('editTitle').value.trim();
+            const newDescription = document.getElementById('editDescription').value.trim();
+            const newNeighborhood = document.getElementById('editNeighborhood').value;
+            const newStatus = document.getElementById('editStatus').value;
+            
+            if (!newTitle || !newDescription) {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Title and description are required!'
+                });
+                return;
+            }
+            
+            try {
+                // Show loading
+                Swal.fire({
+                    title: 'Saving...',
+                    text: 'Please wait',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                
+                const campaignId = getCampaignIdFromUrl();
+                
+                // Check if demo mode
+                const localUser = JSON.parse(localStorage.getItem('user') || '{}');
+                
+                if (localUser.id && localUser.id.startsWith('demo-')) {
+                    // Demo mode - update localStorage
+                    const demoCampaigns = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_CAMPAIGNS') || '[]');
+                    const campaignIndex = demoCampaigns.findIndex(c => c.id === campaignId);
+                    
+                    if (campaignIndex !== -1) {
+                        demoCampaigns[campaignIndex] = {
+                            ...demoCampaigns[campaignIndex],
+                            title: newTitle,
+                            description: newDescription,
+                            neighborhood: newNeighborhood,
+                            status: newStatus,
+                            updated_at: new Date().toISOString()
+                        };
+                        
+                        localStorage.setItem('CLEAN_QUARTER_DEMO_CAMPAIGNS', JSON.stringify(demoCampaigns));
+                        
+                        // Update global campaign variable
+                        campaign = demoCampaigns[campaignIndex];
+                        
+                        // Update UI
+                        document.getElementById('campaignTitle').textContent = newTitle;
+                        document.getElementById('campaignDescription').textContent = newDescription;
+                        document.getElementById('campaignNeighborhood').textContent = newNeighborhood;
+                        
+                        const statusBadge = document.getElementById('statusBadge');
+                        statusBadge.textContent = newStatus === 'active' ? '🟢 Active' : '✅ Completed';
+                        statusBadge.className = 'badge-status ' + (newStatus === 'active' ? 'status-active' : 'status-completed');
+                        
+                        await Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: 'Campaign updated successfully!',
+                            timer: 2000
+                        });
+                        
+                        toggleEditCampaign();
+                    }
+                } else {
+                    // Real mode - update Supabase
+                    const { data, error } = await supabase
+                        .from('campaigns')
+                        .update({
+                            title: newTitle,
+                            description: newDescription,
+                            neighborhood: newNeighborhood,
+                            status: newStatus,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', campaignId)
+                        .select()
+                        .single();
+                    
+                    if (error) throw error;
+                    
+                    // Update campaign
+                    campaign = data;
+                    
+                    // Update UI
+                    document.getElementById('campaignTitle').textContent = newTitle;
+                    document.getElementById('campaignDescription').textContent = newDescription;
+                    document.getElementById('campaignNeighborhood').textContent = newNeighborhood;
+                    
+                    const statusBadge = document.getElementById('statusBadge');
+                    statusBadge.textContent = newStatus === 'active' ? '🟢 Active' : '✅ Completed';
+                    statusBadge.className = 'badge-status ' + (newStatus === 'active' ? 'status-active' : 'status-completed');
+                    
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: 'Campaign updated successfully!',
+                        timer: 2000
+                    });
+                    
+                    toggleEditCampaign();
+                }
+            } catch (error) {
+                console.error('Error updating campaign', error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'Error saving changes'
+                });
+            }
+        }
+
+        // Add event listener to edit form
+        document.getElementById('editCampaignForm')?.addEventListener('submit', handleSaveCampaign);
+
         // Expose functions to window for onclick handlers
         window.handleLogout = handleLogout;
         window.handleDelete = handleDelete;
         window.handleJoin = handleJoin;
         window.handleUploadPhoto = handleUploadPhoto;
+        window.toggleEditCampaign = toggleEditCampaign;
     </script>
 </body>
 </html>
