@@ -5,9 +5,6 @@ import { initializePWA } from './services/pwa.js'
 import { initDemoMode, getDemoUser } from './utils/demoMode.js'
 import { initI18n, setLanguage, applyLanguage } from './utils/i18n.js'
 
-// Initialize Architecture (NEW - Step 7 & 8)
-import { initializeArchitecture, logger, errorHandler, store } from './architecture/index.js'
-
 // Handle demo login - MUST BE DEFINED EARLY AND ASSIGNED TO WINDOW
 function handleDemoLogin(e) {
   if (e) e.preventDefault();
@@ -108,8 +105,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   } catch (error) {
     console.error('Failed to initialize application:', error)
-    logger.error('Application initialization failed', { error: error.message })
-    errorHandler.handle(error)
   }
 })
 
@@ -188,16 +183,11 @@ async function handleRegister(e) {
     const user = await register(email, password, { neighborhood })
     localStorage.setItem('user', JSON.stringify(user))
     
-    // Log to architecture logger
-    logger.info('User registered successfully', { username: email })
+    console.log('User registered successfully:', email)
     
     window.location.href = './src/pages/dashboard.html'
   } catch (error) {
     console.error('Registration failed:', error)
-    logger.error('Registration failed', { error: error.message })
-    
-    // Use error handler for consistent error processing
-    errorHandler.handle(error)
     
     await Swal.fire({
       icon: 'error',
