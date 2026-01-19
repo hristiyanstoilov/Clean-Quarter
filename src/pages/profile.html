@@ -390,6 +390,16 @@
         import supabase from '../services/supabase.js';
         import { initI18n, applyLanguage, setLanguage } from '../utils/i18n.js';
 
+        // ✨ NEW: Import from architecture
+        import { 
+          useAsync, 
+          useFetch,
+          store, 
+          logger, 
+          errorHandler,
+          notify
+        } from '../architecture/index.js';
+
         // Global variables
         let currentUser = null;
         let userProfile = null;
@@ -407,8 +417,15 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', async () => {
-            await checkAuth();
-            await loadProfileData();
+            try {
+                logger.info('Profile page loaded');
+                await checkAuth();
+                await loadProfileData();
+                logger.debug('Profile page initialization complete');
+            } catch (error) {
+                logger.error('Profile page initialization failed', { error: error.message });
+                errorHandler.handle(error);
+            }
         });
 
         /**
@@ -418,64 +435,80 @@
             const { data: { user }, error } = await supabase.auth.getUser();
             
             if (error || !user) {
+                logger.warn('User not authenticated, redirecting to login');
                 window.location.href = '/index.html';
                 return;
             }
             
             currentUser = user;
+            logger.debug('User authenticated', { userId: user.id });
         }
 
         /**
-         * Load profile data and transactions
+         * Load profile data and transactions - REFACTORED WITH useAsync
          */
         async function loadProfileData() {
             try {
-                let profile;
-                
-                // Check if in demo mode
-                if (currentUser.id === 'demo-admin-001') {
-                    console.log('📝 Loading demo profile data');
-                    profile = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_USER'));
-                    console.log('✅ Loaded demo profile:', profile);
-                } else {
-                    // Fetch user profile
-                    const { data, error: profileError } = await supabase
-                        .from('profiles')
-                        .select('*')
-                        .eq('id', currentUser.id)
-                        .single();
+                // ✨ NEW: Use useAsync for profile loading
+                const profileAsync = useAsync(
+                    async () => {
+                        logger.debug('Loading user profile');
+                        
+                        let profile;
+                        
+                        // Check if in demo mode
+                        if (currentUser.id === 'demo-admin-001') {
+                            logger.info('Loading demo profile data');
+                            profile = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_USER'));
+                        } else {
+                            // Fetch user profile
+                            const { data, error: profileError } = await supabase
+                                .from('profiles')
+                                .select('*')
+                                .eq('id', currentUser.id)
+                                .single();
 
-                    if (profileError) {
-                        throw new Error(`Failed to fetch profile: ${profileError.message}`);
-                    }
-                    profile = data;
-                }
+                            if (profileError) {
+                                throw new Error(`Failed to fetch profile: ${profileError.message}`);
+                            }
+                            profile = data;
+                        }
+                        
+                        return profile;
+                    },
+                    []
+                );
 
-                userProfile = profile;
+                userProfile = await profileAsync.execute();
+                logger.info('Profile loaded', { points: userProfile.points_balance, neighborhood: userProfile.neighborhood });
 
                 // Display profile info
                 document.getElementById('userEmail').textContent = currentUser.email;
                 document.getElementById('emailValue').textContent = currentUser.email;
-                document.getElementById('neighborhoodDisplay').textContent = profile.neighborhood || 'Not set';
-                document.getElementById('neighborhoodValue').textContent = profile.neighborhood || 'Not set';
-                document.getElementById('pointsDisplay').textContent = (profile.points_balance || 0) + ' ⭐';
-                document.getElementById('pointsValue').textContent = profile.points_balance || 0;
+                document.getElementById('neighborhoodDisplay').textContent = userProfile.neighborhood || 'Not set';
+                document.getElementById('neighborhoodValue').textContent = userProfile.neighborhood || 'Not set';
+                document.getElementById('pointsDisplay').textContent = (userProfile.points_balance || 0) + ' ⭐';
+                document.getElementById('pointsValue').textContent = userProfile.points_balance || 0;
 
                 // Display rank
-                displayRank(profile.points_balance || 0);
+                displayRank(userProfile.points_balance || 0);
 
-                // Load transactions
-                await loadTransactions();
+                // ✨ NEW: Store profile in global state
+                store.setByPath('user.profile', userProfile);
 
-                // Load participations
-                await loadParticipations();
+                // Load transactions and participations in parallel
+                await Promise.all([
+                    loadTransactions(),
+                    loadParticipations()
+                ]);
 
                 // Show content
                 document.getElementById('loadingState').style.display = 'none';
                 document.getElementById('profileContent').style.display = 'block';
 
             } catch (error) {
-                console.error('Error loading profile:', error);
+                logger.error('Error loading profile', { error: error.message });
+                errorHandler.handle(error);
 
                 await Swal.fire({
                     icon: 'error',
@@ -515,17 +548,18 @@
         }
 
         /**
-         * Load and display transactions
+         * Load and display transactions - REFACTORED WITH LOGGING
          */
         async function loadTransactions() {
             try {
+                logger.debug('Loading transactions');
+                
                 let transactions = [];
                 
                 // Check if in demo mode
                 if (currentUser.id === 'demo-admin-001') {
-                    console.log('📝 Loading demo transactions');
+                    logger.info('Loading demo transactions');
                     transactions = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_TRANSACTIONS') || '[]');
-                    console.log('✅ Loaded', transactions.length, 'demo transactions');
                 } else {
                     const { data, error } = await supabase
                         .from('point_transactions')
@@ -537,6 +571,8 @@
                     if (error) throw error;
                     transactions = data || [];
                 }
+
+                logger.info('Transactions loaded', { count: transactions.length });
 
                 if (!transactions || transactions.length === 0) {
                     document.getElementById('transactionsContainer').innerHTML = `
@@ -596,7 +632,9 @@
                 document.getElementById('transactionsContainer').innerHTML = html;
 
             } catch (error) {
-                console.error('Error loading transactions:', error);
+                logger.error('Error loading transactions', { error: error.message });
+                errorHandler.handle(error);
+                
                 document.getElementById('transactionsContainer').innerHTML = `
                     <div class="empty-state" style="color: #dc3545;">
                         <p>Failed to load transactions</p>
@@ -606,10 +644,12 @@
         }
 
         /**
-         * Load and display user participations
+         * Load and display user participations - REFACTORED WITH LOGGING
          */
         async function loadParticipations() {
             try {
+                logger.debug('Loading participations');
+                
                 const { data: participations, error } = await supabase
                     .from('participations')
                     .select(`
@@ -679,10 +719,13 @@
                     `;
                 });
 
+                logger.info('Participations loaded', { count: participations.length });
                 document.getElementById('participationsContainer').innerHTML = html;
 
             } catch (error) {
-                console.error('Error loading participations:', error);
+                logger.error('Error loading participations', { error: error.message });
+                errorHandler.handle(error);
+                
                 document.getElementById('participationsContainer').innerHTML = `
                     <div class="empty-state" style="color: #dc3545;">
                         <p>Failed to load participations</p>
@@ -692,13 +735,23 @@
         }
 
         /**
-         * Handle logout
+         * Handle logout - REFACTORED WITH LOGGER
          */
         async function handleLogout() {
-            const { error } = await supabase.auth.signOut();
-            if (!error) {
-                localStorage.removeItem('user');
-                window.location.href = '/index.html';
+            try {
+                logger.info('User logout initiated');
+                const { error } = await supabase.auth.signOut();
+                if (!error) {
+                    localStorage.removeItem('user');
+                    store.setState({ auth: { isAuthenticated: false, user: null } });
+                    logger.info('User logged out successfully');
+                    window.location.href = '/index.html';
+                } else {
+                    throw error;
+                }
+            } catch (error) {
+                logger.error('Logout failed', { error: error.message });
+                errorHandler.handle(error);
             }
         }
 
