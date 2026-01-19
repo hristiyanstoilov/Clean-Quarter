@@ -328,6 +328,9 @@
                     <h1 id="userEmail">-</h1>
                     <p><strong>Neighborhood:</strong> <span id="neighborhoodDisplay">-</span></p>
                     <p><strong>Points Balance:</strong> <span id="pointsDisplay" style="font-size: 1.2rem; font-weight: bold; color: #ffd700;">0 ⭐</span></p>
+                    <button class="btn btn-outline-success btn-sm mt-2" onclick="toggleEditMode()" id="editProfileBtn">
+                        <span data-i18n="profile.editProfile">✏️ Редактирай профил</span>
+                    </button>
                 </div>
             </div>
 
@@ -354,6 +357,52 @@
                     <div class="info-label">Rank:</div>
                     <div class="info-value"><span id="rankValue">-</span></div>
                 </div>
+            </div>
+
+            <!-- Edit Profile Form (hidden by default) -->
+            <div class="section" id="editProfileSection" style="display: none;">
+                <h2 data-i18n="profile.editProfileTitle">✏️ Редактирай профил</h2>
+                
+                <form id="editProfileForm">
+                    <div class="mb-3">
+                        <label for="editUsername" class="form-label" data-i18n="profile.username">Потребителско име</label>
+                        <input type="text" class="form-control" id="editUsername" placeholder="Въведи потребителско име" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editNeighborhood" class="form-label" data-i18n="profile.neighborhood">Квартал</label>
+                        <select class="form-select" id="editNeighborhood" required>
+                            <option value="Studentski Grad" data-i18n="neighborhoods.studentskiGrad">Студентски град</option>
+                            <option value="Darvenitsa" data-i18n="neighborhoods.darvenitsa">Дървеница</option>
+                            <option value="Musagenitsa" data-i18n="neighborhoods.musagenitsa">Мусагеница</option>
+                            <option value="Vitosha (VEC)" data-i18n="neighborhoods.vitoshaVec">Витоша (ВЕЦ)</option>
+                            <option value="Malinova Dolina" data-i18n="neighborhoods.malinovaDolina">Малинова долина</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editAvatar" class="form-label" data-i18n="profile.avatar">Аватар (Emoji)</label>
+                        <select class="form-select" id="editAvatar">
+                            <option value="👤">👤 Потребител</option>
+                            <option value="👨">👨 Мъж</option>
+                            <option value="👩">👩 Жена</option>
+                            <option value="🧑">🧑 Човек</option>
+                            <option value="😊">😊 Усмивка</option>
+                            <option value="🌱">🌱 Растение</option>
+                            <option value="♻️">♻️ Рециклиране</option>
+                            <option value="🌿">🌿 Зелено</option>
+                        </select>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success" data-i18n="profile.saveChanges">
+                            💾 Запази промените
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="toggleEditMode()" data-i18n="profile.cancel">
+                            ❌ Отказ
+                        </button>
+                    </div>
+                </form>
             </div>
 
             <!-- Point Transactions Section -->
@@ -717,8 +766,137 @@
             }
         }
 
+        /**
+         * Toggle edit mode - show/hide edit form
+         */
+        function toggleEditMode() {
+            const editSection = document.getElementById('editProfileSection');
+            const accountSection = document.querySelector('.section');
+            
+            if (editSection.style.display === 'none') {
+                // Show edit form
+                editSection.style.display = 'block';
+                
+                // Pre-fill form with current values
+                document.getElementById('editUsername').value = userProfile?.username || '';
+                document.getElementById('editNeighborhood').value = userProfile?.neighborhood || 'Studentski Grad';
+                document.getElementById('editAvatar').value = userProfile?.avatar || '👤';
+                
+                // Scroll to edit form
+                editSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                // Hide edit form
+                editSection.style.display = 'none';
+            }
+        }
+
+        /**
+         * Handle save profile changes
+         */
+        async function handleSaveProfile(e) {
+            e.preventDefault();
+            
+            const newUsername = document.getElementById('editUsername').value.trim();
+            const newNeighborhood = document.getElementById('editNeighborhood').value;
+            const newAvatar = document.getElementById('editAvatar').value;
+            
+            if (!newUsername) {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Грешка',
+                    text: 'Потребителското име е задължително!'
+                });
+                return;
+            }
+            
+            try {
+                // Show loading
+                Swal.fire({
+                    title: 'Запазване...',
+                    text: 'Моля изчакайте',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                
+                // Check if demo mode
+                const localUser = JSON.parse(localStorage.getItem('user') || '{}');
+                
+                if (localUser.id && localUser.id.startsWith('demo-')) {
+                    // Demo mode - update localStorage
+                    localUser.username = newUsername;
+                    localUser.neighborhood = newNeighborhood;
+                    localUser.avatar = newAvatar;
+                    
+                    localStorage.setItem('user', JSON.stringify(localUser));
+                    
+                    // Update userProfile variable
+                    userProfile = localUser;
+                    
+                    // Update UI
+                    document.getElementById('userEmail').textContent = newUsername;
+                    document.getElementById('neighborhoodDisplay').textContent = newNeighborhood;
+                    document.getElementById('neighborhoodValue').textContent = newNeighborhood;
+                    document.querySelector('.avatar').textContent = newAvatar;
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Успех!',
+                        text: 'Профилът е обновен успешно!',
+                        timer: 2000
+                    });
+                    
+                    toggleEditMode();
+                } else {
+                    // Real mode - update Supabase
+                    const { data, error } = await supabase
+                        .from('profiles')
+                        .update({
+                            username: newUsername,
+                            neighborhood: newNeighborhood,
+                            avatar_url: newAvatar
+                        })
+                        .eq('id', currentUser.id)
+                        .select()
+                        .single();
+                    
+                    if (error) throw error;
+                    
+                    // Update userProfile
+                    userProfile = data;
+                    
+                    // Update UI
+                    document.getElementById('userEmail').textContent = newUsername;
+                    document.getElementById('neighborhoodDisplay').textContent = newNeighborhood;
+                    document.getElementById('neighborhoodValue').textContent = newNeighborhood;
+                    document.querySelector('.avatar').textContent = newAvatar;
+                    
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Успех!',
+                        text: 'Профилът е обновен успешно!',
+                        timer: 2000
+                    });
+                    
+                    toggleEditMode();
+                }
+            } catch (error) {
+                console.error('Error updating profile', error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Грешка',
+                    text: error.message || 'Грешка при запазване на промените'
+                });
+            }
+        }
+
+        // Add event listener to edit form
+        document.getElementById('editProfileForm').addEventListener('submit', handleSaveProfile);
+
         // Expose functions to window for onclick handlers
         window.handleLogout = handleLogout;
+        window.toggleEditMode = toggleEditMode;
     </script>
 </body>
 </html>

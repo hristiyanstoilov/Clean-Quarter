@@ -48,6 +48,16 @@
     "noCampaigns": "No active campaigns",
     "loading": "Loading campaigns..."
   },
+  "profile": {
+    "title": "Profile",
+    "editProfile": "✏️ Edit Profile",
+    "editProfileTitle": "✏️ Edit Profile",
+    "username": "Username",
+    "neighborhood": "Neighborhood",
+    "avatar": "Avatar",
+    "saveChanges": "💾 Save Changes",
+    "cancel": "❌ Cancel"
+  },
   "campaign": {
     "title": "Campaign Details",
     "description": "Description",
