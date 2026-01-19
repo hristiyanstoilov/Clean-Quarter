@@ -337,15 +337,29 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Main Script -->
+    <!-- Main Script - REFACTORED WITH ARCHITECTURE -->
     <script type="module">
         import supabase from '../services/supabase.js';
         import { initI18n, applyLanguage, setLanguage } from '../utils/i18n.js';
+
+        // ✨ NEW: Import from architecture
+        import { 
+          useFetch, 
+          useAsync,
+          store, 
+          logger, 
+          errorHandler,
+          notify
+        } from '../architecture/index.js';
 
         // Global variables
         let currentUser = null;
         let userProfile = null;
         let rewards = [];
+
+        // ✨ NEW: Fetch hooks with caching
+        let userProfileFetch = null;
+        let rewardsFetch = null;
 
         // Initialize i18n
         await initI18n();
@@ -360,8 +374,15 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', async () => {
-            await checkAuth();
-            await loadRewardsData();
+            try {
+                logger.info('Rewards page loaded');
+                await checkAuth();
+                await loadRewardsData();
+                logger.debug('Rewards page initialization complete');
+            } catch (error) {
+                logger.error('Rewards page initialization failed', { error: error.message });
+                errorHandler.handle(error);
+            }
         });
 
         /**
@@ -371,42 +392,65 @@
             const { data: { user }, error } = await supabase.auth.getUser();
             
             if (error || !user) {
+                logger.warn('User not authenticated, redirecting to login');
                 window.location.href = '/index.html';
                 return;
             }
             
             currentUser = user;
+            logger.debug('User authenticated', { userId: user.id });
         }
 
         /**
-         * Load rewards data and user profile
+         * Load rewards data and user profile - REFACTORED WITH useFetch
          */
         async function loadRewardsData() {
             try {
-                // Fetch user profile
-                const { data: profile, error: profileError } = await supabase
-                    .from('profiles')
-                    .select('points_balance')
-                    .eq('id', currentUser.id)
-                    .single();
+                // ✨ NEW: Use useFetch with caching for profile
+                userProfileFetch = useFetch(
+                    async () => {
+                        logger.debug('Fetching user profile');
+                        const { data: profile, error: profileError } = await supabase
+                            .from('profiles')
+                            .select('points_balance')
+                            .eq('id', currentUser.id)
+                            .single();
 
-                if (profileError) {
-                    throw new Error(`Failed to fetch user profile: ${profileError.message}`);
-                }
+                        if (profileError) {
+                            throw new Error(`Failed to fetch user profile: ${profileError.message}`);
+                        }
 
-                userProfile = profile;
+                        return profile;
+                    },
+                    { cache: true, cacheTime: 60000 } // Cache for 1 minute
+                );
 
-                // Fetch all rewards
-                const { data: rewardsData, error: rewardsError } = await supabase
-                    .from('rewards')
-                    .select('*')
-                    .order('cost', { ascending: true });
+                userProfile = await userProfileFetch.execute();
 
-                if (rewardsError) {
-                    throw new Error(`Failed to fetch rewards: ${rewardsError.message}`);
-                }
+                // ✨ NEW: Use useFetch with caching for rewards
+                rewardsFetch = useFetch(
+                    async () => {
+                        logger.debug('Fetching rewards');
+                        const { data: rewardsData, error: rewardsError } = await supabase
+                            .from('rewards')
+                            .select('*')
+                            .order('cost', { ascending: true });
 
-                rewards = rewardsData || [];
+                        if (rewardsError) {
+                            throw new Error(`Failed to fetch rewards: ${rewardsError.message}`);
+                        }
+
+                        return rewardsData || [];
+                    },
+                    { cache: true, cacheTime: 300000 } // Cache for 5 minutes
+                );
+
+                rewards = await rewardsFetch.execute();
+
+                // ✨ NEW: Store data in global state
+                store.setByPath('user.profile', userProfile);
+                store.setByPath('rewards.list', rewards);
+                logger.info('Rewards data loaded', { rewardsCount: rewards.length, userPoints: userProfile.points_balance });
 
                 // Display user points
                 document.getElementById('pointsBalance').textContent = userProfile.points_balance || 0;
@@ -419,7 +463,8 @@
                 document.getElementById('rewardsContent').style.display = 'block';
 
             } catch (error) {
-                console.error('Error loading rewards:', error);
+                logger.error('Error loading rewards', { error: error.message });
+                errorHandler.handle(error);
 
                 const errorDiv = document.getElementById('errorMessage');
                 errorDiv.textContent = error.message || 'Failed to load rewards. Please try again.';
@@ -506,12 +551,21 @@
         }
 
         /**
-         * Handle reward purchase
+         * Handle reward purchase - REFACTORED WITH ARCHITECTURE
          */
         async function handleBuy(rewardId, rewardTitle, rewardCost) {
             try {
+                logger.info('Reward purchase initiated', { rewardId, rewardTitle, cost: rewardCost });
+                
                 // Check if user has enough points
                 if ((userProfile.points_balance || 0) < rewardCost) {
+                    logger.warn('Insufficient points for purchase', { 
+                        userPoints: userProfile.points_balance,
+                        rewardCost 
+                    });
+                    
+                    notify(`You need ${rewardCost - (userProfile.points_balance || 0)} more points!`, 'warning');
+                    
                     await Swal.fire({
                         icon: 'error',
                         title: 'Insufficient Points',
@@ -533,6 +587,7 @@
                 });
 
                 if (!result.isConfirmed) {
+                    logger.debug('Purchase cancelled by user', { rewardId });
                     return;
                 }
 
@@ -557,6 +612,8 @@
                     throw new Error(`Failed to deduct points: ${updateError.message}`);
                 }
 
+                logger.debug('Points deducted', { newBalance: newPointsBalance });
+
                 // Create transaction record
                 const { error: transactionError } = await supabase
                     .from('point_transactions')
@@ -569,12 +626,20 @@
                     }]);
 
                 if (transactionError) {
-                    console.warn('Warning: Transaction record failed:', transactionError);
+                    logger.warn('Warning: Transaction record failed', { error: transactionError.message });
                 }
+
+                // ✨ NEW: Update global state
+                userProfile.points_balance = newPointsBalance;
+                store.setByPath('user.profile', userProfile);
+                
+                logger.info('Reward purchased successfully', { rewardId, newBalance: newPointsBalance });
 
                 Swal.close();
 
-                // Show success
+                // ✨ NEW: Use notify for success
+                notify(`🎉 ${rewardTitle} purchased! ${newPointsBalance} points left`, 'success', 2000);
+
                 await Swal.fire({
                     icon: 'success',
                     title: 'Reward Purchased!',
@@ -594,7 +659,8 @@
                 renderRewards();
 
             } catch (error) {
-                console.error('Error purchasing reward:', error);
+                logger.error('Reward purchase failed', { error: error.message });
+                errorHandler.handle(error);
 
                 await Swal.fire({
                     icon: 'error',
