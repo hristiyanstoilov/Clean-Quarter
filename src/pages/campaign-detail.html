@@ -479,7 +479,7 @@
 
             <!-- Action Buttons -->
             <div class="action-buttons">
-                <a href="/src/pages/dashboard.html" class="btn-back">← Back to Dashboard</a>
+                <a href="./dashboard.html" class="btn-back">← Back to Dashboard</a>
                 <button class="btn-delete" id="deleteBtn" style="display: none;" onclick="handleDelete()">
                     🗑️ Delete Campaign
                 </button>
@@ -491,7 +491,7 @@
             <div class="error-message">
                 <h4>Unable to Load Campaign</h4>
                 <p id="errorMessage"></p>
-                <a href="/src/pages/dashboard.html" class="btn-back" style="display: inline-block; margin-top: 1rem;">← Back to Dashboard</a>
+                <a href="./dashboard.html" class="btn-back" style="display: inline-block; margin-top: 1rem;">← Back to Dashboard</a>
             </div>
         </div>
     </div>
@@ -546,7 +546,7 @@
             const { data: { user }, error } = await supabase.auth.getUser();
             
             if (error || !user) {
-                window.location.href = '/index.html';
+                window.location.href = '../../index.html';
             }
             
             currentUser = user;
@@ -1008,7 +1008,7 @@
                 });
 
                 // Redirect to dashboard
-                window.location.href = '/src/pages/dashboard.html';
+                window.location.href = './dashboard.html';
 
             } catch (error) {
                 console.error('Error deleting campaign:', error);
@@ -1038,7 +1038,7 @@
             const { error } = await supabase.auth.signOut();
             if (!error) {
                 localStorage.removeItem('user');
-                window.location.href = '/index.html';
+                window.location.href = '../../index.html';
             }
         }
 

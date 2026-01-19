@@ -249,14 +249,14 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/src/pages/admin.html">🛡️ Admin Panel</a>
+            <a class="navbar-brand" href="./admin.html">🛡️ Admin Panel</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <div class="ms-auto" style="display: flex; gap: 1rem; align-items: center;">
-                    <a href="/src/pages/dashboard.html" data-i18n="nav.dashboard">Dashboard</a>
-                    <a href="/src/pages/profile.html" data-i18n="nav.profile">Profile</a>
+                    <a href="./dashboard.html" data-i18n="nav.dashboard">Dashboard</a>
+                    <a href="./profile.html" data-i18n="nav.profile">Profile</a>
                     <select id="languageSelector" class="form-select form-select-sm" style="max-width: 150px; display: none;">
                         <option value="bg">🇧🇬 Български</option>
                         <option value="en">🇬🇧 English</option>
@@ -315,7 +315,7 @@
             <div class="access-denied">
                 <h1>🚫 Access Denied</h1>
                 <p>You don't have permission to access this page.</p>
-                <a href="/src/pages/dashboard.html" class="btn btn-primary btn-lg">Go to Dashboard</a>
+                <a href="./dashboard.html" class="btn btn-primary btn-lg">Go to Dashboard</a>
             </div>
         </div>
     </div>
@@ -366,7 +366,7 @@
             const { data: { user }, error } = await supabase.auth.getUser();
             
             if (error || !user) {
-                window.location.href = '/index.html';
+                window.location.href = '../../index.html';
                 return;
             }
             
@@ -739,7 +739,7 @@
                 const { error } = await supabase.auth.signOut();
                 if (!error) {
                     localStorage.removeItem('user');
-                    window.location.href = '/index.html';
+                    window.location.href = '../../index.html';
                 } else {
                     throw error;
                 }
