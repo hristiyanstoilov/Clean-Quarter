@@ -266,44 +266,21 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Main Script - REFACTORED WITH ARCHITECTURE -->
+    <!-- Main Script -->
     <script type="module">
         import { initializeMap } from '../services/map.js';
         import { uploadCampaignPhoto } from '../services/storage.js';
         import { initI18n, applyLanguage, setLanguage } from '../utils/i18n.js';
         import supabase from '../services/supabase.js';
 
-        // ✨ NEW: Import from architecture
-        import { 
-          useForm, 
-          useAsync,
-          useDebounce,
-          validateWithSchema,
-          store, 
-          logger, 
-          errorHandler,
-          notify,
-          schemas
-        } from '../architecture/index.js';
+        // Logger for debugging
+        const logger = console;
 
         // Global variables
         let map = null;
         let selectedCoordinates = { lat: null, lng: null };
         let beforePhotoFile = null;
-        
-        // ✨ NEW: Initialize form with validation
-        const campaignSchema = {
-          title: { type: 'string', required: true, minLength: 3, maxLength: 100 },
-          description: { type: 'string', required: true, minLength: 10, maxLength: 500 },
-          neighborhood: { type: 'string', required: true },
-          beforePhoto: { type: 'file', required: true }
-        };
-
-        // ✨ NEW: Form state hook (lazy init - will be set in DOMContentLoaded)
-        let form = null;
-        
-        // ✨ NEW: Debounced validation (lazy init)
-        let debouncedValidate = null;
+        let currentUser = null;
 
         /**
          * Initialize the page on load
@@ -321,33 +298,13 @@
                     console.log('Language changes only from Profile page');
                 });
 
-                // Now initialize form after DOM is ready
-                form = useForm(
-                  {
-                    title: '',
-                    description: '',
-                    neighborhood: '',
-                    beforePhoto: null
-                  },
-                  campaignSchema,
-                  async (values) => {
-                    await handleFormSubmit(values);
-                  }
-                );
-
-                // Initialize debounced validation
-                debouncedValidate = useDebounce(() => {
-                  checkFormCompletion();
-                }, 300);
-
-                logger.info('Create Campaign page loaded');
+                logger.log('Create Campaign page loaded');
                 await checkAuth();
                 initMap();
                 setupEventListeners();
-                logger.debug('Page initialization complete');
+                logger.log('Page initialization complete');
             } catch (error) {
-                logger.error('Page initialization failed', { error: error.message });
-                errorHandler.handle(error);
+                logger.error('Page initialization failed', error);
             }
         });
 
@@ -355,12 +312,29 @@
          * Check if user is authenticated
          */
         async function checkAuth() {
+            // Check for demo mode user first
+            const localUser = localStorage.getItem('user');
+            if (localUser) {
+                try {
+                    currentUser = JSON.parse(localUser);
+                    logger.log('Demo user authenticated:', currentUser.username);
+                    return;
+                } catch (e) {
+                    logger.error('Error parsing local user', e);
+                }
+            }
+            
+            // Check Supabase auth for real users
             const { data: { user }, error } = await supabase.auth.getUser();
             
             if (error || !user) {
-                logger.warn('User not authenticated, redirecting to login');
-                window.location.href = '/index.html';
+                logger.log('User not authenticated, redirecting to login');
+                window.location.href = '../../index.html';
+                return;
             }
+            
+            currentUser = user;
+            logger.log('User authenticated:', user.id);
         }
 
         /**
@@ -374,8 +348,7 @@
                 const { lat, lng } = e.latlng;
                 selectedCoordinates = { lat, lng };
                 
-                // ✨ NEW: Log map interaction
-                logger.debug('Map clicked', { lat, lng });
+                logger.log('Map clicked', lat, lng);
                 
                 // Update display
                 document.getElementById('latitude').textContent = lat.toFixed(6);
@@ -414,9 +387,9 @@
             document.getElementById('createCampaignForm').addEventListener('submit', handleFormSubmit);
             
             // Enable submit button when all fields are filled
-            document.getElementById('campaignTitle').addEventListener('input', debouncedValidate);
-            document.getElementById('campaignDescription').addEventListener('input', debouncedValidate);
-            document.getElementById('campaignNeighborhood').addEventListener('change', debouncedValidate);
+            document.getElementById('campaignTitle').addEventListener('input', checkFormCompletion);
+            document.getElementById('campaignDescription').addEventListener('input', checkFormCompletion);
+            document.getElementById('campaignNeighborhood').addEventListener('change', checkFormCompletion);
         }
 
         /**
@@ -428,9 +401,8 @@
             
             document.getElementById('beforePhotoName').textContent = fileName;
             
-            // ✨ NEW: Log file selection
             if (beforePhotoFile) {
-                logger.debug('Photo selected', { name: beforePhotoFile.name, size: beforePhotoFile.size, type: beforePhotoFile.type });
+                logger.log('Photo selected:', beforePhotoFile.name);
             }
             
             // Show preview
@@ -462,7 +434,7 @@
         }
 
         /**
-         * Handle form submission - REFACTORED WITH ARCHITECTURE
+         * Handle form submission
          */
         async function handleFormSubmit(e) {
             if (e && e.preventDefault) {
@@ -503,19 +475,9 @@
                 const neighborhood = document.getElementById('campaignNeighborhood').value;
                 const { lat, lng } = selectedCoordinates;
                 
-                // ✨ NEW: Validate form data before submission
-                const campaignData = {
-                    title,
-                    description,
-                    neighborhood,
-                    coordinates: { lat, lng }
-                };
-                
-                const validation = validateWithSchema(campaignData, campaignSchema);
-                if (!validation.isValid) {
-                    logger.warn('Campaign validation failed', { errors: validation.errors });
-                    notify(`Validation error: ${validation.errors[0]}`, 'warning');
-                    throw new Error(validation.errors[0] || 'Validation failed');
+                // Basic validation
+                if (!title || !description || !neighborhood || lat === null || lng === null || !beforePhotoFile) {
+                    throw new Error('Please fill all fields and select a location on the map');
                 }
                 
                 // Upload before photo
@@ -528,7 +490,7 @@
                 });
                 
                 const beforePhotoUrl = await uploadCampaignPhoto(beforePhotoFile, 'before');
-                logger.debug('Photo uploaded successfully', { url: beforePhotoUrl.substring(0, 50) });
+                logger.log('Photo uploaded successfully');
                 
                 Swal.close();
                 
@@ -553,12 +515,7 @@
                     throw new Error(`Failed to create campaign: ${campaignError.message}`);
                 }
                 
-                // ✨ NEW: Store campaign in global state
-                store.setByPath('campaigns.currentCampaign', campaign[0]);
-                logger.info('Campaign created successfully', { id: campaign[0].id, title });
-                
-                // Success notification
-                notify('🎉 Кампания успешно създадена!', 'success', 2000);
+                logger.log('Campaign created successfully', campaign[0].id, title);
                 
                 await Swal.fire({
                     icon: 'success',
@@ -567,12 +524,11 @@
                     confirmButtonText: 'View Campaign'
                 });
                 
-                // Redirect to campaign detail or dashboard
-                window.location.href = '/src/pages/dashboard.html';
+                // Redirect to dashboard
+                window.location.href = './dashboard.html';
                 
             } catch (error) {
-                logger.error('Campaign creation failed', { error: error.message });
-                errorHandler.handle(error);
+                logger.error('Campaign creation failed', error);
                 
                 await Swal.fire({
                     icon: 'error',
@@ -588,23 +544,21 @@
         }
 
         /**
-         * Handle logout - REFACTORED WITH LOGGER
+         * Handle logout
          */
         async function handleLogout() {
             try {
-                logger.info('User logout initiated');
+                logger.log('User logout initiated');
                 const { error } = await supabase.auth.signOut();
                 if (!error) {
                     localStorage.removeItem('user');
-                    store.setState({ auth: { isAuthenticated: false, user: null } });
-                    logger.info('User logged out successfully');
-                    window.location.href = '/index.html';
+                    logger.log('User logged out successfully');
+                    window.location.href = '../../index.html';
                 } else {
                     throw error;
                 }
             } catch (error) {
-                logger.error('Logout failed', { error: error.message });
-                errorHandler.handle(error);
+                logger.error('Logout failed', error);
             }
         }
 

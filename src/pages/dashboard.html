@@ -198,7 +198,6 @@
 
     <!-- Dashboard Script -->
     <script type="module">
-        // STEP 9: Refactored Dashboard with New Architecture
         import { initializeMap, loadMapData } from '../services/map.js';
         import { logout } from '../services/auth.js';
         import { initI18n, applyLanguage, setLanguage, t } from '../utils/i18n.js';
@@ -230,7 +229,7 @@
                 });
 
                 // Require authentication
-                requireAuth();
+                requireAuth('../../index.html');
 
                 const map = initializeMap();
                 await loadMapData(map);
@@ -242,7 +241,7 @@
         });
 
         /**
-         * Load and display campaigns list - REFACTORED WITH ARCHITECTURE
+         * Load and display campaigns list
          */
         async function loadCampaignsList() {
             const loadingSpinnerId = 'loadingSpinner';

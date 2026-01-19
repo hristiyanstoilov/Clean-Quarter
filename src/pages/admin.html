@@ -329,19 +329,13 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Main Script - REFACTORED WITH ARCHITECTURE -->
+    <!-- Main Script -->
     <script type="module">
         import supabase from '../services/supabase.js';
         import { initI18n, applyLanguage, setLanguage } from '../utils/i18n.js';
 
-        // ✨ NEW: Import from architecture
-        import { 
-          useAsync, 
-          store, 
-          logger, 
-          errorHandler,
-          notify
-        } from '../architecture/index.js';
+        // Logger for debugging
+        const logger = console;
 
         // Global variables
         let currentUser = null;
