@@ -153,17 +153,31 @@ class Store {
    * @param {string} type - 'success' | 'error' | 'info' | 'warning'
    * @param {number} duration - Auto-dismiss duration in ms
    */
-  notify(message, type = 'info', duration = 3000) {
+  addNotification(message, type = 'info', duration = 3000) {
     const id = Date.now();
     const notification = { id, message, type, timestamp: Date.now() };
 
     this.state.notifications.push(notification);
-    this.notify();
+    // Call the base notify to update listeners (don't recursively call self)
+    console.log('📢 State updated:', this.state);
+    this.listeners.forEach(listener => {
+      try {
+        listener(this.getState());
+      } catch (error) {
+        console.error('❌ Listener error:', error);
+      }
+    });
 
     if (duration > 0) {
       setTimeout(() => {
         this.state.notifications = this.state.notifications.filter(n => n.id !== id);
-        this.notify();
+        this.listeners.forEach(listener => {
+          try {
+            listener(this.getState());
+          } catch (error) {
+            console.error('❌ Listener error:', error);
+          }
+        });
       }, duration);
     }
 

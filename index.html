@@ -24,6 +24,14 @@
     <!-- SweetAlert2 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
+    <!-- Debug: Check if scripts run -->
+    <script>
+        console.log('🔵 Inline script executed - before main.js');
+    </script>
+    
+    <!-- Main Application Module - Load early for global functions -->
+    <script type="module" src="./src/main.js"></script>
+    
     <!-- Custom Styles -->
     <link rel="stylesheet" href="/src/style.css">
     
@@ -83,7 +91,7 @@
         }
 
         .nav-tabs .nav-link {
-            color: #6c757d;
+            color: #000000 !important;
             border: 2px solid transparent;
             font-weight: 600;
             padding: 0.75rem 1.5rem;
@@ -94,13 +102,13 @@
         }
 
         .nav-tabs .nav-link:hover {
-            color: #28a745;
+            color: #28a745 !important;
             background-color: rgba(40, 167, 69, 0.08);
             border-color: #28a745;
         }
 
         .nav-tabs .nav-link.active {
-            color: white;
+            color: white !important;
             background-color: #28a745;
             border-color: #28a745;
             box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
@@ -160,11 +168,12 @@
 
         .btn-register {
             background-color: #17a2b8;
-            color: white;
+            color: black !important;
         }
 
         .btn-register:hover {
             background-color: #138496;
+            color: black !important;
             box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
         }
 
@@ -216,17 +225,6 @@
             font-weight: 600;
         }
     </style>
-
-    <!-- Demo Mode Script - must be inline and BEFORE module script -->
-    <script>
-        // This will be properly implemented in main.js
-        // But we need it available immediately for onclick
-        window.handleDemoLogin = async function() {
-            console.log('🎮 handleDemoLogin called');
-            // Will be overridden by main.js implementation
-            alert('Loading demo mode...');
-        };
-    </script>
 </head>
 <body>
     <div class="auth-page">
@@ -234,14 +232,14 @@
             <div class="auth-card">
                 <!-- Header -->
                 <div class="auth-header">
-                    <h1>♻️ Clean Quarter</h1>
-                    <p>Чист Квартал</p>
+                    <h1>♻️ <span data-i18n="app.title">Чист Квартал</span></h1>
+                    <p data-i18n="app.subtitle">Почистване на квартала</p>
                     
                     <!-- Language Selector -->
                     <div style="margin-top: 1rem;">
                         <select id="languageSelector" class="form-select" style="width: 150px; margin: 0 auto; font-size: 0.9rem;">
-                            <option value="bg">🇧🇬 Български</option>
-                            <option value="en">🇬🇧 English</option>
+                            <option value="bg">Български</option>
+                            <option value="en">English</option>
                         </select>
                     </div>
                 </div>
@@ -251,10 +249,10 @@
                     <!-- Nav Tabs -->
                     <ul class="nav nav-tabs" id="authTabs" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button" role="tab">🔑 Вход</button>
+                            <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button" role="tab" data-i18n="auth.login">Вход</button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button" role="tab">👤 Регистрация</button>
+                            <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button" role="tab" data-i18n="auth.register">Регистрация</button>
                         </li>
                     </ul>
 
@@ -264,29 +262,29 @@
                         <div class="tab-pane fade show active" id="login" role="tabpanel">
                             <form id="loginForm">
                                 <div class="form-group">
-                                    <label for="loginEmail" class="form-label">Имейл</label>
-                                    <input type="email" class="form-control" id="loginEmail" placeholder="your@email.com" required>
+                                    <label for="loginEmail" class="form-label" data-i18n="auth.email">Имейл</label>
+                                    <input type="email" class="form-control" id="loginEmail" data-i18n-placeholder="auth.emailPlaceholder" placeholder="твоят@имейл.com" required>
                                 </div>
                                 <div class="form-group">
-                                    <label for="loginPassword" class="form-label">Парола</label>
-                                    <input type="password" class="form-control" id="loginPassword" placeholder="Въведи парола" required>
+                                    <label for="loginPassword" class="form-label" data-i18n="auth.password">Парола</label>
+                                    <input type="password" class="form-control" id="loginPassword" data-i18n-placeholder="auth.passwordPlaceholder" placeholder="Въведи парола" required>
                                 </div>
                                 <div class="form-check" style="margin-bottom: 1.5rem;">
                                     <input class="form-check-input" type="checkbox" id="rememberMe" style="cursor: pointer;">
-                                    <label class="form-check-label" for="rememberMe" style="cursor: pointer; font-size: 0.95rem; color: #6c757d;">
+                                    <label class="form-check-label" for="rememberMe" style="cursor: pointer; font-size: 0.95rem; color: #6c757d;" data-i18n="auth.rememberMe">
                                         Запомни ме
                                     </label>
                                 </div>
-                                <button type="submit" class="btn-auth btn-login">Вход</button>
+                                <button type="submit" class="btn-auth btn-login" data-i18n="auth.login">Вход</button>
                                 <div style="text-align: center; margin-top: 1rem;">
-                                    <a href="#" style="color: #28a745; text-decoration: none; font-size: 0.9rem; transition: color 0.3s ease;" onmouseover="this.style.color='#218838'" onmouseout="this.style.color='#28a745'" onclick="handleForgotPassword(event)">
+                                    <a href="#" style="color: #28a745; text-decoration: none; font-size: 0.9rem; transition: color 0.3s ease;" onmouseover="this.style.color='#218838'" onmouseout="this.style.color='#28a745'" onclick="handleForgotPassword(event)" data-i18n="auth.forgotPassword">
                                         Забравена парола?
                                     </a>
                                 </div>
                                 <div style="text-align: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e9ecef;">
-                                    <p style="font-size: 0.9rem; color: #6c757d; margin-bottom: 0.75rem;">Или разгледай приложението като админ:</p>
-                                    <button type="button" onclick="handleDemoLogin()" class="btn btn-success w-100" style="border-width: 2px; font-weight: 600; padding: 0.8rem; font-size: 1rem;">
-                                        🎮 Demo Mode (Админ)
+                                    <p style="font-size: 0.9rem; color: #6c757d; margin-bottom: 0.75rem;" data-i18n="auth.demoDescription">Или разгледай приложението като админ:</p>
+                                    <button type="button" onclick="handleDemoLogin()" class="btn btn-success w-100" style="border-width: 2px; font-weight: 600; padding: 0.8rem; font-size: 1rem;" data-i18n="auth.demoMode">
+                                        🎮 Demo режим (Админ)
                                     </button>
                                 </div>
                             </form>
@@ -296,58 +294,58 @@
                         <div class="tab-pane fade" id="register" role="tabpanel">
                             <form id="registerForm">
                                 <div class="form-group">
-                                    <label for="registerEmail" class="form-label">Имейл</label>
-                                    <input type="email" class="form-control" id="registerEmail" placeholder="your@email.com" required>
+                                    <label for="registerEmail" class="form-label" data-i18n="auth.email">Имейл</label>
+                                    <input type="email" class="form-control" id="registerEmail" data-i18n-placeholder="auth.emailPlaceholder" placeholder="твоят@имейл.com" required>
                                 </div>
                                 <div class="form-group">
-                                    <label for="registerPassword" class="form-label">Парола</label>
-                                    <input type="password" class="form-control" id="registerPassword" placeholder="Минимум 6 символа" required onkeyup="checkPasswordStrength()">
+                                    <label for="registerPassword" class="form-label" data-i18n="auth.password">Парола</label>
+                                    <input type="password" class="form-control" id="registerPassword" data-i18n-placeholder="auth.passwordMinChars" placeholder="Минимум 6 символа" required onkeyup="checkPasswordStrength()">
                                     <div style="margin-top: 0.5rem;">
                                         <div style="height: 6px; background-color: #e9ecef; border-radius: 3px; overflow: hidden;">
                                             <div id="passwordStrengthBar" style="height: 100%; width: 0%; background-color: #dc3545; transition: all 0.3s ease;"></div>
                                         </div>
-                                        <div id="passwordStrengthText" style="font-size: 0.85rem; color: #6c757d; margin-top: 0.25rem;">
+                                        <div id="passwordStrengthText" style="font-size: 0.85rem; color: #6c757d; margin-top: 0.25rem;" data-i18n="auth.passwordStrengthHint">
                                             Парола трябва да има: главни букви, малки букви, числа
                                         </div>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label for="registerPasswordConfirm" class="form-label">Потвърди парола</label>
-                                    <input type="password" class="form-control" id="registerPasswordConfirm" placeholder="Повтори паролата" required>
+                                    <label for="registerPasswordConfirm" class="form-label" data-i18n="auth.confirmPassword">Потвърди парола</label>
+                                    <input type="password" class="form-control" id="registerPasswordConfirm" data-i18n-placeholder="auth.repeatPassword" placeholder="Повтори паролата" required>
                                 </div>
                                 <div class="form-group">
-                                    <label for="registerNeighborhood" class="form-label">Твой квартал</label>
+                                    <label for="registerNeighborhood" class="form-label" data-i18n="auth.neighborhood">Твой квартал</label>
                                     <select class="form-select" id="registerNeighborhood" required>
-                                        <option value="">Избери квартал...</option>
-                                        <option value="Vitosha (VEC)">Витоша (ВЕЦ)</option>
-                                        <option value="Drvenitsa">Дървеница</option>
-                                        <option value="Malinova Dolina">Малинова долина</option>
-                                        <option value="Musagenica">Мусагеница</option>
-                                        <option value="Studentski Grad">Студентски град</option>
+                                        <option value="" data-i18n="auth.selectNeighborhood">Избери квартал...</option>
+                                        <option value="Vitosha (VEC)" data-i18n="neighborhoods.vitoshaVec">Витоша (ВЕЦ)</option>
+                                        <option value="Darvenitsa" data-i18n="neighborhoods.darvenitsa">Дървеница</option>
+                                        <option value="Malinova Dolina" data-i18n="neighborhoods.malinovaDolina">Малинова долина</option>
+                                        <option value="Musagenitsa" data-i18n="neighborhoods.musagenitsa">Мусагеница</option>
+                                        <option value="Studentski Grad" data-i18n="neighborhoods.studentskiGrad">Студентски град</option>
                                     </select>
                                 </div>
 
                                 <!-- Terms and Conditions Checkboxes -->
                                 <div style="background-color: #f8f9fa; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem;">
-                                    <p style="font-weight: 600; color: #212529; margin-bottom: 1rem; font-size: 0.95rem;">Задължителни полета:</p>
+                                    <p style="font-weight: 600; color: #212529; margin-bottom: 1rem; font-size: 0.95rem;" data-i18n="auth.requiredFields">Задължителни полета:</p>
                                     
                                     <div class="form-check" style="margin-bottom: 1rem;">
                                         <input class="form-check-input" type="checkbox" id="acceptTerms" required style="cursor: pointer; width: 1.2rem; height: 1.2rem;">
                                         <label class="form-check-label" for="acceptTerms" style="cursor: pointer; font-size: 0.9rem; color: #212529; margin-left: 0.75rem; padding-top: 0.1rem;">
-                                            Запознат съм и приемам 
-                                            <a href="#" onclick="showTermsModal(event)" style="color: #28a745; text-decoration: none; font-weight: 600;">Общите условия и Политиката за поверителност</a>.
+                                            <span data-i18n="auth.acceptTermsLabel">Запознат съм и приемам</span> 
+                                            <a href="#" onclick="showTermsModal(event)" style="color: #28a745; text-decoration: none; font-weight: 600;" data-i18n="auth.termsLink">Общите условия и Политиката за поверителност</a>.
                                         </label>
                                     </div>
 
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="acceptRisk" required style="cursor: pointer; width: 1.2rem; height: 1.2rem;">
-                                        <label class="form-check-label" for="acceptRisk" style="cursor: pointer; font-size: 0.9rem; color: #212529; margin-left: 0.75rem; padding-top: 0.1rem;">
+                                        <label class="form-check-label" for="acceptRisk" style="cursor: pointer; font-size: 0.9rem; color: #212529; margin-left: 0.75rem; padding-top: 0.1rem;" data-i18n="auth.ageConfirmation">
                                             Потвърждавам, че имам навършени 16 години. Разбирам, че участието в почистването е напълно доброволно и на мой собствен риск, като Организаторът не носи отговорност за злополуки.
                                         </label>
                                     </div>
                                 </div>
 
-                                <button type="submit" class="btn-auth btn-register" id="registerBtn">Регистрация</button>
+                                <button type="submit" class="btn-auth btn-register" id="registerBtn" data-i18n="auth.register" style="color: #000000 !important;">Регистрация</button>
                             </form>
                         </div>
                     </div>
@@ -360,11 +358,12 @@
     <div id="termsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); z-index: 1000; overflow-y: auto; padding: 20px; backdrop-filter: blur(4px);">
         <div style="background: #ffffff; max-width: 750px; margin: 30px auto; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
             <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 2.5rem 2rem; border-radius: 16px 16px 0 0; position: relative;">
-                <h2 style="margin: 0; color: white; font-size: 1.8rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">📋 Условия за използване и Поверителност</h2>
+                <h2 id="termsModalTitle" style="margin: 0; color: white; font-size: 1.8rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">📋 Условия за използване и Поверителност</h2>
                 <p style="margin: 0.5rem 0 0 0; opacity: 0.95; font-size: 0.95rem;">Clean Quarter / Чист Квартал</p>
             </div>
             
-            <div id="termsContent" style="padding: 2.5rem; max-height: 550px; overflow-y: auto; line-height: 1.7; font-size: 0.95rem; color: #2d3748; background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);">
+            <!-- Bulgarian Terms Content -->
+            <div id="termsContentBg" style="padding: 2.5rem; max-height: 550px; overflow-y: auto; line-height: 1.7; font-size: 0.95rem; color: #2d3748; background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);">
                 <!-- ОБЩИ УСЛОВИЯ -->
                 <div style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); padding: 1.5rem; border-radius: 12px; border-left: 5px solid #28a745; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(40,167,69,0.1);">
                     <h3 style="color: #1e7e34; margin: 0; font-size: 1.4rem; font-weight: 700; letter-spacing: -0.5px;">ОБЩИ УСЛОВИЯ ЗА ПОЛЗВАНЕ</h3>
@@ -524,9 +523,170 @@
                 <p>Ние можем да актуализираме тази Политика периодично. При съществени промени ще Ви уведомим чрез нотификация в Приложението или по имейл.</p>
             </div>
 
+            <!-- English Terms Content -->
+            <div id="termsContentEn" style="display: none; padding: 2.5rem; max-height: 550px; overflow-y: auto; line-height: 1.7; font-size: 0.95rem; color: #2d3748; background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);">
+                <!-- TERMS AND CONDITIONS -->
+                <div style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); padding: 1.5rem; border-radius: 12px; border-left: 5px solid #28a745; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(40,167,69,0.1);">
+                    <h3 style="color: #1e7e34; margin: 0; font-size: 1.4rem; font-weight: 700; letter-spacing: -0.5px;">GENERAL TERMS AND CONDITIONS</h3>
+                    <p style="margin: 0.5rem 0 0 0; color: #2d5016; font-size: 0.9rem; font-weight: 600;">"Clean Quarter"</p>
+                </div>
+                <p style="font-size: 0.9rem; color: #666; margin-bottom: 1.5rem;"><strong>Last updated: January 17, 2026</strong></p>
+
+                <div style="background: #f1f8f4; padding: 0.75rem 1rem; border-radius: 8px; margin-top: 1.5rem; margin-bottom: 1rem; border-left: 4px solid #28a745;">
+                    <h4 style="color: #1e7e34; margin: 0; font-size: 1.1rem; font-weight: 600;">1. SUBJECT AND GENERAL PROVISIONS</h4>
+                </div>
+                <p><strong>1.1.</strong> These General Terms govern the relationship between Hristiyan Stoilov Stoilov, hereinafter referred to as the "Administrator", and the persons using the mobile application "Clean Quarter" (hereinafter referred to as "Users").</p>
+                <p><strong>1.2.</strong> The Application is a software platform that allows citizens to voluntarily organize and participate in environmental cleaning initiatives, share photos, and communicate with each other.</p>
+                <p><strong>1.3.</strong> By clicking the "Registration" button and/or checking the "I agree to the Terms & Conditions" checkbox, the User declares that they are familiar with these conditions, agree to them, and undertake to observe them.</p>
+
+                <div style="background: #f1f8f4; padding: 0.75rem 1rem; border-radius: 8px; margin-top: 1.5rem; margin-bottom: 1rem; border-left: 4px solid #28a745;">
+                    <h4 style="color: #1e7e34; margin: 0; font-size: 1.1rem; font-weight: 600;">2. REGISTRATION AND AGE RESTRICTIONS</h4>
+                </div>
+                <p><strong>2.1.</strong> Registration in the Application is voluntary and free of charge.</p>
+                <p><strong>2.2.</strong> The services of the Application are intended for persons who have reached the age of 16 (sixteen) years.</p>
+                <p><strong>2.3.</strong> Persons under the age of 18 should use the Application and participate in physical cleaning activities only with the knowledge and consent of a parent/guardian.</p>
+                <p><strong>2.4.</strong> The Administrator reserves the right to delete the profile of any user found to be under the specified age or who has provided false data.</p>
+
+                <div style="background: #f1f8f4; padding: 0.75rem 1rem; border-radius: 8px; margin-top: 1.5rem; margin-bottom: 1rem; border-left: 4px solid #28a745;">
+                    <h4 style="color: #1e7e34; margin: 0; font-size: 1.1rem; font-weight: 600;">3. NATURE OF ACTIVITY AND DISCLAIMER (SAFETY)</h4>
+                </div>
+                <p><strong>3.1. Voluntary Principle:</strong> Use of the Application and participation in physical cleaning is entirely voluntary. NO employment relationships, civil contracts, or hiring commitments arise between the User and the Administrator.</p>
+                <p><strong>3.2. Personal Risk:</strong> The User understands and accepts that participation in cleaning campaigns involves risks to health and safety (including, but not limited to: cuts, abrasions, contact with dangerous objects, infections, insect or animal bites, traffic accidents).</p>
+                <p><strong>3.3. Release of Liability:</strong> The User participates in the cleaning at their own risk. The Administrator (the individual who created the application) is NOT liable for:</p>
+                <ul style="margin-left: 1.5rem; margin-bottom: 0.7rem;">
+                    <li>Physical injuries, accidents, or health problems occurring during the use of the application or cleaning.</li>
+                    <li>Property damage suffered by the User.</li>
+                    <li>Actions of third parties during events.</li>
+                </ul>
+                <p><strong>3.4. Safety Obligations:</strong> The User is obliged:</p>
+                <ul style="margin-left: 1.5rem; margin-bottom: 0.7rem;">
+                    <li>To use personal protective equipment (gloves, suitable shoes).</li>
+                    <li>NOT to touch or collect hazardous waste (medical waste, syringes, chemicals, asbestos, ammunition). Upon discovery of such, they must notify the competent authorities (tel. 112).</li>
+                    <li>To comply with the traffic situation and not to enter the roadway.</li>
+                </ul>
+
+                <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem;">4. RULES FOR WASTE TREATMENT</h4>
+                <p><strong>4.1.</strong> The Application is an informational tool and does not replace municipal cleaning services.</p>
+                <p><strong>4.2.</strong> The User undertakes to dispose of the collected waste SOLELY in the places regulated for this purpose (public waste containers/bins).</p>
+                <p><strong>4.3. Prohibition of Illegal Dumping:</strong> It is strictly forbidden to pile collected waste on sidewalks, gardens, or other areas outside the containers unless there is an express prior arrangement with the Municipality for collection.</p>
+                <p><strong>4.4.</strong> The User bears full personal administrative and penal liability if their actions are qualified as pollution or the creation of an unregulated dump site by the control authorities.</p>
+
+                <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem;">5. USER CONTENT AND COPYRIGHT</h4>
+                <p><strong>5.1.</strong> Users may upload photos, comments, and texts ("User Content").</p>
+                <p><strong>5.2. License:</strong> By uploading a photo or content to the Application, the User grants the Administrator a non-exclusive, royalty-free, perpetual, and territorially unlimited license to use, reproduce, distribute, and publicly display this content (incl. for marketing purposes, social networks, advertising of the "Before/After" initiative), without owing remuneration to the User.</p>
+                <p><strong>5.3. Prohibited Content:</strong> It is forbidden to publish:</p>
+                <ul style="margin-left: 1.5rem; margin-bottom: 0.7rem;">
+                    <li>Photos containing faces of people who have not given their consent.</li>
+                    <li>Hate speech, insults, threats, pornographic content, or violence.</li>
+                    <li>Spam or third-party advertising without permission.</li>
+                </ul>
+                <p><strong>5.4.</strong> The Administrator has the right to remove any content and block users upon violation of these rules, without notice.</p>
+                <p><strong>5.5. Reporting Irregularities:</strong> The Application provides functionality through which Users can report (flag) content they consider offensive or violating the rules. The Administrator commits to reviewing these reports and taking action within a reasonable time (up to 24 hours).</p>
+
+                <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem;">6. GAMIFICATION AND REWARDS</h4>
+                <p><strong>6.1.</strong> The Application uses a system of virtual points, levels, and badges to encourage activity.</p>
+                <p><strong>6.2.</strong> Virtual points and rewards have no monetary equivalent and cannot be exchanged for currency.</p>
+                <p><strong>6.3.</strong> If in the future the Administrator provides an opportunity to receive material rewards (through partners/sponsors), they will be provided on a "while stocks last" principle. The Administrator makes no commitment that every user with a certain number of points will receive a material reward.</p>
+                <p><strong>6.4.</strong> The Administrator has the right to change the points mechanics or reset results upon suspicion of fraud (e.g., fake cleaning reports).</p>
+
+                <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem;">7. SUBSCRIPTIONS AND DONATIONS</h4>
+                <p><strong>7.1.</strong> Use of the main functions of the application is free of charge.</p>
+                <p><strong>7.2.</strong> The Administrator may introduce an option for voluntary donations or premium subscriptions to support development. All payments are voluntary and final (non-refundable), unless applicable law requires otherwise.</p>
+
+                <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem;">8. THIRD-PARTY SERVICES</h4>
+                <p><strong>8.1.</strong> The Application uses mapping services (e.g., Google Maps, OpenStreetMap). By using the Application, the User also agrees to the Terms of Service of the respective map provider.</p>
+
+                <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem;">9. PERSONAL DATA PROTECTION</h4>
+                <p><strong>9.1.</strong> The processing of personal data is carried out in accordance with the Application's Privacy Policy, which is an integral part of these General Terms.</p>
+
+                <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem;">10. CHANGES AND TERMINATION</h4>
+                <p><strong>10.1.</strong> The Administrator has the right to modify these General Terms at any time. Changes enter into force from the moment of their publication in the Application.</p>
+                <p><strong>10.2.</strong> The Administrator has the right to terminate the activity of the Application at any time without owing compensation to the Users.</p>
+
+                <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem;">11. APPLICABLE LAW</h4>
+                <p><strong>11.1.</strong> For all unsettled issues, the current legislation of the Republic of Bulgaria applies.</p>
+
+                <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem;">12. INTELLECTUAL PROPERTY OF THE ADMINISTRATOR</h4>
+                <p><strong>12.1.</strong> All rights to the software, design, logo, trademark, and database of the Application are the exclusive property of the Administrator.</p>
+                <p><strong>12.2.</strong> The User has no right to copy, modify, or perform "reverse engineering" of the Application without express written consent.</p>
+
+                <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem;">13. OTHER PROVISIONS</h4>
+                <p><strong>13.1.</strong> If any of the clauses of these General Terms is declared invalid or unenforceable, this does not lead to the invalidity of the remaining clauses or the contract as a whole.</p>
+
+                <!-- PRIVACY POLICY -->
+                <hr style="margin: 2.5rem 0; border: none; height: 2px; background: linear-gradient(to right, transparent, #28a745, transparent);">
+                
+                <div style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); padding: 1.5rem; border-radius: 12px; border-left: 5px solid #2196f3; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(33,150,243,0.1);">
+                    <h3 style="color: #0d47a1; margin: 0; font-size: 1.4rem; font-weight: 700; letter-spacing: -0.5px;">PRIVACY POLICY</h3>
+                    <p style="margin: 0.5rem 0 0 0; color: #1565c0; font-size: 0.9rem; font-weight: 600;">"Clean Quarter"</p>
+                </div>
+                <p style="font-size: 0.9rem; color: #666; margin-bottom: 1.5rem;"><strong>Effective date: January 17, 2026</strong></p>
+                
+                <p>This Privacy Policy describes how the mobile application "Clean Quarter" (hereinafter referred to as "the Application") collects, uses, and stores your personal data.</p>
+                <p>We respect your privacy and are committed to protecting your personal data in accordance with the General Data Protection Regulation (GDPR) - Regulation (EU) 2016/679.</p>
+
+                <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem;">1. DATA CONTROLLER</h4>
+                <p>The controller of personal data collected through the Application is:</p>
+                <p><strong>Hristiyan Stoilov Stoilov</strong><br>Individual, Software Developer<br>Contact email regarding personal data issues: <strong>support.cleanquarter@gmail.com</strong></p>
+
+                <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem;">2. WHAT DATA WE COLLECT</h4>
+                <p>For the Application to function, we collect the following categories of data:</p>
+                <p><strong>A. Data provided by you:</strong></p>
+                <ul style="margin-left: 1.5rem; margin-bottom: 0.7rem;">
+                    <li><strong>Account Data:</strong> Username (Nickname), email address, and password (stored in encrypted form).</li>
+                    <li><strong>User Content:</strong> Photos of polluted/cleaned areas that you upload voluntarily.</li>
+                    <li><strong>Communication:</strong> Information you send when contacting us for support or feedback.</li>
+                </ul>
+                <p><strong>B. Data collected automatically:</strong></p>
+                <ul style="margin-left: 1.5rem; margin-bottom: 0.7rem;">
+                    <li><strong>Location (Geolocation):</strong> We collect data about your precise location (GPS coordinates) only when you use the functions to create a report or mark a cleaned place. This is necessary for positioning objects on the map.</li>
+                    <li><strong>Technical Data:</strong> IP address, device type, operating system, crash logs.</li>
+                </ul>
+
+                <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem;">3. FOR WHAT PURPOSES WE USE YOUR DATA</h4>
+                <p>We process your data for the following purposes:</p>
+                <ul style="margin-left: 1.5rem; margin-bottom: 0.7rem;">
+                    <li><strong>Service Provision:</strong> Profile registration, map visualization, recording of cleanings.</li>
+                    <li><strong>Gamification:</strong> Calculation of points, levels, and rankings (Your username and points may be visible to other users in leaderboards).</li>
+                    <li><strong>App Improvement:</strong> Error analysis and performance optimization.</li>
+                    <li><strong>Communication:</strong> Sending important messages related to changes in terms or security.</li>
+                </ul>
+
+                <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem;">4. SHARING DATA WITH THIRD PARTIES</h4>
+                <p>We do NOT sell your personal data. We share information only with service providers that support the functioning of the Application:</p>
+                <ul style="margin-left: 1.5rem; margin-bottom: 0.7rem;">
+                    <li><strong>Hosting and Database Providers:</strong> (e.g., Google Firebase / AWS) – for secure storage of information.</li>
+                    <li><strong>Mapping Services:</strong> (e.g., Google Maps / OpenStreetMap) – for visualizing locations.</li>
+                    <li><strong>Analytics Tools:</strong> For collecting anonymous usage statistics.</li>
+                </ul>
+                <p>In the event of a legal obligation, data may be provided to competent state authorities (Ministry of Interior, court, prosecutor's office).</p>
+
+                <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem;">5. PUBLICITY OF CONTENT</h4>
+                <p>Please note that the photos you upload and the location of cleaned objects are publicly accessible to all users of the Application. Do not upload photos containing recognizable faces or personal information that you do not wish to be public.</p>
+
+                <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem;">6. DATA RETENTION</h4>
+                <p>We store your personal data only as long as you have an active profile in the Application. If you delete your profile, your personal data (email, names) will be deleted or anonymized within 30 days, unless there is a legal requirement for longer retention (e.g., for protection against legal claims). Published photos of cleaned places may remain in the system anonymized (without a link to your profile) for the purposes of cause statistics.</p>
+
+                <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem;">7. YOUR RIGHTS</h4>
+                <p>According to GDPR, you have the following rights:</p>
+                <ul style="margin-left: 1.5rem; margin-bottom: 0.7rem;">
+                    <li><strong>Right of Access:</strong> To request information on what data of yours we process.</li>
+                    <li><strong>Right to Rectification:</strong> To change incorrect data in your profile.</li>
+                    <li><strong>Right to Erasure ("Right to be forgotten"):</strong> To request deletion of your profile and data. This can be done via the "Delete Profile" function in the app settings or via email to the Administrator.</li>
+                    <li><strong>Right to Portability:</strong> To receive your data in a readable format.</li>
+                </ul>
+                <p>To exercise your rights, write to us at: <strong>support.cleanquarter@gmail.com</strong></p>
+
+                <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem;">8. SECURITY</h4>
+                <p>We take reasonable technical measures to protect your data (encryption, secure servers). However, the transmission of information over the internet is never 100% secure, and we cannot guarantee complete security.</p>
+
+                <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem;">9. CHANGES TO THE POLICY</h4>
+                <p>We may update this Policy periodically. In case of substantial changes, we will notify you via a notification in the Application or by email.</p>
+            </div>
+
             <div style="padding: 1.5rem 2rem; border-top: 2px solid #e9ecef; background: linear-gradient(to top, #f8f9fa, #ffffff); border-radius: 0 0 16px 16px; text-align: right; display: flex; justify-content: flex-end; gap: 1rem;">
-                <button onclick="closeTermsModal()" style="padding: 0.75rem 2rem; background: #6c757d; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.95rem; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(108,117,125,0.2);" onmouseover="this.style.background='#5a6268'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(108,117,125,0.3)'" onmouseout="this.style.background='#6c757d'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(108,117,125,0.2)'">✕ Затвори</button>
-                <button onclick="acceptTerms()" style="padding: 0.75rem 2rem; background: linear-gradient(135deg, #28a745, #20c997); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.95rem; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(40,167,69,0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 16px rgba(40,167,69,0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(40,167,69,0.3)'">✓ Приемам</button>
+                <button id="termsCloseBtn" onclick="closeTermsModal()" style="padding: 0.75rem 2rem; background: #6c757d; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.95rem; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(108,117,125,0.2);" onmouseover="this.style.background='#5a6268'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(108,117,125,0.3)'" onmouseout="this.style.background='#6c757d'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(108,117,125,0.2)'">✕ Затвори</button>
+                <button id="termsAcceptBtn" onclick="acceptTerms()" style="padding: 0.75rem 2rem; background: linear-gradient(135deg, #28a745, #20c997); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.95rem; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(40,167,69,0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 16px rgba(40,167,69,0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(40,167,69,0.3)'">✓ Приемам</button>
             </div>
         </div>
     </div>
@@ -536,9 +696,6 @@
     
     <!-- Leaflet JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-    
-    <!-- Main App Script -->
-    <script type="module" src="/src/main.js"></script>
     
     <script>
         /**
@@ -633,7 +790,34 @@
          */
         function showTermsModal(e) {
             e.preventDefault();
+            updateTermsLanguage();
             document.getElementById('termsModal').style.display = 'block';
+        }
+
+        /**
+         * Update terms modal content based on current language
+         */
+        function updateTermsLanguage() {
+            const currentLang = localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg';
+            const bgContent = document.getElementById('termsContentBg');
+            const enContent = document.getElementById('termsContentEn');
+            const title = document.getElementById('termsModalTitle');
+            const closeBtn = document.getElementById('termsCloseBtn');
+            const acceptBtn = document.getElementById('termsAcceptBtn');
+            
+            if (currentLang === 'en') {
+                bgContent.style.display = 'none';
+                enContent.style.display = 'block';
+                title.innerHTML = '📋 Terms & Conditions and Privacy Policy';
+                closeBtn.innerHTML = '✕ Close';
+                acceptBtn.innerHTML = '✓ Accept';
+            } else {
+                bgContent.style.display = 'block';
+                enContent.style.display = 'none';
+                title.innerHTML = '📋 Условия за използване и Поверителност';
+                closeBtn.innerHTML = '✕ Затвори';
+                acceptBtn.innerHTML = '✓ Приемам';
+            }
         }
 
         /**

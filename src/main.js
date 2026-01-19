@@ -3,78 +3,115 @@ import './assets/style.css'
 import { login, register } from './services/auth.js'
 import { initializePWA } from './services/pwa.js'
 import { initDemoMode, getDemoUser } from './utils/demoMode.js'
-import { initI18n, setLanguage } from './utils/i18n.js'
+import { initI18n, setLanguage, applyLanguage } from './utils/i18n.js'
 
 // Initialize Architecture (NEW - Step 7 & 8)
 import { initializeArchitecture, logger, errorHandler, store } from './architecture/index.js'
 
-// Initialize architecture FIRST
-console.log('🏗️ Initializing application architecture...')
-await initializeArchitecture()
-
-// Initialize i18n
-await initI18n()
-
-// Setup language selector event
-const langSelector = document.getElementById('languageSelector')
-if (langSelector) {
-  langSelector.addEventListener('change', (e) => {
-    setLanguage(e.target.value)
-  })
-}
-
 // Handle demo login - MUST BE DEFINED EARLY AND ASSIGNED TO WINDOW
-async function handleDemoLogin(e) {
-  if (e) e.preventDefault()
-  console.log('🎮 Demo Login clicked')
+function handleDemoLogin(e) {
+  if (e) e.preventDefault();
+  console.log('🎮 Demo Login clicked');
   
-  try {
-    console.log('📝 Initializing demo data...')
-    initDemoMode()
-    console.log('✅ Demo data initialized')
-    
-    const demoUser = getDemoUser()
-    console.log('👤 Demo user:', demoUser)
-    
-    if (demoUser && demoUser.id) {
-      localStorage.setItem('user', JSON.stringify(demoUser))
-      console.log('✅ User saved')
+  // Run async operations without blocking
+  (async () => {
+    try {
+      console.log('📝 Initializing demo data...');
+      initDemoMode();
+      console.log('✅ Demo data initialized');
       
-      await Swal.fire({
-        icon: 'success',
-        title: '🎮 Demo Mode Active',
-        text: `Welcome ${demoUser.username}!`,
-        timer: 1500
-      })
+      const demoUser = getDemoUser();
+      console.log('👤 Demo user:', demoUser);
       
-      window.location.href = './src/pages/dashboard.html'
-    } else {
-      throw new Error('Demo user not found')
+      if (demoUser && demoUser.id) {
+        localStorage.setItem('user', JSON.stringify(demoUser));
+        console.log('✅ User saved');
+        
+        // Use simple alert first, then navigate
+        if (typeof Swal !== 'undefined') {
+          await Swal.fire({
+            icon: 'success',
+            title: '🎮 Demo Mode Active',
+            text: `Welcome ${demoUser.username}!`,
+            timer: 1500
+          });
+        } else {
+          alert(`🎮 Welcome to Demo Mode, ${demoUser.username}!`);
+        }
+        
+        window.location.href = './src/pages/dashboard.html';
+      } else {
+        throw new Error('Demo user not found');
+      }
+    } catch (error) {
+      console.error('❌ Error:', error);
+      if (typeof Swal !== 'undefined') {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: error.message
+        });
+      } else {
+        alert(`Error: ${error.message}`);
+      }
     }
-  } catch (error) {
-    console.error('❌ Error:', error)
-    await Swal.fire({
-      icon: 'error',
-      title: 'Error',
-      text: error.message
-    })
-  }
+  })();
 }
 
 // CRITICAL: Make globally available for onclick
-window.handleDemoLogin = handleDemoLogin
+window.handleDemoLogin = handleDemoLogin;
 
-// Initialize PWA
-initializePWA()
+// Wait for DOM to be ready
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    console.log('📄 DOM Ready, starting initialization...')
+    
+    // Initialize PWA FIRST
+    console.log('🚀 Initializing PWA...')
+    await initializePWA()
+    console.log('✅ PWA initialized')
 
-// Check if user is logged in
-const currentUser = JSON.parse(localStorage.getItem('user'))
+    // Initialize architecture
+    console.log('🏗️ Initializing application architecture...')
+    await initializeArchitecture()
 
-if (!currentUser) {
-  initAuthForms()
-} else {
-  window.location.href = './src/pages/dashboard.html'
-}
+    // Initialize i18n
+    console.log('🌐 Loading translations...')
+    await initI18n(true) // Real-time enabled for login form
+    console.log('✅ Translations loaded')
+    
+    // Apply language to page
+    const savedLanguage = localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg'
+    console.log('🌍 Applying startup language:', savedLanguage)
+    applyLanguage(savedLanguage)
+    console.log('✅ Language applied at startup:', savedLanguage)
+
+    // Setup language selector event
+    const langSelector = document.getElementById('languageSelector')
+    console.log('🔧 Language selector found:', !!langSelector)
+    if (langSelector) {
+      langSelector.value = savedLanguage
+      langSelector.addEventListener('change', (e) => {
+        console.log('🌍 Language selector changed to:', e.target.value)
+        setLanguage(e.target.value)
+      })
+      console.log('✅ Language selector event listener added')
+    }
+
+    // Check if user is logged in
+    const currentUser = JSON.parse(localStorage.getItem('user'))
+
+    if (!currentUser) {
+      initAuthForms()
+    } else {
+      window.location.href = './src/pages/dashboard.html'
+    }
+  } catch (error) {
+    console.error('Failed to initialize application:', error)
+    logger.error('Application initialization failed', { error: error.message })
+    errorHandler.handle(error)
+  }
+})
 
 // Initialize auth forms
 function initAuthForms() {

@@ -1,4 +1,8 @@
 {
+  "app": {
+    "title": "Clean Quarter",
+    "subtitle": "Neighborhood Cleanup"
+  },
   "nav": {
     "dashboard": "Home",
     "createCampaign": "New Campaign",
@@ -15,9 +19,27 @@
     "password": "Password",
     "confirmPassword": "Confirm Password",
     "neighborhood": "Neighborhood",
-    "demoMode": "Demo Mode (Admin)",
+    "demoMode": "🎮 Demo Mode (Admin)",
     "forgotPassword": "Forgot Password?",
-    "rememberMe": "Remember me"
+    "rememberMe": "Remember me",
+    "emailPlaceholder": "your@email.com",
+    "passwordPlaceholder": "Enter password",
+    "passwordMinChars": "Minimum 6 characters",
+    "repeatPassword": "Repeat password",
+    "selectNeighborhood": "Select neighborhood...",
+    "demoDescription": "Or explore the app as admin:",
+    "passwordStrengthHint": "Password must have: uppercase, lowercase, numbers",
+    "requiredFields": "Required fields:",
+    "acceptTermsLabel": "I have read and accept the",
+    "termsLink": "Terms and Privacy Policy",
+    "ageConfirmation": "I confirm that I am 16 years or older. I understand that participation in cleanup is voluntary and at my own risk, and the Organizer is not liable for accidents."
+  },
+  "neighborhoods": {
+    "vitoshaVec": "Vitosha (VEC)",
+    "darvenitsa": "Darvenitsa",
+    "malinovaDolina": "Malinova Dolina",
+    "musagenitsa": "Musagenitsa",
+    "studentskiGrad": "Studentski Grad"
   },
   "dashboard": {
     "title": "Campaigns",

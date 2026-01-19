@@ -146,16 +146,16 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/src/pages/dashboard.html">♻️ Clean Quarter</a>
+            <a class="navbar-brand" href="./dashboard.html">♻️ Clean Quarter</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <div class="ms-auto" style="display: flex; gap: 1rem; align-items: center;">
-                    <a href="/src/pages/dashboard.html" data-i18n="nav.dashboard">Dashboard</a>
-                    <a href="/src/pages/rewards.html" data-i18n="nav.rewards">Rewards</a>
-                    <a href="/src/pages/profile.html" data-i18n="nav.profile">Profile</a>
-                    <select id="languageSelector" class="form-select form-select-sm" style="max-width: 150px;">
+                    <a href="./dashboard.html" data-i18n="nav.dashboard">Dashboard</a>
+                    <a href="./rewards.html" data-i18n="nav.rewards">Rewards</a>
+                    <a href="./profile.html" data-i18n="nav.profile">Profile</a>
+                    <select id="languageSelector" class="form-select form-select-sm" style="max-width: 150px; display: none;">
                         <option value="bg">🇧🇬 Български</option>
                         <option value="en">🇬🇧 English</option>
                     </select>
@@ -286,17 +286,6 @@
           schemas
         } from '../architecture/index.js';
 
-        // Initialize i18n
-        await initI18n();
-        applyLanguage(localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg');
-
-        // Language selector
-        document.getElementById('languageSelector').value = localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg';
-        document.getElementById('languageSelector').addEventListener('change', (e) => {
-            setLanguage(e.target.value);
-            location.reload();
-        });
-
         // Global variables
         let map = null;
         let selectedCoordinates = { lat: null, lng: null };
@@ -310,30 +299,47 @@
           beforePhoto: { type: 'file', required: true }
         };
 
-        // ✨ NEW: Form state hook
-        const form = useForm(
-          {
-            title: '',
-            description: '',
-            neighborhood: '',
-            beforePhoto: null
-          },
-          campaignSchema,
-          async (values) => {
-            await handleFormSubmit(values);
-          }
-        );
-
-        // ✨ NEW: Debounced validation
-        const debouncedValidate = useDebounce(() => {
-          checkFormCompletion();
-        }, 300);
+        // ✨ NEW: Form state hook (lazy init - will be set in DOMContentLoaded)
+        let form = null;
+        
+        // ✨ NEW: Debounced validation (lazy init)
+        let debouncedValidate = null;
 
         /**
          * Initialize the page on load
          */
         window.addEventListener('DOMContentLoaded', async () => {
             try {
+                // Initialize i18n first (realTime = false)
+                await initI18n(false);
+                applyLanguage(localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg');
+
+                // Language selector
+                document.getElementById('languageSelector').value = localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg';
+                document.getElementById('languageSelector').addEventListener('change', (e) => {
+                    // Just show a message - language changes only from profile page
+                    console.log('Language changes only from Profile page');
+                });
+
+                // Now initialize form after DOM is ready
+                form = useForm(
+                  {
+                    title: '',
+                    description: '',
+                    neighborhood: '',
+                    beforePhoto: null
+                  },
+                  campaignSchema,
+                  async (values) => {
+                    await handleFormSubmit(values);
+                  }
+                );
+
+                // Initialize debounced validation
+                debouncedValidate = useDebounce(() => {
+                  checkFormCompletion();
+                }, 300);
+
                 logger.info('Create Campaign page loaded');
                 await checkAuth();
                 initMap();

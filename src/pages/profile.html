@@ -404,20 +404,20 @@
         let currentUser = null;
         let userProfile = null;
 
-        // Initialize i18n
-        await initI18n();
-        applyLanguage(localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg');
-
-        // Language selector
-        document.getElementById('languageSelector').value = localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg';
-        document.getElementById('languageSelector').addEventListener('change', (e) => {
-            setLanguage(e.target.value);
-            location.reload();
-        });
-
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', async () => {
             try {
+                // Initialize i18n first (realTime = false for initial load)
+                await initI18n(false);
+                applyLanguage(localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg');
+
+                // Language selector - ENABLE REAL-TIME FOR PROFILE
+                document.getElementById('languageSelector').value = localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg';
+                document.getElementById('languageSelector').addEventListener('change', (e) => {
+                    setLanguage(e.target.value, true); // Force update with true flag
+                    location.reload();
+                });
+
                 logger.info('Profile page loaded');
                 await checkAuth();
                 await loadProfileData();
@@ -672,7 +672,7 @@
                         <div class="empty-state">
                             <div class="empty-state-icon">🎪</div>
                             <p>You haven't joined any campaigns yet</p>
-                            <a href="/src/pages/dashboard.html" style="color: #28a745; text-decoration: none; font-weight: bold;">Browse campaigns →</a>
+                            <a href="./dashboard.html" style="color: #28a745; text-decoration: none; font-weight: bold;">Browse campaigns →</a>
                         </div>
                     `;
                     return;

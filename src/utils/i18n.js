@@ -5,11 +5,13 @@
 
 let currentLanguage = localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg';
 let translations = {};
+let enableRealTimeSwitch = true; // Set to false to disable real-time switching
 
 /**
  * Initialize i18n - load language files
  */
-export async function initI18n() {
+export async function initI18n(realTime = true) {
+  enableRealTimeSwitch = realTime;
   try {
     // Load Bulgarian translations
     const bgResponse = await fetch('/src/i18n/bg.json');
@@ -24,10 +26,9 @@ export async function initI18n() {
       en: enData
     };
     
-    console.log('✅ i18n initialized with', Object.keys(translations), 'languages');
+    console.log('✅ i18n initialized with', Object.keys(translations), 'languages (realTime:', realTime, ')');
     
-    // Apply current language
-    applyLanguage(currentLanguage);
+    // Don't apply language here - let caller decide
   } catch (error) {
     console.error('❌ Failed to load translations:', error);
   }
@@ -53,8 +54,14 @@ export function t(key, lang = currentLanguage) {
 /**
  * Set current language and apply it
  * @param {string} lang - 'bg' or 'en'
+ * @param {boolean} force - force update even if realTime is disabled
  */
-export function setLanguage(lang) {
+export function setLanguage(lang, force = false) {
+  if (!enableRealTimeSwitch && !force) {
+    console.warn('⚠️ Real-time language switching is disabled on this page');
+    return;
+  }
+  
   if (!translations[lang]) {
     console.error('❌ Language not supported:', lang);
     return;
@@ -83,25 +90,30 @@ export function getCurrentLanguage() {
 export function applyLanguage(lang) {
   document.documentElement.lang = lang;
   
-  // Update all elements with data-i18n attribute
+  // Update all elements with data-i18n attribute (for text content)
   const elements = document.querySelectorAll('[data-i18n]');
   
   elements.forEach(element => {
     const key = element.getAttribute('data-i18n');
     const translated = t(key, lang);
     
-    // Check if it's a placeholder
-    if (element.hasAttribute('placeholder')) {
-      element.setAttribute('placeholder', translated);
-    } 
     // Check if it's a title/alt
-    else if (element.hasAttribute('title')) {
+    if (element.hasAttribute('title')) {
       element.setAttribute('title', translated);
     }
-    // Otherwise it's text content
+    // Otherwise it's text content - just set the translated text directly
     else {
       element.textContent = translated;
     }
+  });
+  
+  // Update all elements with data-i18n-placeholder attribute (for placeholders)
+  const placeholderElements = document.querySelectorAll('[data-i18n-placeholder]');
+  
+  placeholderElements.forEach(element => {
+    const key = element.getAttribute('data-i18n-placeholder');
+    const translated = t(key, lang);
+    element.setAttribute('placeholder', translated);
   });
   
   // Update language selector

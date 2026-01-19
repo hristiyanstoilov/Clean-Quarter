@@ -282,7 +282,7 @@
                     <a href="/src/pages/dashboard.html" data-i18n="nav.dashboard">Dashboard</a>
                     <a href="/src/pages/rewards.html" data-i18n="nav.rewards">Rewards</a>
                     <a href="/src/pages/profile.html" data-i18n="nav.profile">Profile</a>
-                    <select id="languageSelector" class="form-select form-select-sm" style="max-width: 150px;">
+                    <select id="languageSelector" class="form-select form-select-sm" style="max-width: 150px; display: none;">
                         <option value="bg">🇧🇬 Български</option>
                         <option value="en">🇬🇧 English</option>
                     </select>
@@ -313,8 +313,8 @@
                     </div>
                 </div>
                 <div class="points-actions">
-                    <a href="/src/pages/dashboard.html" class="btn-secondary-action">← Back to Dashboard</a>
-                    <a href="/src/pages/profile.html" class="btn-secondary-action">📊 Transaction History</a>
+                    <a href="./dashboard.html" class="btn-secondary-action">← Back to Dashboard</a>
+                    <a href="./profile.html" class="btn-secondary-action">📊 Transaction History</a>
                 </div>
             </div>
 
@@ -361,20 +361,20 @@
         let userProfileFetch = null;
         let rewardsFetch = null;
 
-        // Initialize i18n
-        await initI18n();
-        applyLanguage(localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg');
-
-        // Language selector
-        document.getElementById('languageSelector').value = localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg';
-        document.getElementById('languageSelector').addEventListener('change', (e) => {
-            setLanguage(e.target.value);
-            location.reload();
-        });
-
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', async () => {
             try {
+                // Initialize i18n first (realTime = false)
+                await initI18n(false);
+                applyLanguage(localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg');
+
+                // Language selector
+                document.getElementById('languageSelector').value = localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg';
+                document.getElementById('languageSelector').addEventListener('change', (e) => {
+                    // Just show a message - language changes only from profile page
+                    console.log('Language changes only from Profile page');
+                });
+
                 logger.info('Rewards page loaded');
                 await checkAuth();
                 await loadRewardsData();

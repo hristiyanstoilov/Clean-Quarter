@@ -4,9 +4,11 @@
  */
 
 // State Management
+import storeInstance from '../state/store.js';
 export { default as store } from '../state/store.js';
 
 // API
+import apiClientInstance from '../api/client.js';
 export { default as apiClient } from '../api/client.js';
 
 // Validation
@@ -34,15 +36,20 @@ export {
 } from '../hooks/index.js';
 
 // Logger
+import loggerInstance from '../services/logger.js';
 export { default as logger } from '../services/logger.js';
 
-// Error Handler
-export {
-  default as errorHandler,
-  AppError,
-  ERROR_TYPES,
-  setupGlobalErrorHandling
+// Error Handler - import for local use AND re-export
+import errorHandlerInstance, { 
+  AppError as AppErrorClass, 
+  ERROR_TYPES as ErrorTypesEnum,
+  setupGlobalErrorHandling as setupErrorHandling
 } from '../services/errorHandler.js';
+
+export const errorHandler = errorHandlerInstance;
+export const AppError = AppErrorClass;
+export const ERROR_TYPES = ErrorTypesEnum;
+export const setupGlobalErrorHandling = setupErrorHandling;
 
 /**
  * Initialize Architecture
@@ -52,34 +59,34 @@ export async function initializeArchitecture() {
   console.log('🏗️ Initializing Clean Architecture...');
 
   // 1. Setup global error handling
-  setupGlobalErrorHandling();
+  setupErrorHandling();
 
   // 2. Setup logger
-  logger.setLevel(import.meta.env.DEV ? 'debug' : 'info');
+  loggerInstance.setLevel(import.meta.env.DEV ? 'debug' : 'info');
 
   // 3. Setup store subscribers (optional)
-  store.subscribe((newState) => {
-    logger.debug('Store updated', newState);
+  storeInstance.subscribe((newState) => {
+    loggerInstance.debug('Store updated', newState);
   });
 
   // 4. Setup API interceptors
-  apiClient.useRequestInterceptor(async (config) => {
-    logger.debug('API Request', { method: config.method, url: config.url });
+  apiClientInstance.useRequestInterceptor(async (config) => {
+    loggerInstance.debug('API Request', { method: config.method, url: config.url });
     return config;
   });
 
-  apiClient.useResponseInterceptor(async (response) => {
-    logger.debug('API Response', { status: response.status, url: response.url });
+  apiClientInstance.useResponseInterceptor(async (response) => {
+    loggerInstance.debug('API Response', { status: response.status, url: response.url });
     return response;
   });
 
-  logger.info('✅ Architecture initialized');
+  loggerInstance.info('✅ Architecture initialized');
 
   return {
-    store,
-    apiClient,
-    errorHandler,
-    logger
+    store: storeInstance,
+    apiClient: apiClientInstance,
+    errorHandler: errorHandlerInstance,
+    logger: loggerInstance
   };
 }
 
@@ -89,20 +96,20 @@ export async function initializeArchitecture() {
 
 // Quick notification
 export function notify(message, type = 'info', duration = 3000) {
-  return store.notify(message, type, duration);
+  return storeInstance.addNotification(message, type, duration);
 }
 
 // Quick error
 export function error(message, context = 'unknown') {
-  return store.addError(message, context);
+  return storeInstance.addError(message, context);
 }
 
 // Quick fetch
 export async function fetchData(url, options = {}) {
   try {
-    return await apiClient.get(url, options);
+    return await apiClientInstance.get(url, options);
   } catch (err) {
-    errorHandler.handle(err);
+    errorHandlerInstance.handle(err);
     throw err;
   }
 }

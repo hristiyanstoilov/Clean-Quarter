@@ -245,8 +245,11 @@ class ErrorHandler {
   }
 }
 
+// Create singleton instance
+const errorHandler = new ErrorHandler();
+
 // Export singleton
-export default new ErrorHandler();
+export default errorHandler;
 
 /**
  * Global error handler setup
@@ -266,5 +269,3 @@ export function setupGlobalErrorHandling() {
 
   logger.info('Global error handling initialized');
 }
-
-const errorHandler = new ErrorHandler();

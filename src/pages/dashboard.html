@@ -129,7 +129,7 @@
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/src/pages/dashboard.html">
+            <a class="navbar-brand" href="./dashboard.html">
                 <strong>Чист Квартал</strong>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -138,16 +138,16 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/src/pages/create-campaign.html" data-i18n="nav.createCampaign">Нова кампания</a>
+                        <a class="nav-link" href="./create-campaign.html" data-i18n="nav.createCampaign">Нова кампания</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/src/pages/rewards.html" data-i18n="nav.rewards">Награди</a>
+                        <a class="nav-link" href="./rewards.html" data-i18n="nav.rewards">Награди</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/src/pages/profile.html" data-i18n="nav.profile">Профил</a>
+                        <a class="nav-link" href="./profile.html" data-i18n="nav.profile">Профил</a>
                     </li>
                     <li class="nav-item">
-                        <select id="languageSelector" class="form-select form-select-sm" style="max-width: 150px; margin-right: 0.5rem;">
+                        <select id="languageSelector" class="form-select form-select-sm" style="max-width: 150px; margin-right: 0.5rem; display: none;">
                             <option value="bg">🇧🇬 Български</option>
                             <option value="en">🇬🇧 English</option>
                         </select>
@@ -212,35 +212,33 @@
           isEmpty
         } from '../utils/helpers.js';
 
-        // ✨ NEW: Import from architecture
-        import { 
-          useFetch, 
-          useAsync, 
-          store, 
-          logger, 
-          errorHandler,
-          notify 
-        } from '../architecture/index.js';
-
-        // Require authentication
-        requireAuth();
-
-        // Initialize i18n
-        await initI18n();
-        applyLanguage(localStorage.getItem('language') || 'bg');
-
-        // Language selector
-        document.getElementById('languageSelector').value = localStorage.getItem('language') || 'bg';
-        document.getElementById('languageSelector').addEventListener('change', (e) => {
-            setLanguage(e.target.value);
-            location.reload();
-        });
+        // Logger for debugging (optional - can be console if architecture is not working)
+        const logger = console;
 
         // Initialize on page load
-        window.addEventListener('DOMContentLoaded', async () => {
-            const map = initializeMap();
-            await loadMapData(map);
-            await loadCampaignsList();
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Initialize i18n first (realTime = false)
+                await initI18n(false);
+                applyLanguage(localStorage.getItem('language') || 'bg');
+
+                // Language selector
+                document.getElementById('languageSelector').value = localStorage.getItem('language') || 'bg';
+                document.getElementById('languageSelector').addEventListener('change', (e) => {
+                    // Just show a message - language changes only from profile page
+                    console.log('Language changes only from Profile page');
+                });
+
+                // Require authentication
+                requireAuth();
+
+                const map = initializeMap();
+                await loadMapData(map);
+                await loadCampaignsList();
+            } catch (error) {
+                logger.error('Failed to initialize dashboard:', { error: error.message });
+                errorHandler.handle(error);
+            }
         });
 
         /**
@@ -254,40 +252,35 @@
             try {
                 showLoading(loadingSpinnerId, [campaignsContainerId, noCampaignsMessageId]);
 
-                // ✨ NEW: Use useAsync from architecture
-                const { data: campaigns, error, loading } = await useAsync(async () => {
-                    const user = JSON.parse(localStorage.getItem('user'));
-                    
-                    if (user && user.id === 'demo-admin-001') {
-                        // Demo mode
-                        logger.info('Loading demo campaigns');
-                        const demoCampaigns = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_CAMPAIGNS') || '[]');
-                        return demoCampaigns;
-                    } else {
-                        // Real data from Supabase
-                        logger.info('Loading campaigns from Supabase');
-                        const { data, error } = await supabase
-                            .from('campaigns')
-                            .select('id, title, neighborhood, before_photo_url, status')
-                            .eq('status', 'active');
+                // Load campaigns based on user type
+                let campaigns = [];
+                const user = JSON.parse(localStorage.getItem('user'));
+                
+                if (user && user.id === 'demo-admin-001') {
+                    // Demo mode
+                    logger.info('Loading demo campaigns');
+                    campaigns = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_CAMPAIGNS') || '[]');
+                } else {
+                    // Real data from Supabase
+                    logger.info('Loading campaigns from Supabase');
+                    const { data, error } = await supabase
+                        .from('campaigns')
+                        .select('id, title, neighborhood, before_photo_url, status')
+                        .eq('status', 'active');
 
-                        if (error) throw error;
-                        return data;
-                    }
-                }, []);
+                    if (error) throw error;
+                    campaigns = data || [];
+                }
 
                 hideLoading(loadingSpinnerId, {
                     [campaignsContainerId]: 'grid',
                     [noCampaignsMessageId]: 'none'
                 });
 
-                // ✨ NEW: Store campaigns in global state
-                store.setByPath('campaigns.list', campaigns);
-                logger.debug('Campaigns stored in global state', { count: campaigns.length });
+                logger.log('Campaigns loaded:', campaigns.length);
 
                 if (isEmpty(campaigns)) {
                     document.getElementById(noCampaignsMessageId).style.display = 'block';
-                    notify('Няма активни кампании', 'info');
                     return;
                 }
 
@@ -309,7 +302,7 @@
                                     <small>📍 ${campaign.neighborhood || 'Студентски град'}</small>
                                 </p>
                                 <div class="mt-auto">
-                                    <a href="../../index.html?page=campaign-detail&id=${campaign.id}" class="btn btn-primary w-100">
+                                    <a href="./campaign-detail.html?id=${campaign.id}" class="btn btn-primary w-100">
                                         Преглед
                                     </a>
                                 </div>
@@ -323,9 +316,7 @@
             } catch (error) {
                 hideLoading(loadingSpinnerId);
                 
-                // ✨ NEW: Use error handler
-                errorHandler.handle(error);
-                logger.error('Failed to load campaigns', { error: error.message });
+                logger.error('Failed to load campaigns', error);
                 
                 await handleError('loadCampaignsList', error, 'Failed to load campaigns. Please try again later.');
                 document.getElementById(campaignsContainerId).innerHTML = `
@@ -339,22 +330,19 @@
         }
 
         /**
-         * Handle logout - REFACTORED WITH LOGGER
+         * Handle logout
          */
         document.getElementById('logoutBtn').addEventListener('click', async () => {
             try {
-                logger.info('User logout initiated');
+                logger.log('User logout initiated');
                 await logout();
                 removeUser();
                 
-                // ✨ NEW: Store logout event
-                store.setState({ auth: { isAuthenticated: false, user: null } });
-                logger.info('User logged out successfully');
+                logger.log('User logged out successfully');
                 
-                window.location.href = '/index.html';
+                window.location.href = '../../index.html';
             } catch (error) {
-                logger.error('Logout failed', { error: error.message });
-                errorHandler.handle(error);
+                logger.error('Logout failed', error);
                 await handleError('logout', error, 'Failed to logout. Please try again.');
             }
         });
