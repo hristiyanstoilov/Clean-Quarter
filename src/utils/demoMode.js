@@ -1,4 +1,16 @@
 /**
+ * Ensure a user exists in CLEAN_QUARTER_DEMO_USERS
+ * @param {Object} user - user object with at least id, username, role
+ */
+export function ensureDemoUser(user) {
+  if (!user || !user.id) return;
+  const users = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_USERS') || '[]');
+  if (!users.find(u => u.id === user.id)) {
+    users.push(user);
+    localStorage.setItem('CLEAN_QUARTER_DEMO_USERS', JSON.stringify(users));
+  }
+}
+/**
  * Demo Mode - Local mock data for testing without Supabase
  * Use email: admin@demo.com, password: demo123
  */
@@ -314,6 +326,10 @@ export function getDemoParticipations() {
   const participations = localStorage.getItem(DEMO_PARTICIPATIONS_KEY);
   return participations ? JSON.parse(participations) : [];
 }
+// When creating a new participation in demo mode, ensure the user is added
+// Example usage: When creating a new participation in demo mode, call ensureDemoUser
+// For example, in your participation creation logic:
+// ensureDemoUser(currentUser);
 
 /**
  * Get demo rewards

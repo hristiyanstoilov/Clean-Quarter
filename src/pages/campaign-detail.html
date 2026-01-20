@@ -371,7 +371,7 @@
         <div id="campaignContent" style="display: none;">
             <!-- Before Photo -->
             <div class="photo-section">
-                <div class="photo-label">📸 Before Photo</div>
+                <div class="photo-label" data-i18n="campaign.beforePhoto">📸 Before Photo</div>
                 <img id="beforePhoto" class="before-photo" src="" alt="Before photo">
             </div>
 
@@ -379,78 +379,78 @@
             <div class="details-section">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h3 id="campaignTitle"></h3>
-                    <button class="btn btn-outline-success btn-sm" id="editCampaignBtn" style="display: none;" onclick="toggleEditCampaign()">
+                    <button class="btn btn-outline-success btn-sm" id="editCampaignBtn" style="display: none;" onclick="toggleEditCampaign()" data-i18n="campaign.editCampaign">
                         ✏️ Edit Campaign
                     </button>
                 </div>
                 
                 <div class="detail-row">
-                    <div class="detail-label">Status</div>
+                    <div class="detail-label" data-i18n="campaign.status">Status</div>
                     <div class="detail-value">
                         <span class="badge-status" id="statusBadge"></span>
                     </div>
                 </div>
 
                 <div class="detail-row">
-                    <div class="detail-label">Description</div>
+                    <div class="detail-label" data-i18n="campaign.description">Description</div>
                     <div class="detail-value" id="campaignDescription"></div>
                 </div>
 
                 <div class="detail-row">
-                    <div class="detail-label">Neighborhood</div>
+                    <div class="detail-label" data-i18n="campaign.neighborhood">Neighborhood</div>
                     <div class="detail-value" id="campaignNeighborhood"></div>
                 </div>
 
                 <div class="detail-row">
-                    <div class="detail-label">Created Date</div>
+                    <div class="detail-label" data-i18n="campaign.createdDate">Created Date</div>
                     <div class="detail-value" id="campaignDate"></div>
                 </div>
 
                 <div class="detail-row">
-                    <div class="detail-label">Created By</div>
+                    <div class="detail-label" data-i18n="campaign.createdBy">Created By</div>
                     <div class="detail-value" id="createdBy"></div>
                 </div>
             </div>
 
             <!-- Edit Campaign Form (hidden by default) -->
             <div class="details-section" id="editCampaignSection" style="display: none;">
-                <h3>✏️ Edit Campaign</h3>
+                <h3 data-i18n="campaign.editTitle">✏️ Edit Campaign</h3>
                 
                 <form id="editCampaignForm">
                     <div class="mb-3">
-                        <label for="editTitle" class="form-label">Title</label>
-                        <input type="text" class="form-control" id="editTitle" placeholder="Campaign title" required>
+                        <label for="editTitle" class="form-label" data-i18n="campaign.titleLabel">Title</label>
+                        <input type="text" class="form-control" id="editTitle" data-i18n-placeholder="campaign.titlePlaceholder" placeholder="Campaign title" required>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="editDescription" class="form-label">Description</label>
-                        <textarea class="form-control" id="editDescription" rows="4" placeholder="Describe the cleanup area..." required></textarea>
+                        <label for="editDescription" class="form-label" data-i18n="campaign.description">Description</label>
+                        <textarea class="form-control" id="editDescription" rows="4" data-i18n-placeholder="campaign.descriptionPlaceholder" placeholder="Describe the cleanup area..." required></textarea>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="editNeighborhood" class="form-label">Neighborhood</label>
+                        <label for="editNeighborhood" class="form-label" data-i18n="campaign.neighborhood">Neighborhood</label>
                         <select class="form-select" id="editNeighborhood" required>
-                            <option value="Studentski Grad">Studentski Grad</option>
-                            <option value="Darvenitsa">Darvenitsa</option>
-                            <option value="Musagenitsa">Musagenitsa</option>
-                            <option value="Vitosha (VEC)">Vitosha (VEC)</option>
-                            <option value="Malinova Dolina">Malinova Dolina</option>
+                            <option value="Studentski Grad" data-i18n="neighborhoods.studentskiGrad">Studentski Grad</option>
+                            <option value="Darvenitsa" data-i18n="neighborhoods.darvenitsa">Darvenitsa</option>
+                            <option value="Musagenitsa" data-i18n="neighborhoods.musagenitsa">Musagenitsa</option>
+                            <option value="Vitosha (VEC)" data-i18n="neighborhoods.vitoshaVec">Vitosha (VEC)</option>
+                            <option value="Malinova Dolina" data-i18n="neighborhoods.malinovaDolina">Malinova Dolina</option>
                         </select>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="editStatus" class="form-label">Status</label>
+                        <label for="editStatus" class="form-label" data-i18n="campaign.status">Status</label>
                         <select class="form-select" id="editStatus" required>
-                            <option value="active">Active</option>
-                            <option value="completed">Completed</option>
+                            <option value="active" data-i18n="campaign.statusActive">Active</option>
+                            <option value="completed" data-i18n="campaign.statusCompleted">Completed</option>
                         </select>
                     </div>
                     
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-success">
+                        <button type="submit" class="btn btn-success" data-i18n="campaign.saveChanges">
                             💾 Save Changes
                         </button>
-                        <button type="button" class="btn btn-secondary" onclick="toggleEditCampaign()">
+                        <button type="button" class="btn btn-secondary" onclick="toggleEditCampaign()" data-i18n="campaign.cancelEdit">
                             ❌ Cancel
                         </button>
                     </div>
@@ -459,18 +459,18 @@
 
             <!-- Participation Stats -->
             <div class="details-section">
-                <h3>📊 Participation</h3>
+                <h3 data-i18n="campaign.participation">📊 Participation</h3>
                 <div class="participation-stats">
                     <div class="stat-item">
-                        <div class="stat-label">Total Participants</div>
+                        <div class="stat-label" data-i18n="campaign.totalParticipants">Total Participants</div>
                         <div class="stat-value" id="participantCount">0</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Approved</div>
+                        <div class="stat-label" data-i18n="campaign.approved">Approved</div>
                         <div class="stat-value" id="approvedCount">0</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Pending</div>
+                        <div class="stat-label" data-i18n="campaign.pending">Pending</div>
                         <div class="stat-value" id="pendingCount">0</div>
                     </div>
                 </div>
@@ -478,12 +478,12 @@
 
             <!-- Location Map -->
             <div class="details-section">
-                <h3>📍 Location</h3>
+                <h3 data-i18n="campaign.location">📍 Location</h3>
                 <div>
                     <p>
-                        <strong>Coordinates:</strong><br>
-                        Latitude: <span id="latitude"></span><br>
-                        Longitude: <span id="longitude"></span>
+                        <strong data-i18n="campaign.coordinates">Coordinates:</strong><br>
+                        <span data-i18n="campaign.latitude">Latitude</span>: <span id="latitude"></span><br>
+                        <span data-i18n="campaign.longitude">Longitude</span>: <span id="longitude"></span>
                     </p>
                 </div>
                 <div id="map"></div>
@@ -491,22 +491,22 @@
 
             <!-- Join Campaign Section -->
             <div class="details-section" id="joinSection" style="display: none;">
-                <h3>🤝 Join Campaign</h3>
-                <p>Click the button below to join this cleanup campaign and help make a difference!</p>
-                <button class="btn-join" id="joinBtn" onclick="handleJoin()">Join Campaign</button>
+                <h3 data-i18n="campaign.joinCampaign">🤝 Join Campaign</h3>
+                <p data-i18n="campaign.joinDescription">Click the button below to join this cleanup campaign and help make a difference!</p>
+                <button class="btn-join" id="joinBtn" onclick="handleJoin()" data-i18n="campaign.joinButton">Join Campaign</button>
             </div>
 
             <!-- Upload After Photo Section -->
             <div class="upload-form-section" id="uploadSection" style="display: none;">
-                <h3>📷 Upload After Photo</h3>
-                <p>Show us the result of your cleanup work! Upload a photo after you've finished cleaning.</p>
+                <h3 data-i18n="campaign.uploadAfterPhoto">📷 Upload After Photo</h3>
+                <p data-i18n="campaign.uploadDescription">Show us the result of your cleanup work! Upload a photo after you've finished cleaning.</p>
                 
                 <form id="uploadPhotoForm">
                     <div class="mb-3">
-                        <label for="afterPhoto" class="form-label">After Photo</label>
+                        <label for="afterPhoto" class="form-label" data-i18n="campaign.afterPhoto">After Photo</label>
                         <div class="file-input-wrapper">
                             <label class="btn-file-input">
-                                📁 Choose File
+                                <span data-i18n="campaign.chooseFile">📁 Choose File</span>
                                 <input 
                                     type="file" 
                                     id="afterPhoto" 
@@ -514,13 +514,13 @@
                                     required
                                 >
                             </label>
-                            <span class="file-name" id="afterPhotoName">No file chosen</span>
+                            <span class="file-name" id="afterPhotoName" data-i18n="campaign.noFileChosen">No file chosen</span>
                         </div>
                         <img id="afterPhotoPreview" class="photo-preview" style="display:none;">
                     </div>
                 </form>
                 
-                <button class="btn-upload" id="uploadBtn" onclick="handleUploadPhoto()" disabled>
+                <button class="btn-upload" id="uploadBtn" onclick="handleUploadPhoto()" disabled data-i18n="campaign.submitProof">
                     ✅ Submit Proof
                 </button>
                 
@@ -529,8 +529,8 @@
 
             <!-- Action Buttons -->
             <div class="action-buttons">
-                <a href="./dashboard.html" class="btn-back">← Back to Dashboard</a>
-                <button class="btn-delete" id="deleteBtn" style="display: none;" onclick="handleDelete()">
+                <a href="./dashboard.html" class="btn-back" data-i18n="campaign.backToDashboard">← Back to Dashboard</a>
+                <button class="btn-delete" id="deleteBtn" style="display: none;" onclick="handleDelete()" data-i18n="campaign.deleteCampaign">
                     🗑️ Delete Campaign
                 </button>
             </div>
@@ -539,9 +539,9 @@
         <!-- Error State -->
         <div id="errorState" style="display: none;">
             <div class="error-message">
-                <h4>Unable to Load Campaign</h4>
+                <h4 data-i18n="campaign.unableToLoad">Unable to Load Campaign</h4>
                 <p id="errorMessage"></p>
-                <a href="./dashboard.html" class="btn-back" style="display: inline-block; margin-top: 1rem;">← Back to Dashboard</a>
+                <a href="./dashboard.html" class="btn-back" style="display: inline-block; margin-top: 1rem;" data-i18n="campaign.backToDashboard">← Back to Dashboard</a>
             </div>
         </div>
     </div>
@@ -593,6 +593,19 @@
          * Check if user is authenticated
          */
         async function checkAuth() {
+            // First check localStorage for demo user
+            const storedUser = localStorage.getItem('user');
+            if (storedUser) {
+                try {
+                    currentUser = JSON.parse(storedUser);
+                    console.log('✅ Demo user loaded from localStorage:', currentUser);
+                    return;
+                } catch (e) {
+                    console.error('Failed to parse stored user:', e);
+                }
+            }
+
+            // Then try Supabase auth
             const { data: { user }, error } = await supabase.auth.getUser();
             
             if (error || !user) {
@@ -625,6 +638,7 @@
                 let campaignData = null;
                 let participations = [];
                 let userPart = null;
+                let userPartError = null;
                 
                 if (currentUser && currentUser.id === 'demo-admin-001') {
                     // Load demo campaign from localStorage
@@ -670,13 +684,14 @@
                     }
 
                     // Fetch current user's participation
-                    const { data: userPartData, error: userPartError } = await supabase
+                    const { data: userPartData, error: userPartErr } = await supabase
                         .from('participations')
                         .select('*')
                         .eq('campaign_id', campaignId)
                         .eq('user_id', currentUser.id)
                         .single();
 
+                    userPartError = userPartErr;
                     if (!userPartError) {
                         userPart = userPartData;
                     }
@@ -697,8 +712,8 @@
                 // Show participation UI
                 showParticipationUI();
 
-                // Setup file input listener
-                document.getElementById('afterPhoto').addEventListener('change', handleAfterPhotoSelect);
+                // Setup file input listener (with null check)
+                document.getElementById('afterPhoto')?.addEventListener('change', handleAfterPhotoSelect);
 
                 // Hide loading, show content
                 document.getElementById('loadingState').style.display = 'none';

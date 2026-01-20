@@ -71,6 +71,27 @@ function createMarker(map, lat, lng, iconType, popupContent) {
  */
 export async function loadCampaignMarkers(map) {
   try {
+    // Check if in demo mode
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (user && user.id === 'demo-admin-001') {
+      // Load demo campaigns from localStorage
+      const campaigns = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_CAMPAIGNS') || '[]');
+      
+      if (isEmpty(campaigns)) return;
+
+      campaigns.forEach(campaign => {
+        const popupContent = `
+          <strong>${campaign.title}</strong><br>
+          Status: ${campaign.status}<br>
+          <small>ID: ${campaign.id}</small>
+        `;
+        
+        createMarker(map, campaign.location_lat, campaign.location_lng, 'campaign', popupContent);
+      });
+      return;
+    }
+
+    // Load from Supabase
     const { data: campaigns, error } = await supabase
       .from('campaigns')
       .select('id, title, location_lat, location_lng, status')
@@ -101,6 +122,13 @@ export async function loadCampaignMarkers(map) {
  */
 export async function loadDisposalPointMarkers(map) {
   try {
+    // Check if in demo mode - skip disposal points for demo
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (user && user.id === 'demo-admin-001') {
+      console.log('📝 Demo mode: skipping disposal points');
+      return;
+    }
+
     const { data: disposalPoints, error } = await supabase
       .from('disposal_points')
       .select('id, name, description, latitude, longitude');

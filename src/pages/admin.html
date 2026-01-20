@@ -422,11 +422,12 @@
                     // DEMO MODE: Load from localStorage
                     const participations = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_PARTICIPATIONS') || '[]');
                     const campaigns = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_CAMPAIGNS') || '[]');
-                    const users = [currentUser]; // In demo, only admin user exists
+                    const users = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_USERS') || '[]');
 
                     // Join participations with campaigns and users
                     allParticipationsData = participations.map(p => {
                         const campaign = campaigns.find(c => c.id === p.campaign_id);
+                        const user = users.find(u => u.id === p.user_id) || currentUser;
                         return {
                             id: p.id,
                             status: p.status,
@@ -440,7 +441,7 @@
                                 before_photo_url: campaign.before_photo_url
                             } : null,
                             profiles: {
-                                username: currentUser.username // Demo user
+                                username: user?.username || 'Demo User'
                             }
                         };
                     });
@@ -638,43 +639,72 @@
                 const POINTS_AWARDED = 20;
 
                 if (isDemoMode) {
-                    // DEMO MODE: Update localStorage
-                    const participations = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_PARTICIPATIONS') || '[]');
-                    const transactions = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_TRANSACTIONS') || '[]');
+                    try {
+                        // DEMO MODE: Update localStorage
+                        const participations = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_PARTICIPATIONS') || '[]');
+                        const transactions = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_TRANSACTIONS') || '[]');
+                        const users = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_USERS') || '[]');
 
-                    // Update participation status
-                    const pIndex = participations.findIndex(p => p.id === participationId);
-                    if (pIndex !== -1) {
-                        participations[pIndex].status = 'approved';
-                        localStorage.setItem('CLEAN_QUARTER_DEMO_PARTICIPATIONS', JSON.stringify(participations));
+                        // Update participation status
+                        const pIndex = participations.findIndex(p => p.id === participationId);
+                        if (pIndex !== -1) {
+                            participations[pIndex].status = 'approved';
+                            localStorage.setItem('CLEAN_QUARTER_DEMO_PARTICIPATIONS', JSON.stringify(participations));
+                        }
+
+                        // Find the user who submitted the participation
+                        const participantId = participation.user_id;
+                        let participant = users.find(u => u.id === participantId);
+                        if (!participant) {
+                            // fallback: if no users array, try currentUser (for legacy demo)
+                            participant = currentUser;
+                        }
+                        if (!participant) {
+                            throw new Error('Demo Mode: Participant not found');
+                        }
+                        participant.points_balance = (participant.points_balance || 0) + POINTS_AWARDED;
+
+                        // Update users array or currentUser in localStorage
+                        if (users.length > 0) {
+                            const uIndex = users.findIndex(u => u.id === participantId);
+                            if (uIndex !== -1) {
+                                users[uIndex] = participant;
+                                localStorage.setItem('CLEAN_QUARTER_DEMO_USERS', JSON.stringify(users));
+                            }
+                        } else {
+                            localStorage.setItem('user', JSON.stringify(participant));
+                        }
+
+                        // Add transaction record
+                        const newTransaction = {
+                            id: 'demo_trans_' + Date.now(),
+                            user_id: participantId,
+                            amount: POINTS_AWARDED,
+                            type: 'earned',
+                            reason: `Cleanup proof approved - ${participation.campaigns?.title || 'Campaign'}`,
+                            participation_id: participationId,
+                            created_at: new Date().toISOString()
+                        };
+                        transactions.push(newTransaction);
+                        localStorage.setItem('CLEAN_QUARTER_DEMO_TRANSACTIONS', JSON.stringify(transactions));
+
+                        Swal.close();
+
+                        await Swal.fire({
+                            icon: 'success',
+                            title: 'Approved!',
+                            text: `${username} earned 20 points ✅`,
+                            confirmButtonColor: '#28a745'
+                        });
+                    } catch (demoError) {
+                        Swal.close();
+                        await Swal.fire({
+                            icon: 'error',
+                            title: 'Demo Mode Error',
+                            text: demoError.message || 'Failed to approve in Demo Mode.'
+                        });
+                        return;
                     }
-
-                    // Update demo user points (admin is the only user in demo)
-                    currentUser.points_balance = (currentUser.points_balance || 0) + POINTS_AWARDED;
-                    localStorage.setItem('user', JSON.stringify(currentUser));
-
-                    // Add transaction record
-                    const newTransaction = {
-                        id: 'demo_trans_' + Date.now(),
-                        user_id: currentUser.id,
-                        amount: POINTS_AWARDED,
-                        type: 'earned',
-                        reason: `Cleanup proof approved - ${participation.campaigns?.title || 'Campaign'}`,
-                        participation_id: participationId,
-                        created_at: new Date().toISOString()
-                    };
-                    transactions.push(newTransaction);
-                    localStorage.setItem('CLEAN_QUARTER_DEMO_TRANSACTIONS', JSON.stringify(transactions));
-
-                    Swal.close();
-
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'Approved!',
-                        text: `${username} earned 20 points ✅`,
-                        confirmButtonColor: '#28a745'
-                    });
-
                 } else {
                     // REAL MODE: Use Supabase
                     const userId = participation.user_id;

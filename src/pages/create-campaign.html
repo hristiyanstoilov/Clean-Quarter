@@ -160,6 +160,9 @@
                         <option value="en">🇬🇧 English</option>
                     </select>
                     <a href="#" onclick="handleLogout()" data-i18n="nav.logout">Logout</a>
+                    <li class="nav-item" id="adminNav" style="display:none;">
+                        <a class="nav-link" href="./admin.html" data-i18n="nav.admin">Admin</a>
+                    </li>
                 </div>
             </div>
         </div>
@@ -294,6 +297,13 @@
                     // Just show a message - language changes only from profile page
                     console.log('Language changes only from Profile page');
                 });
+
+                // Show admin nav if user is admin
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                if (user && user.role === 'admin') {
+                    const adminNav = document.getElementById('adminNav');
+                    if (adminNav) adminNav.style.display = 'block';
+                }
 
                 await checkAuth();
                 initMap();
