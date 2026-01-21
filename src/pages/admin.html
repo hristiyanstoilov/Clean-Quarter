@@ -258,11 +258,74 @@
                     <a href="./dashboard.html" data-i18n="nav.dashboard">Dashboard</a>
                     <a href="./profile.html" data-i18n="nav.profile">Profile</a>
                     <select id="languageSelector" class="form-select form-select-sm" style="max-width: 150px; display: none;">
-                        <option value="bg">🇧🇬 Български</option>
-                        <option value="en">🇬🇧 English</option>
+                        <option value="bg" data-i18n="lang.bg">🇧🇬 Български</option>
+                        <option value="en" data-i18n="lang.en">🇬🇧 English</option>
                     </select>
                     <a href="#" onclick="handleLogout()" data-i18n="nav.logout">Logout</a>
                 </div>
+                        <!-- Campaign Management Section -->
+                        <div class="pending-section mt-5">
+                            <h2 data-i18n="admin.campaign_management">📋 Campaign Management</h2>
+                            <!-- Filter/Search Bar for Campaigns -->
+                            <form id="campaignFilterForm" class="row g-2 mb-3" autocomplete="off" onsubmit="return false;">
+                                <div class="col-md-4 col-12">
+                                    <input type="text" id="filterCampaignTitle" class="form-control" placeholder="Filter by title..." data-i18n-placeholder="admin.campaign_filter_title">
+                                </div>
+                                <div class="col-md-4 col-12">
+                                    <select id="filterCampaignStatus" class="form-select">
+                                        <option value="" data-i18n="admin.all_statuses">All Statuses</option>
+                                        <option value="open" data-i18n="admin.status_open">Open</option>
+                                        <option value="closed" data-i18n="admin.status_closed">Closed</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 col-10">
+                                    <input type="text" id="filterCampaignNeighborhood" class="form-control" placeholder="Filter by neighborhood..." data-i18n-placeholder="admin.campaign_filter_neighborhood">
+                                </div>
+                                <div class="col-md-1 col-2 d-grid">
+                                    <button type="button" id="clearCampaignFilters" class="btn btn-outline-secondary" title="Clear filters" data-i18n="admin.clear_filters">✖</button>
+                                </div>
+                            </form>
+                            <div id="campaignTableContainer">
+                                <!-- Campaigns table will be inserted here -->
+                            </div>
+                            <!-- Edit Campaign Modal -->
+                            <div class="modal fade" id="editCampaignModal" tabindex="-1" aria-labelledby="editCampaignModalLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="editCampaignModalLabel" data-i18n="admin.edit_campaign">Edit Campaign</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form id="editCampaignForm">
+                                                <input type="hidden" id="editCampaignId">
+                                                <div class="mb-3">
+                                                    <label for="editCampaignTitle" class="form-label" data-i18n="admin.title">Title</label>
+                                                    <input type="text" class="form-control" id="editCampaignTitle" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="editCampaignDescription" class="form-label" data-i18n="admin.description">Description</label>
+                                                    <textarea class="form-control" id="editCampaignDescription" rows="2" required></textarea>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="editCampaignNeighborhood" class="form-label" data-i18n="admin.neighborhood">Neighborhood</label>
+                                                    <input type="text" class="form-control" id="editCampaignNeighborhood" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="editCampaignStatus" class="form-label" data-i18n="admin.status">Status</label>
+                                                    <select class="form-select" id="editCampaignStatus">
+                                                        <option value="open">Open</option>
+                                                        <option value="closed">Closed</option>
+                                                    </select>
+                                                </div>
+                                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                                                                                         <button type="submit" class="btn btn-primary" data-i18n="admin.save_changes">Save Changes</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
             </div>
         </div>
     </nav>
@@ -280,30 +343,49 @@
         <div id="adminContent" style="display: none;">
             <!-- Header -->
             <div class="admin-header">
-                <h1>🛡️ Admin Panel</h1>
-                <p>Review and approve cleanup submissions from users</p>
+                <h1 data-i18n="admin.panel_title">🛡️ Admin Panel</h1>
+                <p data-i18n="admin.panel_subtitle">Review and approve cleanup submissions from users</p>
             </div>
 
             <!-- Statistics Cards -->
             <div class="stats-cards">
                 <div class="stat-card">
                     <div class="stat-value" id="totalPendingCount">0</div>
-                    <div class="stat-label">Pending Reviews</div>
+                    <div class="stat-label" data-i18n="admin.pending_reviews">Pending Reviews</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="totalApprovedCount">0</div>
-                    <div class="stat-label">Total Approved</div>
+                    <div class="stat-label" data-i18n="admin.total_approved">Total Approved</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="totalRejectedCount">0</div>
-                    <div class="stat-label">Total Rejected</div>
+                    <div class="stat-label" data-i18n="admin.total_rejected">Total Rejected</div>
                 </div>
             </div>
 
             <!-- Pending Participations Section -->
             <div class="pending-section">
-                <h2>⏳ Pending Approvals</h2>
-                
+                <h2 data-i18n="admin.pending_approvals">⏳ Pending Approvals</h2>
+                <!-- Filter/Search Bar -->
+                <form id="filterForm" class="row g-2 mb-3" autocomplete="off" onsubmit="return false;">
+                    <div class="col-md-4 col-12">
+                        <input type="text" id="filterUser" class="form-control" placeholder="Filter by user..." data-i18n-placeholder="admin.filter_user">
+                    </div>
+                    <div class="col-md-4 col-12">
+                        <input type="text" id="filterCampaign" class="form-control" placeholder="Filter by campaign..." data-i18n-placeholder="admin.filter_campaign">
+                    </div>
+                    <div class="col-md-3 col-10">
+                        <select id="filterStatus" class="form-select">
+                            <option value="" data-i18n="admin.all_statuses">All Statuses</option>
+                            <option value="pending" data-i18n="admin.status_pending">Pending</option>
+                            <option value="approved" data-i18n="admin.status_approved">Approved</option>
+                            <option value="rejected" data-i18n="admin.status_rejected">Rejected</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1 col-2 d-grid">
+                        <button type="button" id="clearFilters" class="btn btn-outline-secondary" title="Clear filters" data-i18n="admin.clear_filters">✖</button>
+                    </div>
+                </form>
                 <div id="pendingTableContainer">
                     <!-- Table will be inserted here -->
                 </div>
@@ -313,9 +395,9 @@
         <!-- Access Denied State -->
         <div id="accessDenied" style="display: none;">
             <div class="access-denied">
-                <h1>🚫 Access Denied</h1>
-                <p>You don't have permission to access this page.</p>
-                <a href="./dashboard.html" class="btn btn-primary btn-lg">Go to Dashboard</a>
+                <h1 data-i18n="admin.access_denied_title">🚫 Access Denied</h1>
+                <p data-i18n="admin.access_denied_msg">You don't have permission to access this page.</p>
+                <a href="./dashboard.html" class="btn btn-primary btn-lg" data-i18n="admin.go_to_dashboard">Go to Dashboard</a>
             </div>
         </div>
     </div>
@@ -332,11 +414,14 @@
     <!-- Main Script -->
     <script type="module">
         import supabase from '../services/supabase.js';
-        import { initI18n, applyLanguage, setLanguage } from '../utils/i18n.js';
+        import { initI18n, applyLanguage, setLanguage, t } from '../utils/i18n.js';
 
         // Global variables
         let currentUser = null;
         let pendingParticipations = [];
+
+        // Campaigns data
+        let allCampaigns = [];
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', async () => {
@@ -354,6 +439,203 @@
 
                 await checkAuth();
                 await loadAdminData();
+                await loadCampaigns();
+
+                // Campaign filter listeners
+                document.getElementById('filterCampaignTitle').addEventListener('input', renderCampaignTable);
+                document.getElementById('filterCampaignStatus').addEventListener('change', renderCampaignTable);
+                document.getElementById('filterCampaignNeighborhood').addEventListener('input', renderCampaignTable);
+                document.getElementById('clearCampaignFilters').addEventListener('click', () => {
+                    document.getElementById('filterCampaignTitle').value = '';
+                    document.getElementById('filterCampaignStatus').value = '';
+                    document.getElementById('filterCampaignNeighborhood').value = '';
+                    renderCampaignTable();
+                });
+            /**
+             * Load all campaigns for admin
+             */
+            async function loadCampaigns() {
+                try {
+                    const localUser = localStorage.getItem('user');
+                    const isDemoMode = localUser && currentUser.role === 'admin';
+                    if (isDemoMode) {
+                        // DEMO MODE: Load from localStorage
+                        allCampaigns = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_CAMPAIGNS') || '[]');
+                    } else {
+                        try {
+                            // Initialize i18n first (realTime = false)
+                            await initI18n(false);
+                            applyLanguage(localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg');
+
+                            // Language selector
+                            document.getElementById('languageSelector').value = localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg';
+                            document.getElementById('languageSelector').addEventListener('change', (e) => {
+                                // Just show a message - language changes only from profile page
+                                console.log('Language changes only from Profile page');
+                            });
+
+                            await checkAuth();
+                            await loadAdminData();
+                            await loadCampaigns();
+
+                            // Campaign filter listeners
+                            document.getElementById('filterCampaignTitle').addEventListener('input', renderCampaignTable);
+                            document.getElementById('filterCampaignStatus').addEventListener('change', renderCampaignTable);
+                            document.getElementById('filterCampaignNeighborhood').addEventListener('input', renderCampaignTable);
+                            document.getElementById('clearCampaignFilters').addEventListener('click', () => {
+                                document.getElementById('filterCampaignTitle').value = '';
+                                document.getElementById('filterCampaignStatus').value = '';
+                                document.getElementById('filterCampaignNeighborhood').value = '';
+                                renderCampaignTable();
+                            });
+                        /**
+                         * Load all campaigns for admin
+                         */
+                        async function loadCampaigns() {
+                            try {
+                                const localUser = localStorage.getItem('user');
+                                const isDemoMode = localUser && currentUser.role === 'admin';
+                                if (isDemoMode) {
+                                    // DEMO MODE: Load from localStorage
+                                    allCampaigns = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_CAMPAIGNS') || '[]');
+                                } else {
+                                    // REAL MODE: Fetch from Supabase
+                                    const { data: campaigns, error } = await supabase
+                                        .from('campaigns')
+                                        .select('*')
+                                        .order('created_at', { ascending: false });
+                                    if (error) throw new Error('Failed to fetch campaigns: ' + error.message);
+                                    allCampaigns = campaigns || [];
+                                }
+                                renderCampaignTable();
+                            } catch (error) {
+                                document.getElementById('campaignTableContainer').innerHTML = `<div class="empty-state"><h3 data-i18n="admin.error_loading_campaigns">${t('admin.error_loading_campaigns')}</h3><p>${error.message}</p></div>`;
+                                applyLanguage(localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg');
+                            }
+                        }
+
+                        /**
+                         * Render campaigns table with filters
+                         */
+                        function renderCampaignTable() {
+                            const container = document.getElementById('campaignTableContainer');
+                            if (!allCampaigns || allCampaigns.length === 0) {
+                                container.innerHTML = `<div class="empty-state"><div style="font-size: 4rem; margin-bottom: 1rem;">📋</div><h3 data-i18n="admin.no_campaigns">${t('admin.no_campaigns')}</h3><p data-i18n="admin.no_campaigns_found">${t('admin.no_campaigns_found')}</p></div>`;
+                                applyLanguage(localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg');
+                                return;
+                            }
+                            // Get filter values
+                            const titleFilter = (document.getElementById('filterCampaignTitle')?.value || '').toLowerCase();
+                            const statusFilter = document.getElementById('filterCampaignStatus')?.value || '';
+                            const neighborhoodFilter = (document.getElementById('filterCampaignNeighborhood')?.value || '').toLowerCase();
+
+                            let filtered = allCampaigns;
+                            if (titleFilter) {
+                                filtered = filtered.filter(c => (c.title || '').toLowerCase().includes(titleFilter));
+                            }
+                            if (statusFilter) {
+                                filtered = filtered.filter(c => (c.status || '').toLowerCase() === statusFilter);
+                            }
+                            if (neighborhoodFilter) {
+                                filtered = filtered.filter(c => (c.neighborhood || '').toLowerCase().includes(neighborhoodFilter));
+                            }
+
+                            if (filtered.length === 0) {
+                                container.innerHTML = `<div class="empty-state"><div style="font-size: 4rem; margin-bottom: 1rem;">📋</div><h3 data-i18n="admin.no_results">${t('admin.no_results')}</h3><p data-i18n="admin.try_adjusting_filters">${t('admin.try_adjusting_filters')}</p></div>`;
+                                applyLanguage(localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg');
+                                return;
+                            }
+
+                            let tableHTML = `<div class="table-responsive"><table class="table table-hover"><thead><tr>
+                                <th data-i18n="admin.title">${t('admin.title')}</th>
+                                <th data-i18n="admin.description">${t('admin.description')}</th>
+                                <th data-i18n="admin.neighborhood">${t('admin.neighborhood')}</th>
+                                <th data-i18n="admin.status">${t('admin.status')}</th>
+                                <th data-i18n="admin.created_by">${t('admin.created_by')}</th>
+                                <th data-i18n="admin.created">${t('admin.created')}</th>
+                                <th data-i18n="admin.actions">${t('admin.actions')}</th>
+                            </tr></thead><tbody>`;
+                            filtered.forEach(campaign => {
+                                const createdDate = campaign.created_at ? new Date(campaign.created_at).toLocaleDateString('bg-BG', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
+                                tableHTML += `<tr>
+                                    <td>${campaign.title || ''}</td>
+                                    <td>${campaign.description || ''}</td>
+                                    <td>${campaign.neighborhood || ''}</td>
+                                    <td>${campaign.status ? t('admin.status_' + campaign.status.toLowerCase()) : ''}</td>
+                                    <td>${campaign.created_by || ''}</td>
+                                    <td>${createdDate}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editCampaign('${campaign.id}')" data-i18n="admin.edit">${t('admin.edit')}</button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteCampaign('${campaign.id}')" data-i18n="admin.delete">${t('admin.delete')}</button>
+                                    </td>
+                                </tr>`;
+                            });
+                            tableHTML += `</tbody></table></div>`;
+                            container.innerHTML = tableHTML;
+                            applyLanguage(localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg');
+                        }
+                        let campaigns = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_CAMPAIGNS') || '[]');
+                        const idx = campaigns.findIndex(c => c.id == id);
+                        if (idx !== -1) {
+                            campaigns[idx].title = title;
+                            campaigns[idx].description = description;
+                            campaigns[idx].neighborhood = neighborhood;
+                            campaigns[idx].status = status;
+                            localStorage.setItem('CLEAN_QUARTER_DEMO_CAMPAIGNS', JSON.stringify(campaigns));
+                        }
+                    } else {
+                        // REAL MODE: Update Supabase
+                        const { error } = await supabase
+                            .from('campaigns')
+                            .update({ title, description, neighborhood, status })
+                            .eq('id', id);
+                        if (error) throw new Error(error.message);
+                    }
+                    await loadCampaigns();
+                    bootstrap.Modal.getInstance(document.getElementById('editCampaignModal')).hide();
+                    Swal.fire('Success', 'Campaign updated successfully!', 'success');
+                } catch (err) {
+                    Swal.fire('Error', err.message || 'Failed to update campaign.', 'error');
+                }
+            });
+
+            // Delete campaign logic
+            window.deleteCampaign = async function(id) {
+                const campaign = allCampaigns.find(c => c.id == id);
+                if (!campaign) return;
+                const result = await Swal.fire({
+                    title: 'Delete Campaign?',
+                    text: `Are you sure you want to delete "${campaign.title}"? This cannot be undone!`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, Delete',
+                    cancelButtonText: 'Cancel'
+                });
+                if (!result.isConfirmed) return;
+                const localUser = localStorage.getItem('user');
+                const isDemoMode = localUser && currentUser.role === 'admin';
+                try {
+                    if (isDemoMode) {
+                        // DEMO MODE: Remove from localStorage
+                        let campaigns = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_CAMPAIGNS') || '[]');
+                        campaigns = campaigns.filter(c => c.id != id);
+                        localStorage.setItem('CLEAN_QUARTER_DEMO_CAMPAIGNS', JSON.stringify(campaigns));
+                    } else {
+                        // REAL MODE: Delete from Supabase
+                        const { error } = await supabase
+                            .from('campaigns')
+                            .delete()
+                            .eq('id', id);
+                        if (error) throw new Error(error.message);
+                    }
+                    await loadCampaigns();
+                    Swal.fire('Deleted!', 'Campaign deleted successfully.', 'success');
+                } catch (err) {
+                    Swal.fire('Error', err.message || 'Failed to delete campaign.', 'error');
+                }
+            };
             } catch (error) {
                 console.error('Admin page initialization failed', error);
             }
@@ -510,36 +792,30 @@
         function renderPendingTable() {
             const container = document.getElementById('pendingTableContainer');
 
-            if (pendingParticipations.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div style="font-size: 4rem; margin-bottom: 1rem;">✅</div>
-                        <h3>No Pending Reviews</h3>
-                        <p>All submissions have been reviewed. Great job!</p>
-                    </div>
-                `;
-                return;
-            }
+            // Get filter values
+            const userFilter = (document.getElementById('filterUser')?.value || '').toLowerCase();
+            const campaignFilter = (document.getElementById('filterCampaign')?.value || '').toLowerCase();
+            const statusFilter = document.getElementById('filterStatus')?.value || '';
 
             let tableHTML = `
-                <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>User</th>
-                                <th>Campaign</th>
-                                <th>Before Photo</th>
-                                <th>After Photo</th>
-                                <th>Submitted</th>
-                                <th>Actions</th>
+                                <th data-i18n="admin.user">${t('admin.user')}</th>
+                                <th data-i18n="admin.campaign">${t('admin.campaign')}</th>
+                                <th data-i18n="admin.before_photo">${t('admin.before_photo')}</th>
+                                <th data-i18n="admin.after_photo">${t('admin.after_photo')}</th>
+                                <th data-i18n="admin.submitted">${t('admin.submitted')}</th>
+                                <th data-i18n="admin.status">${t('admin.status')}</th>
+                                <th data-i18n="admin.actions">${t('admin.actions')}</th>
                             </tr>
                         </thead>
                         <tbody>
             `;
 
-            pendingParticipations.forEach(participation => {
-                const username = participation.profiles?.username || 'Unknown User';
-                const campaignTitle = participation.campaigns?.title || 'Unknown Campaign';
+            filtered.forEach(participation => {
+                const username = participation.profiles?.username || t('admin.unknown_user');
+                const campaignTitle = participation.campaigns?.title || t('admin.unknown_campaign');
                 const beforePhoto = participation.campaigns?.before_photo_url || '';
                 const afterPhoto = participation.after_photo_url || '';
                 const submittedDate = new Date(participation.created_at).toLocaleDateString('bg-BG', {
@@ -547,18 +823,41 @@
                     month: 'short',
                     day: 'numeric'
                 });
+                const status = participation.status || 'pending';
 
                 tableHTML += `
                     <tr>
                         <td><strong>${username}</strong></td>
                         <td>${campaignTitle}</td>
                         <td>
-                            ${beforePhoto ? `<img src="${beforePhoto}" class="photo-thumbnail" alt="Before" onclick="showPhotoModal('${beforePhoto}')">` : 'N/A'}
+                            ${beforePhoto ? `<img src="${beforePhoto}" class="photo-thumbnail" alt="${t('admin.before_photo')}" onclick="showPhotoModal('${beforePhoto}')">` : t('admin.na')}
                         </td>
                         <td>
-                            ${afterPhoto ? `<img src="${afterPhoto}" class="photo-thumbnail" alt="After" onclick="showPhotoModal('${afterPhoto}')">` : 'N/A'}
+                            ${afterPhoto ? `<img src="${afterPhoto}" class="photo-thumbnail" alt="${t('admin.after_photo')}" onclick="showPhotoModal('${afterPhoto}')">` : t('admin.na')}
                         </td>
                         <td>${submittedDate}</td>
+                        <td>${t('admin.status_' + status.toLowerCase())}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-approve" onclick="handleApprove('${participation.id}', '${username}')" data-i18n="admin.approve">✅ ${t('admin.approve')}</button>
+                                <button class="btn-reject" onclick="handleReject('${participation.id}', '${username}')" data-i18n="admin.reject">❌ ${t('admin.reject')}</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            container.innerHTML = tableHTML;
+            applyLanguage(localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg');
+                        </td>
+                        <td>${submittedDate}</td>
+                        <td>${status.charAt(0).toUpperCase() + status.slice(1)}</td>
                         <td>
                             <div class="action-buttons">
                                 <button class="btn-approve" onclick="handleApprove('${participation.id}', '${username}')">
@@ -580,23 +879,34 @@
             `;
 
             container.innerHTML = tableHTML;
-        }
+            try {
+                // Initialize i18n first (realTime = false)
+                await initI18n(false);
+                applyLanguage(localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg');
 
-        /**
-         * Show photo in modal
-         */
-        function showPhotoModal(photoUrl) {
-            document.getElementById('modalPhoto').src = photoUrl;
-            document.getElementById('photoModal').style.display = 'block';
-        }
+                // Language selector
+                document.getElementById('languageSelector').value = localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg';
+                document.getElementById('languageSelector').addEventListener('change', (e) => {
+                    // Just show a message - language changes only from profile page
+                    console.log('Language changes only from Profile page');
+                });
 
-        /**
-         * Close photo modal
-         */
-        function closePhotoModal() {
-            document.getElementById('photoModal').style.display = 'none';
-        }
+                // Filter listeners
+                document.getElementById('filterUser').addEventListener('input', renderPendingTable);
+                document.getElementById('filterCampaign').addEventListener('input', renderPendingTable);
+                document.getElementById('filterStatus').addEventListener('change', renderPendingTable);
+                document.getElementById('clearFilters').addEventListener('click', () => {
+                    document.getElementById('filterUser').value = '';
+                    document.getElementById('filterCampaign').value = '';
+                    document.getElementById('filterStatus').value = '';
+                    renderPendingTable();
+                });
 
+                await checkAuth();
+                await loadAdminData();
+            } catch (error) {
+                console.error('Admin page initialization failed', error);
+            }
         /**
          * Handle approve action
          */
@@ -687,6 +997,15 @@
                         };
                         transactions.push(newTransaction);
                         localStorage.setItem('CLEAN_QUARTER_DEMO_TRANSACTIONS', JSON.stringify(transactions));
+
+                        // Set notification for user
+                        let notifications = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_NOTIFICATIONS') || '{}');
+                        notifications[participantId] = {
+                            type: 'approved',
+                            campaign: participation.campaigns?.title || 'Campaign',
+                            date: new Date().toISOString()
+                        };
+                        localStorage.setItem('CLEAN_QUARTER_DEMO_NOTIFICATIONS', JSON.stringify(notifications));
 
                         Swal.close();
 
@@ -838,6 +1157,17 @@
                         participations[pIndex].rejection_reason = rejectionReason;
                         localStorage.setItem('CLEAN_QUARTER_DEMO_PARTICIPATIONS', JSON.stringify(participations));
                     }
+
+                    // Set notification for user
+                    const participantId = participation.user_id;
+                    let notifications = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_NOTIFICATIONS') || '{}');
+                    notifications[participantId] = {
+                        type: 'rejected',
+                        campaign: participation.campaigns?.title || 'Campaign',
+                        reason: rejectionReason,
+                        date: new Date().toISOString()
+                    };
+                    localStorage.setItem('CLEAN_QUARTER_DEMO_NOTIFICATIONS', JSON.stringify(notifications));
 
                     Swal.close();
 
