@@ -54,17 +54,26 @@
         }
         
         .map-container {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
+              background: white;
+              padding: 2rem;
+              border-radius: 8px;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+              margin-bottom: 2rem;
+              position: relative;
+              width: 100%;
+              min-height: 400px;
         }
         
         #map {
+            width: 100vw;
+            min-width: 300px;
+            min-height: 400px;
             height: 400px;
-            border-radius: 6px;
-            margin-bottom: 1rem;
+              border-radius: 6px;
+              margin-bottom: 1rem;
+              display: block;
+            /* background removed for Leaflet rendering fix */
+              overflow: hidden;
         }
         
         .coordinates-display {
@@ -306,8 +315,10 @@
                 }
 
                 await checkAuth();
-                initMap();
-                setupEventListeners();
+                setTimeout(() => {
+                    initMap();
+                    setupEventListeners();
+                }, 500);
             } catch (error) {
                 console.error('Page initialization failed', error);
             }
@@ -343,10 +354,58 @@
          * Initialize the map
          */
         function initMap() {
+                        window.addEventListener('resize', () => {
+                            if (map) map.invalidateSize();
+                        });
             map = initializeMap();
-            
+            // Fix Leaflet rendering bug: ensure map fills container
+            setTimeout(() => {
+                map.invalidateSize();
+                // Center map and show marker if coordinates are already selected
+                if (selectedCoordinates.lat && selectedCoordinates.lng) {
+                    map.setView([selectedCoordinates.lat, selectedCoordinates.lng], 16);
+                    map.invalidateSize();
+                    if (window.selectionMarker) {
+                        map.removeLayer(window.selectionMarker);
+                    }
+                    window.selectionMarker = L.marker([selectedCoordinates.lat, selectedCoordinates.lng], {
+                        icon: L.icon({
+                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+                            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                            iconSize: [25, 41],
+                            iconAnchor: [12, 41],
+                            popupAnchor: [1, -34],
+                            shadowSize: [41, 41]
+                        })
+                    }).addTo(map).bindPopup('Campaign Location').openPopup();
+                    map.invalidateSize();
+                }
+            }, 300);
+
             // Add click event to map to select coordinates
             map.on('click', (e) => {
+                const { lat, lng } = e.latlng;
+                selectedCoordinates = { lat, lng };
+                document.getElementById('latitude').textContent = lat.toFixed(6);
+                document.getElementById('longitude').textContent = lng.toFixed(6);
+                document.getElementById('coordinatesDisplay').style.display = 'block';
+                // Add or update marker
+                if (window.selectionMarker) {
+                    map.removeLayer(window.selectionMarker);
+                }
+                window.selectionMarker = L.marker([lat, lng], {
+                    icon: L.icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                    })
+                }).addTo(map).bindPopup('Campaign Location').openPopup();
+                map.setView([lat, lng], 16);
+                map.invalidateSize();
+            });
                 const { lat, lng } = e.latlng;
                 selectedCoordinates = { lat, lng };
                 
@@ -507,15 +566,7 @@
                     if (userError || !user) {
                         throw new Error('User not authenticated');
                     }
-                    
-                    // Upload before photo
-                    await Swal.fire({
-                        title: 'Uploading photo...',
-                        allowOutsideClick: false,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
+                            <link rel="stylesheet" href="../assets/style.css">
                     
                     const beforePhotoUrl = await uploadCampaignPhoto(beforePhotoFile, 'before');
                     
