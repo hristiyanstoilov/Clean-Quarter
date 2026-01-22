@@ -9,13 +9,13 @@
 const rules = {
   // Text validation
   required: (value) => {
-    return value && value.toString().trim() ? null : 'This field is required';
+    return value && value.toString().trim() ? null : "This field is required";
   },
 
   email: (value) => {
     if (!value) return null;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(value) ? null : 'Invalid email format';
+    return emailRegex.test(value) ? null : "Invalid email format";
   },
 
   minLength: (min) => {
@@ -32,13 +32,13 @@ const rules = {
 
   pattern: (pattern, message) => {
     return (value) => {
-      return !value || pattern.test(value) ? null : message || 'Invalid format';
+      return !value || pattern.test(value) ? null : message || "Invalid format";
     };
   },
 
   // Number validation
   number: (value) => {
-    return !value || !isNaN(value) ? null : 'Must be a number';
+    return !value || !isNaN(value) ? null : "Must be a number";
   },
 
   min: (min) => {
@@ -55,17 +55,17 @@ const rules = {
 
   // Specific validations
   password: (value) => {
-    if (!value) return 'Password is required';
-    if (value.length < 8) return 'Password must be at least 8 characters';
-    if (!/[A-Z]/.test(value)) return 'Password must contain uppercase letter';
-    if (!/[a-z]/.test(value)) return 'Password must contain lowercase letter';
-    if (!/[0-9]/.test(value)) return 'Password must contain number';
+    if (!value) return "Password is required";
+    if (value.length < 8) return "Password must be at least 8 characters";
+    if (!/[A-Z]/.test(value)) return "Password must contain uppercase letter";
+    if (!/[a-z]/.test(value)) return "Password must contain lowercase letter";
+    if (!/[0-9]/.test(value)) return "Password must contain number";
     return null;
   },
 
   match: (fieldValue) => {
     return (value) => {
-      return value === fieldValue ? null : 'Fields do not match';
+      return value === fieldValue ? null : "Fields do not match";
     };
   },
 
@@ -75,15 +75,15 @@ const rules = {
       new URL(value);
       return null;
     } catch {
-      return 'Invalid URL format';
+      return "Invalid URL format";
     }
   },
 
   phone: (value) => {
     if (!value) return null;
     const phoneRegex = /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/;
-    return phoneRegex.test(value) ? null : 'Invalid phone format';
-  }
+    return phoneRegex.test(value) ? null : "Invalid phone format";
+  },
 };
 
 /**
@@ -92,32 +92,32 @@ const rules = {
 const schemas = {
   login: {
     email: [rules.required, rules.email],
-    password: [rules.required, rules.minLength(6)]
+    password: [rules.required, rules.minLength(6)],
   },
 
   register: {
     email: [rules.required, rules.email],
     password: [rules.required, rules.password],
     confirmPassword: [rules.required],
-    neighborhood: [rules.required]
+    neighborhood: [rules.required],
   },
 
   campaign: {
     title: [rules.required, rules.minLength(3), rules.maxLength(100)],
     description: [rules.required, rules.minLength(10), rules.maxLength(1000)],
-    neighborhood: [rules.required]
+    neighborhood: [rules.required],
   },
 
   reward: {
     title: [rules.required, rules.minLength(3), rules.maxLength(100)],
     cost: [rules.required, rules.number, rules.min(1), rules.max(10000)],
-    category: [rules.required]
+    category: [rules.required],
   },
 
   profile: {
     username: [rules.required, rules.minLength(3), rules.maxLength(50)],
-    email: [rules.required, rules.email]
-  }
+    email: [rules.required, rules.email],
+  },
 };
 
 /**
@@ -128,7 +128,7 @@ const schemas = {
  */
 export function validateField(value, fieldRules = []) {
   for (const rule of fieldRules) {
-    const error = typeof rule === 'function' ? rule(value) : null;
+    const error = typeof rule === "function" ? rule(value) : null;
     if (error) return error;
   }
   return null;
@@ -153,7 +153,7 @@ export function validateForm(data, schema) {
 
   return {
     isValid: Object.keys(errors).length === 0,
-    errors
+    errors,
   };
 }
 
@@ -199,7 +199,7 @@ export function getErrorMessage(error) {
   if (error.message) return error.message;
   if (error.error?.message) return error.error.message;
   if (error.data?.message) return error.data.message;
-  return 'An error occurred';
+  return "An error occurred";
 }
 
 export { rules, schemas };

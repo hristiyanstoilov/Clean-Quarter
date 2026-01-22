@@ -28,12 +28,12 @@ class Store {
       rewardsError: null,
 
       // UI State
-      currentLanguage: localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg',
+      currentLanguage: null,
       notifications: [],
       errors: [],
 
       // Cache
-      cache: new Map()
+      cache: new Map(),
     };
 
     // Subscribers for state changes
@@ -42,13 +42,19 @@ class Store {
 
     // Initialize
     this.init();
+    // Lazy-load language from localStorage if not set
+    if (!this.state.currentLanguage) {
+      try {
+        this.state.currentLanguage = (typeof localStorage !== 'undefined' && localStorage.getItem("CLEAN_QUARTER_LANGUAGE")) || "bg";
+      } catch { this.state.currentLanguage = "bg"; }
+    }
   }
 
   /**
    * Initialize store
    */
   init() {
-    console.log('🏪 Store initialized');
+    console.log("🏪 Store initialized");
   }
 
   /**
@@ -85,7 +91,7 @@ class Store {
    * @returns {*} State value
    */
   get(path) {
-    const keys = path.split('.');
+    const keys = path.split(".");
     let value = this.state;
     for (const key of keys) {
       value = value?.[key];
@@ -105,7 +111,7 @@ class Store {
     }
 
     // Merge updates
-    if (typeof updates === 'string') {
+    if (typeof updates === "string") {
       this.setByPath(updates, value);
     } else {
       this.state = { ...this.state, ...updates };
@@ -121,7 +127,7 @@ class Store {
    * @param {*} value - Value to set
    */
   setByPath(path, value) {
-    const keys = path.split('.');
+    const keys = path.split(".");
     const lastKey = keys.pop();
     let obj = this.state;
 
@@ -137,12 +143,12 @@ class Store {
    * Notify all listeners of state change
    */
   notify() {
-    console.log('📢 State updated:', this.state);
-    this.listeners.forEach(listener => {
+    console.log("📢 State updated:", this.state);
+    this.listeners.forEach((listener) => {
       try {
         listener(this.getState());
       } catch (error) {
-        console.error('❌ Listener error:', error);
+        console.error("❌ Listener error:", error);
       }
     });
   }
@@ -153,29 +159,29 @@ class Store {
    * @param {string} type - 'success' | 'error' | 'info' | 'warning'
    * @param {number} duration - Auto-dismiss duration in ms
    */
-  addNotification(message, type = 'info', duration = 3000) {
+  addNotification(message, type = "info", duration = 3000) {
     const id = Date.now();
     const notification = { id, message, type, timestamp: Date.now() };
 
     this.state.notifications.push(notification);
     // Call the base notify to update listeners (don't recursively call self)
-    console.log('📢 State updated:', this.state);
-    this.listeners.forEach(listener => {
+    console.log("📢 State updated:", this.state);
+    this.listeners.forEach((listener) => {
       try {
         listener(this.getState());
       } catch (error) {
-        console.error('❌ Listener error:', error);
+        console.error("❌ Listener error:", error);
       }
     });
 
     if (duration > 0) {
       setTimeout(() => {
-        this.state.notifications = this.state.notifications.filter(n => n.id !== id);
-        this.listeners.forEach(listener => {
+        this.state.notifications = this.state.notifications.filter((n) => n.id !== id);
+        this.listeners.forEach((listener) => {
           try {
             listener(this.getState());
           } catch (error) {
-            console.error('❌ Listener error:', error);
+            console.error("❌ Listener error:", error);
           }
         });
       }, duration);
@@ -189,12 +195,12 @@ class Store {
    * @param {string} error - Error message
    * @param {string} context - Where error occurred
    */
-  addError(error, context = 'unknown') {
+  addError(error, context = "unknown") {
     this.state.errors.push({
       id: Date.now(),
       error,
       context,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
     this.notify();
   }
@@ -216,7 +222,7 @@ class Store {
   setCache(key, value, ttl = 0) {
     this.state.cache.set(key, {
       value,
-      expires: ttl > 0 ? Date.now() + ttl * 1000 : null
+      expires: ttl > 0 ? Date.now() + ttl * 1000 : null,
     });
   }
 
@@ -267,11 +273,17 @@ class Store {
       rewards: [],
       rewardsLoading: false,
       rewardsError: null,
-      currentLanguage: localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg',
+      currentLanguage: null,
       notifications: [],
       errors: [],
-      cache: new Map()
+      cache: new Map(),
     };
+    // Lazy-load language from localStorage if not set
+    if (!this.state.currentLanguage) {
+      try {
+        this.state.currentLanguage = (typeof localStorage !== 'undefined' && localStorage.getItem("CLEAN_QUARTER_LANGUAGE")) || "bg";
+      } catch { this.state.currentLanguage = "bg"; }
+    }
     this.notify();
   }
 }

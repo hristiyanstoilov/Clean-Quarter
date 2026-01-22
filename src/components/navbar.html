@@ -1,96 +1,109 @@
 <!-- Navigation Bar with Language Selector -->
 <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="../../index.html">
-            <strong>♻️ Clean Quarter</strong>
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="./dashboard.html" data-i18n="nav.dashboard">Home</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="./create-campaign.html" data-i18n="nav.createCampaign">New Campaign</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="./rewards.html" data-i18n="nav.rewards">Rewards</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="./profile.html" data-i18n="nav.profile">Profile</a>
-                </li>
-                <li class="nav-item" id="adminNav" style="display: none;">
-                    <a class="nav-link" href="./admin.html" data-i18n="nav.admin">Admin</a>
-                </li>
-                <li class="nav-item">
-                    <select id="languageSelector" class="form-select form-select-sm" style="width: 140px; margin: 0.5rem 0.5rem;">
-                        <option value="bg">🇧🇬 Български</option>
-                        <option value="en">🇬🇧 English</option>
-                    </select>
-                </li>
-                <li class="nav-item">
-                    <button class="btn btn-danger btn-sm" id="logoutBtn" data-i18n="nav.logout">Logout</button>
-                </li>
-            </ul>
-        </div>
+  <div class="container-fluid">
+    <a class="navbar-brand" href="../../index.html">
+      <strong>♻️ Clean Quarter</strong>
+    </a>
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarNav"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="./dashboard.html" data-i18n="nav.dashboard">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="./create-campaign.html" data-i18n="nav.createCampaign"
+            >New Campaign</a
+          >
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="./rewards.html" data-i18n="nav.rewards">Rewards</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="./profile.html" data-i18n="nav.profile">Profile</a>
+        </li>
+        <li class="nav-item" id="adminNav" style="display: none">
+          <a class="nav-link" href="./admin.html" data-i18n="nav.admin">Admin</a>
+        </li>
+        <li class="nav-item">
+          <select
+            id="languageSelector"
+            class="form-select form-select-sm"
+            style="width: 140px; margin: 0.5rem 0.5rem"
+          >
+            <option value="bg">🇧🇬 Български</option>
+            <option value="en">🇬🇧 English</option>
+          </select>
+        </li>
+        <li class="nav-item">
+          <button class="btn btn-danger btn-sm" id="logoutBtn" data-i18n="nav.logout">
+            Logout
+          </button>
+        </li>
+      </ul>
     </div>
+  </div>
 </nav>
 
 <script>
-    /**
-     * Navbar initialization script
-     * Loads navbar and sets up language switching
-     */
-    async function initNavbar() {
-        // Check if user is logged in
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (!user) {
-            window.location.href = '../../index.html';
-            return;
-        }
-
-        // Show admin nav if user is admin
-        if (user.role === 'admin') {
-            const adminNav = document.getElementById('adminNav');
-            if (adminNav) {
-                adminNav.style.display = 'block';
-            }
-        }
-
-        // Setup logout button
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', async () => {
-                localStorage.removeItem('user');
-                window.location.href = '../../index.html';
-            });
-        }
-
-        // Setup language selector
-        const langSelector = document.getElementById('languageSelector');
-        if (langSelector) {
-            // Load from utils/i18n.js
-            const { setLanguage, getCurrentLanguage, initI18n } = await import('../../utils/i18n.js');
-            
-            // Initialize i18n first
-            await initI18n();
-            
-            // Set current language in selector
-            langSelector.value = getCurrentLanguage();
-            
-            // Listen for language changes
-            langSelector.addEventListener('change', (e) => {
-                setLanguage(e.target.value);
-            });
-        }
+  /**
+   * Navbar initialization script
+   * Loads navbar and sets up language switching
+   */
+  async function initNavbar() {
+    // Check if user is logged in
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user) {
+      window.location.href = "../../index.html";
+      return;
     }
 
-    // Initialize when DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initNavbar);
-    } else {
-        initNavbar();
+    // Show admin nav if user is admin
+    if (user.role === "admin") {
+      const adminNav = document.getElementById("adminNav");
+      if (adminNav) {
+        adminNav.style.display = "block";
+      }
     }
+
+    // Setup logout button
+    const logoutBtn = document.getElementById("logoutBtn");
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", async () => {
+        localStorage.removeItem("user");
+        window.location.href = "../../index.html";
+      });
+    }
+
+    // Setup language selector
+    const langSelector = document.getElementById("languageSelector");
+    if (langSelector) {
+      // Load from utils/i18n.js
+      const { setLanguage, getCurrentLanguage, initI18n } = await import("../../utils/i18n.js");
+
+      // Initialize i18n first
+      await initI18n();
+
+      // Set current language in selector
+      langSelector.value = getCurrentLanguage();
+
+      // Listen for language changes
+      langSelector.addEventListener("change", (e) => {
+        setLanguage(e.target.value);
+      });
+    }
+  }
+
+  // Initialize when DOM is ready
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initNavbar);
+  } else {
+    initNavbar();
+  }
 </script>

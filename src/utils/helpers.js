@@ -4,7 +4,7 @@
  * @returns {string}
  */
 export function capitalize(str) {
-  if (!str) return '';
+  if (!str) return "";
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 /**
@@ -18,10 +18,10 @@ export function capitalize(str) {
  */
 export function getCurrentUser() {
   try {
-    const userJSON = localStorage.getItem('user');
+    const userJSON = localStorage.getItem("user");
     return userJSON ? JSON.parse(userJSON) : null;
   } catch (error) {
-    console.error('Error parsing stored user:', error);
+    console.error("Error parsing stored user:", error);
     return null;
   }
 }
@@ -32,9 +32,9 @@ export function getCurrentUser() {
  */
 export function saveUser(user) {
   try {
-    localStorage.setItem('user', JSON.stringify(user));
+    localStorage.setItem("user", JSON.stringify(user));
   } catch (error) {
-    console.error('Error saving user:', error);
+    console.error("Error saving user:", error);
   }
 }
 
@@ -43,9 +43,9 @@ export function saveUser(user) {
  */
 export function removeUser() {
   try {
-    localStorage.removeItem('user');
+    localStorage.removeItem("user");
   } catch (error) {
-    console.error('Error removing user:', error);
+    console.error("Error removing user:", error);
   }
 }
 
@@ -54,7 +54,7 @@ export function removeUser() {
  * @param {string} redirectUrl - URL to redirect to if not authenticated
  * @returns {boolean} True if user exists, false otherwise
  */
-export function requireAuth(redirectUrl = '/index.html') {
+export function requireAuth(redirectUrl = "/index.html") {
   const user = getCurrentUser();
   if (!user) {
     window.location.href = redirectUrl;
@@ -71,17 +71,17 @@ export function requireAuth(redirectUrl = '/index.html') {
  */
 export async function showSuccess(title, text, timer = null) {
   const config = {
-    icon: 'success',
+    icon: "success",
     title,
     text,
-    confirmButtonColor: '#28a745',
+    confirmButtonColor: "#28a745",
   };
-  
+
   if (timer) {
     config.timer = timer;
     config.timerProgressBar = true;
   }
-  
+
   return Swal.fire(config);
 }
 
@@ -94,17 +94,17 @@ export async function showSuccess(title, text, timer = null) {
 export async function showError(title, text, timer = null) {
   const errorText = text instanceof Error ? text.message : text;
   const config = {
-    icon: 'error',
+    icon: "error",
     title,
     text: errorText,
-    confirmButtonColor: '#dc3545',
+    confirmButtonColor: "#dc3545",
   };
-  
+
   if (timer) {
     config.timer = timer;
     config.timerProgressBar = true;
   }
-  
+
   return Swal.fire(config);
 }
 
@@ -115,10 +115,10 @@ export async function showError(title, text, timer = null) {
  */
 export async function showInfo(title, text) {
   return Swal.fire({
-    icon: 'info',
+    icon: "info",
     title,
     text,
-    confirmButtonColor: '#17a2b8',
+    confirmButtonColor: "#17a2b8",
   });
 }
 
@@ -130,18 +130,18 @@ export async function showInfo(title, text) {
  * @param {string} cancelText - Cancel button text
  * @returns {Promise<boolean>} True if confirmed, false if cancelled
  */
-export async function showConfirm(title, text, confirmText = 'Yes', cancelText = 'Cancel') {
+export async function showConfirm(title, text, confirmText = "Yes", cancelText = "Cancel") {
   const result = await Swal.fire({
-    icon: 'warning',
+    icon: "warning",
     title,
     text,
     showCancelButton: true,
-    confirmButtonColor: '#28a745',
-    cancelButtonColor: '#6c757d',
+    confirmButtonColor: "#28a745",
+    cancelButtonColor: "#6c757d",
     confirmButtonText: confirmText,
     cancelButtonText: cancelText,
   });
-  
+
   return result.isConfirmed;
 }
 
@@ -151,24 +151,24 @@ export async function showConfirm(title, text, confirmText = 'Yes', cancelText =
  * @param {string} format - Format type: 'short', 'long', 'time' (default: 'short')
  * @returns {string} Formatted date string
  */
-export function formatDate(date, format = 'short') {
+export function formatDate(date, format = "short") {
   try {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    
+    const dateObj = typeof date === "string" ? new Date(date) : date;
+
     if (isNaN(dateObj.getTime())) {
-      return 'Invalid Date';
+      return "Invalid Date";
     }
-    
+
     const options = {
-      short: { year: 'numeric', month: 'short', day: 'numeric' },
-      long: { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' },
-      time: { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' },
+      short: { year: "numeric", month: "short", day: "numeric" },
+      long: { year: "numeric", month: "long", day: "numeric", weekday: "long" },
+      time: { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" },
     };
-    
-    return dateObj.toLocaleDateString('en-US', options[format] || options.short);
+
+    return dateObj.toLocaleDateString("en-US", options[format] || options.short);
   } catch (error) {
-    console.error('Error formatting date:', error);
-    return 'Invalid Date';
+    console.error("Error formatting date:", error);
+    return "Invalid Date";
   }
 }
 
@@ -179,23 +179,23 @@ export function formatDate(date, format = 'short') {
  */
 export function getTimeAgo(date) {
   try {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    const dateObj = typeof date === "string" ? new Date(date) : date;
     const now = new Date();
     const diffMs = now - dateObj;
     const diffSecs = Math.floor(diffMs / 1000);
     const diffMins = Math.floor(diffSecs / 60);
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
-    
-    if (diffSecs < 60) return 'just now';
+
+    if (diffSecs < 60) return "just now";
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 30) return `${diffDays}d ago`;
-    
-    return formatDate(dateObj, 'short');
+
+    return formatDate(dateObj, "short");
   } catch (error) {
-    console.error('Error calculating time ago:', error);
-    return 'Unknown';
+    console.error("Error calculating time ago:", error);
+    return "Unknown";
   }
 }
 
@@ -204,10 +204,10 @@ export function getTimeAgo(date) {
  * @param {string} elementId - ID of element to toggle
  * @param {string} display - Display value ('flex', 'block', 'none')
  */
-export function toggleElement(elementId, display = 'flex') {
+export function toggleElement(elementId, display = "flex") {
   const element = document.getElementById(elementId);
   if (element) {
-    element.style.display = element.style.display === 'none' ? display : 'none';
+    element.style.display = element.style.display === "none" ? display : "none";
   }
 }
 
@@ -219,13 +219,13 @@ export function toggleElement(elementId, display = 'flex') {
 export function showLoading(spinnerId, hideElementIds = []) {
   const spinner = document.getElementById(spinnerId);
   if (spinner) {
-    spinner.style.display = 'flex';
+    spinner.style.display = "flex";
   }
-  
-  hideElementIds.forEach(id => {
+
+  hideElementIds.forEach((id) => {
     const element = document.getElementById(id);
     if (element) {
-      element.style.display = 'none';
+      element.style.display = "none";
     }
   });
 }
@@ -238,13 +238,13 @@ export function showLoading(spinnerId, hideElementIds = []) {
 export function hideLoading(spinnerId, elementsToShow = {}) {
   const spinner = document.getElementById(spinnerId);
   if (spinner) {
-    spinner.style.display = 'none';
+    spinner.style.display = "none";
   }
-  
+
   Object.entries(elementsToShow).forEach(([id, display]) => {
     const element = document.getElementById(id);
     if (element) {
-      element.style.display = display || 'block';
+      element.style.display = display || "block";
     }
   });
 }
@@ -267,8 +267,8 @@ export function validateEmail(email) {
 export function isEmpty(data) {
   if (!data) return true;
   if (Array.isArray(data)) return data.length === 0;
-  if (typeof data === 'object') return Object.keys(data).length === 0;
-  if (typeof data === 'string') return data.trim().length === 0;
+  if (typeof data === "object") return Object.keys(data).length === 0;
+  if (typeof data === "string") return data.trim().length === 0;
   return false;
 }
 
@@ -281,8 +281,8 @@ export function safeStringify(data) {
   try {
     return JSON.stringify(data);
   } catch (error) {
-    console.error('Error stringifying data:', error);
-    return '{}';
+    console.error("Error stringifying data:", error);
+    return "{}";
   }
 }
 
@@ -296,9 +296,9 @@ export function safeParse(jsonString, fallback = null) {
   try {
     return JSON.parse(jsonString);
   } catch (error) {
-    console.error('Error parsing JSON:', error);
+    console.error("Error parsing JSON:", error);
     // If fallback is an object with a fallback property, return fallback.fallback for test compatibility
-    if (fallback && typeof fallback === 'object' && 'fallback' in fallback) {
+    if (fallback && typeof fallback === "object" && "fallback" in fallback) {
       return fallback.fallback;
     }
     return fallback;
@@ -325,9 +325,13 @@ export function debounce(func, delay = 300) {
  * @param {Error} error - Error object
  * @param {string} userMessage - Message to show user
  */
-export async function handleError(context, error, userMessage = 'An error occurred. Please try again.') {
+export async function handleError(
+  context,
+  error,
+  userMessage = "An error occurred. Please try again."
+) {
   console.error(`[${context}]`, error);
-  await showError('Error', userMessage);
+  await showError("Error", userMessage);
 }
 
 /**
@@ -340,7 +344,7 @@ export async function copyToClipboard(text) {
     await navigator.clipboard.writeText(text);
     return true;
   } catch (error) {
-    console.error('Error copying to clipboard:', error);
+    console.error("Error copying to clipboard:", error);
     return false;
   }
 }
@@ -351,7 +355,7 @@ export async function copyToClipboard(text) {
  * @returns {string|null} Parameter value or null
  */
 export function getQueryParam(paramName) {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     const params = new URLSearchParams(window.location.search);
     return params.get(paramName);
   }
@@ -366,11 +370,11 @@ export function getQueryParam(paramName) {
  * @returns {string} URL with query string
  */
 export function buildUrl(baseUrl, params = {}) {
-  let origin = '';
-  if (typeof window !== 'undefined' && window.location && window.location.origin) {
+  let origin = "";
+  if (typeof window !== "undefined" && window.location && window.location.origin) {
     origin = window.location.origin;
   } else {
-    origin = 'http://localhost';
+    origin = "http://localhost";
   }
   const url = new URL(baseUrl, origin);
   Object.entries(params).forEach(([key, value]) => {
@@ -399,7 +403,7 @@ export function isValidUUID(uuid) {
  */
 export function truncateText(text, maxLength = 50) {
   if (text.length <= maxLength) return text;
-  return text.substring(0, maxLength - 3 + 1) + '...';
+  return text.substring(0, maxLength - 3 + 1) + "...";
 }
 
 /**
@@ -408,7 +412,7 @@ export function truncateText(text, maxLength = 50) {
  * @param {string} symbol - Currency symbol (default: ⭐)
  * @returns {string} Formatted value
  */
-export function formatValue(value, symbol = '⭐') {
+export function formatValue(value, symbol = "⭐") {
   // Always use en-US for thousands separator for test consistency
-  return `${value.toLocaleString('en-US')} ${symbol}`;
+  return `${value.toLocaleString("en-US")} ${symbol}`;
 }

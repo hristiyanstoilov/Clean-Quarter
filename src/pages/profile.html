@@ -1,421 +1,459 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Профил - Clean Quarter</title>
-    
+
     <!-- Bootstrap 5 CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
     <!-- SweetAlert2 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
+
     <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        
-        .navbar {
-            background-color: #28a745;
-        }
-        
-        .navbar-brand {
-            font-weight: bold;
-            font-size: 1.5rem;
-            color: white !important;
-        }
-        
-        .navbar a {
-            color: white !important;
-            margin-left: 1rem;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin-top: 2rem;
-            margin-bottom: 3rem;
-        }
-        
-        /* Avatar & Rank */
-        .profile-header {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 12px;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
-            display: flex;
-            align-items: center;
-            gap: 2rem;
-            flex-wrap: wrap;
-        }
-        
-        .avatar-section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1rem;
-        }
-        
-        .avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 4rem;
-            border: 3px solid white;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-        
-        .rank-badge {
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-        }
-        
-        .rank-bronze {
-            background-color: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 2px solid rgba(255, 255, 255, 0.5);
-        }
-        
-        .rank-silver {
-            background-color: #e8e8e8;
-            color: #495057;
-        }
-        
-        .rank-gold {
-            background-color: #ffd700;
-            color: #212529;
-        }
-        
-        .profile-info {
-            flex: 1;
-        }
-        
-        .profile-info h1 {
-            margin: 0 0 0.5rem 0;
-            font-size: 1.8rem;
-            font-weight: bold;
-        }
-        
-        .profile-info p {
-            margin: 0.3rem 0;
-            opacity: 0.9;
-        }
-        
-        .section {
-            background: white;
-            border-radius: 12px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-        
-        .section h2 {
-            color: #28a745;
-            border-bottom: 2px solid #28a745;
-            padding-bottom: 1rem;
-            margin-bottom: 1.5rem;
-            font-size: 1.4rem;
-        }
-        
-        .info-row {
-            display: grid;
-            grid-template-columns: 150px 1fr;
-            gap: 1rem;
-            margin-bottom: 1rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid #e9ecef;
-        }
-        
-        .info-row:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-        
-        .info-label {
-            font-weight: 600;
-            color: #495057;
-        }
-        
-        .info-value {
-            color: #212529;
-        }
-        
-        /* Transactions Table */
-        .table-container {
-            overflow-x: auto;
-        }
-        
-        .table {
-            margin: 0;
-            background: white;
-        }
-        
-        .table thead {
-            background-color: #f8f9fa;
-            border-bottom: 2px solid #28a745;
-        }
-        
-        .table thead th {
-            font-weight: 600;
-            color: #28a745;
-            padding: 1rem;
-        }
-        
-        .table tbody td {
-            padding: 1rem;
-            vertical-align: middle;
-        }
-        
-        .badge-earned {
-            background-color: #d4edda;
-            color: #155724;
-            padding: 0.35rem 0.75rem;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-        
-        .badge-spent {
-            background-color: #f8d7da;
-            color: #721c24;
-            padding: 0.35rem 0.75rem;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-        
-        .amount-positive {
-            color: #28a745;
-            font-weight: bold;
-        }
-        
-        .amount-negative {
-            color: #dc3545;
-            font-weight: bold;
-        }
-        
-        /* Participations List */
-        .participation-item {
-            background: #f8f9fa;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            border-left: 4px solid #28a745;
-        }
-        
-        .participation-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            gap: 1rem;
-            margin-bottom: 0.5rem;
-            flex-wrap: wrap;
-        }
-        
-        .participation-title {
-            font-weight: bold;
-            color: #212529;
-            font-size: 1.05rem;
-        }
-        
-        .participation-status {
-            font-size: 0.85rem;
-            padding: 0.35rem 0.75rem;
-            border-radius: 6px;
-        }
-        
-        .status-joined {
-            background-color: #e7f3ff;
-            color: #0056b3;
-        }
-        
-        .status-pending {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-        
-        .status-approved {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        
-        .status-rejected {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        
-        .participation-details {
-            color: #6c757d;
-            font-size: 0.9rem;
-        }
-        
-        .participation-details p {
-            margin: 0.3rem 0;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 2rem;
-            color: #6c757d;
-        }
-        
-        .empty-state-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-        
-        .loading-spinner {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 400px;
-        }
+      body {
+        background-color: #f8f9fa;
+      }
+
+      .navbar {
+        background-color: #28a745;
+      }
+
+      .navbar-brand {
+        font-weight: bold;
+        font-size: 1.5rem;
+        color: white !important;
+      }
+
+      .navbar a {
+        color: white !important;
+        margin-left: 1rem;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin-top: 2rem;
+        margin-bottom: 3rem;
+      }
+
+      /* Avatar & Rank */
+      .profile-header {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        flex-wrap: wrap;
+      }
+
+      .avatar-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        border: 3px solid white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      .rank-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+      }
+
+      .rank-bronze {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+      }
+
+      .rank-silver {
+        background-color: #e8e8e8;
+        color: #495057;
+      }
+
+      .rank-gold {
+        background-color: #ffd700;
+        color: #212529;
+      }
+
+      .profile-info {
+        flex: 1;
+      }
+
+      .profile-info h1 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.8rem;
+        font-weight: bold;
+      }
+
+      .profile-info p {
+        margin: 0.3rem 0;
+        opacity: 0.9;
+      }
+
+      .section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+
+      .section h2 {
+        color: #28a745;
+        border-bottom: 2px solid #28a745;
+        padding-bottom: 1rem;
+        margin-bottom: 1.5rem;
+        font-size: 1.4rem;
+      }
+
+      .info-row {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e9ecef;
+      }
+
+      .info-row:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+      }
+
+      .info-label {
+        font-weight: 600;
+        color: #495057;
+      }
+
+      .info-value {
+        color: #212529;
+      }
+
+      /* Transactions Table */
+      .table-container {
+        overflow-x: auto;
+      }
+
+      .table {
+        margin: 0;
+        background: white;
+      }
+
+      .table thead {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #28a745;
+      }
+
+      .table thead th {
+        font-weight: 600;
+        color: #28a745;
+        padding: 1rem;
+      }
+
+      .table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+      }
+
+      .badge-earned {
+        background-color: #d4edda;
+        color: #155724;
+        padding: 0.35rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+
+      .badge-spent {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 0.35rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+
+      .amount-positive {
+        color: #28a745;
+        font-weight: bold;
+      }
+
+      .amount-negative {
+        color: #dc3545;
+        font-weight: bold;
+      }
+
+      /* Participations List */
+      .participation-item {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        border-left: 4px solid #28a745;
+      }
+
+      .participation-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+        flex-wrap: wrap;
+      }
+
+      .participation-title {
+        font-weight: bold;
+        color: #212529;
+        font-size: 1.05rem;
+      }
+
+      .participation-status {
+        font-size: 0.85rem;
+        padding: 0.35rem 0.75rem;
+        border-radius: 6px;
+      }
+
+      .status-joined {
+        background-color: #e7f3ff;
+        color: #0056b3;
+      }
+
+      .status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+      }
+
+      .status-approved {
+        background-color: #d4edda;
+        color: #155724;
+      }
+
+      .status-rejected {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+
+      .participation-details {
+        color: #6c757d;
+        font-size: 0.9rem;
+      }
+
+      .participation-details p {
+        margin: 0.3rem 0;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: #6c757d;
+      }
+
+      .empty-state-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+      }
+
+      .loading-spinner {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 400px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="./dashboard.html">♻️ Clean Quarter</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <div class="ms-auto" style="display: flex; gap: 1rem; align-items: center;">
-                    <a href="./dashboard.html" data-i18n="nav.dashboard">Dashboard</a>
-                    <a href="./rewards.html" data-i18n="nav.rewards">Rewards</a>
-                    <a href="./profile.html" data-i18n="nav.profile">Profile</a>
-                    <select id="languageSelector" class="form-select form-select-sm" style="max-width: 150px;">
-                        <option value="bg">🇧🇬 Български</option>
-                        <option value="en">🇬🇧 English</option>
-                    </select>
-                    <a href="#" onclick="handleLogout()" data-i18n="nav.logout">Logout</a>
-                </div>
-            </div>
+      <div class="container-fluid">
+        <a class="navbar-brand" href="./dashboard.html">♻️ Clean Quarter</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <div class="ms-auto" style="display: flex; gap: 1rem; align-items: center">
+            <a href="./dashboard.html" data-i18n="nav.dashboard">Dashboard</a>
+            <a href="./rewards.html" data-i18n="nav.rewards">Rewards</a>
+            <a href="./profile.html" data-i18n="nav.profile">Profile</a>
+            <select
+              id="languageSelector"
+              class="form-select form-select-sm"
+              style="max-width: 150px"
+            >
+              <option value="bg">🇧🇬 Български</option>
+              <option value="en">🇬🇧 English</option>
+            </select>
+            <a href="#" onclick="handleLogout()" data-i18n="nav.logout">Logout</a>
+          </div>
         </div>
+      </div>
     </nav>
 
     <!-- Main Container -->
     <div class="container">
-        <!-- Loading State -->
-        <div class="loading-spinner" id="loadingState">
-            <div class="spinner-border text-success" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
+      <!-- Loading State -->
+      <div class="loading-spinner" id="loadingState">
+        <div class="spinner-border text-success" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+
+      <!-- Profile Content (hidden until loaded) -->
+      <div id="profileContent" style="display: none">
+        <!-- Profile Header with Avatar & Rank -->
+        <div class="profile-header">
+          <div class="avatar-section">
+            <div class="avatar">👤</div>
+            <div class="rank-badge" id="rankBadge"></div>
+          </div>
+          <div class="profile-info">
+            <h1 id="userEmail">-</h1>
+            <p><strong>Neighborhood:</strong> <span id="neighborhoodDisplay">-</span></p>
+            <p>
+              <strong>Points Balance:</strong>
+              <span id="pointsDisplay" style="font-size: 1.2rem; font-weight: bold; color: #ffd700"
+                >0 ⭐</span
+              >
+            </p>
+            <button
+              class="btn btn-outline-success btn-sm mt-2"
+              onclick="toggleEditMode()"
+              id="editProfileBtn"
+            >
+              <span data-i18n="profile.editProfile">✏️ Редактирай профил</span>
+            </button>
+          </div>
         </div>
 
-        <!-- Profile Content (hidden until loaded) -->
-        <div id="profileContent" style="display: none;">
-            <!-- Profile Header with Avatar & Rank -->
-            <div class="profile-header">
-                <div class="avatar-section">
-                    <div class="avatar">👤</div>
-                    <div class="rank-badge" id="rankBadge"></div>
-                </div>
-                <div class="profile-info">
-                    <h1 id="userEmail">-</h1>
-                    <p><strong>Neighborhood:</strong> <span id="neighborhoodDisplay">-</span></p>
-                    <p><strong>Points Balance:</strong> <span id="pointsDisplay" style="font-size: 1.2rem; font-weight: bold; color: #ffd700;">0 ⭐</span></p>
-                    <button class="btn btn-outline-success btn-sm mt-2" onclick="toggleEditMode()" id="editProfileBtn">
-                        <span data-i18n="profile.editProfile">✏️ Редактирай профил</span>
-                    </button>
-                </div>
-            </div>
+        <!-- Account Info Section -->
+        <div class="section">
+          <h2>📋 Account Information</h2>
 
-            <!-- Account Info Section -->
-            <div class="section">
-                <h2>📋 Account Information</h2>
-                
-                <div class="info-row">
-                    <div class="info-label">Email:</div>
-                    <div class="info-value" id="emailValue">-</div>
-                </div>
-                
-                <div class="info-row">
-                    <div class="info-label">Neighborhood:</div>
-                    <div class="info-value" id="neighborhoodValue">-</div>
-                </div>
-                
-                <div class="info-row">
-                    <div class="info-label">Points Balance:</div>
-                    <div class="info-value"><strong id="pointsValue">0</strong> ⭐</div>
-                </div>
-                
-                <div class="info-row">
-                    <div class="info-label">Rank:</div>
-                    <div class="info-value"><span id="rankValue">-</span></div>
-                </div>
-            </div>
+          <div class="info-row">
+            <div class="info-label">Email:</div>
+            <div class="info-value" id="emailValue">-</div>
+          </div>
 
-            <!-- Edit Profile Form (hidden by default) -->
-            <div class="section" id="editProfileSection" style="display: none;">
-                <h2 data-i18n="profile.editProfileTitle">✏️ Редактирай профил</h2>
-                
-                <form id="editProfileForm">
-                    <div class="mb-3">
-                        <label for="editUsername" class="form-label" data-i18n="profile.username">Потребителско име</label>
-                        <input type="text" class="form-control" id="editUsername" placeholder="Въведи потребителско име" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="editNeighborhood" class="form-label" data-i18n="profile.neighborhood">Квартал</label>
-                        <select class="form-select" id="editNeighborhood" required>
-                            <option value="Studentski Grad" data-i18n="neighborhoods.studentskiGrad">Студентски град</option>
-                        <link rel="stylesheet" href="../assets/style.css">
-                            <option value="😊">😊 Усмивка</option>
-                            <option value="🌱">🌱 Растение</option>
-                            <option value="♻️">♻️ Рециклиране</option>
-                            <option value="🌿">🌿 Зелено</option>
-                        </select>
-                    </div>
-                    
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-success" data-i18n="profile.saveChanges">
-                            💾 Запази промените
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="toggleEditMode()" data-i18n="profile.cancel">
-                            ❌ Отказ
-                        </button>
-                    </div>
-                </form>
-            </div>
+          <div class="info-row">
+            <div class="info-label">Neighborhood:</div>
+            <div class="info-value" id="neighborhoodValue">-</div>
+          </div>
 
-            <!-- Point Transactions Section -->
-            <div class="section">
-                <h2>💳 Transaction History</h2>
-                
-                <div id="transactionsContainer">
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📊</div>
-                        <p>No transactions yet</p>
-                    </div>
-                </div>
-            </div>
+          <div class="info-row">
+            <div class="info-label">Points Balance:</div>
+            <div class="info-value"><strong id="pointsValue">0</strong> ⭐</div>
+          </div>
 
-            <!-- My Participations Section -->
-            <div class="section">
-                <h2>🤝 My Participations</h2>
-                
-                <div id="participationsContainer">
-                    <div class="empty-state">
-                        <div class="empty-state-icon">🎪</div>
-                        <p>You haven't joined any campaigns yet</p>
-                    </div>
-                </div>
-            </div>
+          <div class="info-row">
+            <div class="info-label">Rank:</div>
+            <div class="info-value"><span id="rankValue">-</span></div>
+          </div>
         </div>
+
+        <!-- Edit Profile Form (hidden by default) -->
+        <div class="section" id="editProfileSection" style="display: none">
+          <h2 data-i18n="profile.editProfileTitle">✏️ Редактирай профил</h2>
+
+          <form id="editProfileForm">
+            <div class="mb-3">
+              <label for="editUsername" class="form-label" data-i18n="profile.username"
+                >Потребителско име</label
+              >
+              <input
+                type="text"
+                class="form-control"
+                id="editUsername"
+                placeholder="Въведи потребителско име"
+                required
+              />
+            </div>
+
+            <div class="mb-3">
+              <label for="editNeighborhood" class="form-label" data-i18n="profile.neighborhood"
+                >Квартал</label
+              >
+              <select class="form-select" id="editNeighborhood" required>
+                <option value="Studentski Grad" data-i18n="neighborhoods.studentskiGrad">
+                  Студентски град
+                </option>
+                <link rel="stylesheet" href="../assets/style.css" />
+                <option value="😊">😊 Усмивка</option>
+                <option value="🌱">🌱 Растение</option>
+                <option value="♻️">♻️ Рециклиране</option>
+                <option value="🌿">🌿 Зелено</option>
+              </select>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-success" data-i18n="profile.saveChanges">
+                💾 Запази промените
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="toggleEditMode()"
+                data-i18n="profile.cancel"
+              >
+                ❌ Отказ
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Point Transactions Section -->
+        <div class="section">
+          <h2>💳 Transaction History</h2>
+
+          <div id="transactionsContainer">
+            <div class="empty-state">
+              <div class="empty-state-icon">📊</div>
+              <p>No transactions yet</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- My Participations Section -->
+        <div class="section">
+          <h2>🤝 My Participations</h2>
+
+          <div id="participationsContainer">
+            <div class="empty-state">
+              <div class="empty-state-icon">🎪</div>
+              <p>You haven't joined any campaigns yet</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Bootstrap JS -->
@@ -423,178 +461,185 @@
 
     <!-- Main Script -->
     <script type="module">
-        import supabase from '../services/supabase.js';
-        import { initI18n, applyLanguage, setLanguage } from '../utils/i18n.js';
+      import supabase from "../services/supabase.js";
+      import { initI18n, applyLanguage, setLanguage } from "../utils/i18n.js";
 
-        // Global variables
-        let currentUser = null;
-        let userProfile = null;
+      // Global variables
+      let currentUser = null;
+      let userProfile = null;
 
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                // Initialize i18n first (realTime = false for initial load)
-                await initI18n(false);
-                applyLanguage(localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg');
+      // Initialize on page load
+      document.addEventListener("DOMContentLoaded", async () => {
+        try {
+          // Initialize i18n first (realTime = false for initial load)
+          await initI18n(false);
+          applyLanguage(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg");
 
-                // Language selector - ENABLE REAL-TIME FOR PROFILE
-                document.getElementById('languageSelector').value = localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg';
-                document.getElementById('languageSelector').addEventListener('change', (e) => {
-                    setLanguage(e.target.value, true); // Force update with true flag
-                    location.reload();
-                });
+          // Language selector - ENABLE REAL-TIME FOR PROFILE
+          document.getElementById("languageSelector").value =
+            localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+          document.getElementById("languageSelector").addEventListener("change", (e) => {
+            setLanguage(e.target.value, true); // Force update with true flag
+            location.reload();
+          });
 
-                await checkAuth();
-                await loadProfileData();
-            } catch (error) {
-                console.error('Profile page initialization failed', error);
-            }
-        });
+          await checkAuth();
+          await loadProfileData();
+        } catch (error) {
+          console.error("Profile page initialization failed", error);
+        }
+      });
 
-        /**
-         * Check if user is authenticated
-         */
-        async function checkAuth() {
-            // Check for demo mode user first
-            const localUser = localStorage.getItem('user');
-            if (localUser) {
-                try {
-                    currentUser = JSON.parse(localUser);
-                    return;
-                } catch (e) {
-                    console.error('Error parsing local user', e);
-                }
-            }
-            
-            // Check Supabase auth for real users
-            const { data: { user }, error } = await supabase.auth.getUser();
-            
-            if (error || !user) {
-                window.location.href = '../../index.html';
-                return;
-            }
-            
-            currentUser = user;
+      /**
+       * Check if user is authenticated
+       */
+      async function checkAuth() {
+        // Check for demo mode user first
+        const localUser = localStorage.getItem("user");
+        if (localUser) {
+          try {
+            currentUser = JSON.parse(localUser);
+            return;
+          } catch (e) {
+            console.error("Error parsing local user", e);
+          }
         }
 
-        /**
-         * Load profile data and transactions
-         */
-        async function loadProfileData() {
-            try {
-                let profile;
-                
-                // Check if in demo mode
-                if (currentUser.id === 'demo-admin-001') {
-                    profile = currentUser;
-                } else {
-                    // Fetch user profile from Supabase
-                    const { data, error: profileError } = await supabase
-                        .from('profiles')
-                        .select('*')
-                        .eq('id', currentUser.id)
-                        .single();
+        // Check Supabase auth for real users
+        const {
+          data: { user },
+          error,
+        } = await supabase.auth.getUser();
 
-                    if (profileError) {
-                        throw new Error(`Failed to fetch profile: ${profileError.message}`);
-                    }
-                    profile = data;
-                }
-                
-                userProfile = profile;
-
-                // Display profile info
-                document.getElementById('userEmail').textContent = currentUser.email || currentUser.username;
-                document.getElementById('emailValue').textContent = currentUser.email || currentUser.username;
-                document.getElementById('neighborhoodDisplay').textContent = userProfile.neighborhood || 'Not set';
-                document.getElementById('neighborhoodValue').textContent = userProfile.neighborhood || 'Not set';
-                document.getElementById('pointsDisplay').textContent = (userProfile.points_balance || 0) + ' ⭐';
-                document.getElementById('pointsValue').textContent = userProfile.points_balance || 0;
-
-                // Display rank
-                displayRank(userProfile.points_balance || 0);
-
-                // Load transactions and participations in parallel
-                await Promise.all([
-                    loadTransactions(),
-                    loadParticipations()
-                ]);
-
-                // Show content
-                document.getElementById('loadingState').style.display = 'none';
-                document.getElementById('profileContent').style.display = 'block';
-
-            } catch (error) {
-                await Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: error.message || 'Failed to load profile. Please try again.'
-                });
-
-                document.getElementById('loadingState').style.display = 'none';
-            }
+        if (error || !user) {
+          window.location.href = "../../index.html";
+          return;
         }
 
-        /**
-         * Display rank based on points
-         */
-        function displayRank(points) {
-            let rank, rankText, emoji;
+        currentUser = user;
+      }
 
-            if (points < 50) {
-                rank = 'bronze';
-                rankText = 'Bronze';
-                emoji = '🥉';
-            } else if (points < 100) {
-                rank = 'silver';
-                rankText = 'Silver';
-                emoji = '🥈';
-            } else {
-                rank = 'gold';
-                rankText = 'Gold';
-                emoji = '🥇';
+      /**
+       * Load profile data and transactions
+       */
+      async function loadProfileData() {
+        try {
+          let profile;
+
+          // Check if in demo mode
+          if (currentUser.id === "demo-admin-001") {
+            profile = currentUser;
+          } else {
+            // Fetch user profile from Supabase
+            const { data, error: profileError } = await supabase
+              .from("profiles")
+              .select("*")
+              .eq("id", currentUser.id)
+              .single();
+
+            if (profileError) {
+              throw new Error(`Failed to fetch profile: ${profileError.message}`);
             }
+            profile = data;
+          }
 
-            const rankBadge = document.getElementById('rankBadge');
-            rankBadge.className = `rank-badge rank-${rank}`;
-            rankBadge.innerHTML = `<span>${emoji}</span> ${rankText} (${points} ⭐)`;
+          userProfile = profile;
 
-            document.getElementById('rankValue').textContent = `${rankText} - ${points} points`;
+          // Display profile info
+          document.getElementById("userEmail").textContent =
+            currentUser.email || currentUser.username;
+          document.getElementById("emailValue").textContent =
+            currentUser.email || currentUser.username;
+          document.getElementById("neighborhoodDisplay").textContent =
+            userProfile.neighborhood || "Not set";
+          document.getElementById("neighborhoodValue").textContent =
+            userProfile.neighborhood || "Not set";
+          document.getElementById("pointsDisplay").textContent =
+            (userProfile.points_balance || 0) + " ⭐";
+          document.getElementById("pointsValue").textContent = userProfile.points_balance || 0;
+
+          // Display rank
+          displayRank(userProfile.points_balance || 0);
+
+          // Load transactions and participations in parallel
+          await Promise.all([loadTransactions(), loadParticipations()]);
+
+          // Show content
+          document.getElementById("loadingState").style.display = "none";
+          document.getElementById("profileContent").style.display = "block";
+        } catch (error) {
+          await Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: error.message || "Failed to load profile. Please try again.",
+          });
+
+          document.getElementById("loadingState").style.display = "none";
+        }
+      }
+
+      /**
+       * Display rank based on points
+       */
+      function displayRank(points) {
+        let rank, rankText, emoji;
+
+        if (points < 50) {
+          rank = "bronze";
+          rankText = "Bronze";
+          emoji = "🥉";
+        } else if (points < 100) {
+          rank = "silver";
+          rankText = "Silver";
+          emoji = "🥈";
+        } else {
+          rank = "gold";
+          rankText = "Gold";
+          emoji = "🥇";
         }
 
-        /**
-         * Load and display transactions
-         */
-        async function loadTransactions() {
-            try {
-                let transactions = [];
-                
-                // Check if in demo mode
-                if (currentUser.id === 'demo-admin-001') {
-                    transactions = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_TRANSACTIONS') || '[]');
-                } else {
-                    const { data, error } = await supabase
-                        .from('point_transactions')
-                        .select('*')
-                        .eq('user_id', currentUser.id)
-                        .order('created_at', { ascending: false })
-                        .limit(20);
+        const rankBadge = document.getElementById("rankBadge");
+        rankBadge.className = `rank-badge rank-${rank}`;
+        rankBadge.innerHTML = `<span>${emoji}</span> ${rankText} (${points} ⭐)`;
 
-                    if (error) throw error;
-                    transactions = data || [];
-                }
+        document.getElementById("rankValue").textContent = `${rankText} - ${points} points`;
+      }
 
-                if (!transactions || transactions.length === 0) {
-                    document.getElementById('transactionsContainer').innerHTML = `
+      /**
+       * Load and display transactions
+       */
+      async function loadTransactions() {
+        try {
+          let transactions = [];
+
+          // Check if in demo mode
+          if (currentUser.id === "demo-admin-001") {
+            transactions = JSON.parse(
+              localStorage.getItem("CLEAN_QUARTER_DEMO_TRANSACTIONS") || "[]"
+            );
+          } else {
+            const { data, error } = await supabase
+              .from("point_transactions")
+              .select("*")
+              .eq("user_id", currentUser.id)
+              .order("created_at", { ascending: false })
+              .limit(20);
+
+            if (error) throw error;
+            transactions = data || [];
+          }
+
+          if (!transactions || transactions.length === 0) {
+            document.getElementById("transactionsContainer").innerHTML = `
                         <div class="empty-state">
                             <div class="empty-state-icon">📊</div>
                             <p>No transactions yet</p>
                         </div>
                     `;
-                    return;
-                }
+            return;
+          }
 
-                let html = `
+          let html = `
                     <div class="table-container">
                         <table class="table">
                             <thead>
@@ -608,22 +653,24 @@
                             <tbody>
                 `;
 
-                transactions.forEach(transaction => {
-                    const date = new Date(transaction.created_at).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                    });
+          transactions.forEach((transaction) => {
+            const date = new Date(transaction.created_at).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            });
 
-                    const typeBadge = transaction.type === 'earned'
-                        ? '<span class="badge-earned">✓ Earned</span>'
-                        : '<span class="badge-spent">✗ Spent</span>';
+            const typeBadge =
+              transaction.type === "earned"
+                ? '<span class="badge-earned">✓ Earned</span>'
+                : '<span class="badge-spent">✗ Spent</span>';
 
-                    const amount = transaction.type === 'earned'
-                        ? `<span class="amount-positive">+${transaction.amount}</span>`
-                        : `<span class="amount-negative">${transaction.amount}</span>`;
+            const amount =
+              transaction.type === "earned"
+                ? `<span class="amount-positive">+${transaction.amount}</span>`
+                : `<span class="amount-negative">${transaction.amount}</span>`;
 
-                    html += `
+            html += `
                         <tr>
                             <td>${date}</td>
                             <td>${typeBadge}</td>
@@ -631,33 +678,33 @@
                             <td>${transaction.reason}</td>
                         </tr>
                     `;
-                });
+          });
 
-                html += `
+          html += `
                             </tbody>
                         </table>
                     </div>
                 `;
 
-                document.getElementById('transactionsContainer').innerHTML = html;
-
-            } catch (error) {
-                document.getElementById('transactionsContainer').innerHTML = `
+          document.getElementById("transactionsContainer").innerHTML = html;
+        } catch (error) {
+          document.getElementById("transactionsContainer").innerHTML = `
                     <div class="empty-state" style="color: #dc3545;">
                         <p>Failed to load transactions</p>
                     </div>
                 `;
-            }
         }
+      }
 
-        /**
-         * Load and display user participations
-         */
-        async function loadParticipations() {
-            try {
-                const { data: participations, error } = await supabase
-                    .from('participations')
-                    .select(`
+      /**
+       * Load and display user participations
+       */
+      async function loadParticipations() {
+        try {
+          const { data: participations, error } = await supabase
+            .from("participations")
+            .select(
+              `
                         id,
                         status,
                         created_at,
@@ -666,224 +713,226 @@
                             title,
                             neighborhood
                         )
-                    `)
-                    .eq('user_id', currentUser.id)
-                    .order('created_at', { ascending: false });
+                    `
+            )
+            .eq("user_id", currentUser.id)
+            .order("created_at", { ascending: false });
 
-                if (error) throw error;
+          if (error) throw error;
 
-                if (!participations || participations.length === 0) {
-                    document.getElementById('participationsContainer').innerHTML = `
+          if (!participations || participations.length === 0) {
+            document.getElementById("participationsContainer").innerHTML = `
                         <div class="empty-state">
                             <div class="empty-state-icon">🎪</div>
                             <p>You haven't joined any campaigns yet</p>
                             <a href="./dashboard.html" style="color: #28a745; text-decoration: none; font-weight: bold;">Browse campaigns →</a>
                         </div>
                     `;
-                    return;
-                }
+            return;
+          }
 
-                let html = '';
+          let html = "";
 
-                participations.forEach(participation => {
-                    const campaign = participation.campaigns;
-                    const date = new Date(participation.created_at).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                    });
+          participations.forEach((participation) => {
+            const campaign = participation.campaigns;
+            const date = new Date(participation.created_at).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            });
 
-                    let statusBadge = '';
-                    switch (participation.status) {
-                        case 'joined':
-                            statusBadge = '<span class="participation-status status-joined">📝 Joined</span>';
-                            break;
-                        case 'pending':
-                            statusBadge = '<span class="participation-status status-pending">⏳ Pending</span>';
-                            break;
-                        case 'approved':
-                            statusBadge = '<span class="participation-status status-approved">✅ Approved</span>';
-                            break;
-                        case 'rejected':
-                            statusBadge = '<span class="participation-status status-rejected">❌ Rejected</span>';
-                            break;
-                    }
+            let statusBadge = "";
+            switch (participation.status) {
+              case "joined":
+                statusBadge = '<span class="participation-status status-joined">📝 Joined</span>';
+                break;
+              case "pending":
+                statusBadge = '<span class="participation-status status-pending">⏳ Pending</span>';
+                break;
+              case "approved":
+                statusBadge =
+                  '<span class="participation-status status-approved">✅ Approved</span>';
+                break;
+              case "rejected":
+                statusBadge =
+                  '<span class="participation-status status-rejected">❌ Rejected</span>';
+                break;
+            }
 
-                    html += `
+            html += `
                         <div class="participation-item">
                             <div class="participation-header">
-                                <div class="participation-title">${campaign?.title || 'Unknown Campaign'}</div>
+                                <div class="participation-title">${campaign?.title || "Unknown Campaign"}</div>
                                 ${statusBadge}
                             </div>
                             <div class="participation-details">
-                                <p><strong>Neighborhood:</strong> ${campaign?.neighborhood || 'Unknown'}</p>
+                                <p><strong>Neighborhood:</strong> ${campaign?.neighborhood || "Unknown"}</p>
                                 <p><strong>Joined:</strong> ${date}</p>
                                 <p><strong>Status:</strong> ${participation.status.charAt(0).toUpperCase() + participation.status.slice(1)}</p>
                             </div>
                         </div>
                     `;
-                });
+          });
 
-                document.getElementById('participationsContainer').innerHTML = html;
-
-            } catch (error) {
-                
-                document.getElementById('participationsContainer').innerHTML = `
+          document.getElementById("participationsContainer").innerHTML = html;
+        } catch (error) {
+          document.getElementById("participationsContainer").innerHTML = `
                     <div class="empty-state" style="color: #dc3545;">
                         <p>Failed to load participations</p>
                     </div>
                 `;
-            }
+        }
+      }
+
+      /**
+       * Handle logout
+       */
+      async function handleLogout() {
+        try {
+          const { error } = await supabase.auth.signOut();
+          if (!error) {
+            localStorage.removeItem("user");
+            window.location.href = "../../index.html";
+          } else {
+            throw error;
+          }
+        } catch (error) {
+          console.error("Logout failed", error);
+        }
+      }
+
+      /**
+       * Toggle edit mode - show/hide edit form
+       */
+      function toggleEditMode() {
+        const editSection = document.getElementById("editProfileSection");
+        const accountSection = document.querySelector(".section");
+
+        if (editSection.style.display === "none") {
+          // Show edit form
+          editSection.style.display = "block";
+
+          // Pre-fill form with current values
+          document.getElementById("editUsername").value = userProfile?.username || "";
+          document.getElementById("editNeighborhood").value =
+            userProfile?.neighborhood || "Studentski Grad";
+          document.getElementById("editAvatar").value = userProfile?.avatar || "👤";
+
+          // Scroll to edit form
+          editSection.scrollIntoView({ behavior: "smooth", block: "start" });
+        } else {
+          // Hide edit form
+          editSection.style.display = "none";
+        }
+      }
+
+      /**
+       * Handle save profile changes
+       */
+      async function handleSaveProfile(e) {
+        e.preventDefault();
+
+        const newUsername = document.getElementById("editUsername").value.trim();
+        const newNeighborhood = document.getElementById("editNeighborhood").value;
+        const newAvatar = document.getElementById("editAvatar").value;
+
+        if (!newUsername) {
+          await Swal.fire({
+            icon: "error",
+            title: "Грешка",
+            text: "Потребителското име е задължително!",
+          });
+          return;
         }
 
-        /**
-         * Handle logout
-         */
-        async function handleLogout() {
-            try {
-                const { error } = await supabase.auth.signOut();
-                if (!error) {
-                    localStorage.removeItem('user');
-                    window.location.href = '../../index.html';
-                } else {
-                    throw error;
-                }
-            } catch (error) {
-                console.error('Logout failed', error);
-            }
+        try {
+          // Show loading
+          Swal.fire({
+            title: "Запазване...",
+            text: "Моля изчакайте",
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
+            },
+          });
+
+          // Check if demo mode
+          const localUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+          if (localUser.id && localUser.id.startsWith("demo-")) {
+            // Demo mode - update localStorage
+            localUser.username = newUsername;
+            localUser.neighborhood = newNeighborhood;
+            localUser.avatar = newAvatar;
+
+            localStorage.setItem("user", JSON.stringify(localUser));
+
+            // Update userProfile variable
+            userProfile = localUser;
+
+            // Update UI
+            document.getElementById("userEmail").textContent = newUsername;
+            document.getElementById("neighborhoodDisplay").textContent = newNeighborhood;
+            document.getElementById("neighborhoodValue").textContent = newNeighborhood;
+            document.querySelector(".avatar").textContent = newAvatar;
+
+            Swal.fire({
+              icon: "success",
+              title: "Успех!",
+              text: "Профилът е обновен успешно!",
+              timer: 2000,
+            });
+
+            toggleEditMode();
+          } else {
+            // Real mode - update Supabase
+            const { data, error } = await supabase
+              .from("profiles")
+              .update({
+                username: newUsername,
+                neighborhood: newNeighborhood,
+                avatar_url: newAvatar,
+              })
+              .eq("id", currentUser.id)
+              .select()
+              .single();
+
+            if (error) throw error;
+
+            // Update userProfile
+            userProfile = data;
+
+            // Update UI
+            document.getElementById("userEmail").textContent = newUsername;
+            document.getElementById("neighborhoodDisplay").textContent = newNeighborhood;
+            document.getElementById("neighborhoodValue").textContent = newNeighborhood;
+            document.querySelector(".avatar").textContent = newAvatar;
+
+            await Swal.fire({
+              icon: "success",
+              title: "Успех!",
+              text: "Профилът е обновен успешно!",
+              timer: 2000,
+            });
+
+            toggleEditMode();
+          }
+        } catch (error) {
+          console.error("Error updating profile", error);
+          await Swal.fire({
+            icon: "error",
+            title: "Грешка",
+            text: error.message || "Грешка при запазване на промените",
+          });
         }
+      }
 
-        /**
-         * Toggle edit mode - show/hide edit form
-         */
-        function toggleEditMode() {
-            const editSection = document.getElementById('editProfileSection');
-            const accountSection = document.querySelector('.section');
-            
-            if (editSection.style.display === 'none') {
-                // Show edit form
-                editSection.style.display = 'block';
-                
-                // Pre-fill form with current values
-                document.getElementById('editUsername').value = userProfile?.username || '';
-                document.getElementById('editNeighborhood').value = userProfile?.neighborhood || 'Studentski Grad';
-                document.getElementById('editAvatar').value = userProfile?.avatar || '👤';
-                
-                // Scroll to edit form
-                editSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            } else {
-                // Hide edit form
-                editSection.style.display = 'none';
-            }
-        }
+      // Add event listener to edit form
+      document.getElementById("editProfileForm").addEventListener("submit", handleSaveProfile);
 
-        /**
-         * Handle save profile changes
-         */
-        async function handleSaveProfile(e) {
-            e.preventDefault();
-            
-            const newUsername = document.getElementById('editUsername').value.trim();
-            const newNeighborhood = document.getElementById('editNeighborhood').value;
-            const newAvatar = document.getElementById('editAvatar').value;
-            
-            if (!newUsername) {
-                await Swal.fire({
-                    icon: 'error',
-                    title: 'Грешка',
-                    text: 'Потребителското име е задължително!'
-                });
-                return;
-            }
-            
-            try {
-                // Show loading
-                Swal.fire({
-                    title: 'Запазване...',
-                    text: 'Моля изчакайте',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-                
-                // Check if demo mode
-                const localUser = JSON.parse(localStorage.getItem('user') || '{}');
-                
-                if (localUser.id && localUser.id.startsWith('demo-')) {
-                    // Demo mode - update localStorage
-                    localUser.username = newUsername;
-                    localUser.neighborhood = newNeighborhood;
-                    localUser.avatar = newAvatar;
-                    
-                    localStorage.setItem('user', JSON.stringify(localUser));
-                    
-                    // Update userProfile variable
-                    userProfile = localUser;
-                    
-                    // Update UI
-                    document.getElementById('userEmail').textContent = newUsername;
-                    document.getElementById('neighborhoodDisplay').textContent = newNeighborhood;
-                    document.getElementById('neighborhoodValue').textContent = newNeighborhood;
-                    document.querySelector('.avatar').textContent = newAvatar;
-                    
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Успех!',
-                        text: 'Профилът е обновен успешно!',
-                        timer: 2000
-                    });
-                    
-                    toggleEditMode();
-                } else {
-                    // Real mode - update Supabase
-                    const { data, error } = await supabase
-                        .from('profiles')
-                        .update({
-                            username: newUsername,
-                            neighborhood: newNeighborhood,
-                            avatar_url: newAvatar
-                        })
-                        .eq('id', currentUser.id)
-                        .select()
-                        .single();
-                    
-                    if (error) throw error;
-                    
-                    // Update userProfile
-                    userProfile = data;
-                    
-                    // Update UI
-                    document.getElementById('userEmail').textContent = newUsername;
-                    document.getElementById('neighborhoodDisplay').textContent = newNeighborhood;
-                    document.getElementById('neighborhoodValue').textContent = newNeighborhood;
-                    document.querySelector('.avatar').textContent = newAvatar;
-                    
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'Успех!',
-                        text: 'Профилът е обновен успешно!',
-                        timer: 2000
-                    });
-                    
-                    toggleEditMode();
-                }
-            } catch (error) {
-                console.error('Error updating profile', error);
-                await Swal.fire({
-                    icon: 'error',
-                    title: 'Грешка',
-                    text: error.message || 'Грешка при запазване на промените'
-                });
-            }
-        }
-
-        // Add event listener to edit form
-        document.getElementById('editProfileForm').addEventListener('submit', handleSaveProfile);
-
-        // Expose functions to window for onclick handlers
-        window.handleLogout = handleLogout;
-        window.toggleEditMode = toggleEditMode;
+      // Expose functions to window for onclick handlers
+      window.handleLogout = handleLogout;
+      window.toggleEditMode = toggleEditMode;
     </script>
-</body>
+  </body>
 </html>

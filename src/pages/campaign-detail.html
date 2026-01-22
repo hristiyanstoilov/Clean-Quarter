@@ -1,1272 +1,1376 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Campaign Details - Clean Quarter</title>
-    
+
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
     <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-    
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"
+    />
+
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
+
     <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        
-        .navbar {
-            background-color: #28a745;
-        }
-        
-        .navbar-brand {
-            font-weight: bold;
-            font-size: 1.5rem;
-        }
-        
-        .navbar a {
-            color: white !important;
-            margin-left: 1rem;
-        }
-        
-        .container {
-            max-width: 1000px;
-            margin-top: 2rem;
-        }
-        
-        .photo-section {
-            background: white;
-            padding: 0;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            overflow: hidden;
-            margin-bottom: 2rem;
-        }
-        
-        .before-photo {
-            width: 100%;
-            max-height: 500px;
-            object-fit: cover;
-            display: block;
-        }
-        
-        .photo-label {
-            background-color: #28a745;
-            color: white;
-            padding: 0.75rem 1rem;
-            font-weight: bold;
-            font-size: 0.9rem;
-        }
-        
-        .details-section {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
-        }
-        
-        .details-section h3 {
-            margin-bottom: 1.5rem;
-            color: #28a745;
-            border-bottom: 2px solid #28a745;
-            padding-bottom: 0.5rem;
-        }
-        
-        .detail-row {
-            margin-bottom: 1.5rem;
-            padding-bottom: 1.5rem;
-            border-bottom: 1px solid #e9ecef;
-        }
-        
-        .detail-row:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-        
-        .detail-label {
-            font-weight: bold;
-            color: #495057;
-            margin-bottom: 0.5rem;
-        }
-        
-        .detail-value {
-            color: #212529;
-            font-size: 1.05rem;
-        }
-        
-        .badge-status {
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-weight: bold;
-        }
-        
-        .badge-active {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        
-        .badge-completed {
-            background-color: #d1ecf1;
-            color: #0c5460;
-        }
-        
-        .badge-cancelled {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        
-        #map {
-            height: 300px;
-            border-radius: 6px;
-            margin-top: 1rem;
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
-            flex-wrap: wrap;
-        }
-        
-        .btn-back {
-            padding: 0.75rem 1.5rem;
-            background-color: #6c757d;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            text-decoration: none;
-        }
-        
-        .btn-back:hover {
-            background-color: #5a6268;
-            text-decoration: none;
-            color: white;
-        }
-        
-        .btn-delete {
-            padding: 0.75rem 1.5rem;
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        
-        .btn-delete:hover {
-            background-color: #c82333;
-        }
-        
-        .btn-delete:disabled {
-            background-color: #c82333;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-        
-        .btn-join {
-            padding: 0.75rem 1.5rem;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 1rem;
-        }
-        
-        .btn-join:hover {
-            background-color: #218838;
-        }
-        
-        .btn-join:disabled {
-            background-color: #6c757d;
-            cursor: not-allowed;
-        }
-        
-        .upload-form-section {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
-            border-left: 4px solid #28a745;
-        }
-        
-        .upload-form-section h3 {
-            margin-bottom: 1.5rem;
-            color: #28a745;
-            border-bottom: 2px solid #28a745;
-            padding-bottom: 0.5rem;
-        }
-        
-        .file-input-wrapper {
-            position: relative;
-            overflow: hidden;
-            display: inline-block;
-            width: 100%;
-        }
-        
-        .file-input-wrapper input[type=file] {
-            position: absolute;
-            left: -9999px;
-        }
-        
-        .btn-file-input {
-            display: inline-block;
-            padding: 0.375rem 0.75rem;
-            background-color: #28a745;
-            color: white;
-            border-radius: 0.25rem;
-            cursor: pointer;
-            font-size: 0.875rem;
-        }
-        
-        .btn-file-input:hover {
-            background-color: #218838;
-            text-decoration: none;
-        }
-        
-        .file-name {
-            margin-left: 0.5rem;
-            color: #666;
-            font-size: 0.875rem;
-        }
-        
-        .photo-preview {
-            max-width: 200px;
-            max-height: 200px;
-            border-radius: 6px;
-            margin-top: 1rem;
-        }
-        
-        .btn-upload {
-            padding: 0.75rem 1.5rem;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 0.95rem;
-            margin-top: 1rem;
-        }
-        
-        .btn-upload:hover {
-            background-color: #218838;
-        }
-        
-        .btn-upload:disabled {
-            background-color: #6c757d;
-            cursor: not-allowed;
-        }
-        
-        .status-message {
-            padding: 1rem;
-            border-radius: 6px;
-            margin-top: 1rem;
-            font-weight: bold;
-        }
-        
-        .status-pending {
-            background-color: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
-        }
-        
-        .status-approved {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .status-rejected {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .participation-stats {
-            background-color: #f0f8ff;
-            padding: 1rem;
-            border-radius: 6px;
-            border-left: 4px solid #28a745;
-            margin-bottom: 1.5rem;
-        }
-        
-        .stat-item {
-            display: inline-block;
-            margin-right: 2rem;
-        }
-        
-        .stat-label {
-            font-size: 0.9rem;
-            color: #6c757d;
-        }
-        
-        .stat-value {
-            font-weight: bold;
-            font-size: 1.3rem;
-            color: #28a745;
-        }
-        
-        .loading-spinner {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 300px;
-        }
-        
-        .error-message {
-            background-color: #f8d7da;
-            color: #721c24;
-            padding: 1.5rem;
-            border-radius: 6px;
-            margin-top: 2rem;
-            border: 1px solid #f5c6cb;
-        }
+      body {
+        background-color: #f8f9fa;
+      }
+
+      .navbar {
+        background-color: #28a745;
+      }
+
+      .navbar-brand {
+        font-weight: bold;
+        font-size: 1.5rem;
+      }
+
+      .navbar a {
+        color: white !important;
+        margin-left: 1rem;
+      }
+
+      .container {
+        max-width: 1000px;
+        margin-top: 2rem;
+      }
+
+      .photo-section {
+        background: white;
+        padding: 0;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        margin-bottom: 2rem;
+      }
+
+      .before-photo {
+        width: 100%;
+        max-height: 500px;
+        object-fit: cover;
+        display: block;
+      }
+
+      .photo-label {
+        background-color: #28a745;
+        color: white;
+        padding: 0.75rem 1rem;
+        font-weight: bold;
+        font-size: 0.9rem;
+      }
+
+      .details-section {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+      }
+
+      .details-section h3 {
+        margin-bottom: 1.5rem;
+        color: #28a745;
+        border-bottom: 2px solid #28a745;
+        padding-bottom: 0.5rem;
+      }
+
+      .detail-row {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+      }
+
+      .detail-row:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+      }
+
+      .detail-label {
+        font-weight: bold;
+        color: #495057;
+        margin-bottom: 0.5rem;
+      }
+
+      .detail-value {
+        color: #212529;
+        font-size: 1.05rem;
+      }
+
+      .badge-status {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: bold;
+      }
+
+      .badge-active {
+        background-color: #d4edda;
+        color: #155724;
+      }
+
+      .badge-completed {
+        background-color: #d1ecf1;
+        color: #0c5460;
+      }
+
+      .badge-cancelled {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+
+      #map {
+        height: 300px;
+        border-radius: 6px;
+        margin-top: 1rem;
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        flex-wrap: wrap;
+      }
+
+      .btn-back {
+        padding: 0.75rem 1.5rem;
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: bold;
+        text-decoration: none;
+      }
+
+      .btn-back:hover {
+        background-color: #5a6268;
+        text-decoration: none;
+        color: white;
+      }
+
+      .btn-delete {
+        padding: 0.75rem 1.5rem;
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+
+      .btn-delete:hover {
+        background-color: #c82333;
+      }
+
+      .btn-delete:disabled {
+        background-color: #c82333;
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+
+      .btn-join {
+        padding: 0.75rem 1.5rem;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 1rem;
+      }
+
+      .btn-join:hover {
+        background-color: #218838;
+      }
+
+      .btn-join:disabled {
+        background-color: #6c757d;
+        cursor: not-allowed;
+      }
+
+      .upload-form-section {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+        border-left: 4px solid #28a745;
+      }
+
+      .upload-form-section h3 {
+        margin-bottom: 1.5rem;
+        color: #28a745;
+        border-bottom: 2px solid #28a745;
+        padding-bottom: 0.5rem;
+      }
+
+      .file-input-wrapper {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+        width: 100%;
+      }
+
+      .file-input-wrapper input[type="file"] {
+        position: absolute;
+        left: -9999px;
+      }
+
+      .btn-file-input {
+        display: inline-block;
+        padding: 0.375rem 0.75rem;
+        background-color: #28a745;
+        color: white;
+        border-radius: 0.25rem;
+        cursor: pointer;
+        font-size: 0.875rem;
+      }
+
+      .btn-file-input:hover {
+        background-color: #218838;
+        text-decoration: none;
+      }
+
+      .file-name {
+        margin-left: 0.5rem;
+        color: #666;
+        font-size: 0.875rem;
+      }
+
+      .photo-preview {
+        max-width: 200px;
+        max-height: 200px;
+        border-radius: 6px;
+        margin-top: 1rem;
+      }
+
+      .btn-upload {
+        padding: 0.75rem 1.5rem;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 0.95rem;
+        margin-top: 1rem;
+      }
+
+      .btn-upload:hover {
+        background-color: #218838;
+      }
+
+      .btn-upload:disabled {
+        background-color: #6c757d;
+        cursor: not-allowed;
+      }
+
+      .status-message {
+        padding: 1rem;
+        border-radius: 6px;
+        margin-top: 1rem;
+        font-weight: bold;
+      }
+
+      .status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+
+      .status-approved {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .status-rejected {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .participation-stats {
+        background-color: #f0f8ff;
+        padding: 1rem;
+        border-radius: 6px;
+        border-left: 4px solid #28a745;
+        margin-bottom: 1.5rem;
+      }
+
+      .stat-item {
+        display: inline-block;
+        margin-right: 2rem;
+      }
+
+      .stat-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+      }
+
+      .stat-value {
+        font-weight: bold;
+        font-size: 1.3rem;
+        color: #28a745;
+      }
+
+      .loading-spinner {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 300px;
+      }
+
+      .error-message {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 1.5rem;
+        border-radius: 6px;
+        margin-top: 2rem;
+        border: 1px solid #f5c6cb;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="./dashboard.html">♻️ Clean Quarter</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <div class="ms-auto" style="display: flex; gap: 1rem; align-items: center;">
-                    <a href="./dashboard.html" data-i18n="nav.dashboard">Dashboard</a>
-                    <a href="./rewards.html" data-i18n="nav.rewards">Rewards</a>
-                    <a href="./profile.html" data-i18n="nav.profile">Profile</a>
-                    <select id="languageSelector" class="form-select form-select-sm" style="max-width: 150px; display: none;">
-                        <option value="bg">🇧🇬 Български</option>
-                        <option value="en">🇬🇧 English</option>
-                    </select>
-                    <a href="#" onclick="handleLogout()" data-i18n="nav.logout">Logout</a>
-                </div>
-            </div>
+      <div class="container-fluid">
+        <a class="navbar-brand" href="./dashboard.html">♻️ Clean Quarter</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <div class="ms-auto" style="display: flex; gap: 1rem; align-items: center">
+            <a href="./dashboard.html" data-i18n="nav.dashboard">Dashboard</a>
+            <a href="./rewards.html" data-i18n="nav.rewards">Rewards</a>
+            <a href="./profile.html" data-i18n="nav.profile">Profile</a>
+            <select
+              id="languageSelector"
+              class="form-select form-select-sm"
+              style="max-width: 150px; display: none"
+            >
+              <option value="bg">🇧🇬 Български</option>
+              <option value="en">🇬🇧 English</option>
+            </select>
+            <a href="#" onclick="handleLogout()" data-i18n="nav.logout">Logout</a>
+          </div>
         </div>
+      </div>
     </nav>
 
     <!-- Main Container -->
     <div class="container">
-        <!-- Loading State -->
-        <div class="loading-spinner" id="loadingState">
-            <div class="spinner-border text-success" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
+      <!-- Loading State -->
+      <div class="loading-spinner" id="loadingState">
+        <div class="spinner-border text-success" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+
+      <!-- Campaign Detail Content (hidden until loaded) -->
+      <div id="campaignContent" style="display: none">
+        <!-- Before Photo -->
+        <div class="photo-section">
+          <div class="photo-label" data-i18n="campaign.beforePhoto">📸 Before Photo</div>
+          <img id="beforePhoto" class="before-photo" src="" alt="Before photo" />
         </div>
 
-        <!-- Campaign Detail Content (hidden until loaded) -->
-        <div id="campaignContent" style="display: none;">
-            <!-- Before Photo -->
-            <div class="photo-section">
-                <div class="photo-label" data-i18n="campaign.beforePhoto">📸 Before Photo</div>
-                <img id="beforePhoto" class="before-photo" src="" alt="Before photo">
+        <!-- Campaign Details -->
+        <div class="details-section">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 id="campaignTitle"></h3>
+            <button
+              class="btn btn-outline-success btn-sm"
+              id="editCampaignBtn"
+              style="display: none"
+              onclick="toggleEditCampaign()"
+              data-i18n="campaign.editCampaign"
+            >
+              ✏️ Edit Campaign
+            </button>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-label" data-i18n="campaign.status">Status</div>
+            <div class="detail-value">
+              <span class="badge-status" id="statusBadge"></span>
             </div>
+          </div>
 
-            <!-- Campaign Details -->
-            <div class="details-section">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h3 id="campaignTitle"></h3>
-                    <button class="btn btn-outline-success btn-sm" id="editCampaignBtn" style="display: none;" onclick="toggleEditCampaign()" data-i18n="campaign.editCampaign">
-                        ✏️ Edit Campaign
-                    </button>
-                </div>
-                
-                <div class="detail-row">
-                    <div class="detail-label" data-i18n="campaign.status">Status</div>
-                    <div class="detail-value">
-                        <span class="badge-status" id="statusBadge"></span>
-                    </div>
-                </div>
+          <div class="detail-row">
+            <div class="detail-label" data-i18n="campaign.description">Description</div>
+            <div class="detail-value" id="campaignDescription"></div>
+          </div>
 
-                <div class="detail-row">
-                    <div class="detail-label" data-i18n="campaign.description">Description</div>
-                    <div class="detail-value" id="campaignDescription"></div>
-                </div>
+          <div class="detail-row">
+            <div class="detail-label" data-i18n="campaign.neighborhood">Neighborhood</div>
+            <div class="detail-value" id="campaignNeighborhood"></div>
+          </div>
 
-                <div class="detail-row">
-                    <div class="detail-label" data-i18n="campaign.neighborhood">Neighborhood</div>
-                    <div class="detail-value" id="campaignNeighborhood"></div>
-                </div>
+          <div class="detail-row">
+            <div class="detail-label" data-i18n="campaign.createdDate">Created Date</div>
+            <div class="detail-value" id="campaignDate"></div>
+          </div>
 
-                <div class="detail-row">
-                    <div class="detail-label" data-i18n="campaign.createdDate">Created Date</div>
-                    <div class="detail-value" id="campaignDate"></div>
-                </div>
-
-                <div class="detail-row">
-                    <div class="detail-label" data-i18n="campaign.createdBy">Created By</div>
-                    <div class="detail-value" id="createdBy"></div>
-                </div>
-            </div>
-
-            <!-- Edit Campaign Form (hidden by default) -->
-            <div class="details-section" id="editCampaignSection" style="display: none;">
-                <h3 data-i18n="campaign.editTitle">✏️ Edit Campaign</h3>
-                
-                <form id="editCampaignForm">
-                    <div class="mb-3">
-                        <label for="editTitle" class="form-label" data-i18n="campaign.titleLabel">Title</label>
-                        <input type="text" class="form-control" id="editTitle" data-i18n-placeholder="campaign.titlePlaceholder" placeholder="Campaign title" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="editDescription" class="form-label" data-i18n="campaign.description">Description</label>
-                        <textarea class="form-control" id="editDescription" rows="4" data-i18n-placeholder="campaign.descriptionPlaceholder" placeholder="Describe the cleanup area..." required></textarea>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="editNeighborhood" class="form-label" data-i18n="campaign.neighborhood">Neighborhood</label>
-                        <select class="form-select" id="editNeighborhood" required>
-                            <option value="Studentski Grad" data-i18n="neighborhoods.studentskiGrad">Studentski Grad</option>
-                            <option value="Darvenitsa" data-i18n="neighborhoods.darvenitsa">Darvenitsa</option>
-                            <option value="Musagenitsa" data-i18n="neighborhoods.musagenitsa">Musagenitsa</option>
-                            <option value="Vitosha (VEC)" data-i18n="neighborhoods.vitoshaVec">Vitosha (VEC)</option>
-                            <option value="Malinova Dolina" data-i18n="neighborhoods.malinovaDolina">Malinova Dolina</option>
-                        </select>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="editStatus" class="form-label" data-i18n="campaign.status">Status</label>
-                        <select class="form-select" id="editStatus" required>
-                            <option value="active" data-i18n="campaign.statusActive">Active</option>
-                            <option value="completed" data-i18n="campaign.statusCompleted">Completed</option>
-                        </select>
-                    </div>
-                    
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-success" data-i18n="campaign.saveChanges">
-                            💾 Save Changes
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="toggleEditCampaign()" data-i18n="campaign.cancelEdit">
-                            ❌ Cancel
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Participation Stats -->
-            <div class="details-section">
-                <h3 data-i18n="campaign.participation">📊 Participation</h3>
-                <div class="participation-stats">
-                    <div class="stat-item">
-                        <div class="stat-label" data-i18n="campaign.totalParticipants">Total Participants</div>
-                        <div class="stat-value" id="participantCount">0</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label" data-i18n="campaign.approved">Approved</div>
-                        <div class="stat-value" id="approvedCount">0</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label" data-i18n="campaign.pending">Pending</div>
-                        <div class="stat-value" id="pendingCount">0</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Location Map -->
-            <div class="details-section">
-                <h3 data-i18n="campaign.location">📍 Location</h3>
-                <div>
-                    <p>
-                        <strong data-i18n="campaign.coordinates">Coordinates:</strong><br>
-                        <span data-i18n="campaign.latitude">Latitude</span>: <span id="latitude"></span><br>
-                        <span data-i18n="campaign.longitude">Longitude</span>: <span id="longitude"></span>
-                    </p>
-                </div>
-                <div id="map"></div>
-            </div>
-
-            <!-- Join Campaign Section -->
-            <div class="details-section" id="joinSection" style="display: none;">
-                <h3 data-i18n="campaign.joinCampaign">🤝 Join Campaign</h3>
-                <p data-i18n="campaign.joinDescription">Click the button below to join this cleanup campaign and help make a difference!</p>
-                <button class="btn-join" id="joinBtn" onclick="handleJoin()" data-i18n="campaign.joinButton">Join Campaign</button>
-            </div>
-
-            <!-- Upload After Photo Section -->
-            <div class="upload-form-section" id="uploadSection" style="display: none;">
-                <h3 data-i18n="campaign.uploadAfterPhoto">📷 Upload After Photo</h3>
-                <p data-i18n="campaign.uploadDescription">Show us the result of your cleanup work! Upload a photo after you've finished cleaning.</p>
-                
-                <form id="uploadPhotoForm">
-                    <div class="mb-3">
-                        <label for="afterPhoto" class="form-label" data-i18n="campaign.afterPhoto">After Photo</label>
-                        <div class="file-input-wrapper">
-                            <label class="btn-file-input">
-                                <span data-i18n="campaign.chooseFile">📁 Choose File</span>
-                                <input 
-                                    type="file" 
-                                    id="afterPhoto" 
-                                    accept="image/*"
-                                    required
-                                >
-                            </label>
-                            <span class="file-name" id="afterPhotoName" data-i18n="campaign.noFileChosen">No file chosen</span>
-                        </div>
-                        <img id="afterPhotoPreview" class="photo-preview" style="display:none;">
-                    </div>
-                </form>
-                
-                <button class="btn-upload" id="uploadBtn" onclick="handleUploadPhoto()" disabled data-i18n="campaign.submitProof">
-                    ✅ Submit Proof
-                </button>
-                
-                <div id="submissionStatus" class="status-message" style="display: none;"></div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="action-buttons">
-                <a href="./dashboard.html" class="btn-back" data-i18n="campaign.backToDashboard">← Back to Dashboard</a>
-                <button class="btn-delete" id="deleteBtn" style="display: none;" onclick="handleDelete()" data-i18n="campaign.deleteCampaign">
-                    🗑️ Delete Campaign
-                </button>
-            </div>
+          <div class="detail-row">
+            <div class="detail-label" data-i18n="campaign.createdBy">Created By</div>
+            <div class="detail-value" id="createdBy"></div>
+          </div>
         </div>
 
-        <!-- Error State -->
-        <div id="errorState" style="display: none;">
-            <div class="error-message">
-                <h4 data-i18n="campaign.unableToLoad">Unable to Load Campaign</h4>
-                <p id="errorMessage"></p>
-                <a href="./dashboard.html" class="btn-back" style="display: inline-block; margin-top: 1rem;" data-i18n="campaign.backToDashboard">← Back to Dashboard</a>
+        <!-- Edit Campaign Form (hidden by default) -->
+        <div class="details-section" id="editCampaignSection" style="display: none">
+          <h3 data-i18n="campaign.editTitle">✏️ Edit Campaign</h3>
+
+          <form id="editCampaignForm">
+            <div class="mb-3">
+              <label for="editTitle" class="form-label" data-i18n="campaign.titleLabel"
+                >Title</label
+              >
+              <input
+                type="text"
+                class="form-control"
+                id="editTitle"
+                data-i18n-placeholder="campaign.titlePlaceholder"
+                placeholder="Campaign title"
+                required
+              />
             </div>
+
+            <div class="mb-3">
+              <label for="editDescription" class="form-label" data-i18n="campaign.description"
+                >Description</label
+              >
+              <textarea
+                class="form-control"
+                id="editDescription"
+                rows="4"
+                data-i18n-placeholder="campaign.descriptionPlaceholder"
+                placeholder="Describe the cleanup area..."
+                required
+              ></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label for="editNeighborhood" class="form-label" data-i18n="campaign.neighborhood"
+                >Neighborhood</label
+              >
+              <select class="form-select" id="editNeighborhood" required>
+                <option value="Studentski Grad" data-i18n="neighborhoods.studentskiGrad">
+                  Studentski Grad
+                </option>
+                <option value="Darvenitsa" data-i18n="neighborhoods.darvenitsa">Darvenitsa</option>
+                <option value="Musagenitsa" data-i18n="neighborhoods.musagenitsa">
+                  Musagenitsa
+                </option>
+                <option value="Vitosha (VEC)" data-i18n="neighborhoods.vitoshaVec">
+                  Vitosha (VEC)
+                </option>
+                <option value="Malinova Dolina" data-i18n="neighborhoods.malinovaDolina">
+                  Malinova Dolina
+                </option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="editStatus" class="form-label" data-i18n="campaign.status">Status</label>
+              <select class="form-select" id="editStatus" required>
+                <option value="active" data-i18n="campaign.statusActive">Active</option>
+                <option value="completed" data-i18n="campaign.statusCompleted">Completed</option>
+              </select>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-success" data-i18n="campaign.saveChanges">
+                💾 Save Changes
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="toggleEditCampaign()"
+                data-i18n="campaign.cancelEdit"
+              >
+                ❌ Cancel
+              </button>
+            </div>
+          </form>
         </div>
+
+        <!-- Participation Stats -->
+        <div class="details-section">
+          <h3 data-i18n="campaign.participation">📊 Participation</h3>
+          <div class="participation-stats">
+            <div class="stat-item">
+              <div class="stat-label" data-i18n="campaign.totalParticipants">
+                Total Participants
+              </div>
+              <div class="stat-value" id="participantCount">0</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label" data-i18n="campaign.approved">Approved</div>
+              <div class="stat-value" id="approvedCount">0</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label" data-i18n="campaign.pending">Pending</div>
+              <div class="stat-value" id="pendingCount">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Location Map -->
+        <div class="details-section">
+          <h3 data-i18n="campaign.location">📍 Location</h3>
+          <div>
+            <p>
+              <strong data-i18n="campaign.coordinates">Coordinates:</strong><br />
+              <span data-i18n="campaign.latitude">Latitude</span>: <span id="latitude"></span><br />
+              <span data-i18n="campaign.longitude">Longitude</span>: <span id="longitude"></span>
+            </p>
+          </div>
+          <div id="map"></div>
+        </div>
+
+        <!-- Join Campaign Section -->
+        <div class="details-section" id="joinSection" style="display: none">
+          <h3 data-i18n="campaign.joinCampaign">🤝 Join Campaign</h3>
+          <p data-i18n="campaign.joinDescription">
+            Click the button below to join this cleanup campaign and help make a difference!
+          </p>
+          <button
+            class="btn-join"
+            id="joinBtn"
+            onclick="handleJoin()"
+            data-i18n="campaign.joinButton"
+          >
+            Join Campaign
+          </button>
+        </div>
+
+        <!-- Upload After Photo Section -->
+        <div class="upload-form-section" id="uploadSection" style="display: none">
+          <h3 data-i18n="campaign.uploadAfterPhoto">📷 Upload After Photo</h3>
+          <p data-i18n="campaign.uploadDescription">
+            Show us the result of your cleanup work! Upload a photo after you've finished cleaning.
+          </p>
+
+          <form id="uploadPhotoForm">
+            <div class="mb-3">
+              <label for="afterPhoto" class="form-label" data-i18n="campaign.afterPhoto"
+                >After Photo</label
+              >
+              <div class="file-input-wrapper">
+                <label class="btn-file-input">
+                  <span data-i18n="campaign.chooseFile">📁 Choose File</span>
+                  <input type="file" id="afterPhoto" accept="image/*" required />
+                </label>
+                <span class="file-name" id="afterPhotoName" data-i18n="campaign.noFileChosen"
+                  >No file chosen</span
+                >
+              </div>
+              <img id="afterPhotoPreview" class="photo-preview" style="display: none" />
+            </div>
+          </form>
+
+          <button
+            class="btn-upload"
+            id="uploadBtn"
+            onclick="handleUploadPhoto()"
+            disabled
+            data-i18n="campaign.submitProof"
+          >
+            ✅ Submit Proof
+          </button>
+
+          <div id="submissionStatus" class="status-message" style="display: none"></div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+          <a href="./dashboard.html" class="btn-back" data-i18n="campaign.backToDashboard"
+            >← Back to Dashboard</a
+          >
+          <button
+            class="btn-delete"
+            id="deleteBtn"
+            style="display: none"
+            onclick="handleDelete()"
+            data-i18n="campaign.deleteCampaign"
+          >
+            🗑️ Delete Campaign
+          </button>
+        </div>
+      </div>
+
+      <!-- Error State -->
+      <div id="errorState" style="display: none">
+        <div class="error-message">
+          <h4 data-i18n="campaign.unableToLoad">Unable to Load Campaign</h4>
+          <p id="errorMessage"></p>
+          <a
+            href="./dashboard.html"
+            class="btn-back"
+            style="display: inline-block; margin-top: 1rem"
+            data-i18n="campaign.backToDashboard"
+            >← Back to Dashboard</a
+          >
+        </div>
+      </div>
     </div>
 
     <!-- Leaflet JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-    
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Main Script -->
     <script type="module">
-        import supabase from '../services/supabase.js';
-        import { initializeMap } from '../services/map.js';
-        import { uploadCampaignPhoto } from '../services/storage.js';
-        import { initI18n, applyLanguage, setLanguage } from '../utils/i18n.js';
+      import supabase from "../services/supabase.js";
+      import { initializeMap } from "../services/map.js";
+      import { uploadCampaignPhoto } from "../services/storage.js";
+      import { initI18n, applyLanguage, setLanguage } from "../utils/i18n.js";
 
-        // Global variables
-        let campaign = null;
-        let currentUser = null;
-        let map = null;
-        let userParticipation = null;
-        let afterPhotoFile = null;
+      // Global variables
+      let campaign = null;
+      let currentUser = null;
+      let map = null;
+      let userParticipation = null;
+      let afterPhotoFile = null;
 
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                // Initialize i18n (realTime = false)
-                await initI18n(false);
-                applyLanguage(localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg');
+      // Initialize on page load
+      document.addEventListener("DOMContentLoaded", async () => {
+        try {
+          // Initialize i18n (realTime = false)
+          await initI18n(false);
+          applyLanguage(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg");
 
-                // Language selector
-                document.getElementById('languageSelector').value = localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg';
-                document.getElementById('languageSelector').addEventListener('change', (e) => {
-                    // Just show a message - language changes only from profile page
-                    console.log('Language changes only from Profile page');
-                });
+          // Language selector
+          document.getElementById("languageSelector").value =
+            localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+          document.getElementById("languageSelector").addEventListener("change", (e) => {
+            // Just show a message - language changes only from profile page
+            console.log("Language changes only from Profile page");
+          });
 
-                await checkAuth();
-                await loadCampaignDetail();
-            } catch (error) {
-                console.error('Failed to initialize:', error);
-                document.getElementById('errorState').style.display = 'block';
-                document.getElementById('errorMessage').textContent = error.message;
+          await checkAuth();
+          await loadCampaignDetail();
+        } catch (error) {
+          console.error("Failed to initialize:", error);
+          document.getElementById("errorState").style.display = "block";
+          document.getElementById("errorMessage").textContent = error.message;
+        }
+      });
+
+      /**
+       * Check if user is authenticated
+       */
+      async function checkAuth() {
+        // First check localStorage for demo user
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          try {
+            currentUser = JSON.parse(storedUser);
+            console.log("✅ Demo user loaded from localStorage:", currentUser);
+            return;
+          } catch (e) {
+            console.error("Failed to parse stored user:", e);
+          }
+        }
+
+        // Then try Supabase auth
+        const {
+          data: { user },
+          error,
+        } = await supabase.auth.getUser();
+
+        if (error || !user) {
+          window.location.href = "../../index.html";
+        }
+
+        currentUser = user;
+      }
+
+      /**
+       * Get campaign ID from URL parameters
+       */
+      function getCampaignIdFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        return params.get("id");
+      }
+
+      /**
+       * Load and display campaign details
+       */
+      async function loadCampaignDetail() {
+        try {
+          const campaignId = getCampaignIdFromUrl();
+
+          if (!campaignId) {
+            throw new Error("Campaign ID not provided in URL");
+          }
+
+          // Check if in demo mode
+          let campaignData = null;
+          let participations = [];
+          let userPart = null;
+          let userPartError = null;
+
+          if (currentUser && currentUser.id === "demo-admin-001") {
+            // Load demo campaign from localStorage
+            console.log("📝 Loading demo campaign:", campaignId);
+            const allCampaigns = JSON.parse(
+              localStorage.getItem("CLEAN_QUARTER_DEMO_CAMPAIGNS") || "[]"
+            );
+            campaignData = allCampaigns.find((c) => c.id === campaignId);
+
+            if (!campaignData) {
+              throw new Error("Campaign not found in demo data");
             }
+
+            console.log("✅ Loaded demo campaign:", campaignData);
+
+            // Load demo participations
+            participations = JSON.parse(
+              localStorage.getItem("CLEAN_QUARTER_DEMO_PARTICIPATIONS") || "[]"
+            ).filter((p) => p.campaign_id === campaignId);
+
+            userPart = participations.find((p) => p.user_id === currentUser.id) || null;
+          } else {
+            // Fetch campaign data from Supabase
+            const { data, error: campaignError } = await supabase
+              .from("campaigns")
+              .select("*")
+              .eq("id", campaignId)
+              .single();
+
+            if (campaignError) {
+              throw new Error(`Campaign not found: ${campaignError.message}`);
+            }
+
+            campaignData = data;
+
+            // Fetch participation statistics
+            const { data: parts, error: participationError } = await supabase
+              .from("participations")
+              .select("id, status")
+              .eq("campaign_id", campaignId);
+
+            if (participationError) {
+              console.error("Error fetching participations:", participationError);
+            } else {
+              participations = parts;
+            }
+
+            // Fetch current user's participation
+            const { data: userPartData, error: userPartErr } = await supabase
+              .from("participations")
+              .select("*")
+              .eq("campaign_id", campaignId)
+              .eq("user_id", currentUser.id)
+              .single();
+
+            userPartError = userPartErr;
+            if (!userPartError) {
+              userPart = userPartData;
+            }
+          }
+
+          campaign = campaignData;
+
+          if (!userPartError && userPart) {
+            userParticipation = userPart;
+          }
+
+          // Display the campaign details
+          displayCampaignDetails(campaign, participations || []);
+
+          // Check delete eligibility and show button if applicable
+          await checkDeleteEligibility(campaignId, participations || []);
+
+          // Show participation UI
+          showParticipationUI();
+
+          // Setup file input listener (with null check)
+          document.getElementById("afterPhoto")?.addEventListener("change", handleAfterPhotoSelect);
+
+          // Hide loading, show content
+          document.getElementById("loadingState").style.display = "none";
+          document.getElementById("campaignContent").style.display = "block";
+        } catch (error) {
+          console.error("Error loading campaign:", error);
+          showError(error.message);
+        }
+      }
+
+      /**
+       * Display campaign details on the page
+       */
+      function displayCampaignDetails(campaignData, participations) {
+        // Title
+        document.getElementById("campaignTitle").textContent = campaignData.title;
+
+        // Before Photo
+        const photoElement = document.getElementById("beforePhoto");
+        photoElement.src = campaignData.before_photo_url;
+        photoElement.alt = `Before photo for ${campaignData.title}`;
+
+        // Status
+        const statusBadge = document.getElementById("statusBadge");
+        statusBadge.textContent =
+          campaignData.status.charAt(0).toUpperCase() + campaignData.status.slice(1);
+        statusBadge.className = `badge-status badge-${campaignData.status}`;
+
+        // Description
+        document.getElementById("campaignDescription").textContent = campaignData.description;
+
+        // Neighborhood
+        document.getElementById("campaignNeighborhood").textContent = campaignData.neighborhood;
+
+        // Created date
+        const createdDate = new Date(campaignData.created_at);
+        document.getElementById("campaignDate").textContent = createdDate.toLocaleDateString(
+          "bg-BG",
+          {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          }
+        );
+
+        // Created by
+        document.getElementById("createdBy").textContent = campaignData.created_by;
+
+        // Participation stats
+        const totalParticipants = participations.length;
+        const approvedCount = participations.filter((p) => p.status === "approved").length;
+        const pendingCount = participations.filter((p) => p.status === "pending").length;
+
+        document.getElementById("participantCount").textContent = totalParticipants;
+        document.getElementById("approvedCount").textContent = approvedCount;
+        document.getElementById("pendingCount").textContent = pendingCount;
+
+        // Location
+        document.getElementById("latitude").textContent = campaignData.location_lat.toFixed(6);
+        document.getElementById("longitude").textContent = campaignData.location_lng.toFixed(6);
+
+        // Initialize map with campaign location
+        initializeDetailMap(campaignData.location_lat, campaignData.location_lng);
+      }
+
+      /**
+       * Initialize map with campaign location
+       */
+      function initializeDetailMap(lat, lng) {
+        map = initializeMap();
+
+        // Add marker for campaign location
+        L.marker([lat, lng], {
+          icon: L.icon({
+            iconUrl:
+              "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
+            shadowUrl:
+              "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41],
+          }),
+        })
+          .addTo(map)
+          .bindPopup(`Campaign Location: ${campaign.title}`);
+
+        // Center map on campaign location
+        map.setView([lat, lng], 15);
+      }
+
+      /**
+       * Check if current user can delete the campaign
+       * Requirements:
+       * 1. Current user must be the campaign creator
+       * 2. Campaign must have 0 participations
+       */
+      async function checkDeleteEligibility(campaignId, participations) {
+        const isCreator = currentUser.id === campaign.created_by;
+        const hasNoParticipations = participations.length === 0;
+
+        // Show edit button if user is creator
+        if (isCreator) {
+          document.getElementById("editCampaignBtn").style.display = "inline-block";
+        }
+
+        // Show delete button only if BOTH conditions are true
+        if (isCreator && hasNoParticipations) {
+          document.getElementById("deleteBtn").style.display = "inline-block";
+        }
+      }
+
+      /**
+       * Show participation UI based on user status
+       */
+      function showParticipationUI() {
+        const isCreator = currentUser.id === campaign.created_by;
+        const joinSection = document.getElementById("joinSection");
+        const uploadSection = document.getElementById("uploadSection");
+
+        // Hide both sections by default
+        joinSection.style.display = "none";
+        uploadSection.style.display = "none";
+
+        // If user is the creator, don't show participation UI
+        if (isCreator) {
+          return;
+        }
+
+        // If user has not joined yet
+        if (!userParticipation) {
+          joinSection.style.display = "block";
+        } else {
+          // User has joined, show upload section
+          uploadSection.style.display = "block";
+
+          // Show status message based on participation status
+          showSubmissionStatus(userParticipation.status);
+
+          // If photo already uploaded and status is not rejected, disable upload
+          if (userParticipation.after_photo_url && userParticipation.status !== "rejected") {
+            document.getElementById("uploadPhotoForm").style.opacity = "0.6";
+            document.getElementById("uploadPhotoForm").style.pointerEvents = "none";
+            document.getElementById("uploadBtn").disabled = true;
+          }
+        }
+      }
+
+      /**
+       * Handle joining campaign
+       */
+      async function handleJoin() {
+        const joinBtn = document.getElementById("joinBtn");
+
+        try {
+          joinBtn.disabled = true;
+
+          const campaignId = getCampaignIdFromUrl();
+
+          // Create participation record with 'joined' status (no photo yet)
+          const { data: participation, error: joinError } = await supabase
+            .from("participations")
+            .insert([
+              {
+                campaign_id: campaignId,
+                user_id: currentUser.id,
+                status: "joined",
+              },
+            ])
+            .select();
+
+          if (joinError) {
+            throw new Error(`Failed to join campaign: ${joinError.message}`);
+          }
+
+          // Update local state
+          userParticipation = participation[0];
+
+          // Show success message
+          await Swal.fire({
+            icon: "success",
+            title: "Joined!",
+            text: "You have successfully joined the campaign! Now upload your after photo.",
+          });
+
+          // Update UI
+          showParticipationUI();
+        } catch (error) {
+          console.error("Error joining campaign:", error);
+
+          await Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: error.message || "Failed to join campaign. Please try again.",
+          });
+
+          joinBtn.disabled = false;
+        }
+      }
+
+      /**
+       * Handle after photo file selection
+       */
+      function handleAfterPhotoSelect(e) {
+        afterPhotoFile = e.target.files[0];
+        const fileName = afterPhotoFile ? afterPhotoFile.name : "No file chosen";
+
+        document.getElementById("afterPhotoName").textContent = fileName;
+
+        // Show preview
+        if (afterPhotoFile) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const preview = document.getElementById("afterPhotoPreview");
+            preview.src = event.target.result;
+            preview.style.display = "block";
+          };
+          reader.readAsDataURL(afterPhotoFile);
+
+          // Enable upload button
+          document.getElementById("uploadBtn").disabled = false;
+        } else {
+          document.getElementById("uploadBtn").disabled = true;
+        }
+      }
+
+      /**
+       * Handle uploading after photo
+       */
+      async function handleUploadPhoto() {
+        const uploadBtn = document.getElementById("uploadBtn");
+
+        try {
+          if (!afterPhotoFile) {
+            throw new Error("No file selected");
+          }
+
+          uploadBtn.disabled = true;
+
+          // Show loading state
+          await Swal.fire({
+            title: "Uploading photo...",
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
+            },
+          });
+
+          // Upload the photo
+          const photoUrl = await uploadCampaignPhoto(afterPhotoFile, "after");
+
+          Swal.close();
+
+          // Update participation record
+          const { error: updateError } = await supabase
+            .from("participations")
+            .update({
+              after_photo_url: photoUrl,
+              status: "pending",
+            })
+            .eq("id", userParticipation.id);
+
+          if (updateError) {
+            throw new Error(`Failed to update participation: ${updateError.message}`);
+          }
+
+          // Update local state
+          userParticipation.after_photo_url = photoUrl;
+          userParticipation.status = "pending";
+
+          // Show success
+          await Swal.fire({
+            icon: "success",
+            title: "Proof Submitted!",
+            text: "Your cleanup proof has been submitted for admin approval.",
+          });
+
+          // Show status message
+          showSubmissionStatus("pending");
+
+          // Disable upload form
+          document.getElementById("uploadPhotoForm").style.opacity = "0.6";
+          document.getElementById("uploadPhotoForm").style.pointerEvents = "none";
+        } catch (error) {
+          console.error("Error uploading photo:", error);
+
+          await Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: error.message || "Failed to upload photo. Please try again.",
+          });
+
+          uploadBtn.disabled = false;
+        }
+      }
+
+      /**
+       * Show submission status message
+       */
+      function showSubmissionStatus(status) {
+        const statusDiv = document.getElementById("submissionStatus");
+        statusDiv.style.display = "block";
+
+        if (status === "joined") {
+          statusDiv.className = "status-message status-pending";
+          statusDiv.textContent = "📝 Upload your after photo to submit proof.";
+        } else if (status === "pending") {
+          statusDiv.className = "status-message status-pending";
+          statusDiv.textContent = "⏳ Waiting for admin approval...";
+        } else if (status === "approved") {
+          statusDiv.className = "status-message status-approved";
+          statusDiv.textContent = "✅ Your proof has been approved! Points awarded.";
+        } else if (status === "rejected") {
+          statusDiv.className = "status-message status-rejected";
+          statusDiv.textContent = "❌ Your proof was rejected. Please try again with better photo.";
+        }
+      }
+
+      /**
+       * Handle campaign deletion
+       */
+      async function handleDelete() {
+        const result = await Swal.fire({
+          title: "Delete Campaign?",
+          text: "Are you sure you want to delete this campaign? This action cannot be undone.",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#dc3545",
+          cancelButtonColor: "#6c757d",
+          confirmButtonText: "Yes, Delete It",
+          cancelButtonText: "Cancel",
         });
 
-        /**
-         * Check if user is authenticated
-         */
-        async function checkAuth() {
-            // First check localStorage for demo user
-            const storedUser = localStorage.getItem('user');
-            if (storedUser) {
-                try {
-                    currentUser = JSON.parse(storedUser);
-                    console.log('✅ Demo user loaded from localStorage:', currentUser);
-                    return;
-                } catch (e) {
-                    console.error('Failed to parse stored user:', e);
-                }
-            }
-
-            // Then try Supabase auth
-            const { data: { user }, error } = await supabase.auth.getUser();
-            
-            if (error || !user) {
-                window.location.href = '../../index.html';
-            }
-            
-            currentUser = user;
+        if (!result.isConfirmed) {
+          return;
         }
 
-        /**
-         * Get campaign ID from URL parameters
-         */
-        function getCampaignIdFromUrl() {
-            const params = new URLSearchParams(window.location.search);
-            return params.get('id');
+        try {
+          // Show loading state
+          await Swal.fire({
+            title: "Deleting campaign...",
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
+            },
+          });
+
+          const campaignId = getCampaignIdFromUrl();
+
+          // Delete the campaign from database
+          // Note: CASCADE will delete related records
+          const { error: deleteError } = await supabase
+            .from("campaigns")
+            .delete()
+            .eq("id", campaignId);
+
+          if (deleteError) {
+            throw new Error(`Failed to delete campaign: ${deleteError.message}`);
+          }
+
+          // Success notification
+          await Swal.fire({
+            icon: "success",
+            title: "Campaign Deleted",
+            text: "The campaign has been successfully deleted.",
+            confirmButtonText: "OK",
+          });
+
+          // Redirect to dashboard
+          window.location.href = "./dashboard.html";
+        } catch (error) {
+          console.error("Error deleting campaign:", error);
+
+          await Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: error.message || "Failed to delete campaign. Please try again.",
+          });
+        }
+      }
+
+      /**
+       * Show error state
+       */
+      function showError(message) {
+        document.getElementById("loadingState").style.display = "none";
+        document.getElementById("campaignContent").style.display = "none";
+        document.getElementById("errorState").style.display = "block";
+        document.getElementById("errorMessage").textContent = message;
+      }
+
+      /**
+       * Handle logout
+       */
+      async function handleLogout() {
+        const { error } = await supabase.auth.signOut();
+        if (!error) {
+          localStorage.removeItem("user");
+          window.location.href = "../../index.html";
+        }
+      }
+
+      /**
+       * Toggle edit campaign form
+       */
+      function toggleEditCampaign() {
+        const editSection = document.getElementById("editCampaignSection");
+
+        if (editSection.style.display === "none") {
+          // Show edit form
+          editSection.style.display = "block";
+
+          // Pre-fill form with current values
+          document.getElementById("editTitle").value = campaign?.title || "";
+          document.getElementById("editDescription").value = campaign?.description || "";
+          document.getElementById("editNeighborhood").value =
+            campaign?.neighborhood || "Studentski Grad";
+          document.getElementById("editStatus").value = campaign?.status || "active";
+
+          // Scroll to edit form
+          editSection.scrollIntoView({ behavior: "smooth", block: "start" });
+        } else {
+          // Hide edit form
+          editSection.style.display = "none";
+        }
+      }
+
+      /**
+       * Handle save campaign changes
+       */
+      async function handleSaveCampaign(e) {
+        e.preventDefault();
+
+        const newTitle = document.getElementById("editTitle").value.trim();
+        const newDescription = document.getElementById("editDescription").value.trim();
+        const newNeighborhood = document.getElementById("editNeighborhood").value;
+        const newStatus = document.getElementById("editStatus").value;
+
+        if (!newTitle || !newDescription) {
+          await Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "Title and description are required!",
+          });
+          return;
         }
 
-        /**
-         * Load and display campaign details
-         */
-        async function loadCampaignDetail() {
-            try {
-                const campaignId = getCampaignIdFromUrl();
-                
-                if (!campaignId) {
-                    throw new Error('Campaign ID not provided in URL');
-                }
+        try {
+          // Show loading
+          Swal.fire({
+            title: "Saving...",
+            text: "Please wait",
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
+            },
+          });
 
-                // Check if in demo mode
-                let campaignData = null;
-                let participations = [];
-                let userPart = null;
-                let userPartError = null;
-                
-                if (currentUser && currentUser.id === 'demo-admin-001') {
-                    // Load demo campaign from localStorage
-                    console.log('📝 Loading demo campaign:', campaignId);
-                    const allCampaigns = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_CAMPAIGNS') || '[]');
-                    campaignData = allCampaigns.find(c => c.id === campaignId);
-                    
-                    if (!campaignData) {
-                        throw new Error('Campaign not found in demo data');
-                    }
-                    
-                    console.log('✅ Loaded demo campaign:', campaignData);
-                    
-                    // Load demo participations
-                    participations = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_PARTICIPATIONS') || '[]')
-                        .filter(p => p.campaign_id === campaignId);
-                    
-                    userPart = participations.find(p => p.user_id === currentUser.id) || null;
-                } else {
-                    // Fetch campaign data from Supabase
-                    const { data, error: campaignError } = await supabase
-                        .from('campaigns')
-                        .select('*')
-                        .eq('id', campaignId)
-                        .single();
+          const campaignId = getCampaignIdFromUrl();
 
-                    if (campaignError) {
-                        throw new Error(`Campaign not found: ${campaignError.message}`);
-                    }
+          // Check if demo mode
+          const localUser = JSON.parse(localStorage.getItem("user") || "{}");
 
-                    campaignData = data;
+          if (localUser.id && localUser.id.startsWith("demo-")) {
+            // Demo mode - update localStorage
+            const demoCampaigns = JSON.parse(
+              localStorage.getItem("CLEAN_QUARTER_DEMO_CAMPAIGNS") || "[]"
+            );
+            const campaignIndex = demoCampaigns.findIndex((c) => c.id === campaignId);
 
-                    // Fetch participation statistics
-                    const { data: parts, error: participationError } = await supabase
-                        .from('participations')
-                        .select('id, status')
-                        .eq('campaign_id', campaignId);
+            if (campaignIndex !== -1) {
+              demoCampaigns[campaignIndex] = {
+                ...demoCampaigns[campaignIndex],
+                title: newTitle,
+                description: newDescription,
+                neighborhood: newNeighborhood,
+                status: newStatus,
+                updated_at: new Date().toISOString(),
+              };
 
-                    if (participationError) {
-                        console.error('Error fetching participations:', participationError);
-                    } else {
-                        participations = parts;
-                    }
+              localStorage.setItem("CLEAN_QUARTER_DEMO_CAMPAIGNS", JSON.stringify(demoCampaigns));
 
-                    // Fetch current user's participation
-                    const { data: userPartData, error: userPartErr } = await supabase
-                        .from('participations')
-                        .select('*')
-                        .eq('campaign_id', campaignId)
-                        .eq('user_id', currentUser.id)
-                        .single();
+              // Update global campaign variable
+              campaign = demoCampaigns[campaignIndex];
 
-                    userPartError = userPartErr;
-                    if (!userPartError) {
-                        userPart = userPartData;
-                    }
-                }
+              // Update UI
+              document.getElementById("campaignTitle").textContent = newTitle;
+              document.getElementById("campaignDescription").textContent = newDescription;
+              document.getElementById("campaignNeighborhood").textContent = newNeighborhood;
 
-                campaign = campaignData;
+              const statusBadge = document.getElementById("statusBadge");
+              statusBadge.textContent = newStatus === "active" ? "🟢 Active" : "✅ Completed";
+              statusBadge.className =
+                "badge-status " + (newStatus === "active" ? "status-active" : "status-completed");
 
-                if (!userPartError && userPart) {
-                    userParticipation = userPart;
-                }
+              await Swal.fire({
+                icon: "success",
+                title: "Success!",
+                text: "Campaign updated successfully!",
+                timer: 2000,
+              });
 
-                // Display the campaign details
-                displayCampaignDetails(campaign, participations || []);
-
-                // Check delete eligibility and show button if applicable
-                await checkDeleteEligibility(campaignId, participations || []);
-
-                // Show participation UI
-                showParticipationUI();
-
-                // Setup file input listener (with null check)
-                document.getElementById('afterPhoto')?.addEventListener('change', handleAfterPhotoSelect);
-
-                // Hide loading, show content
-                document.getElementById('loadingState').style.display = 'none';
-                document.getElementById('campaignContent').style.display = 'block';
-
-            } catch (error) {
-                console.error('Error loading campaign:', error);
-                showError(error.message);
+              toggleEditCampaign();
             }
-        }
+          } else {
+            // Real mode - update Supabase
+            const { data, error } = await supabase
+              .from("campaigns")
+              .update({
+                title: newTitle,
+                description: newDescription,
+                neighborhood: newNeighborhood,
+                status: newStatus,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", campaignId)
+              .select()
+              .single();
 
-        /**
-         * Display campaign details on the page
-         */
-        function displayCampaignDetails(campaignData, participations) {
-            // Title
-            document.getElementById('campaignTitle').textContent = campaignData.title;
+            if (error) throw error;
 
-            // Before Photo
-            const photoElement = document.getElementById('beforePhoto');
-            photoElement.src = campaignData.before_photo_url;
-            photoElement.alt = `Before photo for ${campaignData.title}`;
+            // Update campaign
+            campaign = data;
 
-            // Status
-            const statusBadge = document.getElementById('statusBadge');
-            statusBadge.textContent = campaignData.status.charAt(0).toUpperCase() + campaignData.status.slice(1);
-            statusBadge.className = `badge-status badge-${campaignData.status}`;
+            // Update UI
+            document.getElementById("campaignTitle").textContent = newTitle;
+            document.getElementById("campaignDescription").textContent = newDescription;
+            document.getElementById("campaignNeighborhood").textContent = newNeighborhood;
 
-            // Description
-            document.getElementById('campaignDescription').textContent = campaignData.description;
+            const statusBadge = document.getElementById("statusBadge");
+            statusBadge.textContent = newStatus === "active" ? "🟢 Active" : "✅ Completed";
+            statusBadge.className =
+              "badge-status " + (newStatus === "active" ? "status-active" : "status-completed");
 
-            // Neighborhood
-            document.getElementById('campaignNeighborhood').textContent = campaignData.neighborhood;
-
-            // Created date
-            const createdDate = new Date(campaignData.created_at);
-            document.getElementById('campaignDate').textContent = createdDate.toLocaleDateString('bg-BG', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
+            await Swal.fire({
+              icon: "success",
+              title: "Success!",
+              text: "Campaign updated successfully!",
+              timer: 2000,
             });
 
-            // Created by
-            document.getElementById('createdBy').textContent = campaignData.created_by;
-
-            // Participation stats
-            const totalParticipants = participations.length;
-            const approvedCount = participations.filter(p => p.status === 'approved').length;
-            const pendingCount = participations.filter(p => p.status === 'pending').length;
-
-            document.getElementById('participantCount').textContent = totalParticipants;
-            document.getElementById('approvedCount').textContent = approvedCount;
-            document.getElementById('pendingCount').textContent = pendingCount;
-
-            // Location
-            document.getElementById('latitude').textContent = campaignData.location_lat.toFixed(6);
-            document.getElementById('longitude').textContent = campaignData.location_lng.toFixed(6);
-
-            // Initialize map with campaign location
-            initializeDetailMap(campaignData.location_lat, campaignData.location_lng);
+            toggleEditCampaign();
+          }
+        } catch (error) {
+          console.error("Error updating campaign", error);
+          await Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: error.message || "Error saving changes",
+          });
         }
+      }
 
-        /**
-         * Initialize map with campaign location
-         */
-        function initializeDetailMap(lat, lng) {
-            map = initializeMap();
-            
-            // Add marker for campaign location
-            L.marker([lat, lng], {
-                icon: L.icon({
-                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                    iconSize: [25, 41],
-                    iconAnchor: [12, 41],
-                    popupAnchor: [1, -34],
-                    shadowSize: [41, 41]
-                })
-            }).addTo(map).bindPopup(`Campaign Location: ${campaign.title}`);
+      // Add event listener to edit form
+      document.getElementById("editCampaignForm")?.addEventListener("submit", handleSaveCampaign);
 
-            // Center map on campaign location
-            map.setView([lat, lng], 15);
-        }
-
-        /**
-         * Check if current user can delete the campaign
-         * Requirements:
-         * 1. Current user must be the campaign creator
-         * 2. Campaign must have 0 participations
-         */
-        async function checkDeleteEligibility(campaignId, participations) {
-            const isCreator = currentUser.id === campaign.created_by;
-            const hasNoParticipations = participations.length === 0;
-
-            // Show edit button if user is creator
-            if (isCreator) {
-                document.getElementById('editCampaignBtn').style.display = 'inline-block';
-            }
-
-            // Show delete button only if BOTH conditions are true
-            if (isCreator && hasNoParticipations) {
-                document.getElementById('deleteBtn').style.display = 'inline-block';
-            }
-        }
-
-        /**
-         * Show participation UI based on user status
-         */
-        function showParticipationUI() {
-            const isCreator = currentUser.id === campaign.created_by;
-            const joinSection = document.getElementById('joinSection');
-            const uploadSection = document.getElementById('uploadSection');
-
-            // Hide both sections by default
-            joinSection.style.display = 'none';
-            uploadSection.style.display = 'none';
-
-            // If user is the creator, don't show participation UI
-            if (isCreator) {
-                return;
-            }
-
-            // If user has not joined yet
-            if (!userParticipation) {
-                joinSection.style.display = 'block';
-            } else {
-                // User has joined, show upload section
-                uploadSection.style.display = 'block';
-                
-                // Show status message based on participation status
-                showSubmissionStatus(userParticipation.status);
-                
-                // If photo already uploaded and status is not rejected, disable upload
-                if (userParticipation.after_photo_url && userParticipation.status !== 'rejected') {
-                    document.getElementById('uploadPhotoForm').style.opacity = '0.6';
-                    document.getElementById('uploadPhotoForm').style.pointerEvents = 'none';
-                    document.getElementById('uploadBtn').disabled = true;
-                }
-            }
-        }
-
-        /**
-         * Handle joining campaign
-         */
-        async function handleJoin() {
-            const joinBtn = document.getElementById('joinBtn');
-            
-            try {
-                joinBtn.disabled = true;
-
-                const campaignId = getCampaignIdFromUrl();
-
-                // Create participation record with 'joined' status (no photo yet)
-                const { data: participation, error: joinError } = await supabase
-                    .from('participations')
-                    .insert([{
-                        campaign_id: campaignId,
-                        user_id: currentUser.id,
-                        status: 'joined'
-                    }])
-                    .select();
-
-                if (joinError) {
-                    throw new Error(`Failed to join campaign: ${joinError.message}`);
-                }
-
-                // Update local state
-                userParticipation = participation[0];
-
-                // Show success message
-                await Swal.fire({
-                    icon: 'success',
-                    title: 'Joined!',
-                    text: 'You have successfully joined the campaign! Now upload your after photo.'
-                });
-
-                // Update UI
-                showParticipationUI();
-
-            } catch (error) {
-                console.error('Error joining campaign:', error);
-
-                await Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: error.message || 'Failed to join campaign. Please try again.'
-                });
-
-                joinBtn.disabled = false;
-            }
-        }
-
-        /**
-         * Handle after photo file selection
-         */
-        function handleAfterPhotoSelect(e) {
-            afterPhotoFile = e.target.files[0];
-            const fileName = afterPhotoFile ? afterPhotoFile.name : 'No file chosen';
-            
-            document.getElementById('afterPhotoName').textContent = fileName;
-            
-            // Show preview
-            if (afterPhotoFile) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    const preview = document.getElementById('afterPhotoPreview');
-                    preview.src = event.target.result;
-                    preview.style.display = 'block';
-                };
-                reader.readAsDataURL(afterPhotoFile);
-                
-                // Enable upload button
-                document.getElementById('uploadBtn').disabled = false;
-            } else {
-                document.getElementById('uploadBtn').disabled = true;
-            }
-        }
-
-        /**
-         * Handle uploading after photo
-         */
-        async function handleUploadPhoto() {
-            const uploadBtn = document.getElementById('uploadBtn');
-            
-            try {
-                if (!afterPhotoFile) {
-                    throw new Error('No file selected');
-                }
-
-                uploadBtn.disabled = true;
-
-                // Show loading state
-                await Swal.fire({
-                    title: 'Uploading photo...',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-
-                // Upload the photo
-                const photoUrl = await uploadCampaignPhoto(afterPhotoFile, 'after');
-
-                Swal.close();
-
-                // Update participation record
-                const { error: updateError } = await supabase
-                    .from('participations')
-                    .update({
-                        after_photo_url: photoUrl,
-                        status: 'pending'
-                    })
-                    .eq('id', userParticipation.id);
-
-                if (updateError) {
-                    throw new Error(`Failed to update participation: ${updateError.message}`);
-                }
-
-                // Update local state
-                userParticipation.after_photo_url = photoUrl;
-                userParticipation.status = 'pending';
-
-                // Show success
-                await Swal.fire({
-                    icon: 'success',
-                    title: 'Proof Submitted!',
-                    text: 'Your cleanup proof has been submitted for admin approval.'
-                });
-
-                // Show status message
-                showSubmissionStatus('pending');
-
-                // Disable upload form
-                document.getElementById('uploadPhotoForm').style.opacity = '0.6';
-                document.getElementById('uploadPhotoForm').style.pointerEvents = 'none';
-
-            } catch (error) {
-                console.error('Error uploading photo:', error);
-
-                await Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: error.message || 'Failed to upload photo. Please try again.'
-                });
-
-                uploadBtn.disabled = false;
-            }
-        }
-
-        /**
-         * Show submission status message
-         */
-        function showSubmissionStatus(status) {
-            const statusDiv = document.getElementById('submissionStatus');
-            statusDiv.style.display = 'block';
-            
-            if (status === 'joined') {
-                statusDiv.className = 'status-message status-pending';
-                statusDiv.textContent = '📝 Upload your after photo to submit proof.';
-            } else if (status === 'pending') {
-                statusDiv.className = 'status-message status-pending';
-                statusDiv.textContent = '⏳ Waiting for admin approval...';
-            } else if (status === 'approved') {
-                statusDiv.className = 'status-message status-approved';
-                statusDiv.textContent = '✅ Your proof has been approved! Points awarded.';
-            } else if (status === 'rejected') {
-                statusDiv.className = 'status-message status-rejected';
-                statusDiv.textContent = '❌ Your proof was rejected. Please try again with better photo.';
-            }
-        }
-
-        /**
-         * Handle campaign deletion
-         */
-        async function handleDelete() {
-            const result = await Swal.fire({
-                title: 'Delete Campaign?',
-                text: 'Are you sure you want to delete this campaign? This action cannot be undone.',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#dc3545',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Yes, Delete It',
-                cancelButtonText: 'Cancel'
-            });
-
-            if (!result.isConfirmed) {
-                return;
-            }
-
-            try {
-                // Show loading state
-                await Swal.fire({
-                    title: 'Deleting campaign...',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-
-                const campaignId = getCampaignIdFromUrl();
-
-                // Delete the campaign from database
-                // Note: CASCADE will delete related records
-                const { error: deleteError } = await supabase
-                    .from('campaigns')
-                    .delete()
-                    .eq('id', campaignId);
-
-                if (deleteError) {
-                    throw new Error(`Failed to delete campaign: ${deleteError.message}`);
-                }
-
-                // Success notification
-                await Swal.fire({
-                    icon: 'success',
-                    title: 'Campaign Deleted',
-                    text: 'The campaign has been successfully deleted.',
-                    confirmButtonText: 'OK'
-                });
-
-                // Redirect to dashboard
-                window.location.href = './dashboard.html';
-
-            } catch (error) {
-                console.error('Error deleting campaign:', error);
-
-                await Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: error.message || 'Failed to delete campaign. Please try again.'
-                });
-            }
-        }
-
-        /**
-         * Show error state
-         */
-        function showError(message) {
-            document.getElementById('loadingState').style.display = 'none';
-            document.getElementById('campaignContent').style.display = 'none';
-            document.getElementById('errorState').style.display = 'block';
-            document.getElementById('errorMessage').textContent = message;
-        }
-
-        /**
-         * Handle logout
-         */
-        async function handleLogout() {
-            const { error } = await supabase.auth.signOut();
-            if (!error) {
-                localStorage.removeItem('user');
-                window.location.href = '../../index.html';
-            }
-        }
-
-        /**
-         * Toggle edit campaign form
-         */
-        function toggleEditCampaign() {
-            const editSection = document.getElementById('editCampaignSection');
-            
-            if (editSection.style.display === 'none') {
-                // Show edit form
-                editSection.style.display = 'block';
-                
-                // Pre-fill form with current values
-                document.getElementById('editTitle').value = campaign?.title || '';
-                document.getElementById('editDescription').value = campaign?.description || '';
-                document.getElementById('editNeighborhood').value = campaign?.neighborhood || 'Studentski Grad';
-                document.getElementById('editStatus').value = campaign?.status || 'active';
-                
-                // Scroll to edit form
-                editSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            } else {
-                // Hide edit form
-                editSection.style.display = 'none';
-            }
-        }
-
-        /**
-         * Handle save campaign changes
-         */
-        async function handleSaveCampaign(e) {
-            e.preventDefault();
-            
-            const newTitle = document.getElementById('editTitle').value.trim();
-            const newDescription = document.getElementById('editDescription').value.trim();
-            const newNeighborhood = document.getElementById('editNeighborhood').value;
-            const newStatus = document.getElementById('editStatus').value;
-            
-            if (!newTitle || !newDescription) {
-                await Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Title and description are required!'
-                });
-                return;
-            }
-            
-            try {
-                // Show loading
-                Swal.fire({
-                    title: 'Saving...',
-                    text: 'Please wait',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-                
-                const campaignId = getCampaignIdFromUrl();
-                
-                // Check if demo mode
-                const localUser = JSON.parse(localStorage.getItem('user') || '{}');
-                
-                if (localUser.id && localUser.id.startsWith('demo-')) {
-                    // Demo mode - update localStorage
-                    const demoCampaigns = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_CAMPAIGNS') || '[]');
-                    const campaignIndex = demoCampaigns.findIndex(c => c.id === campaignId);
-                    
-                    if (campaignIndex !== -1) {
-                        demoCampaigns[campaignIndex] = {
-                            ...demoCampaigns[campaignIndex],
-                            title: newTitle,
-                            description: newDescription,
-                            neighborhood: newNeighborhood,
-                            status: newStatus,
-                            updated_at: new Date().toISOString()
-                        };
-                        
-                        localStorage.setItem('CLEAN_QUARTER_DEMO_CAMPAIGNS', JSON.stringify(demoCampaigns));
-                        
-                        // Update global campaign variable
-                        campaign = demoCampaigns[campaignIndex];
-                        
-                        // Update UI
-                        document.getElementById('campaignTitle').textContent = newTitle;
-                        document.getElementById('campaignDescription').textContent = newDescription;
-                        document.getElementById('campaignNeighborhood').textContent = newNeighborhood;
-                        
-                        const statusBadge = document.getElementById('statusBadge');
-                        statusBadge.textContent = newStatus === 'active' ? '🟢 Active' : '✅ Completed';
-                        statusBadge.className = 'badge-status ' + (newStatus === 'active' ? 'status-active' : 'status-completed');
-                        
-                        await Swal.fire({
-                            icon: 'success',
-                            title: 'Success!',
-                            text: 'Campaign updated successfully!',
-                            timer: 2000
-                        });
-                        
-                        toggleEditCampaign();
-                    }
-                } else {
-                    // Real mode - update Supabase
-                    const { data, error } = await supabase
-                        .from('campaigns')
-                        .update({
-                            title: newTitle,
-                            description: newDescription,
-                            neighborhood: newNeighborhood,
-                            status: newStatus,
-                            updated_at: new Date().toISOString()
-                        })
-                        .eq('id', campaignId)
-                        .select()
-                        .single();
-                    
-                    if (error) throw error;
-                    
-                    // Update campaign
-                    campaign = data;
-                    
-                    // Update UI
-                    document.getElementById('campaignTitle').textContent = newTitle;
-                    document.getElementById('campaignDescription').textContent = newDescription;
-                    document.getElementById('campaignNeighborhood').textContent = newNeighborhood;
-                    
-                    const statusBadge = document.getElementById('statusBadge');
-                    statusBadge.textContent = newStatus === 'active' ? '🟢 Active' : '✅ Completed';
-                    statusBadge.className = 'badge-status ' + (newStatus === 'active' ? 'status-active' : 'status-completed');
-                    
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'Success!',
-                        text: 'Campaign updated successfully!',
-                        timer: 2000
-                    });
-                    
-                    toggleEditCampaign();
-                }
-            } catch (error) {
-                console.error('Error updating campaign', error);
-                await Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: error.message || 'Error saving changes'
-                });
-            }
-        }
-
-        // Add event listener to edit form
-        document.getElementById('editCampaignForm')?.addEventListener('submit', handleSaveCampaign);
-
-        // Expose functions to window for onclick handlers
-        window.handleLogout = handleLogout;
-        window.handleDelete = handleDelete;
-        window.handleJoin = handleJoin;
-        window.handleUploadPhoto = handleUploadPhoto;
-        window.toggleEditCampaign = toggleEditCampaign;
+      // Expose functions to window for onclick handlers
+      window.handleLogout = handleLogout;
+      window.handleDelete = handleDelete;
+      window.handleJoin = handleJoin;
+      window.handleUploadPhoto = handleUploadPhoto;
+      window.toggleEditCampaign = toggleEditCampaign;
     </script>
-</body>
+  </body>
 </html>

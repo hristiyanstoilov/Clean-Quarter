@@ -3,11 +3,11 @@
  * Handles all HTTP requests with interceptors, retry logic, and error handling
  */
 
-import store from '../state/store.js';
+import store from "../state/store.js";
 
 class ApiClient {
   constructor() {
-    this.baseURL = import.meta.env.VITE_API_URL || 'https://api.example.com';
+    this.baseURL = import.meta.env.VITE_API_URL || "https://api.example.com";
     this.timeout = 30000; // 30 seconds
     this.retries = 3;
     this.retryDelay = 1000; // 1 second
@@ -39,7 +39,7 @@ class ApiClient {
   async executeRequestInterceptors(config) {
     let result = config;
     for (const interceptor of this.requestInterceptors) {
-      result = await interceptor(result) || result;
+      result = (await interceptor(result)) || result;
     }
     return result;
   }
@@ -52,7 +52,7 @@ class ApiClient {
   async executeResponseInterceptors(response) {
     let result = response;
     for (const interceptor of this.responseInterceptors) {
-      result = await interceptor(result) || result;
+      result = (await interceptor(result)) || result;
     }
     return result;
   }
@@ -66,17 +66,17 @@ class ApiClient {
    * @returns {Promise} Response data
    */
   async request(method, url, data = null, options = {}) {
-    store.setState('isLoading', true);
+    store.setState("isLoading", true);
 
     let config = {
       method,
       url: this.baseURL + url,
       headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
+        "Content-Type": "application/json",
+        ...options.headers,
       },
       body: data ? JSON.stringify(data) : null,
-      signal: AbortSignal.timeout(this.timeout)
+      signal: AbortSignal.timeout(this.timeout),
     };
 
     // Execute request interceptors
@@ -92,7 +92,7 @@ class ApiClient {
           method: config.method,
           headers: config.headers,
           body: config.body,
-          signal: config.signal
+          signal: config.signal,
         });
 
         // Handle response
@@ -101,7 +101,7 @@ class ApiClient {
           throw {
             status: response.status,
             message: errorData.message || `HTTP ${response.status}`,
-            data: errorData
+            data: errorData,
           };
         }
 
@@ -111,11 +111,11 @@ class ApiClient {
         const finalResponse = await this.executeResponseInterceptors({
           status: response.status,
           data: responseData,
-          headers: response.headers
+          headers: response.headers,
         });
 
         console.log(`✅ ${method} ${url} - Success`);
-        store.setState('isLoading', false);
+        store.setState("isLoading", false);
 
         return finalResponse.data;
       } catch (error) {
@@ -136,15 +136,15 @@ class ApiClient {
     }
 
     // Handle final error
-    store.setState('isLoading', false);
+    store.setState("isLoading", false);
     console.error(`❌ ${method} ${url} - Failed:`, lastError);
     throw {
-      type: 'API_ERROR',
+      type: "API_ERROR",
       method,
       url,
       error: lastError,
-      message: lastError.message || 'Unknown error',
-      timestamp: new Date().toISOString()
+      message: lastError.message || "Unknown error",
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -152,42 +152,42 @@ class ApiClient {
    * GET request
    */
   async get(url, options = {}) {
-    return this.request('GET', url, null, options);
+    return this.request("GET", url, null, options);
   }
 
   /**
    * POST request
    */
   async post(url, data, options = {}) {
-    return this.request('POST', url, data, options);
+    return this.request("POST", url, data, options);
   }
 
   /**
    * PUT request
    */
   async put(url, data, options = {}) {
-    return this.request('PUT', url, data, options);
+    return this.request("PUT", url, data, options);
   }
 
   /**
    * PATCH request
    */
   async patch(url, data, options = {}) {
-    return this.request('PATCH', url, data, options);
+    return this.request("PATCH", url, data, options);
   }
 
   /**
    * DELETE request
    */
   async delete(url, options = {}) {
-    return this.request('DELETE', url, null, options);
+    return this.request("DELETE", url, null, options);
   }
 
   /**
    * Sleep utility for delays
    */
   sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
@@ -208,7 +208,7 @@ apiClient.useRequestInterceptor(async (config) => {
     // This will be integrated with Supabase auth
     // For now, just pass through
   } catch (error) {
-    console.error('Auth interceptor error:', error);
+    console.error("Auth interceptor error:", error);
   }
   return config;
 });
@@ -216,7 +216,7 @@ apiClient.useRequestInterceptor(async (config) => {
 // Response: Handle errors
 apiClient.useResponseInterceptor(async (response) => {
   if (response.status >= 400) {
-    store.addError(response.data?.message || 'API Error', 'ApiClient');
+    store.addError(response.data?.message || "API Error", "ApiClient");
   }
   return response;
 });

@@ -1,5 +1,5 @@
-import supabase from './supabase.js';
-import { showSuccess, showError } from '../utils/helpers.js';
+import supabase from "./supabase.js";
+import { showSuccess, showError } from "../utils/helpers.js";
 
 /**
  * Register a new user with email, password, and metadata (neighborhood)
@@ -12,15 +12,15 @@ export async function register(email, password, meta) {
   try {
     // Validate inputs
     if (!email || !password) {
-      throw new Error('Email and password are required');
+      throw new Error("Email and password are required");
     }
 
     if (!meta?.neighborhood) {
-      throw new Error('Neighborhood is required');
+      throw new Error("Neighborhood is required");
     }
 
-    console.log('📝 Starting registration for:', email);
-    
+    console.log("📝 Starting registration for:", email);
+
     // Register user with Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
@@ -28,40 +28,40 @@ export async function register(email, password, meta) {
     });
 
     if (authError) {
-      console.error('❌ Auth signup error:', authError);
-      throw new Error(authError.message || 'Registration failed');
+      console.error("❌ Auth signup error:", authError);
+      throw new Error(authError.message || "Registration failed");
     }
 
     if (!authData?.user?.id) {
-      throw new Error('No user ID returned from registration');
+      throw new Error("No user ID returned from registration");
     }
 
-    console.log('✅ Auth signup successful, user ID:', authData.user.id);
+    console.log("✅ Auth signup successful, user ID:", authData.user.id);
 
     // Create profile in database with metadata
     const userId = authData.user.id;
-    const { error: profileError } = await supabase.from('profiles').insert([
+    const { error: profileError } = await supabase.from("profiles").insert([
       {
         id: userId,
-        username: email.split('@')[0],
-        role: 'user',
+        username: email.split("@")[0],
+        role: "user",
         points_balance: 0,
         neighborhood: meta.neighborhood || null,
       },
     ]);
 
     if (profileError) {
-      console.error('❌ Profile creation error:', profileError);
-      throw new Error(profileError.message || 'Failed to create profile');
+      console.error("❌ Profile creation error:", profileError);
+      throw new Error(profileError.message || "Failed to create profile");
     }
 
-    console.log('✅ Profile created successfully');
+    console.log("✅ Profile created successfully");
 
-    await showSuccess('Registration Successful!', 'Your account has been created.');
+    await showSuccess("Registration Successful!", "Your account has been created.");
     return authData.user;
   } catch (error) {
-    console.error('❌ Register error:', error);
-    await showError('Registration Error', error);
+    console.error("❌ Register error:", error);
+    await showError("Registration Error", error);
     throw error;
   }
 }
@@ -81,10 +81,10 @@ export async function login(email, password) {
 
     if (error) throw error;
 
-    await showSuccess('Login Successful!', `Welcome, ${email}`);
+    await showSuccess("Login Successful!", `Welcome, ${email}`);
     return data.user;
   } catch (error) {
-    await showError('Login Error', error);
+    await showError("Login Error", error);
     throw error;
   }
 }
@@ -99,9 +99,9 @@ export async function logout() {
 
     if (error) throw error;
 
-    await showSuccess('Logout Successful', 'See you soon!');
+    await showSuccess("Logout Successful", "See you soon!");
   } catch (error) {
-    await showError('Logout Error', error);
+    await showError("Logout Error", error);
     throw error;
   }
 }
@@ -112,16 +112,19 @@ export async function logout() {
  */
 export async function getUser() {
   try {
-    const { data: { user }, error } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
 
     if (error) {
-      console.error('Get user error:', error);
+      console.error("Get user error:", error);
       return null;
     }
 
     return user;
   } catch (error) {
-    console.error('Get user error:', error);
+    console.error("Get user error:", error);
     return null;
   }
 }

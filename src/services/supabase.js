@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -17,13 +17,13 @@ if (!supabaseUrl || !supabaseAnonKey) {
     
     Get credentials from: https://supabase.com/dashboard/project/_/settings/api
   `;
-  
+
   console.error(errorMessage);
-  
+
   // Show error in UI
-  if (typeof window !== 'undefined') {
-    document.addEventListener('DOMContentLoaded', () => {
-      const body = document.querySelector('body');
+  if (typeof window !== "undefined") {
+    document.addEventListener("DOMContentLoaded", () => {
+      const body = document.querySelector("body");
       if (body) {
         body.innerHTML = `
           <div style="
@@ -41,8 +41,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
       }
     });
   }
-  
-  throw new Error('Supabase configuration missing');
+
+  throw new Error("Supabase configuration missing");
 }
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);

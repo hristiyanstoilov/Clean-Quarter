@@ -1,3 +1,55 @@
+/* Responsive improvements for ultra-mobile and small screens */
+@media (max-width: 600px) {
+  /* Profile info-row: stack vertically */
+  .info-row {
+    grid-template-columns: 1fr !important;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  /* Section padding */
+  .section {
+    padding: 1rem 0.5rem;
+  }
+
+  /* Responsive images */
+  img,
+  .photo-thumbnail,
+  .before-photo,
+  .photo-preview,
+  .reward-image {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Table responsive font and padding */
+  .table,
+  table {
+    font-size: 0.85rem;
+  }
+  .table thead th,
+  .table tbody td {
+    padding: 0.5rem 0.25rem !important;
+  }
+
+  /* Modal and form max-width */
+  .modal,
+  .form-section,
+  .details-section {
+    max-width: 98vw !important;
+    padding: 1rem 0.5rem !important;
+  }
+
+  /* Card/grid adjustments */
+  .campaigns-grid,
+  .rewards-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+}
 /* Clean Quarter - Global Styles */
 
 :root {
@@ -14,7 +66,7 @@
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background-color: var(--light-bg);
   color: #333;
 }
@@ -54,7 +106,9 @@ body {
 
 .campaign-card {
   cursor: pointer;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .campaign-card:hover {

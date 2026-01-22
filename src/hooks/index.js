@@ -3,9 +3,9 @@
  * Reusable logic for data fetching, forms, and UI state
  */
 
-import store from '../state/store.js';
-import apiClient from '../api/client.js';
-import { validateField } from '../services/validation.js';
+import store from "../state/store.js";
+import apiClient from "../api/client.js";
+import { validateField } from "../services/validation.js";
 
 /**
  * useAsync - Handle async operations with loading/error states
@@ -26,7 +26,7 @@ export function useAsync(asyncFn, dependencies = []) {
         return state.data;
       } catch (error) {
         state.error = error;
-        store.addError(error.message || 'Async operation failed', 'useAsync');
+        store.addError(error.message || "Async operation failed", "useAsync");
         throw error;
       } finally {
         state.loading = false;
@@ -36,7 +36,7 @@ export function useAsync(asyncFn, dependencies = []) {
       state.data = null;
       state.loading = false;
       state.error = null;
-    }
+    },
   };
 
   return state;
@@ -67,7 +67,7 @@ export function useFetch(url, options = {}) {
         return result;
       } catch (error) {
         state.error = error;
-        store.addError(error.message, 'useFetch');
+        store.addError(error.message, "useFetch");
         throw error;
       } finally {
         state.loading = false;
@@ -75,14 +75,14 @@ export function useFetch(url, options = {}) {
     },
     cache: {
       clear: () => store.clearCache(cacheKey),
-      set: (value, ttl) => store.setCache(cacheKey, value, ttl)
-    }
+      set: (value, ttl) => store.setCache(cacheKey, value, ttl),
+    },
   };
 
   // Auto-fetch if not cached
   if (!cached) {
-    state.refetch().catch(err => {
-      console.error('Auto-fetch error:', err);
+    state.refetch().catch((err) => {
+      console.error("Auto-fetch error:", err);
     });
   }
 
@@ -132,10 +132,10 @@ export function useForm(initialValues = {}, schema = {}, onSubmit = null) {
 
     getFieldProps: (field) => {
       return {
-        value: state.values[field] || '',
+        value: state.values[field] || "",
         onChange: (e) => state.setValue(field, e.target.value),
         onBlur: () => state.setTouched(field, true),
-        error: state.touched[field] ? state.errors[field] : null
+        error: state.touched[field] ? state.errors[field] : null,
       };
     },
 
@@ -144,7 +144,7 @@ export function useForm(initialValues = {}, schema = {}, onSubmit = null) {
     },
 
     isValid: () => {
-      return Object.values(state.errors).every(error => !error);
+      return Object.values(state.errors).every((error) => !error);
     },
 
     submit: async (e) => {
@@ -160,7 +160,7 @@ export function useForm(initialValues = {}, schema = {}, onSubmit = null) {
       state.errors = newErrors;
 
       if (Object.keys(newErrors).length > 0) {
-        store.notify('Please fix errors before submitting', 'error');
+        store.notify("Please fix errors before submitting", "error");
         return false;
       }
 
@@ -169,15 +169,15 @@ export function useForm(initialValues = {}, schema = {}, onSubmit = null) {
         if (onSubmit) {
           await onSubmit(state.values);
         }
-        store.notify('Form submitted successfully', 'success');
+        store.notify("Form submitted successfully", "success");
         return true;
       } catch (error) {
-        store.addError(error.message || 'Form submission failed', 'useForm');
+        store.addError(error.message || "Form submission failed", "useForm");
         return false;
       } finally {
         state.isSubmitting = false;
       }
-    }
+    },
   };
 
   return state;
@@ -194,12 +194,12 @@ export function useState(initialValue) {
   const listeners = new Set();
 
   const dispatch = (newValue) => {
-    if (typeof newValue === 'function') {
+    if (typeof newValue === "function") {
       value = newValue(value);
     } else {
       value = newValue;
     }
-    listeners.forEach(listener => listener(value));
+    listeners.forEach((listener) => listener(value));
   };
 
   const subscribe = (listener) => {
@@ -219,7 +219,7 @@ export function useStoreState(path) {
   const value = store.get(path);
 
   const setValue = (newValue) => {
-    if (typeof newValue === 'function') {
+    if (typeof newValue === "function") {
       store.setState(path, newValue(value));
     } else {
       store.setState(path, newValue);
@@ -235,7 +235,7 @@ export function useStoreState(path) {
  * @param {Function|Array} dependencies - Can be function or array
  */
 export function useEffect(callback, dependencies = []) {
-  if (typeof dependencies === 'function') {
+  if (typeof dependencies === "function") {
     // Simple immediate execution
     dependencies();
     callback();

@@ -1,324 +1,336 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Admin Panel - Clean Quarter</title>
-    
+
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
+
     <style>
-        body {
-        <link rel="stylesheet" href="../assets/style.css">
-        
-        .navbar-brand {
-            font-weight: bold;
-            font-size: 1.5rem;
-        }
-        
-        .navbar a {
-            color: white !important;
-            margin-left: 1rem;
-        }
-        
-        .container {
-            max-width: 1400px;
-            margin-top: 2rem;
-            margin-bottom: 3rem;
-        }
-        
-        .admin-header {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
-        }
-        
-        .admin-header h1 {
-            color: #dc3545;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .admin-header p {
-            color: #6c757d;
-            margin: 0.5rem 0 0 0;
-        }
-        
-        .stats-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-        
-        .stat-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        
-        .stat-card .stat-value {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #dc3545;
-        }
-        
-        .stat-card .stat-label {
-            color: #6c757d;
-            font-size: 0.9rem;
-            margin-top: 0.5rem;
-        }
-        
-        .pending-section {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .pending-section h2 {
-            color: #dc3545;
-            margin-bottom: 1.5rem;
-            border-bottom: 2px solid #dc3545;
-            padding-bottom: 0.5rem;
-        }
-        
-        .table-responsive {
-            margin-top: 1rem;
-        }
-        
-        .table {
-            background: white;
-        }
-        
-        .table thead {
-            background-color: #dc3545;
-            color: white;
-        }
-        
-        .table thead th {
-            border: none;
-            font-weight: 600;
-            padding: 1rem;
-            vertical-align: middle;
-        }
-        
-        .table tbody td {
-            vertical-align: middle;
-            padding: 1rem;
-        }
-        
-        .photo-thumbnail {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        
-        .photo-thumbnail:hover {
-            transform: scale(1.05);
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 0.5rem;
-        }
-        
-        .btn-approve {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 0.875rem;
-        }
-        
-        .btn-approve:hover {
-            background-color: #218838;
-        }
-        
-        .btn-reject {
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 0.875rem;
-        }
-        
-        .btn-reject:hover {
-            background-color: #c82333;
-        }
-        
-        .loading-spinner {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 300px;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 3rem 2rem;
-            color: #6c757d;
-        }
-        
-        .empty-state i {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-        }
-        
-        .access-denied {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 60vh;
-            text-align: center;
-        }
-        
-        .access-denied h1 {
-            color: #dc3545;
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-        
-        .access-denied p {
-            color: #6c757d;
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-        }
-        
-        /* Photo Modal */
-        .photo-modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.9);
-            cursor: pointer;
-        }
-        
-        .photo-modal img {
-            display: block;
-            margin: auto;
-            max-width: 90%;
-            max-height: 90%;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-        
-        .photo-modal .close {
-            position: absolute;
-            top: 20px;
-            right: 40px;
-            color: white;
-            font-size: 40px;
-            font-weight: bold;
-            cursor: pointer;
-        }
+      body {
+      <link rel="stylesheet" href="../assets/style.css">
+
+      .navbar-brand {
+          font-weight: bold;
+          font-size: 1.5rem;
+      }
+
+      .navbar a {
+          color: white !important;
+          margin-left: 1rem;
+      }
+
+      .container {
+          max-width: 1400px;
+          margin-top: 2rem;
+          margin-bottom: 3rem;
+      }
+
+      .admin-header {
+          background: white;
+          padding: 2rem;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          margin-bottom: 2rem;
+      }
+
+      .admin-header h1 {
+          color: #dc3545;
+          margin: 0;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+      }
+
+      .admin-header p {
+          color: #6c757d;
+          margin: 0.5rem 0 0 0;
+      }
+
+      .stats-cards {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 1rem;
+          margin-bottom: 2rem;
+      }
+
+      .stat-card {
+          background: white;
+          padding: 1.5rem;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          text-align: center;
+      }
+
+      .stat-card .stat-value {
+          font-size: 2.5rem;
+          font-weight: bold;
+          color: #dc3545;
+      }
+
+      .stat-card .stat-label {
+          color: #6c757d;
+          font-size: 0.9rem;
+          margin-top: 0.5rem;
+      }
+
+      .pending-section {
+          background: white;
+          padding: 2rem;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+
+      .pending-section h2 {
+          color: #dc3545;
+          margin-bottom: 1.5rem;
+          border-bottom: 2px solid #dc3545;
+          padding-bottom: 0.5rem;
+      }
+
+      .table-responsive {
+          margin-top: 1rem;
+      }
+
+      .table {
+          background: white;
+      }
+
+      .table thead {
+          background-color: #dc3545;
+          color: white;
+      }
+
+      .table thead th {
+          border: none;
+          font-weight: 600;
+          padding: 1rem;
+          vertical-align: middle;
+      }
+
+      .table tbody td {
+          vertical-align: middle;
+          padding: 1rem;
+      }
+
+      .photo-thumbnail {
+          width: 100px;
+          height: 100px;
+          object-fit: cover;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: transform 0.2s;
+      }
+
+      .photo-thumbnail:hover {
+          transform: scale(1.05);
+      }
+
+      .action-buttons {
+          display: flex;
+          gap: 0.5rem;
+      }
+
+      .btn-approve {
+          background-color: #28a745;
+          color: white;
+          border: none;
+          padding: 0.5rem 1rem;
+          border-radius: 6px;
+          cursor: pointer;
+          font-weight: bold;
+          font-size: 0.875rem;
+      }
+
+      .btn-approve:hover {
+          background-color: #218838;
+      }
+
+      .btn-reject {
+          background-color: #dc3545;
+          color: white;
+          border: none;
+          padding: 0.5rem 1rem;
+          border-radius: 6px;
+          cursor: pointer;
+          font-weight: bold;
+          font-size: 0.875rem;
+      }
+
+      .btn-reject:hover {
+          background-color: #c82333;
+      }
+
+      .loading-spinner {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 300px;
+      }
+
+      .empty-state {
+          text-align: center;
+          padding: 3rem 2rem;
+          color: #6c757d;
+      }
+
+      .empty-state i {
+          font-size: 4rem;
+          margin-bottom: 1rem;
+      }
+
+      .access-denied {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-height: 60vh;
+          text-align: center;
+      }
+
+      .access-denied h1 {
+          color: #dc3545;
+          font-size: 3rem;
+          margin-bottom: 1rem;
+      }
+
+      .access-denied p {
+          color: #6c757d;
+          font-size: 1.2rem;
+          margin-bottom: 2rem;
+      }
+
+      /* Photo Modal */
+      .photo-modal {
+          display: none;
+          position: fixed;
+          z-index: 1000;
+          left: 0;
+          top: 0;
+          width: 100%;
+          height: 100%;
+          background-color: rgba(0,0,0,0.9);
+          cursor: pointer;
+      }
+
+      .photo-modal img {
+          display: block;
+          margin: auto;
+          max-width: 90%;
+          max-height: 90%;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+      }
+
+      .photo-modal .close {
+          position: absolute;
+          top: 20px;
+          right: 40px;
+          color: white;
+          font-size: 40px;
+          font-weight: bold;
+          cursor: pointer;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="./admin.html">🛡️ Admin Panel</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <div class="ms-auto" style="display: flex; gap: 1rem; align-items: center;">
-                    <a href="./dashboard.html" data-i18n="nav.dashboard">Dashboard</a>
-                    <a href="./profile.html" data-i18n="nav.profile">Profile</a>
-                    <select id="languageSelector" class="form-select form-select-sm" style="max-width: 150px; display: none;">
-                        <option value="bg">🇧🇬 Български</option>
-                        <option value="en">🇬🇧 English</option>
-                    </select>
-                    <a href="#" onclick="handleLogout()" data-i18n="nav.logout">Logout</a>
-                </div>
-            </div>
+      <div class="container-fluid">
+        <a class="navbar-brand" href="./admin.html">🛡️ Admin Panel</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <div class="ms-auto" style="display: flex; gap: 1rem; align-items: center">
+            <a href="./dashboard.html" data-i18n="nav.dashboard">Dashboard</a>
+            <a href="./profile.html" data-i18n="nav.profile">Profile</a>
+            <select
+              id="languageSelector"
+              class="form-select form-select-sm"
+              style="max-width: 150px; display: none"
+            >
+              <option value="bg">🇧🇬 Български</option>
+              <option value="en">🇬🇧 English</option>
+            </select>
+            <a href="#" onclick="handleLogout()" data-i18n="nav.logout">Logout</a>
+          </div>
         </div>
+      </div>
     </nav>
 
     <!-- Main Container -->
     <div class="container">
-        <!-- Loading State -->
-        <div class="loading-spinner" id="loadingState">
-            <div class="spinner-border text-danger" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
+      <!-- Loading State -->
+      <div class="loading-spinner" id="loadingState">
+        <div class="spinner-border text-danger" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+
+      <!-- Admin Content (hidden until loaded) -->
+      <div id="adminContent" style="display: none">
+        <!-- Header -->
+        <div class="admin-header">
+          <h1>🛡️ Admin Panel</h1>
+          <p>Review and approve cleanup submissions from users</p>
         </div>
 
-        <!-- Admin Content (hidden until loaded) -->
-        <div id="adminContent" style="display: none;">
-            <!-- Header -->
-            <div class="admin-header">
-                <h1>🛡️ Admin Panel</h1>
-                <p>Review and approve cleanup submissions from users</p>
-            </div>
-
-            <!-- Statistics Cards -->
-            <div class="stats-cards">
-                <div class="stat-card">
-                    <div class="stat-value" id="totalPendingCount">0</div>
-                    <div class="stat-label">Pending Reviews</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="totalApprovedCount">0</div>
-                    <div class="stat-label">Total Approved</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="totalRejectedCount">0</div>
-                    <div class="stat-label">Total Rejected</div>
-                </div>
-            </div>
-
-            <!-- Pending Participations Section -->
-            <div class="pending-section">
-                <h2>⏳ Pending Approvals</h2>
-                
-                <div id="pendingTableContainer">
-                    <!-- Table will be inserted here -->
-                </div>
-            </div>
+        <!-- Statistics Cards -->
+        <div class="stats-cards">
+          <div class="stat-card">
+            <div class="stat-value" id="totalPendingCount">0</div>
+            <div class="stat-label">Pending Reviews</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="totalApprovedCount">0</div>
+            <div class="stat-label">Total Approved</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="totalRejectedCount">0</div>
+            <div class="stat-label">Total Rejected</div>
+          </div>
         </div>
 
-        <!-- Access Denied State -->
-        <div id="accessDenied" style="display: none;">
-            <div class="access-denied">
-                <h1>🚫 Access Denied</h1>
-                <p>You don't have permission to access this page.</p>
-                <a href="./dashboard.html" class="btn btn-primary btn-lg">Go to Dashboard</a>
-            </div>
+        <!-- Pending Participations Section -->
+        <div class="pending-section">
+          <h2>⏳ Pending Approvals</h2>
+
+          <div id="pendingTableContainer">
+            <!-- Table will be inserted here -->
+          </div>
         </div>
+      </div>
+
+      <!-- Access Denied State -->
+      <div id="accessDenied" style="display: none">
+        <div class="access-denied">
+          <h1>🚫 Access Denied</h1>
+          <p>You don't have permission to access this page.</p>
+          <a href="./dashboard.html" class="btn btn-primary btn-lg">Go to Dashboard</a>
+        </div>
+      </div>
     </div>
 
     <!-- Photo Modal -->
     <div id="photoModal" class="photo-modal" onclick="closePhotoModal()">
-        <span class="close" onclick="closePhotoModal()">&times;</span>
-        <img id="modalPhoto" src="" alt="Full size photo">
+      <span class="close" onclick="closePhotoModal()">&times;</span>
+      <img id="modalPhoto" src="" alt="Full size photo" />
     </div>
 
     <!-- Bootstrap JS -->
@@ -326,125 +338,136 @@
 
     <!-- Main Script -->
     <script type="module">
-        import supabase from '../services/supabase.js';
-        import { initI18n, applyLanguage, setLanguage } from '../utils/i18n.js';
+      import supabase from "../services/supabase.js";
+      import { initI18n, applyLanguage, setLanguage } from "../utils/i18n.js";
 
-        // Global variables
-        let currentUser = null;
-        let pendingParticipations = [];
+      // Global variables
+      let currentUser = null;
+      let pendingParticipations = [];
 
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                // Initialize i18n first (realTime = false)
-                await initI18n(false);
-                applyLanguage(localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg');
+      // Initialize on page load
+      document.addEventListener("DOMContentLoaded", async () => {
+        try {
+          // Initialize i18n first (realTime = false)
+          await initI18n(false);
+          applyLanguage(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg");
 
-                // Language selector
-                document.getElementById('languageSelector').value = localStorage.getItem('CLEAN_QUARTER_LANGUAGE') || 'bg';
-                document.getElementById('languageSelector').addEventListener('change', (e) => {
-                    // Just show a message - language changes only from profile page
-                    console.log('Language changes only from Profile page');
-                });
+          // Language selector
+          document.getElementById("languageSelector").value =
+            localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+          document.getElementById("languageSelector").addEventListener("change", (e) => {
+            // Just show a message - language changes only from profile page
+            console.log("Language changes only from Profile page");
+          });
 
-                await checkAuth();
-                await loadAdminData();
-            } catch (error) {
-                console.error('Admin page initialization failed', error);
+          await checkAuth();
+          await loadAdminData();
+        } catch (error) {
+          console.error("Admin page initialization failed", error);
+        }
+      });
+
+      /**
+       * Check if user is authenticated and has admin role
+       */
+      async function checkAuth() {
+        // Check for demo mode user first
+        const localUser = localStorage.getItem("user");
+        if (localUser) {
+          try {
+            currentUser = JSON.parse(localUser);
+            // Check if demo user is admin
+            if (currentUser.role === "admin") {
+              return; // Demo admin, allow access
+            } else {
+              // Demo user but not admin
+              document.getElementById("loadingState").style.display = "none";
+              document.getElementById("accessDenied").style.display = "block";
+              return;
             }
-        });
-
-        /**
-         * Check if user is authenticated and has admin role
-         */
-        async function checkAuth() {
-            // Check for demo mode user first
-            const localUser = localStorage.getItem('user');
-            if (localUser) {
-                try {
-                    currentUser = JSON.parse(localUser);
-                    // Check if demo user is admin
-                    if (currentUser.role === 'admin') {
-                        return; // Demo admin, allow access
-                    } else {
-                        // Demo user but not admin
-                        document.getElementById('loadingState').style.display = 'none';
-                        document.getElementById('accessDenied').style.display = 'block';
-                        return;
-                    }
-                } catch (e) {
-                    console.error('Error parsing local user', e);
-                }
-            }
-            
-            // Check Supabase auth for real users
-            const { data: { user }, error } = await supabase.auth.getUser();
-            
-            if (error || !user) {
-                window.location.href = '../../index.html';
-                return;
-            }
-            
-            currentUser = user;
-
-            // Fetch user profile to check role
-            const { data: profile, error: profileError } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('id', user.id)
-                .single();
-
-            if (profileError || !profile || profile.role !== 'admin') {
-                // User is not an admin, show access denied
-                document.getElementById('loadingState').style.display = 'none';
-                document.getElementById('accessDenied').style.display = 'block';
-                return;
-            }
+          } catch (e) {
+            console.error("Error parsing local user", e);
+          }
         }
 
-        /**
-         * Load admin data
-         */
-        async function loadAdminData() {
-            try {
-                // Check if we're in demo mode
-                const localUser = localStorage.getItem('user');
-                const isDemoMode = localUser && currentUser.role === 'admin';
+        // Check Supabase auth for real users
+        const {
+          data: { user },
+          error,
+        } = await supabase.auth.getUser();
 
-                let allParticipationsData = [];
+        if (error || !user) {
+          window.location.href = "../../index.html";
+          return;
+        }
 
-                if (isDemoMode) {
-                    // DEMO MODE: Load from localStorage
-                    const participations = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_PARTICIPATIONS') || '[]');
-                    const campaigns = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_CAMPAIGNS') || '[]');
-                    const users = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_USERS') || '[]');
+        currentUser = user;
 
-                    // Join participations with campaigns and users
-                    allParticipationsData = participations.map(p => {
-                        const campaign = campaigns.find(c => c.id === p.campaign_id);
-                        const user = users.find(u => u.id === p.user_id) || currentUser;
-                        return {
-                            id: p.id,
-                            status: p.status,
-                            after_photo_url: p.after_photo_url,
-                            created_at: p.created_at,
-                            user_id: p.user_id,
-                            campaign_id: p.campaign_id,
-                            campaigns: campaign ? {
-                                id: campaign.id,
-                                title: campaign.title,
-                                before_photo_url: campaign.before_photo_url
-                            } : null,
-                            profiles: {
-                                username: user?.username || 'Demo User'
-                            }
-                        };
-                    });
-                } else {
-                    // REAL MODE: Fetch from Supabase
-                    const { data: allParticipations, error: allError } = await supabase
-                        .from('participations')
-                        .select(`
+        // Fetch user profile to check role
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+
+        if (profileError || !profile || profile.role !== "admin") {
+          // User is not an admin, show access denied
+          document.getElementById("loadingState").style.display = "none";
+          document.getElementById("accessDenied").style.display = "block";
+          return;
+        }
+      }
+
+      /**
+       * Load admin data
+       */
+      async function loadAdminData() {
+        try {
+          // Check if we're in demo mode
+          const localUser = localStorage.getItem("user");
+          const isDemoMode = localUser && currentUser.role === "admin";
+
+          let allParticipationsData = [];
+
+          if (isDemoMode) {
+            // DEMO MODE: Load from localStorage
+            const participations = JSON.parse(
+              localStorage.getItem("CLEAN_QUARTER_DEMO_PARTICIPATIONS") || "[]"
+            );
+            const campaigns = JSON.parse(
+              localStorage.getItem("CLEAN_QUARTER_DEMO_CAMPAIGNS") || "[]"
+            );
+            const users = JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_USERS") || "[]");
+
+            // Join participations with campaigns and users
+            allParticipationsData = participations.map((p) => {
+              const campaign = campaigns.find((c) => c.id === p.campaign_id);
+              const user = users.find((u) => u.id === p.user_id) || currentUser;
+              return {
+                id: p.id,
+                status: p.status,
+                after_photo_url: p.after_photo_url,
+                created_at: p.created_at,
+                user_id: p.user_id,
+                campaign_id: p.campaign_id,
+                campaigns: campaign
+                  ? {
+                      id: campaign.id,
+                      title: campaign.title,
+                      before_photo_url: campaign.before_photo_url,
+                    }
+                  : null,
+                profiles: {
+                  username: user?.username || "Demo User",
+                },
+              };
+            });
+          } else {
+            // REAL MODE: Fetch from Supabase
+            const { data: allParticipations, error: allError } = await supabase
+              .from("participations")
+              .select(
+                `
                             id,
                             status,
                             after_photo_url,
@@ -459,64 +482,64 @@
                             profiles (
                                 username
                             )
-                        `)
-                        .order('created_at', { ascending: false });
+                        `
+              )
+              .order("created_at", { ascending: false });
 
-                    if (allError) {
-                        throw new Error(`Failed to fetch participations: ${allError.message}`);
-                    }
-
-                    allParticipationsData = allParticipations || [];
-                }
-
-                // Filter pending participations
-                pendingParticipations = allParticipationsData.filter(p => p.status === 'pending');
-
-                // Calculate statistics
-                const totalApproved = allParticipationsData.filter(p => p.status === 'approved').length;
-                const totalRejected = allParticipationsData.filter(p => p.status === 'rejected').length;
-
-                // Update stats
-                document.getElementById('totalPendingCount').textContent = pendingParticipations.length;
-                document.getElementById('totalApprovedCount').textContent = totalApproved;
-                document.getElementById('totalRejectedCount').textContent = totalRejected;
-
-                // Render pending table
-                renderPendingTable();
-
-                // Show admin content
-                document.getElementById('loadingState').style.display = 'none';
-                document.getElementById('adminContent').style.display = 'block';
-
-            } catch (error) {
-                await Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: error.message || 'Failed to load admin data. Please try again.'
-                });
-
-                document.getElementById('loadingState').style.display = 'none';
+            if (allError) {
+              throw new Error(`Failed to fetch participations: ${allError.message}`);
             }
+
+            allParticipationsData = allParticipations || [];
+          }
+
+          // Filter pending participations
+          pendingParticipations = allParticipationsData.filter((p) => p.status === "pending");
+
+          // Calculate statistics
+          const totalApproved = allParticipationsData.filter((p) => p.status === "approved").length;
+          const totalRejected = allParticipationsData.filter((p) => p.status === "rejected").length;
+
+          // Update stats
+          document.getElementById("totalPendingCount").textContent = pendingParticipations.length;
+          document.getElementById("totalApprovedCount").textContent = totalApproved;
+          document.getElementById("totalRejectedCount").textContent = totalRejected;
+
+          // Render pending table
+          renderPendingTable();
+
+          // Show admin content
+          document.getElementById("loadingState").style.display = "none";
+          document.getElementById("adminContent").style.display = "block";
+        } catch (error) {
+          await Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: error.message || "Failed to load admin data. Please try again.",
+          });
+
+          document.getElementById("loadingState").style.display = "none";
         }
+      }
 
-        /**
-         * Render pending participations table
-         */
-        function renderPendingTable() {
-            const container = document.getElementById('pendingTableContainer');
+      /**
+       * Render pending participations table
+       */
+      function renderPendingTable() {
+        const container = document.getElementById("pendingTableContainer");
 
-            if (pendingParticipations.length === 0) {
-                container.innerHTML = `
+        if (pendingParticipations.length === 0) {
+          container.innerHTML = `
                     <div class="empty-state">
                         <div style="font-size: 4rem; margin-bottom: 1rem;">✅</div>
                         <h3>No Pending Reviews</h3>
                         <p>All submissions have been reviewed. Great job!</p>
                     </div>
                 `;
-                return;
-            }
+          return;
+        }
 
-            let tableHTML = `
+        let tableHTML = `
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
@@ -532,26 +555,26 @@
                         <tbody>
             `;
 
-            pendingParticipations.forEach(participation => {
-                const username = participation.profiles?.username || 'Unknown User';
-                const campaignTitle = participation.campaigns?.title || 'Unknown Campaign';
-                const beforePhoto = participation.campaigns?.before_photo_url || '';
-                const afterPhoto = participation.after_photo_url || '';
-                const submittedDate = new Date(participation.created_at).toLocaleDateString('bg-BG', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                });
+        pendingParticipations.forEach((participation) => {
+          const username = participation.profiles?.username || "Unknown User";
+          const campaignTitle = participation.campaigns?.title || "Unknown Campaign";
+          const beforePhoto = participation.campaigns?.before_photo_url || "";
+          const afterPhoto = participation.after_photo_url || "";
+          const submittedDate = new Date(participation.created_at).toLocaleDateString("bg-BG", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          });
 
-                tableHTML += `
+          tableHTML += `
                     <tr>
                         <td><strong>${username}</strong></td>
                         <td>${campaignTitle}</td>
                         <td>
-                            ${beforePhoto ? `<img src="${beforePhoto}" class="photo-thumbnail" alt="Before" onclick="showPhotoModal('${beforePhoto}')">` : 'N/A'}
+                            ${beforePhoto ? `<img src="${beforePhoto}" class="photo-thumbnail" alt="Before" onclick="showPhotoModal('${beforePhoto}')">` : "N/A"}
                         </td>
                         <td>
-                            ${afterPhoto ? `<img src="${afterPhoto}" class="photo-thumbnail" alt="After" onclick="showPhotoModal('${afterPhoto}')">` : 'N/A'}
+                            ${afterPhoto ? `<img src="${afterPhoto}" class="photo-thumbnail" alt="After" onclick="showPhotoModal('${afterPhoto}')">` : "N/A"}
                         </td>
                         <td>${submittedDate}</td>
                         <td>
@@ -566,342 +589,352 @@
                         </td>
                     </tr>
                 `;
-            });
+        });
 
-            tableHTML += `
+        tableHTML += `
                         </tbody>
                     </table>
                 </div>
             `;
 
-            container.innerHTML = tableHTML;
-        }
+        container.innerHTML = tableHTML;
+      }
 
-        /**
-         * Show photo in modal
-         */
-        function showPhotoModal(photoUrl) {
-            document.getElementById('modalPhoto').src = photoUrl;
-            document.getElementById('photoModal').style.display = 'block';
-        }
+      /**
+       * Show photo in modal
+       */
+      function showPhotoModal(photoUrl) {
+        document.getElementById("modalPhoto").src = photoUrl;
+        document.getElementById("photoModal").style.display = "block";
+      }
 
-        /**
-         * Close photo modal
-         */
-        function closePhotoModal() {
-            document.getElementById('photoModal').style.display = 'none';
-        }
+      /**
+       * Close photo modal
+       */
+      function closePhotoModal() {
+        document.getElementById("photoModal").style.display = "none";
+      }
 
-        /**
-         * Handle approve action
-         */
-        async function handleApprove(participationId, username) {
+      /**
+       * Handle approve action
+       */
+      async function handleApprove(participationId, username) {
+        try {
+          // Find the participation record
+          const participation = pendingParticipations.find((p) => p.id === participationId);
+          if (!participation) {
+            throw new Error("Participation not found");
+          }
+
+          // Show confirmation
+          const result = await Swal.fire({
+            title: "Approve Submission?",
+            text: `Award 20 points to ${username}?`,
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonColor: "#28a745",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: "Yes, Approve",
+            cancelButtonText: "Cancel",
+          });
+
+          if (!result.isConfirmed) {
+            return;
+          }
+
+          // Show loading
+          await Swal.fire({
+            title: "Processing...",
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
+            },
+          });
+
+          // Check if we're in demo mode
+          const localUser = localStorage.getItem("user");
+          const isDemoMode = localUser && currentUser.role === "admin";
+          const POINTS_AWARDED = 20;
+
+          if (isDemoMode) {
             try {
-                // Find the participation record
-                const participation = pendingParticipations.find(p => p.id === participationId);
-                if (!participation) {
-                    throw new Error('Participation not found');
+              // DEMO MODE: Update localStorage
+              const participations = JSON.parse(
+                localStorage.getItem("CLEAN_QUARTER_DEMO_PARTICIPATIONS") || "[]"
+              );
+              const transactions = JSON.parse(
+                localStorage.getItem("CLEAN_QUARTER_DEMO_TRANSACTIONS") || "[]"
+              );
+              const users = JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_USERS") || "[]");
+
+              // Update participation status
+              const pIndex = participations.findIndex((p) => p.id === participationId);
+              if (pIndex !== -1) {
+                participations[pIndex].status = "approved";
+                localStorage.setItem(
+                  "CLEAN_QUARTER_DEMO_PARTICIPATIONS",
+                  JSON.stringify(participations)
+                );
+              }
+
+              // Find the user who submitted the participation
+              const participantId = participation.user_id;
+              let participant = users.find((u) => u.id === participantId);
+              if (!participant) {
+                // fallback: if no users array, try currentUser (for legacy demo)
+                participant = currentUser;
+              }
+              if (!participant) {
+                throw new Error("Demo Mode: Participant not found");
+              }
+              participant.points_balance = (participant.points_balance || 0) + POINTS_AWARDED;
+
+              // Update users array or currentUser in localStorage
+              if (users.length > 0) {
+                const uIndex = users.findIndex((u) => u.id === participantId);
+                if (uIndex !== -1) {
+                  users[uIndex] = participant;
+                  localStorage.setItem("CLEAN_QUARTER_DEMO_USERS", JSON.stringify(users));
                 }
+              } else {
+                localStorage.setItem("user", JSON.stringify(participant));
+              }
 
-                // Show confirmation
-                const result = await Swal.fire({
-                    title: 'Approve Submission?',
-                    text: `Award 20 points to ${username}?`,
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonColor: '#28a745',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: 'Yes, Approve',
-                    cancelButtonText: 'Cancel'
-                });
+              // Add transaction record
+              const newTransaction = {
+                id: "demo_trans_" + Date.now(),
+                user_id: participantId,
+                amount: POINTS_AWARDED,
+                type: "earned",
+                reason: `Cleanup proof approved - ${participation.campaigns?.title || "Campaign"}`,
+                participation_id: participationId,
+                created_at: new Date().toISOString(),
+              };
+              transactions.push(newTransaction);
+              localStorage.setItem("CLEAN_QUARTER_DEMO_TRANSACTIONS", JSON.stringify(transactions));
 
-                if (!result.isConfirmed) {
-                    return;
-                }
+              Swal.close();
 
-                // Show loading
-                await Swal.fire({
-                    title: 'Processing...',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-
-                // Check if we're in demo mode
-                const localUser = localStorage.getItem('user');
-                const isDemoMode = localUser && currentUser.role === 'admin';
-                const POINTS_AWARDED = 20;
-
-                if (isDemoMode) {
-                    try {
-                        // DEMO MODE: Update localStorage
-                        const participations = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_PARTICIPATIONS') || '[]');
-                        const transactions = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_TRANSACTIONS') || '[]');
-                        const users = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_USERS') || '[]');
-
-                        // Update participation status
-                        const pIndex = participations.findIndex(p => p.id === participationId);
-                        if (pIndex !== -1) {
-                            participations[pIndex].status = 'approved';
-                            localStorage.setItem('CLEAN_QUARTER_DEMO_PARTICIPATIONS', JSON.stringify(participations));
-                        }
-
-                        // Find the user who submitted the participation
-                        const participantId = participation.user_id;
-                        let participant = users.find(u => u.id === participantId);
-                        if (!participant) {
-                            // fallback: if no users array, try currentUser (for legacy demo)
-                            participant = currentUser;
-                        }
-                        if (!participant) {
-                            throw new Error('Demo Mode: Participant not found');
-                        }
-                        participant.points_balance = (participant.points_balance || 0) + POINTS_AWARDED;
-
-                        // Update users array or currentUser in localStorage
-                        if (users.length > 0) {
-                            const uIndex = users.findIndex(u => u.id === participantId);
-                            if (uIndex !== -1) {
-                                users[uIndex] = participant;
-                                localStorage.setItem('CLEAN_QUARTER_DEMO_USERS', JSON.stringify(users));
-                            }
-                        } else {
-                            localStorage.setItem('user', JSON.stringify(participant));
-                        }
-
-                        // Add transaction record
-                        const newTransaction = {
-                            id: 'demo_trans_' + Date.now(),
-                            user_id: participantId,
-                            amount: POINTS_AWARDED,
-                            type: 'earned',
-                            reason: `Cleanup proof approved - ${participation.campaigns?.title || 'Campaign'}`,
-                            participation_id: participationId,
-                            created_at: new Date().toISOString()
-                        };
-                        transactions.push(newTransaction);
-                        localStorage.setItem('CLEAN_QUARTER_DEMO_TRANSACTIONS', JSON.stringify(transactions));
-
-                        Swal.close();
-
-                        await Swal.fire({
-                            icon: 'success',
-                            title: 'Approved!',
-                            text: `${username} earned 20 points ✅`,
-                            confirmButtonColor: '#28a745'
-                        });
-                    } catch (demoError) {
-                        Swal.close();
-                        await Swal.fire({
-                            icon: 'error',
-                            title: 'Demo Mode Error',
-                            text: demoError.message || 'Failed to approve in Demo Mode.'
-                        });
-                        return;
-                    }
-                } else {
-                    // REAL MODE: Use Supabase
-                    const userId = participation.user_id;
-
-                    // Update participation status to 'approved'
-                    const { error: updateParticipationError } = await supabase
-                        .from('participations')
-                        .update({ status: 'approved' })
-                        .eq('id', participationId);
-
-                    if (updateParticipationError) {
-                        throw new Error(`Failed to update participation: ${updateParticipationError.message}`);
-                    }
-
-                    // Get current user points
-                    const { data: profile, error: profileError } = await supabase
-                        .from('profiles')
-                        .select('points_balance')
-                        .eq('id', userId)
-                        .single();
-
-                    if (profileError) {
-                        throw new Error(`Failed to fetch user profile: ${profileError.message}`);
-                    }
-
-                    const newPointsBalance = (profile.points_balance || 0) + POINTS_AWARDED;
-
-                    // Update user points
-                    const { error: updatePointsError } = await supabase
-                        .from('profiles')
-                        .update({ points_balance: newPointsBalance })
-                        .eq('id', userId);
-
-                    if (updatePointsError) {
-                        throw new Error(`Failed to update points: ${updatePointsError.message}`);
-                    }
-
-                    // Record transaction
-                    const { error: transactionError } = await supabase
-                        .from('point_transactions')
-                        .insert([{
-                            user_id: userId,
-                            amount: POINTS_AWARDED,
-                            type: 'earned',
-                            reason: `Cleanup proof approved - ${participation.campaigns?.title || 'Campaign'}`,
-                            participation_id: participationId
-                        }]);
-
-                    if (transactionError) {
-                        console.warn('Warning: Transaction record failed', transactionError.message);
-                    }
-
-                    Swal.close();
-
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'Approved!',
-                        text: `${username} earned 20 points ✅`,
-                        confirmButtonColor: '#28a745'
-                    });
-                }
-
-                // Reload admin data
-                await loadAdminData();
-
-            } catch (error) {
-
-                await Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: error.message || 'Failed to approve. Please try again.'
-                });
+              await Swal.fire({
+                icon: "success",
+                title: "Approved!",
+                text: `${username} earned 20 points ✅`,
+                confirmButtonColor: "#28a745",
+              });
+            } catch (demoError) {
+              Swal.close();
+              await Swal.fire({
+                icon: "error",
+                title: "Demo Mode Error",
+                text: demoError.message || "Failed to approve in Demo Mode.",
+              });
+              return;
             }
-        }
+          } else {
+            // REAL MODE: Use Supabase
+            const userId = participation.user_id;
 
-        /**
-         * Handle reject action
-         */
-        async function handleReject(participationId, username) {
-            try {
-                // Find the participation record
-                const participation = pendingParticipations.find(p => p.id === participationId);
-                if (!participation) {
-                    throw new Error('Participation not found');
-                }
+            // Update participation status to 'approved'
+            const { error: updateParticipationError } = await supabase
+              .from("participations")
+              .update({ status: "approved" })
+              .eq("id", participationId);
 
-                // Prompt for rejection reason
-                const result = await Swal.fire({
-                    title: 'Reject Submission?',
-                    input: 'textarea',
-                    inputLabel: 'Reason for rejection (optional)',
-                    inputPlaceholder: 'e.g., Photo quality is poor, location unclear, etc.',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#dc3545',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: 'Yes, Reject',
-                    cancelButtonText: 'Cancel',
-                    inputAttributes: {
-                        'aria-label': 'Rejection reason'
-                    }
-                });
-
-                if (!result.isConfirmed) {
-                    return;
-                }
-
-                const rejectionReason = result.value || 'No reason provided';
-
-                // Show loading
-                await Swal.fire({
-                    title: 'Processing...',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-
-                // Check if we're in demo mode
-                const localUser = localStorage.getItem('user');
-                const isDemoMode = localUser && currentUser.role === 'admin';
-
-                if (isDemoMode) {
-                    // DEMO MODE: Update localStorage
-                    const participations = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_PARTICIPATIONS') || '[]');
-
-                    // Update participation status
-                    const pIndex = participations.findIndex(p => p.id === participationId);
-                    if (pIndex !== -1) {
-                        participations[pIndex].status = 'rejected';
-                        participations[pIndex].rejection_reason = rejectionReason;
-                        localStorage.setItem('CLEAN_QUARTER_DEMO_PARTICIPATIONS', JSON.stringify(participations));
-                    }
-
-                    Swal.close();
-
-                    await Swal.fire({
-                        icon: 'info',
-                        title: 'Rejected',
-                        text: `${username}'s submission was rejected.`,
-                        confirmButtonColor: '#dc3545'
-                    });
-
-                } else {
-                    // REAL MODE: Use Supabase
-                    const { error: updateError } = await supabase
-                        .from('participations')
-                        .update({ 
-                            status: 'rejected',
-                            rejection_reason: rejectionReason
-                        })
-                        .eq('id', participationId);
-
-                    if (updateError) {
-                        throw new Error(`Failed to reject participation: ${updateError.message}`);
-                    }
-
-                    Swal.close();
-
-                    await Swal.fire({
-                        icon: 'info',
-                        title: 'Rejected',
-                        text: `${username}'s submission was rejected.`,
-                        confirmButtonColor: '#dc3545'
-                    });
-                }
-
-                // Reload admin data
-                await loadAdminData();
-
-            } catch (error) {
-                await Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: error.message || 'Failed to reject. Please try again.'
-                });
+            if (updateParticipationError) {
+              throw new Error(
+                `Failed to update participation: ${updateParticipationError.message}`
+              );
             }
-        }
 
-        /**
-         * Handle logout
-         */
-        async function handleLogout() {
-            try {
-                const { error } = await supabase.auth.signOut();
-                if (!error) {
-                    localStorage.removeItem('user');
-                    window.location.href = '../../index.html';
-                } else {
-                    throw error;
-                }
-            } catch (error) {
-                console.error('Logout failed', error);
+            // Get current user points
+            const { data: profile, error: profileError } = await supabase
+              .from("profiles")
+              .select("points_balance")
+              .eq("id", userId)
+              .single();
+
+            if (profileError) {
+              throw new Error(`Failed to fetch user profile: ${profileError.message}`);
             }
-        }
 
-        // Expose functions to window for onclick handlers
-        window.handleLogout = handleLogout;
-        window.handleApprove = handleApprove;
-        window.handleReject = handleReject;
-        window.showPhotoModal = showPhotoModal;
-        window.closePhotoModal = closePhotoModal;
+            const newPointsBalance = (profile.points_balance || 0) + POINTS_AWARDED;
+
+            // Update user points
+            const { error: updatePointsError } = await supabase
+              .from("profiles")
+              .update({ points_balance: newPointsBalance })
+              .eq("id", userId);
+
+            if (updatePointsError) {
+              throw new Error(`Failed to update points: ${updatePointsError.message}`);
+            }
+
+            // Record transaction
+            const { error: transactionError } = await supabase.from("point_transactions").insert([
+              {
+                user_id: userId,
+                amount: POINTS_AWARDED,
+                type: "earned",
+                reason: `Cleanup proof approved - ${participation.campaigns?.title || "Campaign"}`,
+                participation_id: participationId,
+              },
+            ]);
+
+            if (transactionError) {
+              console.warn("Warning: Transaction record failed", transactionError.message);
+            }
+
+            Swal.close();
+
+            await Swal.fire({
+              icon: "success",
+              title: "Approved!",
+              text: `${username} earned 20 points ✅`,
+              confirmButtonColor: "#28a745",
+            });
+          }
+
+          // Reload admin data
+          await loadAdminData();
+        } catch (error) {
+          await Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: error.message || "Failed to approve. Please try again.",
+          });
+        }
+      }
+
+      /**
+       * Handle reject action
+       */
+      async function handleReject(participationId, username) {
+        try {
+          // Find the participation record
+          const participation = pendingParticipations.find((p) => p.id === participationId);
+          if (!participation) {
+            throw new Error("Participation not found");
+          }
+
+          // Prompt for rejection reason
+          const result = await Swal.fire({
+            title: "Reject Submission?",
+            input: "textarea",
+            inputLabel: "Reason for rejection (optional)",
+            inputPlaceholder: "e.g., Photo quality is poor, location unclear, etc.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#dc3545",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: "Yes, Reject",
+            cancelButtonText: "Cancel",
+            inputAttributes: {
+              "aria-label": "Rejection reason",
+            },
+          });
+
+          if (!result.isConfirmed) {
+            return;
+          }
+
+          const rejectionReason = result.value || "No reason provided";
+
+          // Show loading
+          await Swal.fire({
+            title: "Processing...",
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
+            },
+          });
+
+          // Check if we're in demo mode
+          const localUser = localStorage.getItem("user");
+          const isDemoMode = localUser && currentUser.role === "admin";
+
+          if (isDemoMode) {
+            // DEMO MODE: Update localStorage
+            const participations = JSON.parse(
+              localStorage.getItem("CLEAN_QUARTER_DEMO_PARTICIPATIONS") || "[]"
+            );
+
+            // Update participation status
+            const pIndex = participations.findIndex((p) => p.id === participationId);
+            if (pIndex !== -1) {
+              participations[pIndex].status = "rejected";
+              participations[pIndex].rejection_reason = rejectionReason;
+              localStorage.setItem(
+                "CLEAN_QUARTER_DEMO_PARTICIPATIONS",
+                JSON.stringify(participations)
+              );
+            }
+
+            Swal.close();
+
+            await Swal.fire({
+              icon: "info",
+              title: "Rejected",
+              text: `${username}'s submission was rejected.`,
+              confirmButtonColor: "#dc3545",
+            });
+          } else {
+            // REAL MODE: Use Supabase
+            const { error: updateError } = await supabase
+              .from("participations")
+              .update({
+                status: "rejected",
+                rejection_reason: rejectionReason,
+              })
+              .eq("id", participationId);
+
+            if (updateError) {
+              throw new Error(`Failed to reject participation: ${updateError.message}`);
+            }
+
+            Swal.close();
+
+            await Swal.fire({
+              icon: "info",
+              title: "Rejected",
+              text: `${username}'s submission was rejected.`,
+              confirmButtonColor: "#dc3545",
+            });
+          }
+
+          // Reload admin data
+          await loadAdminData();
+        } catch (error) {
+          await Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: error.message || "Failed to reject. Please try again.",
+          });
+        }
+      }
+
+      /**
+       * Handle logout
+       */
+      async function handleLogout() {
+        try {
+          const { error } = await supabase.auth.signOut();
+          if (!error) {
+            localStorage.removeItem("user");
+            window.location.href = "../../index.html";
+          } else {
+            throw error;
+          }
+        } catch (error) {
+          console.error("Logout failed", error);
+        }
+      }
+
+      // Expose functions to window for onclick handlers
+      window.handleLogout = handleLogout;
+      window.handleApprove = handleApprove;
+      window.handleReject = handleReject;
+      window.showPhotoModal = showPhotoModal;
+      window.closePhotoModal = closePhotoModal;
     </script>
-</body>
+  </body>
 </html>

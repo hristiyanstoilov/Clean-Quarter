@@ -1,5 +1,5 @@
-import supabase from './supabase.js';
-import { handleError } from '../utils/helpers.js';
+import supabase from "./supabase.js";
+import { handleError } from "../utils/helpers.js";
 
 /**
  * Upload an image to the 'campaign-photos' bucket
@@ -7,10 +7,10 @@ import { handleError } from '../utils/helpers.js';
  * @param {string} folderName - Optional folder name inside the bucket (e.g., 'before', 'after')
  * @returns {Promise<string>} The public URL of the uploaded image
  */
-export async function uploadCampaignPhoto(file, folderName = 'photos') {
+export async function uploadCampaignPhoto(file, folderName = "photos") {
   try {
     if (!file) {
-      throw new Error('No file provided');
+      throw new Error("No file provided");
     }
 
     // Generate unique filename with timestamp
@@ -20,20 +20,16 @@ export async function uploadCampaignPhoto(file, folderName = 'photos') {
     const filePath = `${folderName}/${fileName}`;
 
     // Upload file to Supabase Storage
-    const { error } = await supabase.storage
-      .from('campaign-photos')
-      .upload(filePath, file);
+    const { error } = await supabase.storage.from("campaign-photos").upload(filePath, file);
 
     if (error) throw new Error(`Upload failed: ${error.message}`);
 
     // Get public URL
-    const { data: publicUrlData } = supabase.storage
-      .from('campaign-photos')
-      .getPublicUrl(filePath);
+    const { data: publicUrlData } = supabase.storage.from("campaign-photos").getPublicUrl(filePath);
 
     return publicUrlData.publicUrl;
   } catch (error) {
-    await handleError('uploadCampaignPhoto', error, 'Failed to upload photo. Please try again.');
+    await handleError("uploadCampaignPhoto", error, "Failed to upload photo. Please try again.");
     throw error;
   }
 }
@@ -45,15 +41,13 @@ export async function uploadCampaignPhoto(file, folderName = 'photos') {
  */
 export async function deleteCampaignPhoto(filePath) {
   try {
-    const { error } = await supabase.storage
-      .from('campaign-photos')
-      .remove([filePath]);
+    const { error } = await supabase.storage.from("campaign-photos").remove([filePath]);
 
     if (error) {
       throw new Error(`Delete failed: ${error.message}`);
     }
   } catch (error) {
-    await handleError('deleteCampaignPhoto', error, 'Failed to delete photo. Please try again.');
+    await handleError("deleteCampaignPhoto", error, "Failed to delete photo. Please try again.");
     throw error;
   }
 }

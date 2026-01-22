@@ -8,7 +8,7 @@ const LOG_LEVELS = {
   INFO: 1,
   WARN: 2,
   ERROR: 3,
-  FATAL: 4
+  FATAL: 4,
 };
 
 class Logger {
@@ -47,7 +47,7 @@ class Logger {
       message,
       data,
       userAgent: navigator.userAgent,
-      url: window.location.href
+      url: window.location.href,
     };
 
     this.logs.push(logEntry);
@@ -58,11 +58,11 @@ class Logger {
     }
 
     // Notify listeners
-    this.listeners.forEach(listener => {
+    this.listeners.forEach((listener) => {
       try {
         listener(logEntry);
       } catch (error) {
-        console.error('Logger listener error:', error);
+        console.error("Logger listener error:", error);
       }
     });
 
@@ -74,7 +74,7 @@ class Logger {
    */
   debug(message, data = null) {
     if (LOG_LEVELS.DEBUG >= this.level) return;
-    const entry = this.storeLog('DEBUG', message, data);
+    const entry = this.storeLog("DEBUG", message, data);
     if (this.isDevelopment) {
       console.debug(`🔍 [DEBUG] ${message}`, data);
     }
@@ -86,7 +86,7 @@ class Logger {
    */
   info(message, data = null) {
     if (LOG_LEVELS.INFO >= this.level) return;
-    const entry = this.storeLog('INFO', message, data);
+    const entry = this.storeLog("INFO", message, data);
     if (this.isDevelopment) {
       console.log(`ℹ️ [INFO] ${message}`, data);
     }
@@ -98,7 +98,7 @@ class Logger {
    */
   warn(message, data = null) {
     if (LOG_LEVELS.WARN >= this.level) return;
-    const entry = this.storeLog('WARN', message, data);
+    const entry = this.storeLog("WARN", message, data);
     console.warn(`⚠️ [WARN] ${message}`, data);
     return entry;
   }
@@ -108,10 +108,10 @@ class Logger {
    */
   error(message, error = null, data = null) {
     if (LOG_LEVELS.ERROR >= this.level) return;
-    const entry = this.storeLog('ERROR', message, {
+    const entry = this.storeLog("ERROR", message, {
       error: error instanceof Error ? error.message : error,
       stack: error instanceof Error ? error.stack : null,
-      data
+      data,
     });
     console.error(`❌ [ERROR] ${message}`, error, data);
     return entry;
@@ -121,10 +121,10 @@ class Logger {
    * Log fatal error
    */
   fatal(message, error = null, data = null) {
-    const entry = this.storeLog('FATAL', message, {
+    const entry = this.storeLog("FATAL", message, {
       error: error instanceof Error ? error.message : error,
       stack: error instanceof Error ? error.stack : null,
-      data
+      data,
     });
     console.error(`🔴 [FATAL] ${message}`, error, data);
     // In production, could send to error tracking service
@@ -164,7 +164,7 @@ class Logger {
    */
   getLogs(level = null) {
     if (!level) return this.logs;
-    return this.logs.filter(log => log.level === level.toUpperCase());
+    return this.logs.filter((log) => log.level === level.toUpperCase());
   }
 
   /**
@@ -187,17 +187,17 @@ class Logger {
   async sendLogs(endpoint) {
     try {
       const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: this.exportLogs()
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: this.exportLogs(),
       });
 
       if (response.ok) {
-        this.info('Logs sent to server');
+        this.info("Logs sent to server");
         this.clearLogs();
       }
     } catch (error) {
-      this.error('Failed to send logs', error);
+      this.error("Failed to send logs", error);
     }
   }
 
@@ -206,15 +206,11 @@ class Logger {
    */
   createChild(prefix) {
     const child = Object.create(this);
-    const originalMethods = ['debug', 'info', 'warn', 'error', 'fatal'];
+    const originalMethods = ["debug", "info", "warn", "error", "fatal"];
 
-    originalMethods.forEach(method => {
+    originalMethods.forEach((method) => {
       child[method] = (message, data) => {
-        return Logger.prototype[method].call(
-          this,
-          `[${prefix}] ${message}`,
-          data
-        );
+        return Logger.prototype[method].call(this, `[${prefix}] ${message}`, data);
       };
     });
 
