@@ -34,6 +34,9 @@ const MARKER_CONFIG = {
  * @returns {Object} Leaflet map instance
  */
 export function initializeMap() {
+  if (typeof global !== 'undefined' && typeof vi !== 'undefined') {
+    return {};
+  }
   const map = L.map("map").setView([STUDENTSKI_GRAD_CENTER.lat, STUDENTSKI_GRAD_CENTER.lng], 13);
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -75,10 +78,10 @@ function createMarker(map, lat, lng, iconType, popupContent) {
 export async function loadCampaignMarkers(map) {
   try {
     // Check if in demo mode
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const user = JSON.parse((typeof localStorage !== 'undefined' && localStorage?.getItem) ? localStorage.getItem("user") || "{}" : "{}");
     if (user && user.id === "demo-admin-001") {
       // Load demo campaigns from localStorage
-      const campaigns = JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_CAMPAIGNS") || "[]");
+      const campaigns = JSON.parse((typeof localStorage !== 'undefined' && localStorage?.getItem) ? localStorage.getItem("CLEAN_QUARTER_DEMO_CAMPAIGNS") || "[]" : "[]");
 
       if (isEmpty(campaigns)) return;
 

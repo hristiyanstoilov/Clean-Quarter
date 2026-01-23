@@ -9,57 +9,61 @@
 const rules = {
   // Text validation
   required: (value) => {
-    return value && value.toString().trim() ? null : "This field is required";
+    if (value === null || value === undefined || value === '' || (typeof value === 'string' && value.trim() === '')) {
+      return "Полето е задължително";
+    }
+    return null;
   },
 
   email: (value) => {
     if (!value) return null;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(value) ? null : "Invalid email format";
+    return emailRegex.test(value) ? null : "Невалиден имейл формат";
   },
 
   minLength: (min) => {
     return (value) => {
-      return !value || value.length >= min ? null : `Minimum ${min} characters required`;
+      if (value === null || value === undefined || value === '') return null;
+      return value.length >= min ? null : `Минимална дължина е ${min}`;
     };
   },
 
   maxLength: (max) => {
     return (value) => {
-      return !value || value.length <= max ? null : `Maximum ${max} characters allowed`;
+      return !value || value.length <= max ? null : `Максимална дължина е ${max}`;
     };
   },
 
   pattern: (pattern, message) => {
     return (value) => {
-      return !value || pattern.test(value) ? null : message || "Invalid format";
+      return !value || pattern.test(value) ? null : message || "Невалиден формат";
     };
   },
 
   // Number validation
   number: (value) => {
-    return !value || !isNaN(value) ? null : "Must be a number";
+    return !value || !isNaN(value) ? null : "Трябва да е число";
   },
 
   min: (min) => {
     return (value) => {
-      return !value || parseFloat(value) >= min ? null : `Minimum value is ${min}`;
+      return !value || parseFloat(value) >= min ? null : `Минимална стойност е ${min}`;
     };
   },
 
   max: (max) => {
     return (value) => {
-      return !value || parseFloat(value) <= max ? null : `Maximum value is ${max}`;
+      return !value || parseFloat(value) <= max ? null : `Максимална стойност е ${max}`;
     };
   },
 
   // Specific validations
   password: (value) => {
-    if (!value) return "Password is required";
-    if (value.length < 8) return "Password must be at least 8 characters";
-    if (!/[A-Z]/.test(value)) return "Password must contain uppercase letter";
-    if (!/[a-z]/.test(value)) return "Password must contain lowercase letter";
-    if (!/[0-9]/.test(value)) return "Password must contain number";
+    if (!value) return "Изисква се парола";
+    if (value.length < 8) return "Паролата трябва да е поне 8 символа";
+    if (!/[A-Z]/.test(value)) return "Паролата трябва да съдържа главна буква";
+    if (!/[a-z]/.test(value)) return "Паролата трябва да съдържа малка буква";
+    if (!/[0-9]/.test(value)) return "Паролата трябва да съдържа число";
     return null;
   },
 
@@ -128,10 +132,15 @@ const schemas = {
  */
 export function validateField(value, fieldRules = []) {
   for (const rule of fieldRules) {
-    const error = typeof rule === "function" ? rule(value) : null;
+    let error = null;
+    if (typeof rule === "function") {
+      error = rule(value);
+    } else if (typeof rule === "string" && typeof rules[rule] === "function") {
+      error = rules[rule](value);
+    }
     if (error) return error;
   }
-  return null;
+  return true;
 }
 
 /**
@@ -142,19 +151,44 @@ export function validateField(value, fieldRules = []) {
  */
 export function validateForm(data, schema) {
   const errors = {};
-
-  for (const [field, rules] of Object.entries(schema)) {
+  for (const [field, fieldRules] of Object.entries(schema)) {
     const value = data[field];
-    const error = validateField(value, rules);
-    if (error) {
-      errors[field] = error;
+    const isEmpty = value === null || value === undefined || value === '' || (typeof value === 'string' && value.trim() === '');
+    if (isEmpty) {
+      // Only check required rule
+      let requiredRule = fieldRules.find(r => r === 'required' || r === rules.required);
+      if (requiredRule) {
+        let error = typeof requiredRule === 'function' ? requiredRule(value) : rules[requiredRule](value);
+        if (typeof error === 'string' && error) {
+          errors[field] = error;
+        }
+      }
+      continue;
+    }
+    // For non-empty values, check all rules
+    for (const rule of fieldRules) {
+      let error = null;
+      if (typeof rule === "function") {
+        error = rule(value);
+      } else if (typeof rule === "string" && typeof rules[rule] === "function") {
+        error = rules[rule](value);
+      } else if (typeof rule === "object" && rule !== null) {
+        // Handle object rule: { minLength: 6 }
+        const key = Object.keys(rule)[0];
+        if (typeof rules[key] === "function") {
+          error = rules[key](rule[key])(value);
+        }
+      }
+      if (field === 'password') {
+        console.log('DEBUG password:', value, rule, error);
+      }
+      if (typeof error === 'string' && error) {
+        errors[field] = error;
+        break;
+      }
     }
   }
-
-  return {
-    isValid: Object.keys(errors).length === 0,
-    errors,
-  };
+  return errors;
 }
 
 /**
@@ -167,7 +201,7 @@ export function validateWithSchema(schemaName, data) {
   const schema = schemas[schemaName];
   if (!schema) {
     console.error(`❌ Schema not found: ${schemaName}`);
-    return { isValid: false, errors: {} };
+    return {};
   }
   return validateForm(data, schema);
 }

@@ -1,4 +1,23 @@
 /**
+ * Set demo mode state
+ * @param {boolean} value
+ */
+export function setDemoMode(value) {
+  let ls = typeof globalThis !== 'undefined' && globalThis.localStorage ? globalThis.localStorage : (typeof localStorage !== 'undefined' ? localStorage : null);
+  if (!ls) {
+    // Create a persistent mock for tests
+    ls = {
+      store: {},
+      getItem(key) { return this.store[key] || null; },
+      setItem(key, value) { this.store[key] = value; },
+      removeItem(key) { delete this.store[key]; },
+      clear() { this.store = {}; }
+    };
+    if (typeof globalThis !== 'undefined') globalThis.localStorage = ls;
+  }
+  ls.setItem('CLEAN_QUARTER_DEMO_MODE', value ? 'true' : 'false');
+}
+/**
  * Ensure a user exists in CLEAN_QUARTER_DEMO_USERS
  * @param {Object} user - user object with at least id, username, role
  */
@@ -310,7 +329,19 @@ export function initDemoMode() {
  * Check if we're in demo mode
  */
 export function isDemoMode() {
-  return localStorage.getItem(DEMO_MODE_KEY) === "true";
+  let ls = typeof globalThis !== 'undefined' && globalThis.localStorage ? globalThis.localStorage : (typeof localStorage !== 'undefined' ? localStorage : null);
+  if (!ls) {
+    // Create a persistent mock for tests
+    ls = {
+      store: {},
+      getItem(key) { return this.store[key] || null; },
+      setItem(key, value) { this.store[key] = value; },
+      removeItem(key) { delete this.store[key]; },
+      clear() { this.store = {}; }
+    };
+    if (typeof globalThis !== 'undefined') globalThis.localStorage = ls;
+  }
+  return ls.getItem(DEMO_MODE_KEY) === "true";
 }
 
 /**

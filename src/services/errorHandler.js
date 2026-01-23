@@ -249,8 +249,11 @@ class ErrorHandler {
 // Create singleton instance
 const errorHandler = new ErrorHandler();
 
+
 // Export singleton
 export default errorHandler;
+// Named export for testability: export the real handle method
+export const handleError = (...args) => errorHandler.handle(...args);
 
 /**
  * Global error handler setup

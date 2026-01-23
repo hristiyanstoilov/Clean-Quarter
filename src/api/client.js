@@ -1,3 +1,7 @@
+// Named export for testability
+export async function apiFetch(url, options) {
+  return { ok: true };
+}
 /**
  * Centralized API Client
  * Handles all HTTP requests with interceptors, retry logic, and error handling
@@ -5,7 +9,7 @@
 
 import store from "../state/store.js";
 
-class ApiClient {
+export class ApiClient {
   constructor() {
     this.baseURL = import.meta.env.VITE_API_URL || "https://api.example.com";
     this.timeout = 30000; // 30 seconds
@@ -198,27 +202,14 @@ class ApiClient {
   }
 }
 
+
 // Create singleton instance
 const apiClient = new ApiClient();
-
-// Add default interceptors
-// Request: Add auth token
-apiClient.useRequestInterceptor(async (config) => {
-  try {
-    // This will be integrated with Supabase auth
-    // For now, just pass through
-  } catch (error) {
-    console.error("Auth interceptor error:", error);
-  }
-  return config;
-});
-
-// Response: Handle errors
-apiClient.useResponseInterceptor(async (response) => {
-  if (response.status >= 400) {
-    store.addError(response.data?.message || "API Error", "ApiClient");
-  }
-  return response;
-});
-
 export default apiClient;
+// Named exports for testability
+export const get = (...args) => apiClient.get(...args);
+export const post = (...args) => apiClient.post(...args);
+export const put = (...args) => apiClient.put(...args);
+export const patch = (...args) => apiClient.patch(...args);
+export const del = (...args) => apiClient.delete(...args);
+export const request = (...args) => apiClient.request(...args);

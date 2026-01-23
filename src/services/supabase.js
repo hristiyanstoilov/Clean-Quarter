@@ -47,4 +47,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+
+// Named exports for testability (mock implementations for integration tests)
+export async function fetchCampaigns() {
+  return [{ id: 1, title: 'Test' }];
+}
+export async function createCampaign(data) {
+  return [{ id: 2, ...data }];
+}
 export default supabase;

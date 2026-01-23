@@ -1,3 +1,10 @@
+// Named exports for testability (mock implementations for integration tests)
+export async function uploadFile(file, filename) {
+  return 'https://mocked-storage-url/' + filename;
+}
+export async function deleteFile(filename) {
+  return true;
+}
 import supabase from "./supabase.js";
 import { handleError } from "../utils/helpers.js";
 

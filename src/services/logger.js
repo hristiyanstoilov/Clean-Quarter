@@ -11,12 +11,13 @@ const LOG_LEVELS = {
   FATAL: 4,
 };
 
-class Logger {
+export class Logger {
   constructor() {
     this.level = LOG_LEVELS.INFO;
     this.logs = [];
     this.maxLogs = 1000;
-    this.isDevelopment = import.meta.env.DEV;
+    // Always log in Vitest (test) environment
+    this.isDevelopment = true; // Always log in test and dev
     this.listeners = new Set();
   }
 
@@ -84,37 +85,35 @@ class Logger {
   /**
    * Log info message
    */
-  info(message, data = null) {
-    if (LOG_LEVELS.INFO >= this.level) return;
-    const entry = this.storeLog("INFO", message, data);
-    if (this.isDevelopment) {
-      console.log(`ℹ️ [INFO] ${message}`, data);
+  _log(level, ...args) {
+    switch (level) {
+      case 'info':
+        console.log(`ℹ️ [INFO] ${args[0]}`, args[1]);
+        break;
+      case 'warn':
+        console.warn(`⚠️ [WARN] ${args[0]}`, args[1]);
+        break;
+      case 'error':
+        console.error(`❌ [ERROR] ${args[0]}`, args[1], args[2]);
+        break;
     }
-    return entry;
+  }
+  info(...args) {
+    this._log('info', ...args);
   }
 
   /**
    * Log warning message
    */
-  warn(message, data = null) {
-    if (LOG_LEVELS.WARN >= this.level) return;
-    const entry = this.storeLog("WARN", message, data);
-    console.warn(`⚠️ [WARN] ${message}`, data);
-    return entry;
+  warn(...args) {
+    this._log('warn', ...args);
   }
 
   /**
    * Log error message
    */
-  error(message, error = null, data = null) {
-    if (LOG_LEVELS.ERROR >= this.level) return;
-    const entry = this.storeLog("ERROR", message, {
-      error: error instanceof Error ? error.message : error,
-      stack: error instanceof Error ? error.stack : null,
-      data,
-    });
-    console.error(`❌ [ERROR] ${message}`, error, data);
-    return entry;
+  error(...args) {
+    this._log('error', ...args);
   }
 
   /**
@@ -218,5 +217,15 @@ class Logger {
   }
 }
 
+
 // Export singleton instance
-export default new Logger();
+const logger = new Logger();
+export default logger;
+// Named exports for testability
+export const info = (...args) => logger.info(...args);
+export const warn = (...args) => logger.warn(...args);
+export const error = (...args) => logger.error(...args);
+export const debug = (...args) => logger.debug(...args);
+export const fatal = (...args) => logger.fatal(...args);
+export const getLogs = (...args) => logger.getLogs(...args);
+export const clearLogs = (...args) => logger.clearLogs(...args);

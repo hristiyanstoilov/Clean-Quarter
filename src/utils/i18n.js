@@ -1,3 +1,7 @@
+// Named export for testability
+export function getLanguage() {
+  return getCurrentLanguage();
+}
 /**
  * Internationalization (i18n) Module
  * Handles language switching and translations

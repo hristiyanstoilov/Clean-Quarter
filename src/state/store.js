@@ -1,9 +1,10 @@
+
 /**
  * Centralized State Management Store
  * Handles global application state with pub-sub pattern
  */
 
-class Store {
+export class Store {
   constructor() {
     this.state = {
       // Auth State
@@ -90,13 +91,9 @@ class Store {
    * @param {string} path - Dot-separated path (e.g., 'user.id')
    * @returns {*} State value
    */
-  get(path) {
-    const keys = path.split(".");
-    let value = this.state;
-    for (const key of keys) {
-      value = value?.[key];
-    }
-    return value;
+  get(key) {
+    return Object.prototype.hasOwnProperty.call(this.state, key) ? this.state[key] : undefined;
+  }
   }
 
   /**
@@ -288,5 +285,15 @@ class Store {
   }
 }
 
+
 // Export singleton instance
-export default new Store();
+
+const store = new Store();
+export default store;
+export const get = (...args) => store.get(...args);
+export const setState = (...args) => store.setState(...args);
+export const getState = (...args) => store.getState(...args);
+export const subscribe = (...args) => store.subscribe(...args);
+export const addError = (...args) => store.addError(...args);
+export const clearErrors = (...args) => store.clearErrors(...args);
+export const reset = (...args) => store.reset(...args);

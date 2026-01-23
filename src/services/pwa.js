@@ -187,3 +187,13 @@ export async function getCachedData(key) {
   }
   return null;
 }
+/**
+ * Register service worker
+ */
+export async function registerServiceWorker() {
+  if (typeof navigator !== 'undefined' && navigator.serviceWorker && navigator.serviceWorker.register) {
+    await navigator.serviceWorker.register('/service-worker.js');
+    return 'ok';
+  }
+  return false;
+}

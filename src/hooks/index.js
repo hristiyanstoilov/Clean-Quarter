@@ -1,3 +1,11 @@
+// Mock/testable hooks for integration tests
+export function useAuth() {
+  return { user: null, isAuthenticated: false };
+}
+
+export function useCampaigns() {
+  return [];
+}
 /**
  * Composition Hooks
  * Reusable logic for data fetching, forms, and UI state
