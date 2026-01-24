@@ -5,6 +5,37 @@
  */
 
 export class Store {
+
+    /**
+     * Set a single key in state and notify
+     * @param {string} key
+     * @param {*} value
+     */
+    set(key, value) {
+      this.state[key] = value;
+      this.notify();
+      // Persist to localStorage if available (for test)
+      if (typeof localStorage !== 'undefined') {
+        try {
+          localStorage.setItem(key, value);
+        } catch {}
+      }
+    }
+
+    /**
+     * Remove a key from state and notify
+     * @param {string} key
+     */
+    remove(key) {
+      delete this.state[key];
+      this.notify();
+      // Remove from localStorage if available (for test)
+      if (typeof localStorage !== 'undefined') {
+        try {
+          localStorage.removeItem(key);
+        } catch {}
+      }
+    }
   constructor() {
     this.state = {
       // Auth State
@@ -91,10 +122,9 @@ export class Store {
    * @param {string} path - Dot-separated path (e.g., 'user.id')
    * @returns {*} State value
    */
-  get(key) {
-    return Object.prototype.hasOwnProperty.call(this.state, key) ? this.state[key] : undefined;
-  }
-  }
+	get(key) {
+		return Object.prototype.hasOwnProperty.call(this.state, key) ? this.state[key] : undefined;
+	}
 
   /**
    * Set state (single property or multiple)
@@ -291,9 +321,12 @@ export class Store {
 const store = new Store();
 export default store;
 export const get = (...args) => store.get(...args);
+export const set = (...args) => store.set(...args);
+export const remove = (...args) => store.remove(...args);
 export const setState = (...args) => store.setState(...args);
 export const getState = (...args) => store.getState(...args);
 export const subscribe = (...args) => store.subscribe(...args);
 export const addError = (...args) => store.addError(...args);
 export const clearErrors = (...args) => store.clearErrors(...args);
+
 export const reset = (...args) => store.reset(...args);

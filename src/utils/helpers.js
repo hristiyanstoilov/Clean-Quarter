@@ -319,10 +319,6 @@ export function safeParse(jsonString, fallback = null) {
     }
     return fallback;
   }
-  catch (e) {
-    return null;
-  }
-}
 }
 
 /**

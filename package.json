@@ -19,6 +19,9 @@
     "vite": "^5.0.0",
     "vitest": "^4.0.17"
   },
+  "vitest": {
+    "setupFiles": ["./vitest.setup.js"]
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.38.0",
     "leaflet": "^1.9.4"
