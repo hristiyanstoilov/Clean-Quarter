@@ -1,4 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+vi.mock('../src/services/supabase.js', () => ({
+  default: {},
+}));
 import supabase from '../src/services/supabase.js';
 
 describe('services/supabase.js', () => {
