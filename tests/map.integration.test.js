@@ -31,4 +31,20 @@ describe('map.js integration', () => {
     await map.loadCampaignMarkers(fakeMap);
     expect(global.L.marker).toHaveBeenCalled();
   });
+
+  it('handles supabase error when loading campaign markers', async () => {
+    // Patch: mock supabase.from('campaigns').select().eq() chain to return error
+    const eqMock = vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } });
+    const selectMock = vi.fn(() => ({ eq: eqMock }));
+    vi.spyOn(supabaseModule.default, 'from').mockReturnValue({ select: selectMock });
+    // Patch: spy on console.error
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const fakeMap = { addLayer: vi.fn() };
+    await map.loadCampaignMarkers(fakeMap);
+    expect(errorSpy).toHaveBeenCalledWith(
+      'Error loading campaign markers:',
+      expect.objectContaining({ message: 'DB error' })
+    );
+    errorSpy.mockRestore();
+  });
 });

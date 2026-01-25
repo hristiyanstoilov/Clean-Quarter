@@ -50,7 +50,12 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Named exports for testability (mock implementations for integration tests)
 export async function fetchCampaigns() {
-  return [{ id: 1, title: 'Test' }];
+  // Връща реални кампании от Supabase
+  const { data, error } = await supabase
+    .from('campaigns')
+    .select('id, title, location_lat, location_lng, status');
+  if (error) throw error;
+  return data;
 }
 export async function createCampaign(data) {
   return [{ id: 2, ...data }];
