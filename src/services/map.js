@@ -1,4 +1,4 @@
-import supabase from "./supabase.js";
+// Supabase will be dynamically imported inside functions to allow mocking in tests
 import { isEmpty } from "../utils/helpers.js";
 
 // Studentski Grad center coordinates
@@ -71,6 +71,7 @@ function createMarker(map, lat, lng, iconType, popupContent) {
   return marker;
 }
 
+
 /**
  * Fetch active campaigns and display them as RED markers
  * @param {Object} map - Leaflet map instance
@@ -97,7 +98,9 @@ export async function loadCampaignMarkers(map) {
       return;
     }
 
-    // Load from Supabase
+    // Dynamically import Supabase to allow mocking in tests
+    const supabaseModule = await import("./supabase.js");
+    const supabase = supabaseModule.default || supabaseModule;
     const { data: campaigns, error } = await supabase
       .from("campaigns")
       .select("id, title, location_lat, location_lng, status")
@@ -134,6 +137,9 @@ export async function loadDisposalPointMarkers(map) {
       return;
     }
 
+    // Dynamically import Supabase to allow mocking in tests
+    const supabaseModule = await import("./supabase.js");
+    const supabase = supabaseModule.default || supabaseModule;
     const { data: disposalPoints, error } = await supabase
       .from("disposal_points")
       .select("id, name, description, latitude, longitude");
