@@ -10,18 +10,29 @@
     "test": "vitest",
     "coverage": "vitest run --coverage",
     "lint": "eslint src --ext .js",
-    "format": "prettier --write \"src/**/*.{js,css,html}\""
+    "format": "prettier --write \"src/**/*.{js,css,html}\"",
+    "prepare": "husky install"
+  },
+  "lint-staged": {
+    "src/**/*.{js,css,html}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^4.0.17",
     "eslint": "^9.39.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
     "prettier": "^3.8.0",
     "terser": "^5.46.0",
     "vite": "^5.0.0",
     "vitest": "^4.0.17"
   },
   "vitest": {
-    "setupFiles": ["./vitest.setup.js"]
+    "setupFiles": [
+      "./vitest.setup.js"
+    ]
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.38.0",
