@@ -1,5 +1,7 @@
 import supabase from "./supabase.js";
+import logger from "./logger.js";
 import { showSuccess, showError } from "../utils/helpers.js";
+import { rules } from "./validation.js";
 
 /**
  * Register a new user with email, password, and metadata (neighborhood)
@@ -8,18 +10,23 @@ import { showSuccess, showError } from "../utils/helpers.js";
  * @param {object} meta - metadata object containing 'neighborhood'
  * @returns {Promise<object>} user object
  */
-export async function register(email, password, meta) {
+export async function register(email, password, options = {}) {
+  const passwordError = rules.password(password);
+  if (passwordError) {
+    throw new Error(passwordError);
+  }
+
   try {
     // Validate inputs
     if (!email || !password) {
       throw new Error("Email and password are required");
     }
 
-    if (!meta?.neighborhood) {
+    if (!options?.neighborhood) {
       throw new Error("Neighborhood is required");
     }
 
-    console.log("📝 Starting registration for:", email);
+    logger.info("📝 Starting registration for:", email);
 
     // Register user with Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -28,7 +35,7 @@ export async function register(email, password, meta) {
     });
 
     if (authError) {
-      console.error("❌ Auth signup error:", authError);
+      logger.error("❌ Auth signup error:", authError);
       throw new Error(authError.message || "Registration failed");
     }
 
@@ -36,7 +43,7 @@ export async function register(email, password, meta) {
       throw new Error("No user ID returned from registration");
     }
 
-    console.log("✅ Auth signup successful, user ID:", authData.user.id);
+    logger.info("✅ Auth signup successful, user ID:", authData.user.id);
 
     // Create profile in database with metadata
     const userId = authData.user.id;
@@ -46,21 +53,21 @@ export async function register(email, password, meta) {
         username: email.split("@")[0],
         role: "user",
         points_balance: 0,
-        neighborhood: meta.neighborhood || null,
+        neighborhood: options.neighborhood || null,
       },
     ]);
 
     if (profileError) {
-      console.error("❌ Profile creation error:", profileError);
+      logger.error("❌ Profile creation error:", profileError);
       throw new Error(profileError.message || "Failed to create profile");
     }
 
-    console.log("✅ Profile created successfully");
+    logger.info("✅ Profile created successfully");
 
     await showSuccess("Registration Successful!", "Your account has been created.");
     return authData.user;
   } catch (error) {
-    console.error("❌ Register error:", error);
+    logger.error("❌ Register error:", error);
     await showError("Registration Error", error);
     throw error;
   }
@@ -118,13 +125,21 @@ export async function getUser() {
     } = await supabase.auth.getUser();
 
     if (error) {
-      console.error("Get user error:", error);
+      logger.error("Get user error:", error);
       return null;
     }
 
     return user;
   } catch (error) {
-    console.error("Get user error:", error);
+    logger.error("Get user error:", error);
     return null;
+  }
+}
+
+// Validate password before password change (if implemented)
+export async function changePassword(userId, newPassword) {
+  const passwordError = rules.password(newPassword);
+  if (passwordError) {
+    throw new Error(passwordError);
   }
 }

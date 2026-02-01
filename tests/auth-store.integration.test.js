@@ -18,7 +18,7 @@ vi.mock('../src/services/supabase.js', () => {
           return { data: null, error: { message: 'Invalid' } };
         }),
         signInWithPassword: vi.fn(async ({ email, password }) => {
-          if (email === 'user@test.com' && password === 'pass') return { data: { user: { id: 'u1', email } }, error: null };
+          if (email === 'user@test.com' && password === 'TestPass123') return { data: { user: { id: 'u1', email } }, error: null };
           return { data: null, error: { message: 'Invalid credentials' } };
         }),
         signOut: vi.fn(async () => ({ error: null })),
@@ -39,13 +39,13 @@ describe('auth + store integration', () => {
 
   it('registers a user and updates store', async () => {
     // Provide required meta.neighborhood
-    const user = await auth.register('user@test.com', 'pass', { neighborhood: 'Studentski Grad' });
+    const user = await auth.register('user@test.com', 'TestPass123', { neighborhood: 'Studentski Grad' });
     expect(user).toBeTruthy();
     expect(user.email).toBe('user@test.com');
   });
 
   it('logs in a user and updates store', async () => {
-    const user = await auth.login('user@test.com', 'pass');
+    const user = await auth.login('user@test.com', 'TestPass123');
     expect(user).toBeTruthy();
     expect(user.email).toBe('user@test.com');
     // Optionally: check store state
@@ -57,7 +57,7 @@ describe('auth + store integration', () => {
   });
 
   it('logs out a user', async () => {
-    await auth.login('user@test.com', 'pass');
+    await auth.login('user@test.com', 'TestPass123');
     await auth.logout();
     // expect(store.get('user')).toBeNull();
   });

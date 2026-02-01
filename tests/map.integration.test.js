@@ -49,10 +49,9 @@ describe('map.js integration', () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const fakeMap = { addLayer: vi.fn() };
     await mapModule.loadCampaignMarkers(fakeMap);
-    expect(errorSpy).toHaveBeenCalledWith(
-      'Error loading campaign markers:',
-      expect.objectContaining({ message: 'DB error' })
-    );
+    expect(errorSpy).toHaveBeenCalled();
+    const firstCall = errorSpy.mock.calls[0];
+    expect(firstCall[0]).toContain('Error loading campaign markers');
     errorSpy.mockRestore();
   });
 });

@@ -1,3 +1,13 @@
+// Mock URL constructor before any imports
+class MockURL {
+  constructor(url) {
+    this.href = url;
+  }
+  static createObjectURL() {
+    return 'blob:mock-url';
+  }
+}
+global.URL = MockURL;
 
 import { describe, it, expect, vi } from 'vitest';
 // Patch: mock supabase.js before importing storage.js to avoid import.meta.env error
@@ -16,8 +26,9 @@ vi.mock('../src/services/supabase.js', () => ({
 global.Swal = {
   fire: vi.fn(async () => ({ isConfirmed: true }))
 };
+
+
 import * as storage from '../src/services/storage.js';
-global.URL = { createObjectURL: vi.fn(() => 'blob:url') };
 
 describe('storage.js integration', () => {
   it('uploads a campaign photo (mock)', async () => {
@@ -34,5 +45,75 @@ describe('storage.js integration', () => {
     vi.spyOn(storage, 'deleteCampaignPhoto').mockResolvedValue(true);
     const result = await storage.deleteCampaignPhoto('test-path');
     expect(result).toBe(true);
+  });
+
+  it('throws if no file provided to uploadCampaignPhoto', async () => {
+    const { uploadCampaignPhoto } = await import('../src/services/storage.js');
+    await expect(uploadCampaignPhoto(null)).rejects.toThrow('No file provided');
+  });
+
+  it('throws if Supabase upload fails', async () => {
+    vi.resetModules();
+    class MockURL {
+      constructor(url) { this.href = url; }
+      static createObjectURL() { return 'blob:mock-url'; }
+    }
+    global.URL = MockURL;
+    vi.doMock('../src/services/supabase.js', () => ({
+      default: {
+        storage: {
+          from: () => ({
+            upload: async () => ({ error: { message: 'Upload failed' } }),
+            getPublicUrl: () => ({ data: { publicUrl: 'mock-url' } })
+          })
+        }
+      }
+    }));
+    const { uploadCampaignPhoto } = await import('../src/services/storage.js');
+    const file = new Blob(['test'], { type: 'image/png', name: 'file.png' });
+    await expect(uploadCampaignPhoto(file, 'folder')).rejects.toThrow('Upload failed');
+  });
+
+  it('returns publicUrl even if getPublicUrl returns no data', async () => {
+    vi.resetModules();
+    class MockURL {
+      constructor(url) { this.href = url; }
+      static createObjectURL() { return 'blob:mock-url'; }
+    }
+    global.URL = MockURL;
+    vi.doMock('../src/services/supabase.js', () => ({
+      default: {
+        storage: {
+          from: () => ({
+            upload: async () => ({ error: null }),
+            getPublicUrl: () => ({ data: {} })
+          })
+        }
+      }
+    }));
+    const { uploadCampaignPhoto } = await import('../src/services/storage.js');
+    const file = new Blob(['test'], { type: 'image/png', name: 'file.png' });
+    const url = await uploadCampaignPhoto(file, 'folder');
+    expect(url).toBeUndefined();
+  });
+
+  it('throws if Supabase delete fails', async () => {
+    vi.resetModules();
+    class MockURL {
+      constructor(url) { this.href = url; }
+      static createObjectURL() { return 'blob:mock-url'; }
+    }
+    global.URL = MockURL;
+    vi.doMock('../src/services/supabase.js', () => ({
+      default: {
+        storage: {
+          from: () => ({
+            remove: async () => ({ error: { message: 'Delete failed' } })
+          })
+        }
+      }
+    }));
+    const { deleteCampaignPhoto } = await import('../src/services/storage.js');
+    await expect(deleteCampaignPhoto('bad-path')).rejects.toThrow('Delete failed');
   });
 });
