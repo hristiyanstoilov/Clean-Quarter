@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import { resolve } from 'path'
+import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig({
   server: {
@@ -18,7 +19,8 @@ export default defineConfig({
         profile: resolve(__dirname, 'src/pages/profile.html'),
         admin: resolve(__dirname, 'src/pages/admin.html'),
         rewards: resolve(__dirname, 'src/pages/rewards.html')
-      }
+      },
+      plugins: [visualizer({ open: true, filename: 'dist/bundle-stats.html' })]
     }
   }
 })

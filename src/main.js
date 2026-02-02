@@ -1,112 +1,69 @@
+// Handle demo login - for Demo Mode button
+let initDemoMode, getDemoUser;
+async function handleDemoLogin(e) {
+  if (e) e.preventDefault();
+  try {
+    if (!initDemoMode || !getDemoUser) {
+      const demoMode = await import("./utils/demoMode.js");
+      initDemoMode = demoMode.initDemoMode;
+      getDemoUser = demoMode.getDemoUser;
+    }
+    // Get current language before login
+    let lang = "bg";
+    try {
+      lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+    } catch {}
+    // Set language in localStorage for dashboard and all pages
+    localStorage.setItem("CLEAN_QUARTER_LANGUAGE", lang);
+    initDemoMode();
+    const demoUser = getDemoUser();
+    if (demoUser && demoUser.id) {
+      localStorage.setItem("user", JSON.stringify(demoUser));
+      if (typeof Swal !== "undefined") {
+        await Swal.fire({
+          icon: "success",
+          title: lang === "en" ? "🎮 Demo Mode Active" : "🎮 Демонстрационен режим",
+          text:
+            lang === "en" ? `Welcome ${demoUser.username}!` : `Добре дошъл, ${demoUser.username}!`,
+          timer: 1500,
+        });
+      } else {
+        alert(
+          lang === "en"
+            ? `🎮 Welcome to Demo Mode, ${demoUser.username}!`
+            : `🎮 Добре дошъл в демо режим, ${demoUser.username}!`
+        );
+      }
+      window.location.href = "./src/pages/dashboard.html";
+    } else {
+      throw new Error(lang === "en" ? "Demo user not found" : "Демо потребителят не е намерен");
+    }
+  } catch (error) {
+    let lang = "bg";
+    try {
+      lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+    } catch {}
+    console.error("❌ Error:", error);
+    if (typeof Swal !== "undefined") {
+      await Swal.fire({
+        icon: "error",
+        title: lang === "en" ? "Error" : "Грешка",
+        text: error.message,
+      });
+    } else {
+      alert((lang === "en" ? "Error: " : "Грешка: ") + error.message);
+    }
+  }
+}
+// Make globally available for onclick
+window.handleDemoLogin = handleDemoLogin;
 // Main entry point for the application
 import "./assets/style.css";
 import { login, register } from "./services/auth.js";
-import { initializePWA } from "./services/pwa.js";
-import { initDemoMode, getDemoUser } from "./utils/demoMode.js";
-import { initI18n, setLanguage, applyLanguage } from "./utils/i18n.js";
-
-// Handle demo login - MUST BE DEFINED EARLY AND ASSIGNED TO WINDOW
-function handleDemoLogin(e) {
-  if (e) e.preventDefault();
-  console.log("🎮 Demo Login clicked");
-
-  // Run async operations without blocking
-  (async () => {
-    try {
-      console.log("📝 Initializing demo data...");
-      initDemoMode();
-      console.log("✅ Demo data initialized");
-
-      const demoUser = getDemoUser();
-      console.log("👤 Demo user:", demoUser);
-
-      if (demoUser && demoUser.id) {
-        localStorage.setItem("user", JSON.stringify(demoUser));
-        console.log("✅ User saved");
-
-        // Use simple alert first, then navigate
-        if (typeof Swal !== "undefined") {
-          await Swal.fire({
-            icon: "success",
-            title: "🎮 Demo Mode Active",
-            text: `Welcome ${demoUser.username}!`,
-            timer: 1500,
-          });
-        } else {
-          alert(`🎮 Welcome to Demo Mode, ${demoUser.username}!`);
-        }
-
-        window.location.href = "./src/pages/dashboard.html";
-      } else {
-        throw new Error("Demo user not found");
-      }
-    } catch (error) {
-      console.error("❌ Error:", error);
-      if (typeof Swal !== "undefined") {
-        await Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: error.message,
-        });
-      } else {
-        alert(`Error: ${error.message}`);
-      }
-    }
-  })();
-}
-
-// CRITICAL: Make globally available for onclick
-window.handleDemoLogin = handleDemoLogin;
-
-// Wait for DOM to be ready
-document.addEventListener("DOMContentLoaded", async () => {
-  try {
-    console.log("📄 DOM Ready, starting initialization...");
-
-    // Initialize PWA FIRST
-    console.log("🚀 Initializing PWA...");
-    await initializePWA();
-    console.log("✅ PWA initialized");
-
-    // Initialize architecture
-    console.log("🏗️ Initializing application architecture...");
-    await initializeArchitecture();
-
-    // Initialize i18n
-    console.log("🌐 Loading translations...");
-    await initI18n(true); // Real-time enabled for login form
-    console.log("✅ Translations loaded");
-
-    // Apply language to page
-    const savedLanguage = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
-    console.log("🌍 Applying startup language:", savedLanguage);
-    applyLanguage(savedLanguage);
-    console.log("✅ Language applied at startup:", savedLanguage);
-
-    // Setup language selector event
-    const langSelector = document.getElementById("languageSelector");
-    console.log("🔧 Language selector found:", !!langSelector);
-    if (langSelector) {
-      langSelector.value = savedLanguage;
-      langSelector.addEventListener("change", (e) => {
-        console.log("🌍 Language selector changed to:", e.target.value);
-        setLanguage(e.target.value);
-      });
-      console.log("✅ Language selector event listener added");
-    }
-
-    // Check if user is logged in
-    const currentUser = JSON.parse(localStorage.getItem("user"));
-
-    if (!currentUser) {
-      initAuthForms();
-    } else {
-      window.location.href = "./src/pages/dashboard.html";
-    }
-  } catch (error) {
-    console.error("Failed to initialize application:", error);
-  }
-});
+import { initPasswordStrengthMeter } from "./components/passwordStrength.js";
+import passwordToggle from "./components/passwordToggle.js";
+// Lazy-load non-critical modules for performance
+let initializePWA, initI18n, setLanguage, applyLanguage;
 
 // Initialize auth forms
 function initAuthForms() {
@@ -119,6 +76,14 @@ function initAuthForms() {
 
   if (registerForm) {
     registerForm.addEventListener("submit", handleRegister);
+    // Initialize password strength meter for registration
+    initPasswordStrengthMeter();
+    // Initialize password visibility toggle for registration
+    passwordToggle({
+      inputId: "registerPassword",
+      toggleBtnId: "toggleRegisterPassword",
+      eyeIconId: "registerPasswordEye",
+    });
   }
 }
 
@@ -212,3 +177,32 @@ function loadPage(pageName) {
 }
 
 window.navigateTo = loadPage;
+
+// Ensure auth forms, i18n, and language selector are initialized on DOMContentLoaded
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    // Lazy-load i18n module if not already loaded
+    if (!initI18n || !setLanguage || !applyLanguage) {
+      const i18n = await import("./utils/i18n.js");
+      initI18n = i18n.initI18n;
+      setLanguage = i18n.setLanguage;
+      applyLanguage = i18n.applyLanguage;
+    }
+    await initI18n(true); // Enable real-time switching
+    const savedLanguage = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+    applyLanguage(savedLanguage);
+    // Setup language selector event
+    const langSelector = document.getElementById("languageSelector");
+    if (langSelector) {
+      langSelector.value = savedLanguage;
+      langSelector.addEventListener("change", (e) => {
+        setLanguage(e.target.value);
+      });
+    }
+    // Init forms
+    initAuthForms();
+  } catch (error) {
+    console.error("Failed to initialize i18n or forms:", error);
+    initAuthForms();
+  }
+});
