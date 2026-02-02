@@ -26,6 +26,87 @@
     
     <!-- Debug: Check if scripts run -->
     <script>
+                        // Live password checklist for registration
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const passwordInput = document.getElementById('registerPassword');
+                            const pwLength = document.getElementById('pw-length');
+                            const pwUppercase = document.getElementById('pw-uppercase');
+                            const pwLowercase = document.getElementById('pw-lowercase');
+                            const pwDigit = document.getElementById('pw-digit');
+                            if (passwordInput) {
+                                passwordInput.addEventListener('input', function(e) {
+                                    const value = e.target.value;
+                                    // Length
+                                    if (value.length >= 8) {
+                                        pwLength.classList.remove('text-danger');
+                                        pwLength.classList.add('text-success');
+                                    } else {
+                                        pwLength.classList.remove('text-success');
+                                        pwLength.classList.add('text-danger');
+                                    }
+                                    // Uppercase
+                                    if (/[A-Z]/.test(value)) {
+                                        pwUppercase.classList.remove('text-danger');
+                                        pwUppercase.classList.add('text-success');
+                                    } else {
+                                        pwUppercase.classList.remove('text-success');
+                                        pwUppercase.classList.add('text-danger');
+                                    }
+                                    // Lowercase
+                                    if (/[a-z]/.test(value)) {
+                                        pwLowercase.classList.remove('text-danger');
+                                        pwLowercase.classList.add('text-success');
+                                    } else {
+                                        pwLowercase.classList.remove('text-success');
+                                        pwLowercase.classList.add('text-danger');
+                                    }
+                                    // Digit
+                                    if (/[0-9]/.test(value)) {
+                                        pwDigit.classList.remove('text-danger');
+                                        pwDigit.classList.add('text-success');
+                                    } else {
+                                        pwDigit.classList.remove('text-success');
+                                        pwDigit.classList.add('text-danger');
+                                    }
+                                });
+                            }
+                        });
+                // Live password validation for registration
+                document.addEventListener('DOMContentLoaded', function() {
+                    const passwordInput = document.getElementById('registerPassword');
+                    const passwordFeedback = document.getElementById('registerPasswordFeedback');
+                    if (passwordInput) {
+                        passwordInput.addEventListener('input', function(e) {
+                            const value = e.target.value;
+                            let error = null;
+                            // Password validation logic (same as src/services/validation.js)
+                            if (!value) {
+                                error = '';
+                            } else if (value.length < 8) {
+                                error = 'Паролата трябва да е поне 8 символа';
+                            } else if (!/[A-Z]/.test(value)) {
+                                error = 'Паролата трябва да съдържа главна буква';
+                            } else if (!/[a-z]/.test(value)) {
+                                error = 'Паролата трябва да съдържа малка буква';
+                            } else if (!/[0-9]/.test(value)) {
+                                error = 'Паролата трябва да съдържа число';
+                            }
+                            if (!value) {
+                                passwordFeedback.textContent = '';
+                                passwordFeedback.classList.remove('text-success');
+                                passwordFeedback.classList.add('text-danger');
+                            } else if (error) {
+                                passwordFeedback.textContent = error;
+                                passwordFeedback.classList.remove('text-success');
+                                passwordFeedback.classList.add('text-danger');
+                            } else {
+                                passwordFeedback.textContent = 'Паролата е силна!';
+                                passwordFeedback.classList.remove('text-danger');
+                                passwordFeedback.classList.add('text-success');
+                            }
+                        });
+                    }
+                });
         console.log('🔵 Inline script executed - before main.js');
     </script>
     
@@ -262,6 +343,10 @@
                         <div class="tab-pane fade show active" id="login" role="tabpanel">
                             <form id="loginForm">
                                 <div class="form-group">
+                                                                                                            <div id="registerPasswordStrengthBar" style="height: 6px; background-color: #e9ecef; border-radius: 3px; overflow: hidden; margin-bottom: 0.5rem;">
+                                                                                                                <div id="registerPasswordStrength" style="height: 100%; width: 0%; background-color: #dc3545; transition: all 0.3s ease;"></div>
+                                                                                                            </div>
+                                            <!-- Password strength meter JS moved to main.js or external script. -->
                                     <label for="loginEmail" class="form-label" data-i18n="auth.email">Имейл</label>
                                     <input type="email" class="form-control" id="loginEmail" data-i18n-placeholder="auth.emailPlaceholder" placeholder="твоят@имейл.com" required>
                                 </div>
@@ -298,16 +383,20 @@
                                     <input type="email" class="form-control" id="registerEmail" data-i18n-placeholder="auth.emailPlaceholder" placeholder="твоят@имейл.com" required>
                                 </div>
                                 <div class="form-group">
-                                    <label for="registerPassword" class="form-label" data-i18n="auth.password">Парола</label>
-                                    <input type="password" class="form-control" id="registerPassword" data-i18n-placeholder="auth.passwordMinChars" placeholder="Минимум 6 символа" required onkeyup="checkPasswordStrength()">
-                                    <div style="margin-top: 0.5rem;">
-                                        <div style="height: 6px; background-color: #e9ecef; border-radius: 3px; overflow: hidden;">
-                                            <div id="passwordStrengthBar" style="height: 100%; width: 0%; background-color: #dc3545; transition: all 0.3s ease;"></div>
-                                        </div>
-                                        <div id="passwordStrengthText" style="font-size: 0.85rem; color: #6c757d; margin-top: 0.25rem;" data-i18n="auth.passwordStrengthHint">
-                                            Парола трябва да има: главни букви, малки букви, числа
-                                        </div>
-                                    </div>
+                                                                        <label for="registerPassword" class="form-label" data-i18n="auth.password">Парола</label>
+                                                                        <div style="position: relative;">
+                                                                            <input type="password" class="form-control" id="registerPassword" data-i18n-placeholder="auth.passwordMinChars" placeholder="Минимум 8 символа, главна, малка буква и число" required autocomplete="new-password">
+                                                                            <button type="button" id="toggleRegisterPassword" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer;">
+                                                                                <span id="registerPasswordEye" aria-label="Покажи/Скрий парола" style="font-size: 1.2rem;">👁️</span>
+                                                                            </button>
+                                                                        </div>
+                                                                        <ul id="registerPasswordChecklist" class="form-text mt-2" style="list-style: none; padding-left: 0;">
+                                                                            <li id="pw-length" class="text-danger" data-i18n="auth.pwMinLength">• Мин. 8 символа</li>
+                                                                            <li id="pw-uppercase" class="text-danger" data-i18n="auth.pwUppercase">• Главна буква (A-Z)</li>
+                                                                            <li id="pw-lowercase" class="text-danger" data-i18n="auth.pwLowercase">• Малка буква (a-z)</li>
+                                                                            <li id="pw-digit" class="text-danger" data-i18n="auth.pwDigit">• Число (0-9)</li>
+                                                                        </ul>
+
                                 </div>
                                 <div class="form-group">
                                     <label for="registerPasswordConfirm" class="form-label" data-i18n="auth.confirmPassword">Потвърди парола</label>

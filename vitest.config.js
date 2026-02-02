@@ -1,7 +1,14 @@
 // vitest.config.js
-export default {
-  setupFiles: [
-    './tests/global-setup.js',
-    './tests/setup.js',
-  ],
-};
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  setupFiles: ['./vitest.setup.js'],
+  test: {
+    include: [
+      'tests/**/*.test.js',
+      'minimal-root.test.js'
+    ],
+    environment: 'node',
+    globals: true
+  }
+});
