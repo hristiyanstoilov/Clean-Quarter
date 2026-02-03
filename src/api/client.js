@@ -8,6 +8,7 @@ export async function apiFetch(url, options) {
  */
 
 import store from "../state/store.js";
+import logger from "../services/logger.js";
 
 export class ApiClient {
   constructor() {
@@ -90,7 +91,7 @@ export class ApiClient {
     let lastError;
     for (let attempt = 0; attempt < this.retries; attempt++) {
       try {
-        console.log(`📡 ${method} ${url} (attempt ${attempt + 1}/${this.retries})`);
+        logger.info(`📡 ${method} ${url} (attempt ${attempt + 1}/${this.retries})`);
 
         const response = await fetch(config.url, {
           method: config.method,
@@ -118,7 +119,7 @@ export class ApiClient {
           headers: response.headers,
         });
 
-        console.log(`✅ ${method} ${url} - Success`);
+        logger.info(`✅ ${method} ${url} - Success`);
         store.setState("isLoading", false);
 
         return finalResponse.data;
@@ -133,7 +134,7 @@ export class ApiClient {
         // Exponential backoff
         if (attempt < this.retries - 1) {
           const delay = this.retryDelay * Math.pow(2, attempt);
-          console.log(`⏳ Retrying in ${delay}ms...`);
+          logger.info(`⏳ Retrying in ${delay}ms...`);
           await this.sleep(delay);
         }
       }
@@ -141,7 +142,7 @@ export class ApiClient {
 
     // Handle final error
     store.setState("isLoading", false);
-    console.error(`❌ ${method} ${url} - Failed:`, lastError);
+    logger.error(`❌ ${method} ${url} - Failed:`, lastError);
     throw {
       type: "API_ERROR",
       method,
@@ -201,7 +202,6 @@ export class ApiClient {
     signal?.abort();
   }
 }
-
 
 // Create singleton instance
 const apiClient = new ApiClient();

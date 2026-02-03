@@ -1,41 +1,40 @@
-
+import logger from "../services/logger.js";
 /**
  * Centralized State Management Store
  * Handles global application state with pub-sub pattern
  */
 
 export class Store {
-
-    /**
-     * Set a single key in state and notify
-     * @param {string} key
-     * @param {*} value
-     */
-    set(key, value) {
-      this.state[key] = value;
-      this.notify();
-      // Persist to localStorage if available (for test)
-      if (typeof localStorage !== 'undefined') {
-        try {
-          localStorage.setItem(key, value);
-        } catch {}
-      }
+  /**
+   * Set a single key in state and notify
+   * @param {string} key
+   * @param {*} value
+   */
+  set(key, value) {
+    this.state[key] = value;
+    this.notify();
+    // Persist to localStorage if available (for test)
+    if (typeof localStorage !== "undefined") {
+      try {
+        localStorage.setItem(key, value);
+      } catch {}
     }
+  }
 
-    /**
-     * Remove a key from state and notify
-     * @param {string} key
-     */
-    remove(key) {
-      delete this.state[key];
-      this.notify();
-      // Remove from localStorage if available (for test)
-      if (typeof localStorage !== 'undefined') {
-        try {
-          localStorage.removeItem(key);
-        } catch {}
-      }
+  /**
+   * Remove a key from state and notify
+   * @param {string} key
+   */
+  remove(key) {
+    delete this.state[key];
+    this.notify();
+    // Remove from localStorage if available (for test)
+    if (typeof localStorage !== "undefined") {
+      try {
+        localStorage.removeItem(key);
+      } catch {}
     }
+  }
   constructor() {
     this.state = {
       // Auth State
@@ -77,8 +76,12 @@ export class Store {
     // Lazy-load language from localStorage if not set
     if (!this.state.currentLanguage) {
       try {
-        this.state.currentLanguage = (typeof localStorage !== 'undefined' && localStorage.getItem("CLEAN_QUARTER_LANGUAGE")) || "bg";
-      } catch { this.state.currentLanguage = "bg"; }
+        this.state.currentLanguage =
+          (typeof localStorage !== "undefined" && localStorage.getItem("CLEAN_QUARTER_LANGUAGE")) ||
+          "bg";
+      } catch {
+        this.state.currentLanguage = "bg";
+      }
     }
   }
 
@@ -86,7 +89,7 @@ export class Store {
    * Initialize store
    */
   init() {
-    console.log("🏪 Store initialized");
+    logger.info("🏪 Store initialized");
   }
 
   /**
@@ -122,9 +125,9 @@ export class Store {
    * @param {string} path - Dot-separated path (e.g., 'user.id')
    * @returns {*} State value
    */
-	get(key) {
-		return Object.prototype.hasOwnProperty.call(this.state, key) ? this.state[key] : undefined;
-	}
+  get(key) {
+    return Object.prototype.hasOwnProperty.call(this.state, key) ? this.state[key] : undefined;
+  }
 
   /**
    * Set state (single property or multiple)
@@ -170,12 +173,12 @@ export class Store {
    * Notify all listeners of state change
    */
   notify() {
-    console.log("📢 State updated:", this.state);
+    logger.info("📢 State updated:", this.state);
     this.listeners.forEach((listener) => {
       try {
         listener(this.getState());
       } catch (error) {
-        console.error("❌ Listener error:", error);
+        logger.error("❌ Listener error:", error);
       }
     });
   }
@@ -308,13 +311,16 @@ export class Store {
     // Lazy-load language from localStorage if not set
     if (!this.state.currentLanguage) {
       try {
-        this.state.currentLanguage = (typeof localStorage !== 'undefined' && localStorage.getItem("CLEAN_QUARTER_LANGUAGE")) || "bg";
-      } catch { this.state.currentLanguage = "bg"; }
+        this.state.currentLanguage =
+          (typeof localStorage !== "undefined" && localStorage.getItem("CLEAN_QUARTER_LANGUAGE")) ||
+          "bg";
+      } catch {
+        this.state.currentLanguage = "bg";
+      }
     }
     this.notify();
   }
 }
-
 
 // Export singleton instance
 

@@ -1,4 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
+import logger from "./logger.js";
+import { isBrowser } from "../utils/env.js";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -18,13 +20,14 @@ if (!supabaseUrl || !supabaseAnonKey) {
     Get credentials from: https://supabase.com/dashboard/project/_/settings/api
   `;
 
-  console.error(errorMessage);
+  logger.error(errorMessage);
 
-  // Show error in UI
-  if (typeof window !== "undefined") {
+  // Show error in UI (dev only)
+  if (isBrowser()) {
     document.addEventListener("DOMContentLoaded", () => {
       const body = document.querySelector("body");
       if (body) {
+        // SAFE: Only static error message, no user content injected
         body.innerHTML = `
           <div style="
             font-family: monospace;
@@ -47,13 +50,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-
 // Named exports for testability (mock implementations for integration tests)
 export async function fetchCampaigns() {
   // Връща реални кампании от Supabase
   const { data, error } = await supabase
-    .from('campaigns')
-    .select('id, title, location_lat, location_lng, status');
+    .from("campaigns")
+    .select("id, title, location_lat, location_lng, status");
   if (error) throw error;
   return data;
 }

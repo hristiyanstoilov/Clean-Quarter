@@ -9,12 +9,16 @@
 const rules = {
   // Text validation
   required: (value) => {
-    if (value === null || value === undefined || value === '' || (typeof value === 'string' && value.trim() === '')) {
+    if (
+      value === null ||
+      value === undefined ||
+      value === "" ||
+      (typeof value === "string" && value.trim() === "")
+    ) {
       return "Полето е задължително";
     }
     return null;
   },
-
   email: (value) => {
     if (!value) return null;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -23,7 +27,7 @@ const rules = {
 
   minLength: (min) => {
     return (value) => {
-      if (value === null || value === undefined || value === '') return null;
+      if (value === null || value === undefined || value === "") return null;
       return value.length >= min ? null : `Минимална дължина е ${min}`;
     };
   },
@@ -122,7 +126,7 @@ const schemas = {
     username: [rules.required, rules.minLength(3), rules.maxLength(50)],
     email: [rules.required, rules.email],
   },
-};
+}; // <-- Close the schemas object
 
 /**
  * Validate single field
@@ -153,13 +157,18 @@ export function validateForm(data, schema) {
   const errors = {};
   for (const [field, fieldRules] of Object.entries(schema)) {
     const value = data[field];
-    const isEmpty = value === null || value === undefined || value === '' || (typeof value === 'string' && value.trim() === '');
+    const isEmpty =
+      value === null ||
+      value === undefined ||
+      value === "" ||
+      (typeof value === "string" && value.trim() === "");
     if (isEmpty) {
       // Only check required rule
-      let requiredRule = fieldRules.find(r => r === 'required' || r === rules.required);
+      let requiredRule = fieldRules.find((r) => r === "required" || r === rules.required);
       if (requiredRule) {
-        let error = typeof requiredRule === 'function' ? requiredRule(value) : rules[requiredRule](value);
-        if (typeof error === 'string' && error) {
+        let error =
+          typeof requiredRule === "function" ? requiredRule(value) : rules[requiredRule](value);
+        if (typeof error === "string" && error) {
           errors[field] = error;
         }
       }
@@ -179,10 +188,10 @@ export function validateForm(data, schema) {
           error = rules[key](rule[key])(value);
         }
       }
-      if (field === 'password') {
-        console.log('DEBUG password:', value, rule, error);
-      }
-      if (typeof error === 'string' && error) {
+      // if (field === "password") {
+      //   logger.debug("DEBUG password:", value, rule, error);
+      // }
+      if (typeof error === "string" && error) {
         errors[field] = error;
         break;
       }
@@ -197,10 +206,12 @@ export function validateForm(data, schema) {
  * @param {Object} data - Data to validate
  * @returns {Object} Validation result
  */
+import logger from "./logger.js";
+
 export function validateWithSchema(schemaName, data) {
   const schema = schemas[schemaName];
   if (!schema) {
-    console.error(`❌ Schema not found: ${schemaName}`);
+    logger.error(`❌ Schema not found: ${schemaName}`);
     return {};
   }
   return validateForm(data, schema);

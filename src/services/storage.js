@@ -1,6 +1,6 @@
 // Named exports for testability (mock implementations for integration tests)
 export async function uploadFile(file, filename) {
-  return 'https://mocked-storage-url/' + filename;
+  return "https://mocked-storage-url/" + filename;
 }
 export async function deleteFile(filename) {
   return true;
@@ -19,21 +19,17 @@ export async function uploadCampaignPhoto(file, folderName = "photos") {
     if (!file) {
       throw new Error("No file provided");
     }
-
     // Generate unique filename with timestamp
     const timestamp = Date.now();
     const randomString = Math.random().toString(36).substring(2, 8);
     const fileName = `${timestamp}-${randomString}-${file.name}`;
     const filePath = `${folderName}/${fileName}`;
-
     // Upload file to Supabase Storage
     const { error } = await supabase.storage.from("campaign-photos").upload(filePath, file);
-
     if (error) throw new Error(`Upload failed: ${error.message}`);
-
     // Get public URL
     const { data: publicUrlData } = supabase.storage.from("campaign-photos").getPublicUrl(filePath);
-
+    if (!publicUrlData || !publicUrlData.publicUrl) return undefined;
     return publicUrlData.publicUrl;
   } catch (error) {
     await handleError("uploadCampaignPhoto", error, "Failed to upload photo. Please try again.");
@@ -49,12 +45,19 @@ export async function uploadCampaignPhoto(file, folderName = "photos") {
 export async function deleteCampaignPhoto(filePath) {
   try {
     const { error } = await supabase.storage.from("campaign-photos").remove([filePath]);
-
     if (error) {
       throw new Error(`Delete failed: ${error.message}`);
     }
+    return true;
   } catch (error) {
     await handleError("deleteCampaignPhoto", error, "Failed to delete photo. Please try again.");
     throw error;
   }
 }
+
+export default {
+  uploadFile,
+  deleteFile,
+  uploadCampaignPhoto,
+  deleteCampaignPhoto,
+};

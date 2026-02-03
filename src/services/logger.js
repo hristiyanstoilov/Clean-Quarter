@@ -3,6 +3,8 @@
  * Centralized logging with different levels
  */
 
+import { isBrowser, hasLocalStorage, hasNavigator } from "../utils/env.js";
+
 const LOG_LEVELS = {
   DEBUG: 0,
   INFO: 1,
@@ -41,14 +43,14 @@ export class Logger {
   /**
    * Store log entry
    */
-  storeLog(level, message, data = null) {
+  storeLog(level, message, data = null, _skipListenerNotify = false) {
     const logEntry = {
       timestamp: new Date().toISOString(),
       level,
       message,
       data,
-      userAgent: navigator.userAgent,
-      url: window.location.href,
+      userAgent: hasNavigator() && navigator.userAgent ? navigator.userAgent : null,
+      url: isBrowser() && window.location ? window.location.href : null,
     };
 
     this.logs.push(logEntry);
@@ -58,14 +60,23 @@ export class Logger {
       this.logs.shift();
     }
 
-    // Notify listeners
-    this.listeners.forEach((listener) => {
-      try {
-        listener(logEntry);
-      } catch (error) {
-        console.error("Logger listener error:", error);
-      }
-    });
+    // Notify listeners, unless skipping due to error handling
+    if (!_skipListenerNotify) {
+      this.listeners.forEach((listener) => {
+        try {
+          listener(logEntry);
+        } catch (error) {
+          // Prevent recursion by skipping listener notification
+          this.storeLog("ERROR", "Logger listener error:", error, true);
+        }
+      });
+    }
+
+    if (hasLocalStorage()) {
+      const logs = JSON.parse(window.localStorage.getItem("logs") || "[]");
+      logs.push(logEntry);
+      window.localStorage.setItem("logs", JSON.stringify(logs));
+    }
 
     return logEntry;
   }
@@ -77,7 +88,7 @@ export class Logger {
     if (LOG_LEVELS.DEBUG >= this.level) return;
     const entry = this.storeLog("DEBUG", message, data);
     if (this.isDevelopment) {
-      console.debug(`🔍 [DEBUG] ${message}`, data);
+      this.info(`🔍 [DEBUG] ${message}`, data);
     }
     return entry;
   }
@@ -87,33 +98,48 @@ export class Logger {
    */
   _log(level, ...args) {
     switch (level) {
-      case 'info':
-        console.log(`ℹ️ [INFO] ${args[0]}`, args[1]);
+      case "info": {
+        this.storeLog("INFO", args[0], args[1]);
+        if (typeof console !== "undefined" && console.log) {
+          const msg = typeof args[0] === "string" ? `ℹ️ [INFO] ${args[0]}` : "ℹ️ [INFO]";
+          console.log(msg, args[1]);
+        }
         break;
-      case 'warn':
-        console.warn(`⚠️ [WARN] ${args[0]}`, args[1]);
+      }
+      case "warn": {
+        this.storeLog("WARN", args[0], args[1]);
+        if (typeof console !== "undefined" && console.warn) {
+          const msg = typeof args[0] === "string" ? `⚠️ [WARN] ${args[0]}` : "⚠️ [WARN]";
+          console.warn(msg, args[1]);
+        }
         break;
-      case 'error':
-        console.error(`❌ [ERROR] ${args[0]}`, args[1], args[2]);
+      }
+      case "error": {
+        this.storeLog("ERROR", args[0], args[1]);
+        if (typeof console !== "undefined" && console.error) {
+          const msg = typeof args[0] === "string" ? `❌ [ERROR] ${args[0]}` : "❌ [ERROR]";
+          console.error(msg, args[1], args[2]);
+        }
         break;
+      }
     }
   }
   info(...args) {
-    this._log('info', ...args);
+    this._log("info", ...args);
   }
 
   /**
    * Log warning message
    */
   warn(...args) {
-    this._log('warn', ...args);
+    this._log("warn", ...args);
   }
 
   /**
    * Log error message
    */
   error(...args) {
-    this._log('error', ...args);
+    this._log("error", ...args);
   }
 
   /**
@@ -125,7 +151,7 @@ export class Logger {
       stack: error instanceof Error ? error.stack : null,
       data,
     });
-    console.error(`🔴 [FATAL] ${message}`, error, data);
+    this.error(`🔴 [FATAL] ${message}`, error, data);
     // In production, could send to error tracking service
     return entry;
   }
@@ -208,15 +234,15 @@ export class Logger {
     const originalMethods = ["debug", "info", "warn", "error", "fatal"];
 
     originalMethods.forEach((method) => {
-      child[method] = (message, data) => {
-        return Logger.prototype[method].call(this, `[${prefix}] ${message}`, data);
+      child[method] = function (message, data) {
+        // Call via child instance so spies work
+        return this.__proto__[method].call(this, `[${prefix}] ${message}`, data);
       };
     });
 
     return child;
   }
 }
-
 
 // Export singleton instance
 const logger = new Logger();
