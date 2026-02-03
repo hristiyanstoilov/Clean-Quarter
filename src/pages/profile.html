@@ -414,6 +414,72 @@
               </select>
             </div>
 
+            <!-- Change Password Section -->
+            <div
+              id="editPasswordStrengthBar"
+              style="
+                height: 6px;
+                background-color: #e9ecef;
+                border-radius: 3px;
+                overflow: hidden;
+                margin-bottom: 0.5rem;
+              "
+            >
+              <div
+                id="editPasswordStrength"
+                style="
+                  height: 100%;
+                  width: 0%;
+                  background-color: #dc3545;
+                  transition: all 0.3s ease;
+                "
+              ></div>
+            </div>
+            <div class="mb-3">
+              <label for="editPassword" class="form-label" data-i18n="profile.newPassword"
+                >Нова парола</label
+              >
+              <div style="position: relative">
+                <input
+                  type="password"
+                  class="form-control"
+                  id="editPassword"
+                  placeholder="Въведи нова парола"
+                  autocomplete="new-password"
+                />
+                <button
+                  type="button"
+                  id="toggleEditPassword"
+                  style="
+                    position: absolute;
+                    right: 10px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                  "
+                >
+                  <span
+                    id="editPasswordEye"
+                    aria-label="Покажи/Скрий парола"
+                    style="font-size: 1.2rem"
+                    >👁️</span
+                  >
+                </button>
+              </div>
+              <ul
+                id="editPasswordChecklist"
+                class="form-text mt-2"
+                style="list-style: none; padding-left: 0"
+              >
+                <li id="edit-pw-length" class="text-danger">• Мин. 8 символа</li>
+                <li id="edit-pw-uppercase" class="text-danger">• Главна буква (A-Z)</li>
+                <li id="edit-pw-lowercase" class="text-danger">• Малка буква (a-z)</li>
+                <li id="edit-pw-digit" class="text-danger">• Число (0-9)</li>
+              </ul>
+            </div>
+
             <div class="d-flex gap-2">
               <button type="submit" class="btn btn-success" data-i18n="profile.saveChanges">
                 💾 Запази промените
@@ -464,12 +530,53 @@
       import supabase from "../services/supabase.js";
       import { initI18n, applyLanguage, setLanguage } from "../utils/i18n.js";
 
+      import { rules } from "../services/validation.js";
       // Global variables
       let currentUser = null;
       let userProfile = null;
 
       // Initialize on page load
       document.addEventListener("DOMContentLoaded", async () => {
+        // Password input and related elements (declare once)
+        const passwordInput = document.getElementById("editPassword");
+        const strengthBar = document.getElementById("editPasswordStrength");
+        const toggleBtn = document.getElementById("toggleEditPassword");
+        const eyeIcon = document.getElementById("editPasswordEye");
+
+        // Password strength meter for profile
+        if (passwordInput && strengthBar) {
+          passwordInput.addEventListener("input", function (e) {
+            const value = e.target.value;
+            let score = 0;
+            if (value.length >= 8) score++;
+            if (/[A-Z]/.test(value)) score++;
+            if (/[a-z]/.test(value)) score++;
+            if (/[0-9]/.test(value)) score++;
+            // Strength bar logic
+            let percent = (score / 4) * 100;
+            strengthBar.style.width = percent + "%";
+            if (score === 4) {
+              strengthBar.style.backgroundColor = "#28a745";
+            } else if (score === 3) {
+              strengthBar.style.backgroundColor = "#ffc107";
+            } else {
+              strengthBar.style.backgroundColor = "#dc3545";
+            }
+          });
+        }
+
+        // Password visibility toggle for profile
+        if (toggleBtn && passwordInput) {
+          toggleBtn.addEventListener("click", function () {
+            if (passwordInput.type === "password") {
+              passwordInput.type = "text";
+              eyeIcon.textContent = "🙈";
+            } else {
+              passwordInput.type = "password";
+              eyeIcon.textContent = "👁️";
+            }
+          });
+        }
         try {
           // Initialize i18n first (realTime = false for initial load)
           await initI18n(false);
@@ -485,6 +592,49 @@
 
           await checkAuth();
           await loadProfileData();
+
+          // Live password validation
+          const pwLength = document.getElementById("edit-pw-length");
+          const pwUppercase = document.getElementById("edit-pw-uppercase");
+          const pwLowercase = document.getElementById("edit-pw-lowercase");
+          const pwDigit = document.getElementById("edit-pw-digit");
+          if (passwordInput) {
+            passwordInput.addEventListener("input", (e) => {
+              const value = e.target.value;
+              // Length
+              if (value.length >= 8) {
+                pwLength.classList.remove("text-danger");
+                pwLength.classList.add("text-success");
+              } else {
+                pwLength.classList.remove("text-success");
+                pwLength.classList.add("text-danger");
+              }
+              // Uppercase
+              if (/[A-Z]/.test(value)) {
+                pwUppercase.classList.remove("text-danger");
+                pwUppercase.classList.add("text-success");
+              } else {
+                pwUppercase.classList.remove("text-success");
+                pwUppercase.classList.add("text-danger");
+              }
+              // Lowercase
+              if (/[a-z]/.test(value)) {
+                pwLowercase.classList.remove("text-danger");
+                pwLowercase.classList.add("text-success");
+              } else {
+                pwLowercase.classList.remove("text-success");
+                pwLowercase.classList.add("text-danger");
+              }
+              // Digit
+              if (/[0-9]/.test(value)) {
+                pwDigit.classList.remove("text-danger");
+                pwDigit.classList.add("text-success");
+              } else {
+                pwDigit.classList.remove("text-success");
+                pwDigit.classList.add("text-danger");
+              }
+            });
+          }
         } catch (error) {
           console.error("Profile page initialization failed", error);
         }
