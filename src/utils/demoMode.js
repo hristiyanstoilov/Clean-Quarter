@@ -26,16 +26,48 @@ const DEMO_TRANSACTIONS_KEY = 'CLEAN_QUARTER_DEMO_TRANSACTIONS';
  * Initialize demo mode with sample data
  */
 export function initDemoMode() {
-  const demoUser = {
-    id: 'demo-admin-001',
-    email: 'admin@demo.com',
-    username: 'admin_demo',
-    role: 'admin',
-    points_balance: 2500,
-    neighborhood: 'Studentski Grad',
-    avatar_url: null,
-    created_at: new Date('2024-01-15').toISOString(),
-  };
+  const demoUsers = [
+    {
+      id: 'demo-admin-001',
+      email: 'admin@demo.com',
+      username: 'admin_demo',
+      role: 'admin',
+      points_balance: 2500,
+      neighborhood: 'Studentski Grad',
+      avatar_url: null,
+      created_at: new Date('2024-01-15').toISOString(),
+    },
+    {
+      id: 'user-demo-001',
+      email: 'user@demo.com',
+      username: 'user_demo',
+      role: 'user',
+      points_balance: 800,
+      neighborhood: 'Darvenitsa',
+      avatar_url: null,
+      created_at: new Date('2024-01-16').toISOString(),
+    },
+    {
+      id: 'user-demo-002',
+      email: 'user2@demo.com',
+      username: 'user2_demo',
+      role: 'user',
+      points_balance: 120,
+      neighborhood: 'Musagenitsa',
+      avatar_url: null,
+      created_at: new Date('2024-01-17').toISOString(),
+    },
+    {
+      id: 'user-demo-003',
+      email: 'user3@demo.com',
+      username: 'user3_demo',
+      role: 'user',
+      points_balance: 50,
+      neighborhood: 'Vitosha (VEC)',
+      avatar_url: null,
+      created_at: new Date('2024-01-18').toISOString(),
+    }
+  ];
 
   const demoCampaigns = [
     {
@@ -281,11 +313,83 @@ export function initDemoMode() {
 
   // Save to localStorage
   localStorage.setItem(DEMO_MODE_KEY, 'true');
-  localStorage.setItem(DEMO_USER_KEY, JSON.stringify(demoUser));
+  localStorage.setItem(DEMO_USER_KEY, JSON.stringify(demoUsers[0]));
+  localStorage.setItem('CLEAN_QUARTER_DEMO_USERS', JSON.stringify(demoUsers));
   localStorage.setItem(DEMO_CAMPAIGNS_KEY, JSON.stringify(demoCampaigns));
-  localStorage.setItem(DEMO_PARTICIPATIONS_KEY, JSON.stringify(demoParticipations));
-  localStorage.setItem(DEMO_REWARDS_KEY, JSON.stringify(demoRewards));
-  localStorage.setItem(DEMO_TRANSACTIONS_KEY, JSON.stringify(demoTransactions));
+  localStorage.setItem(DEMO_PARTICIPATIONS_KEY, JSON.stringify(demoParticipations.concat([
+    // More participations for richer demo
+    {
+      id: 'part-004',
+      campaign_id: 'campaign-004',
+      user_id: 'user-demo-002',
+      status: 'pending',
+      after_photo_url: '',
+      points_earned: 0,
+      created_at: new Date('2024-01-14').toISOString(),
+      updated_at: new Date('2024-01-14').toISOString(),
+    },
+    {
+      id: 'part-005',
+      campaign_id: 'campaign-005',
+      user_id: 'user-demo-003',
+      status: 'approved',
+      after_photo_url: '',
+      points_earned: 100,
+      created_at: new Date('2024-01-15').toISOString(),
+      updated_at: new Date('2024-01-15').toISOString(),
+    }
+  ]));
+  localStorage.setItem(DEMO_REWARDS_KEY, JSON.stringify(demoRewards.concat([
+    // More rewards for variety
+    {
+      id: 'reward-011',
+      title: 'Еко бутилка',
+      description: 'Многоразова бутилка за вода',
+      cost: 60,
+      category: 'merchandise',
+      image_url: '',
+      quantity_available: 50,
+    },
+    {
+      id: 'reward-012',
+      title: 'Подаръчен ваучер',
+      description: 'Ваучер за пазаруване в супермаркет',
+      cost: 200,
+      category: 'voucher',
+      image_url: '',
+      quantity_available: 10,
+    }
+  ]));
+  localStorage.setItem(DEMO_TRANSACTIONS_KEY, JSON.stringify(demoTransactions.concat([
+    // More transactions for demo users
+    {
+      id: 'trans-006',
+      user_id: 'user-demo-001',
+      amount: 100,
+      type: 'earned',
+      description: 'Почистване на спортно игрище',
+      campaign_id: 'campaign-004',
+      created_at: new Date('2024-01-14').toISOString(),
+    },
+    {
+      id: 'trans-007',
+      user_id: 'user-demo-002',
+      amount: 80,
+      type: 'earned',
+      description: 'Почистване на устата на поток',
+      campaign_id: 'campaign-005',
+      created_at: new Date('2024-01-15').toISOString(),
+    },
+    {
+      id: 'trans-008',
+      user_id: 'user-demo-003',
+      amount: 60,
+      type: 'spent',
+      description: 'Използване на награда: Еко бутилка',
+      reward_id: 'reward-011',
+      created_at: new Date('2024-01-16').toISOString(),
+    }
+  ]));
 }
 
 /**

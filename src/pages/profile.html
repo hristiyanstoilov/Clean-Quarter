@@ -297,6 +297,7 @@
                     <a href="./dashboard.html" data-i18n="nav.dashboard">Dashboard</a>
                     <a href="./rewards.html" data-i18n="nav.rewards">Rewards</a>
                     <a href="./profile.html" data-i18n="nav.profile">Profile</a>
+                    <a href="./admin.html" id="adminNav" style="display:none;" data-i18n="nav.admin">Admin</a>
                     <select id="languageSelector" class="form-select form-select-sm" style="max-width: 150px;">
                         <option value="bg">🇧🇬 Български</option>
                         <option value="en">🇬🇧 English</option>
@@ -436,6 +437,16 @@
 
     <!-- Main Script -->
     <script type="module">
+                // Show Admin nav if user is admin
+                (function showAdminNavIfAdmin() {
+                    let user = null;
+                    try {
+                        user = JSON.parse(localStorage.getItem('user'));
+                    } catch (e) {}
+                    if (user && user.role === 'admin') {
+                        document.getElementById('adminNav').style.display = '';
+                    }
+                })();
         import supabase from '../services/supabase.js';
         import { initI18n, applyLanguage, setLanguage } from '../utils/i18n.js';
 

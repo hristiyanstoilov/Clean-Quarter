@@ -134,6 +134,31 @@
     "rejectionReason": "Rejection Reason",
     "noParticipations": "No participations"
   },
+  "demo": {
+    "switchUser": "Switch Demo User",
+    "admin": "👑 Demo Admin",
+    "user": "👤 Demo User"
+  },
+  "tooltips": {
+    "createCampaign": "Create a new cleanup campaign",
+    "rewards": "Browse and redeem rewards",
+    "profile": "View and edit your profile",
+    "admin": "Admin panel",
+    "viewCampaign": "See details and join this campaign",
+    "buyReward": "Redeem points for this reward",
+    "backToDashboard": "Back to dashboard",
+    "transactionHistory": "View your points history"
+  },
+  "categories": {
+    "food": "Food",
+    "fitness": "Fitness",
+    "entertainment": "Entertainment",
+    "beauty": "Beauty",
+    "culture": "Culture",
+    "merchandise": "Merchandise",
+    "voucher": "Voucher",
+    "health": "Health"
+  },
   "common": {
     "loading": "Loading...",
     "error": "Error",

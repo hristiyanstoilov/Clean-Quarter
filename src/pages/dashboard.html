@@ -56,6 +56,21 @@
             grid-template-columns: 1fr;
             gap: 1rem;
             width: 100%;
+            padding: 0.5rem;
+        }
+        @media (max-width: 400px) {
+            .campaigns-grid {
+                gap: 0.5rem;
+                padding: 0.25rem;
+            }
+            .campaign-card .card-body {
+                padding: 0.75rem 0.5rem 0.5rem 0.5rem;
+            }
+            .campaign-card .btn {
+                font-size: 0.95rem;
+                padding: 0.5rem 0.5rem;
+            }
+        }
         }
 
         @media (min-width: 576px) {
@@ -80,27 +95,40 @@
         }
         
         .campaign-card {
-            transition: transform 0.2s, box-shadow 0.2s;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(40,167,69,0.08), 0 1.5px 6px rgba(40,167,69,0.06);
+            border: 1.5px solid #e9ecef;
+            transition: transform 0.18s cubic-bezier(.4,0,.2,1), box-shadow 0.18s cubic-bezier(.4,0,.2,1);
             height: 100%;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
         
         .campaign-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            transform: translateY(-7px) scale(1.025);
+            box-shadow: 0 8px 28px rgba(40,167,69,0.13), 0 2px 8px rgba(40,167,69,0.10);
         }
         
         .campaign-card img {
-            height: 200px;
+            height: 160px;
             object-fit: cover;
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+        }
+        @media (max-width: 400px) {
+            .campaign-card img {
+                height: 110px;
+            }
+        }
         }
 
         .campaign-card .card-body {
             display: flex;
             flex-direction: column;
             flex-grow: 1;
-            padding: 1rem;
+            padding: 1.25rem 1.25rem 1rem 1.25rem;
         }
 
         .campaign-card .btn {
@@ -108,6 +136,16 @@
             margin-top: auto;
             padding: 0.75rem 1rem;
             font-weight: 600;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(40,167,69,0.08);
+            background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+            border: none;
+            color: #fff;
+            transition: background 0.18s;
+        }
+        .campaign-card .btn:hover {
+            background: linear-gradient(90deg, #20c997 0%, #28a745 100%);
+            color: #fff;
         }
         
         .spinner-container {
@@ -137,14 +175,29 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
+                                        <!-- DEMO USER SWITCHER (visible only in Demo Mode) -->
+                                        <li class="nav-item" id="demoUserSwitcherContainer" style="display:none;">
+                                            <select id="demoUserSwitcher" class="form-select form-select-sm" style="width: 170px; margin-right: 1rem;">
+                                                <option value="demo-admin-001">👑 Demo Admin</option>
+                                                <option value="user-demo-001">👤 Demo User</option>
+                                            </select>
+                                        </li>
                     <li class="nav-item">
                         <a class="nav-link" href="./create-campaign.html" data-i18n="nav.createCampaign">Нова кампания</a>
+                                            <!-- Tooltip: Create Campaign -->
+                                            <span class="d-none d-lg-inline" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Създай нова кампания за почистване">🛈</span>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="./rewards.html" data-i18n="nav.rewards">Награди</a>
+                                            <span class="d-none d-lg-inline" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Разгледай и обменяй точки за награди">🛈</span>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="./profile.html" data-i18n="nav.profile">Профил</a>
+                                            <span class="d-none d-lg-inline" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Виж и редактирай профила си">🛈</span>
+                    </li>
+                    <li class="nav-item" id="adminNav" style="display:none;">
+                        <a class="nav-link" href="./admin.html" data-i18n="nav.admin">Админ</a>
+                                            <span class="d-none d-lg-inline" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Администраторски панел">🛈</span>
                     </li>
                     <li class="nav-item">
                         <select id="languageSelector" class="form-select form-select-sm" style="max-width: 150px; margin-right: 0.5rem; display: none;">
@@ -162,6 +215,40 @@
 
     <!-- Main Container -->
     <div class="main-container">
+        <!-- User Statistics Section -->
+        <div class="container-fluid mt-4 mb-2">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-4 col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-body text-center">
+                            <h5 class="card-title mb-2">Общо точки</h5>
+                            <div id="userPoints" style="font-size:2.2rem;font-weight:700;">0</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-body text-center">
+                            <h5 class="card-title mb-2">Кампании с участие</h5>
+                            <div id="userCampaignsJoined" style="font-size:2.2rem;font-weight:700;">0</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <canvas id="userStatsChart" height="90"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Reset Demo Data Button (Demo Mode only) -->
+            <div class="row mt-3" id="resetDemoDataRow" style="display:none;">
+                <div class="col-12 text-end">
+                    <button class="btn btn-outline-danger" id="resetDemoDataBtn">🔄 Reset Demo Data</button>
+                </div>
+            </div>
+        </div>
         <!-- Map Container -->
         <div id="map"></div>
 
@@ -189,6 +276,8 @@
             </div>
         </div>
     </div>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- Leaflet JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -198,6 +287,59 @@
 
     <!-- Dashboard Script -->
     <script type="module">
+                        // DEMO USER SWITCHER LOGIC
+                        (function setupDemoUserSwitcher() {
+                            // Only show if in Demo Mode
+                            const demoMode = localStorage.getItem('CLEAN_QUARTER_DEMO_MODE');
+                            if (!demoMode) return;
+                            const switcherContainer = document.getElementById('demoUserSwitcherContainer');
+                            if (!switcherContainer) return;
+                            switcherContainer.style.display = '';
+                            // Set current value
+                            const user = JSON.parse(localStorage.getItem('user'));
+                            if (user && user.id) {
+                                document.getElementById('demoUserSwitcher').value = user.id;
+                            }
+                            document.getElementById('demoUserSwitcher').addEventListener('change', (e) => {
+                                const selected = e.target.value;
+                                let newUser;
+                                if (selected === 'demo-admin-001') {
+                                    newUser = {
+                                        id: 'demo-admin-001',
+                                        email: 'admin@demo.com',
+                                        username: 'admin_demo',
+                                        role: 'admin',
+                                        points_balance: 2500,
+                                        neighborhood: 'Studentski Grad',
+                                        avatar_url: null,
+                                        created_at: '2024-01-15T00:00:00.000Z'
+                                    };
+                                } else {
+                                    newUser = {
+                                        id: 'user-demo-001',
+                                        email: 'user@demo.com',
+                                        username: 'user_demo',
+                                        role: 'user',
+                                        points_balance: 800,
+                                        neighborhood: 'Darvenitsa',
+                                        avatar_url: null,
+                                        created_at: '2024-01-16T00:00:00.000Z'
+                                    };
+                                }
+                                localStorage.setItem('user', JSON.stringify(newUser));
+                                location.reload();
+                            });
+                        })();
+                // Show Admin nav if user is admin
+                (function showAdminNavIfAdmin() {
+                    let user = null;
+                    try {
+                        user = JSON.parse(localStorage.getItem('user'));
+                    } catch (e) {}
+                    if (user && user.role === 'admin') {
+                        document.getElementById('adminNav').style.display = '';
+                    }
+                })();
         import { initializeMap, loadMapData } from '../services/map.js';
         import { logout } from '../services/auth.js';
         import { initI18n, applyLanguage, setLanguage, t } from '../utils/i18n.js';
@@ -213,6 +355,73 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', async () => {
+                                    // Show reset button only in Demo Mode
+                                    if (localStorage.getItem('CLEAN_QUARTER_DEMO_MODE')) {
+                                        document.getElementById('resetDemoDataRow').style.display = '';
+                                    }
+
+                                    // Reset Demo Data logic
+                                    document.getElementById('resetDemoDataBtn').addEventListener('click', async () => {
+                                        const result = await Swal.fire({
+                                            title: 'Reset Demo Data?',
+                                            text: 'This will clear and re-seed all demo data. Are you sure?',
+                                            icon: 'warning',
+                                            showCancelButton: true,
+                                            confirmButtonColor: '#dc3545',
+                                            cancelButtonColor: '#6c757d',
+                                            confirmButtonText: 'Yes, Reset',
+                                            cancelButtonText: 'Cancel'
+                                        });
+                                        if (!result.isConfirmed) return;
+                                        // Clear demo data
+                                        localStorage.removeItem('CLEAN_QUARTER_DEMO_USERS');
+                                        localStorage.removeItem('CLEAN_QUARTER_DEMO_CAMPAIGNS');
+                                        localStorage.removeItem('CLEAN_QUARTER_DEMO_PARTICIPATIONS');
+                                        localStorage.removeItem('CLEAN_QUARTER_DEMO_REWARDS');
+                                        localStorage.removeItem('CLEAN_QUARTER_DEMO_TRANSACTIONS');
+                                        localStorage.removeItem('CLEAN_QUARTER_DEMO_NOTIFICATIONS');
+                                        // Optionally, re-seed demo data (reuse demoMode.js logic)
+                                        if (window.demoModeSeedData) {
+                                            window.demoModeSeedData();
+                                        }
+                                        await Swal.fire('Reset!', 'Demo data has been reset.', 'success');
+                                        window.location.reload();
+                                    });
+                        // User statistics (Demo Mode only)
+                        try {
+                            const user = JSON.parse(localStorage.getItem('user'));
+                            if (user) {
+                                // Points
+                                document.getElementById('userPoints').textContent = user.points_balance || 0;
+                                // Campaigns joined
+                                const participations = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_PARTICIPATIONS') || '[]');
+                                const joined = participations.filter(p => p.user_id === user.id && p.status === 'approved');
+                                document.getElementById('userCampaignsJoined').textContent = joined.length;
+                                // Chart: participations by status
+                                const pending = participations.filter(p => p.user_id === user.id && p.status === 'pending').length;
+                                const rejected = participations.filter(p => p.user_id === user.id && p.status === 'rejected').length;
+                                const ctx = document.getElementById('userStatsChart').getContext('2d');
+                                new Chart(ctx, {
+                                    type: 'bar',
+                                    data: {
+                                        labels: [t('dashboard.stats_approved') || 'Одобрени', t('dashboard.stats_pending') || 'В изчакване', t('dashboard.stats_rejected') || 'Отхвърлени'],
+                                        datasets: [{
+                                            label: t('dashboard.stats_participations') || 'Участия',
+                                            data: [joined.length, pending, rejected],
+                                            backgroundColor: ['#28a745', '#ffc107', '#dc3545']
+                                        }]
+                                    },
+                                    options: {
+                                        plugins: { legend: { display: false } },
+                                        scales: { y: { beginAtZero: true, ticks: { precision:0 } } },
+                                        responsive: true,
+                                        maintainAspectRatio: false
+                                    }
+                                });
+                            }
+                        } catch (e) { console.warn('User stats error', e); }
+                        // Always re-apply language after dynamic content
+                        applyLanguage(localStorage.getItem('language') || 'bg');
             try {
                 // Initialize i18n first (realTime = false)
                 await initI18n(false);
@@ -227,6 +436,31 @@
 
                 // Require authentication
                 requireAuth('../../index.html');
+
+                // Show user notification if present (Demo Mode)
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (user) {
+                    let notifications = JSON.parse(localStorage.getItem('CLEAN_QUARTER_DEMO_NOTIFICATIONS') || '{}');
+                    const note = notifications[user.id];
+                    if (note) {
+                        let msg = '';
+                        if (note.type === 'approved') {
+                            msg = `Your participation in "${note.campaign}" was approved! 🎉`;
+                        } else if (note.type === 'rejected') {
+                            msg = `Your participation in "${note.campaign}" was rejected.`;
+                            if (note.reason) msg += `\nReason: ${note.reason}`;
+                        }
+                        await Swal.fire({
+                            icon: note.type === 'approved' ? 'success' : 'info',
+                            title: note.type === 'approved' ? 'Approved!' : 'Rejected',
+                            text: msg,
+                            confirmButtonColor: note.type === 'approved' ? '#28a745' : '#dc3545'
+                        });
+                        // Remove notification after showing
+                        delete notifications[user.id];
+                        localStorage.setItem('CLEAN_QUARTER_DEMO_NOTIFICATIONS', JSON.stringify(notifications));
+                    }
+                }
 
                 const map = initializeMap();
                 await loadMapData(map);
@@ -272,6 +506,7 @@
 
                 if (isEmpty(campaigns)) {
                     document.getElementById(noCampaignsMessageId).style.display = 'block';
+                    applyLanguage(localStorage.getItem('language') || 'bg');
                     return;
                 }
 
@@ -283,36 +518,41 @@
                             ${campaign.before_photo_url ? `
                                 <img src="${campaign.before_photo_url}" class="card-img-top" alt="${campaign.title}">
                             ` : `
-                                <div class="card-img-top bg-secondary" style="height: 200px; display: flex; align-items: center; justify-content: center;">
-                                    <span class="text-white">Няма снимка</span>
+                                <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 200px;">
+                                    <span class="text-white" data-i18n="dashboard.noPhoto">${t('dashboard.noPhoto') || 'Няма снимка'}</span>
                                 </div>
                             `}
                             <div class="card-body d-flex flex-column">
-                                <h5 class="card-title">${campaign.title}</h5>
-                                <p class="card-text text-muted">
-                                    <small>📍 ${campaign.neighborhood || 'Студентски град'}</small>
+                                <div style="display:flex;align-items:center;gap:0.5rem;">
+                                    <span style="font-size:1.2rem;">🧹</span>
+                                    <h5 class="card-title mb-0" style="font-weight:700;">${campaign.title}</h5>
+                                </div>
+                                <p class="card-text text-muted mt-2 mb-1" style="font-size:0.98rem;">
+                                    <span class="badge bg-success" style="font-size:0.85rem;">${campaign.status === 'active' ? (t('dashboard.active') || 'Активна') : (t('dashboard.finished') || 'Завършена')}</span>
+                                    <small class="ms-2">📍 ${campaign.neighborhood || (t('dashboard.defaultNeighborhood') || 'Студентски град')}</small>
                                 </p>
                                 <div class="mt-auto">
-                                    <a href="./campaign-detail.html?id=${campaign.id}" class="btn btn-primary w-100">
-                                        Преглед
-                                    </a>
+                                    <a href="./campaign-detail.html?id=${campaign.id}" class="btn w-100" data-i18n="dashboard.viewCampaign">${t('dashboard.viewCampaign') || 'Преглед'}</a>
+                                    <span class="d-block text-muted mt-1" style="font-size:0.92rem;" data-bs-toggle="tooltip" data-bs-placement="top" data-i18n="dashboard.campaignHelp" title="${t('dashboard.campaignHelp') || 'Виж детайли за тази кампания и участвай'}">🛈 ${t('dashboard.campaignHelp') || 'Помощ: Прегледай кампанията'}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 `).join('');
+                applyLanguage(localStorage.getItem('language') || 'bg');
 
             } catch (error) {
                 hideLoading(loadingSpinnerId);
                 
-                await handleError('loadCampaignsList', error, 'Failed to load campaigns. Please try again later.');
+                await handleError('loadCampaignsList', error, t('dashboard.campaignsLoadError') || 'Failed to load campaigns. Please try again later.');
                 document.getElementById(campaignsContainerId).innerHTML = `
                     <div class="col-12">
-                        <div class="alert alert-danger" role="alert">
-                            Грешка при зареждане на кампаниите. Опитайте отново по-късно.
+                        <div class="alert alert-danger" role="alert" data-i18n="dashboard.campaignsLoadError">
+                            ${t('dashboard.campaignsLoadError') || 'Грешка при зареждане на кампаниите. Опитайте отново по-късно.'}
                         </div>
                     </div>
                 `;
+                applyLanguage(localStorage.getItem('language') || 'bg');
             }
         }
 

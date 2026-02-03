@@ -115,40 +115,69 @@
         /* Rewards Grid */
         .rewards-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 2rem;
+            grid-template-columns: 1fr;
+            gap: 1.2rem;
             margin-bottom: 2rem;
+            padding: 0.5rem;
+        }
+        @media (min-width: 576px) {
+            .rewards-grid {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 2rem;
+            }
+        }
+        @media (max-width: 400px) {
+            .rewards-grid {
+                gap: 0.5rem;
+                padding: 0.25rem;
+            }
+            .reward-card .reward-content {
+                padding: 0.75rem 0.5rem 0.5rem 0.5rem;
+            }
+            .btn-buy {
+                font-size: 0.95rem;
+                padding: 0.5rem 0.5rem;
+            }
         }
         
         /* Reward Card */
         .reward-card {
-            background: white;
-            border-radius: 12px;
+            background: #fff;
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
+            box-shadow: 0 2px 12px rgba(40,167,69,0.08), 0 1.5px 6px rgba(40,167,69,0.06);
+            border: 1.5px solid #e9ecef;
+            transition: transform 0.18s cubic-bezier(.4,0,.2,1), box-shadow 0.18s cubic-bezier(.4,0,.2,1);
             display: flex;
             flex-direction: column;
         }
         
         .reward-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            transform: translateY(-7px) scale(1.025);
+            box-shadow: 0 8px 28px rgba(40,167,69,0.13), 0 2px 8px rgba(40,167,69,0.10);
         }
         
         .reward-image {
             width: 100%;
-            height: 200px;
+            height: 160px;
             background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 3rem;
+            font-size: 2.2rem;
             color: #28a745;
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+        }
+        @media (max-width: 400px) {
+            .reward-image {
+                height: 90px;
+                font-size: 1.5rem;
+            }
         }
         
         .reward-content {
-            padding: 1.5rem;
+            padding: 1.25rem 1.25rem 1rem 1.25rem;
             flex: 1;
             display: flex;
             flex-direction: column;
@@ -156,19 +185,19 @@
         
         .reward-category {
             display: inline-block;
-            background-color: #e8f5e9;
-            color: #1e7e34;
-            padding: 0.25rem 0.75rem;
+            background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+            color: #fff;
+            padding: 0.35rem 1rem;
             border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
+            font-size: 0.85rem;
+            font-weight: 700;
             margin-bottom: 0.75rem;
             width: fit-content;
         }
         
         .reward-title {
-            font-size: 1.25rem;
-            font-weight: bold;
+            font-size: 1.18rem;
+            font-weight: 700;
             color: #212529;
             margin-bottom: 0.5rem;
         }
@@ -193,8 +222,8 @@
             display: flex;
             align-items: center;
             gap: 0.3rem;
-            font-size: 1.5rem;
-            font-weight: bold;
+            font-size: 1.25rem;
+            font-weight: 700;
             color: #28a745;
         }
         
@@ -203,18 +232,20 @@
         }
         
         .btn-buy {
-            background-color: #28a745;
-            color: white;
+            background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+            color: #fff;
             border: none;
             padding: 0.75rem 1.5rem;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
+            font-weight: 700;
+            box-shadow: 0 1px 4px rgba(40,167,69,0.08);
+            transition: background 0.18s;
         }
         
         .btn-buy:hover {
-            background-color: #218838;
+            background: linear-gradient(90deg, #20c997 0%, #28a745 100%);
+            color: #fff;
             transform: scale(1.05);
         }
         
@@ -282,6 +313,7 @@
                     <a href="./dashboard.html" data-i18n="nav.dashboard">Dashboard</a>
                     <a href="./rewards.html" data-i18n="nav.rewards">Rewards</a>
                     <a href="./profile.html" data-i18n="nav.profile">Profile</a>
+                    <a href="./admin.html" id="adminNav" style="display:none;" data-i18n="nav.admin">Admin</a>
                     <select id="languageSelector" class="form-select form-select-sm" style="max-width: 150px; display: none;">
                         <option value="bg">🇧🇬 Български</option>
                         <option value="en">🇬🇧 English</option>
@@ -314,7 +346,9 @@
                 </div>
                 <div class="points-actions">
                     <a href="./dashboard.html" class="btn-secondary-action">← Back to Dashboard</a>
+                                        <span class="d-none d-lg-inline" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Върни се към началното табло">🛈</span>
                     <a href="./profile.html" class="btn-secondary-action">📊 Transaction History</a>
+                                    <span class="d-none d-lg-inline" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Виж историята на точките си">🛈</span>
                 </div>
             </div>
 
@@ -339,6 +373,16 @@
 
     <!-- Main Script -->
     <script type="module">
+                // Show Admin nav if user is admin
+                (function showAdminNavIfAdmin() {
+                    let user = null;
+                    try {
+                        user = JSON.parse(localStorage.getItem('user'));
+                    } catch (e) {}
+                    if (user && user.role === 'admin') {
+                        document.getElementById('adminNav').style.display = '';
+                    }
+                })();
         import supabase from '../services/supabase.js';
         import { initI18n, applyLanguage, setLanguage } from '../utils/i18n.js';
 
@@ -484,8 +528,10 @@
                         </div>
                         <div class="reward-content">
                             <span class="reward-category">${reward.category}</span>
-                            <h3 class="reward-title">${reward.title}</h3>
-                            <p class="reward-description">${reward.description}</p>
+                            <div style="display:flex;align-items:center;gap:0.5rem;">
+                                <h3 class="reward-title mb-0">${reward.title}</h3>
+                            </div>
+                            <p class="reward-description mt-2 mb-1">${reward.description}</p>
                             <div class="reward-footer">
                                 <div class="reward-cost">
                                     <span class="icon">⭐</span>
@@ -497,6 +543,16 @@
                                     ${buttonDisabled}
                                 >
                                     ${buttonText}
+                                </button>
+                                <span class="d-block text-muted mt-1" style="font-size:0.92rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="Обмени точки за тази награда">🛈 Помощ: Купи награда</span>
+                                        // Initialize Bootstrap tooltips
+                                        import 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js';
+                                        document.addEventListener('DOMContentLoaded', function () {
+                                            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                                            tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+                                                new window.bootstrap.Tooltip(tooltipTriggerEl);
+                                            });
+                                        });
                                 </button>
                             </div>
                         </div>
