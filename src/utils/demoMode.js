@@ -3,19 +3,32 @@
  * @param {boolean} value
  */
 export function setDemoMode(value) {
-  let ls = typeof globalThis !== 'undefined' && globalThis.localStorage ? globalThis.localStorage : (typeof localStorage !== 'undefined' ? localStorage : null);
+  let ls =
+    typeof globalThis !== "undefined" && globalThis.localStorage
+      ? globalThis.localStorage
+      : typeof localStorage !== "undefined"
+        ? localStorage
+        : null;
   if (!ls) {
     // Create a persistent mock for tests
     ls = {
       store: {},
-      getItem(key) { return this.store[key] || null; },
-      setItem(key, value) { this.store[key] = value; },
-      removeItem(key) { delete this.store[key]; },
-      clear() { this.store = {}; }
+      getItem(key) {
+        return this.store[key] || null;
+      },
+      setItem(key, value) {
+        this.store[key] = value;
+      },
+      removeItem(key) {
+        delete this.store[key];
+      },
+      clear() {
+        this.store = {};
+      },
     };
-    if (typeof globalThis !== 'undefined') globalThis.localStorage = ls;
+    if (typeof globalThis !== "undefined") globalThis.localStorage = ls;
   }
-  ls.setItem('CLEAN_QUARTER_DEMO_MODE', value ? 'true' : 'false');
+  ls.setItem("CLEAN_QUARTER_DEMO_MODE", value ? "true" : "false");
 }
 /**
  * Ensure a user exists in CLEAN_QUARTER_DEMO_USERS
@@ -59,71 +72,89 @@ export function initDemoMode() {
   const demoCampaigns = [
     {
       id: "campaign-001",
-      title: 'Почистване на парк "Студентски"',
-      description: "Събиране на боклук около детската площадка",
+      title: { bg: 'Почистване на парк "Студентски"', en: 'Park Cleanup "Studentski"' },
+      description: {
+        bg: "Събиране на боклук около детската площадка",
+        en: "Litter collection around the playground",
+      },
       location_lat: 42.6977,
       location_lng: 23.3219,
       status: "active",
       before_photo_url:
         "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%234CAF50%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22white%22 font-size=%2220%22%3EBefore Photo 📷%3C/text%3E%3C/svg%3E",
       created_by: "demo-admin-001",
-      neighborhood: "Studentski Grad",
+      neighborhood: { bg: "Студентски град", en: "Studentski Grad" },
       created_at: new Date("2024-01-10").toISOString(),
       updated_at: new Date("2024-01-10").toISOString(),
     },
     {
       id: "campaign-002",
-      title: 'Почистване на тротоар улица "Царица Йоанна"',
-      description: "Премахване на листа и боклук от тротоара",
+      title: {
+        bg: 'Почистване на тротоар улица "Царица Йоанна"',
+        en: 'Sidewalk Cleanup "Tsaritsa Yoanna"',
+      },
+      description: {
+        bg: "Премахване на листа и боклук от тротоара",
+        en: "Removing leaves and litter from the sidewalk",
+      },
       location_lat: 42.695,
       location_lng: 23.318,
       status: "active",
       before_photo_url:
         "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%234CAF50%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22white%22 font-size=%2220%22%3EBefore Photo 📷%3C/text%3E%3C/svg%3E",
       created_by: "demo-admin-001",
-      neighborhood: "Darvenitsa",
+      neighborhood: { bg: "Дървеница", en: "Darvenitsa" },
       created_at: new Date("2024-01-12").toISOString(),
       updated_at: new Date("2024-01-12").toISOString(),
     },
     {
       id: "campaign-003",
-      title: 'Почистване на зелена площ "Малинова долина"',
-      description: "Събиране на пластмасови отпадъци",
+      title: {
+        bg: 'Почистване на зелена площ "Малинова долина"',
+        en: 'Green Area Cleanup "Malinova Dolina"',
+      },
+      description: { bg: "Събиране на пластмасови отпадъци", en: "Collecting plastic waste" },
       location_lat: 42.692,
       location_lng: 23.315,
       status: "completed",
       before_photo_url:
         "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%234CAF50%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22white%22 font-size=%2220%22%3EBefore Photo 📷%3C/text%3E%3C/svg%3E",
       created_by: "demo-admin-001",
-      neighborhood: "Malinova Dolina",
+      neighborhood: { bg: "Малинова долина", en: "Malinova Dolina" },
       created_at: new Date("2024-01-05").toISOString(),
       updated_at: new Date("2024-01-08").toISOString(),
     },
     {
       id: "campaign-004",
-      title: "Почистване на спортно игрище",
-      description: "Основно чистене на игрището и около него",
+      title: { bg: "Почистване на спортно игрище", en: "Sports Field Cleanup" },
+      description: {
+        bg: "Основно чистене на игрището и около него",
+        en: "Thorough cleaning of the field and surroundings",
+      },
       location_lat: 42.7,
       location_lng: 23.325,
       status: "active",
       before_photo_url:
         "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%234CAF50%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22white%22 font-size=%2220%22%3EBefore Photo 📷%3C/text%3E%3C/svg%3E",
       created_by: "demo-admin-001",
-      neighborhood: "Vitosha (VEC)",
+      neighborhood: { bg: "Витоша (ВЕЦ)", en: "Vitosha (VEC)" },
       created_at: new Date("2024-01-14").toISOString(),
       updated_at: new Date("2024-01-14").toISOString(),
     },
     {
       id: "campaign-005",
-      title: "Почистване на устата на поток",
-      description: "Събиране на боклук около потока Церова",
+      title: { bg: "Почистване на устата на поток", en: "Stream Mouth Cleanup" },
+      description: {
+        bg: "Събиране на боклук около потока Церова",
+        en: "Collecting litter around the Tserova stream",
+      },
       location_lat: 42.689,
       location_lng: 23.31,
       status: "active",
       before_photo_url:
         "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%234CAF50%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22white%22 font-size=%2220%22%3EBefore Photo 📷%3C/text%3E%3C/svg%3E",
       created_by: "demo-admin-001",
-      neighborhood: "Musagenitsa",
+      neighborhood: { bg: "Мусагеница", en: "Musagenitsa" },
       created_at: new Date("2024-01-13").toISOString(),
       updated_at: new Date("2024-01-13").toISOString(),
     },
@@ -329,17 +360,30 @@ export function initDemoMode() {
  * Check if we're in demo mode
  */
 export function isDemoMode() {
-  let ls = typeof globalThis !== 'undefined' && globalThis.localStorage ? globalThis.localStorage : (typeof localStorage !== 'undefined' ? localStorage : null);
+  let ls =
+    typeof globalThis !== "undefined" && globalThis.localStorage
+      ? globalThis.localStorage
+      : typeof localStorage !== "undefined"
+        ? localStorage
+        : null;
   if (!ls) {
     // Create a persistent mock for tests
     ls = {
       store: {},
-      getItem(key) { return this.store[key] || null; },
-      setItem(key, value) { this.store[key] = value; },
-      removeItem(key) { delete this.store[key]; },
-      clear() { this.store = {}; }
+      getItem(key) {
+        return this.store[key] || null;
+      },
+      setItem(key, value) {
+        this.store[key] = value;
+      },
+      removeItem(key) {
+        delete this.store[key];
+      },
+      clear() {
+        this.store = {};
+      },
     };
-    if (typeof globalThis !== 'undefined') globalThis.localStorage = ls;
+    if (typeof globalThis !== "undefined") globalThis.localStorage = ls;
   }
   return ls.getItem(DEMO_MODE_KEY) === "true";
 }
