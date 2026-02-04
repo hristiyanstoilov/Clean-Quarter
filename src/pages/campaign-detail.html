@@ -821,13 +821,22 @@
        * Display campaign details on the page
        */
       function displayCampaignDetails(campaignData, participations) {
-        // Title
-        document.getElementById("campaignTitle").textContent = campaignData.title;
+        // Get current language (default bg)
+        let lang = "bg";
+        try {
+          lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+        } catch {}
+
+        // Title (bilingual support)
+        let title = campaignData.title;
+        if (title && typeof title === "object")
+          title = title[lang] || title.bg || Object.values(title)[0];
+        document.getElementById("campaignTitle").textContent = title;
 
         // Before Photo
         const photoElement = document.getElementById("beforePhoto");
         photoElement.src = campaignData.before_photo_url;
-        photoElement.alt = `Before photo for ${campaignData.title}`;
+        photoElement.alt = `Before photo for ${title}`;
 
         // Status
         const statusBadge = document.getElementById("statusBadge");
@@ -835,11 +844,16 @@
           campaignData.status.charAt(0).toUpperCase() + campaignData.status.slice(1);
         statusBadge.className = `badge-status badge-${campaignData.status}`;
 
-        // Description
-        document.getElementById("campaignDescription").textContent = campaignData.description;
+        // Description (bilingual support)
+        let desc = campaignData.description;
+        if (desc && typeof desc === "object")
+          desc = desc[lang] || desc.bg || Object.values(desc)[0];
+        document.getElementById("campaignDescription").textContent = desc;
 
-        // Neighborhood
-        document.getElementById("campaignNeighborhood").textContent = campaignData.neighborhood;
+        // Neighborhood (bilingual support)
+        let nbh = campaignData.neighborhood;
+        if (nbh && typeof nbh === "object") nbh = nbh[lang] || nbh.bg || Object.values(nbh)[0];
+        document.getElementById("campaignNeighborhood").textContent = nbh;
 
         // Created date
         const createdDate = new Date(campaignData.created_at);
@@ -898,6 +912,11 @@
 
         // Center map on campaign location
         map.setView([lat, lng], 15);
+
+        // Fix Leaflet rendering bug: ensure map fills container after visible
+        setTimeout(() => {
+          map.invalidateSize();
+        }, 300);
       }
 
       /**

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin Panel - Clean Quarter</title>
+    <title data-i18n="admin.title">Admin Panel - Clean Quarter</title>
 
     <!-- Bootstrap CSS -->
     <link
@@ -16,10 +16,6 @@
 
     <link rel="stylesheet" href="../assets/style.css" />
     <style>
-      body {
-        /* Add any body-specific styles here if needed */
-      }
-
       .navbar-brand {
         font-weight: bold;
         font-size: 1.5rem;
@@ -247,9 +243,9 @@
   </head>
   <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark" aria-label="Admin navigation">
       <div class="container-fluid">
-        <a class="navbar-brand" href="./admin.html">🛡️ Admin Panel</a>
+        <a class="navbar-brand" href="./admin.html" data-i18n="admin.title">🛡️ Admin Panel</a>
         <button
           class="navbar-toggler"
           type="button"
@@ -277,41 +273,90 @@
     </nav>
 
     <!-- Main Container -->
-    <div class="container">
+    <div class="container" role="main">
       <!-- Loading State -->
       <div class="loading-spinner" id="loadingState">
         <div class="spinner-border text-danger" role="status">
-          <span class="visually-hidden">Loading...</span>
+          <span class="visually-hidden" data-i18n="common.loading">Loading...</span>
         </div>
       </div>
 
       <!-- Admin Content (hidden until loaded) -->
-      <div id="adminContent" style="display: none">
+      <div id="adminContent" style="display: none" tabindex="-1" aria-label="Admin content">
         <!-- Header -->
-        <div class="admin-header">
-          <h1>🛡️ Admin Panel</h1>
-          <p>Review and approve cleanup submissions from users</p>
+
+        <div class="admin-header" role="region" aria-labelledby="adminPanelTitle">
+          <h1 id="adminPanelTitle" data-i18n="admin.title">🛡️ Admin Panel</h1>
+          <p data-i18n="admin.reviewSubmissions">
+            Review and approve cleanup submissions from users
+          </p>
+        </div>
+
+        <!-- User Management Section -->
+        <div
+          class="pending-section"
+          style="margin-bottom: 2rem"
+          role="region"
+          aria-labelledby="userManagementTitle"
+        >
+          <h2 id="userManagementTitle" data-i18n="admin.userManagement">👥 User Management</h2>
+          <div style="margin-bottom: 1rem; max-width: 350px">
+            <input
+              id="userSearchInput"
+              class="form-control form-control-sm"
+              type="search"
+              data-i18n-placeholder="admin.searchUsers"
+              placeholder="Search users..."
+              oninput="window.filterUserTable()"
+            />
+          </div>
+          <div id="userTableContainer" aria-live="polite" aria-label="User table results">
+            <!-- User table will be inserted here -->
+          </div>
+          <div style="margin-top: 2rem">
+            <button
+              class="btn btn-outline-secondary btn-sm"
+              onclick="window.showRoleLog()"
+              data-i18n="admin.showRoleLog"
+            >
+              Show Role Change Log
+            </button>
+            <div
+              style="margin-top: 1rem; max-width: 350px; display: none"
+              id="roleLogSearchWrapper"
+            >
+              <input
+                id="roleLogSearchInput"
+                class="form-control form-control-sm"
+                type="search"
+                data-i18n-placeholder="admin.searchRoleLog"
+                placeholder="Search role log..."
+                oninput="window.filterRoleLogTable()"
+              />
+            </div>
+            <div id="roleLogContainer" style="display: none; margin-top: 1rem"></div>
+          </div>
         </div>
 
         <!-- Statistics Cards -->
         <div class="stats-cards">
           <div class="stat-card">
             <div class="stat-value" id="totalPendingCount">0</div>
-            <div class="stat-label">Pending Reviews</div>
+            <div class="stat-label" data-i18n="admin.pendingApprovals">Pending Reviews</div>
           </div>
           <div class="stat-card">
             <div class="stat-value" id="totalApprovedCount">0</div>
-            <div class="stat-label">Total Approved</div>
+            <div class="stat-label" data-i18n="admin.approved">Total Approved</div>
           </div>
           <div class="stat-card">
             <div class="stat-value" id="totalRejectedCount">0</div>
-            <div class="stat-label">Total Rejected</div>
+            <div class="stat-label" data-i18n="admin.rejected">Total Rejected</div>
           </div>
         </div>
 
         <!-- Pending Participations Section -->
         <div class="pending-section">
-          <h2>⏳ Pending Approvals</h2>
+          <h2 data-i18n="admin.pendingApprovals">⏳ Pending Approvals</h2>
 
           <div id="pendingTableContainer">
             <!-- Table will be inserted here -->
@@ -320,18 +365,40 @@
       </div>
 
       <!-- Access Denied State -->
-      <div id="accessDenied" style="display: none">
+      <div
+        id="accessDenied"
+        style="display: none"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="accessDeniedTitle"
+      >
         <div class="access-denied">
-          <h1>🚫 Access Denied</h1>
-          <p>You don't have permission to access this page.</p>
-          <a href="./dashboard.html" class="btn btn-primary btn-lg">Go to Dashboard</a>
+          <h1 id="accessDeniedTitle" data-i18n="admin.accessDeniedTitle">🚫 Access Denied</h1>
+          <p data-i18n="admin.accessDeniedMsg">You don't have permission to access this page.</p>
+          <a
+            href="./dashboard.html"
+            class="btn btn-primary btn-lg"
+            data-i18n="admin.goToDashboard"
+            role="button"
+            tabindex="0"
+            >Go to Dashboard</a
+          >
         </div>
       </div>
     </div>
 
     <!-- Photo Modal -->
-    <div id="photoModal" class="photo-modal" onclick="closePhotoModal()">
-      <span class="close" onclick="closePhotoModal()">&times;</span>
+    <div
+      id="photoModal"
+      class="photo-modal"
+      onclick="closePhotoModal()"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Photo preview"
+    >
+      <span class="close" onclick="closePhotoModal()" tabindex="0" role="button" aria-label="Close"
+        >&times;</span
+      >
       <img id="modalPhoto" src="" alt="Full size photo" />
     </div>
 
@@ -507,6 +574,12 @@
           document.getElementById("totalApprovedCount").textContent = totalApproved;
           document.getElementById("totalRejectedCount").textContent = totalRejected;
 
+          // Load and render users
+          await loadAndRenderUsers();
+          // Preload role log for quick access
+          window._roleLogCache = null;
+          await preloadRoleLog();
+
           // Render pending table
           renderPendingTable();
 
@@ -516,11 +589,121 @@
         } catch (error) {
           await Swal.fire({
             icon: "error",
-            title: "Error",
-            text: error.message || "Failed to load admin data. Please try again.",
+            title: i18n.t("common.error"),
+            text: error.message || i18n.t("admin.failedToLoad"),
           });
 
           document.getElementById("loadingState").style.display = "none";
+        }
+      }
+
+      /**
+       * Preload role change log for quick access
+       */
+      async function preloadRoleLog() {
+        try {
+          const localUser = localStorage.getItem("user");
+          const isDemoMode = localUser && currentUser.role === "admin";
+          if (isDemoMode) {
+            window._roleLogCache = JSON.parse(
+              localStorage.getItem("CLEAN_QUARTER_ROLE_LOG") || "[]"
+            );
+          } else {
+            // Real mode: fetch from Supabase
+            const { data, error } = await supabase
+              .from("point_transactions")
+              .select("id, user_id, reason, created_at")
+              .eq("type", "role_change")
+              .order("created_at", { ascending: false });
+            if (error) throw new Error(error.message);
+            window._roleLogCache = data || [];
+          }
+        } catch (err) {
+          window._roleLogCache = [];
+        }
+      }
+
+      /**
+       * Show role change log in UI
+       */
+      let _allRoleLogCache = [];
+      window.showRoleLog = async function () {
+        const container = document.getElementById("roleLogContainer");
+        const searchWrapper = document.getElementById("roleLogSearchWrapper");
+        if (container.style.display === "block") {
+          container.style.display = "none";
+          if (searchWrapper) searchWrapper.style.display = "none";
+          return;
+        }
+        container.style.display = "block";
+        if (searchWrapper) searchWrapper.style.display = "block";
+        let logs = window._roleLogCache;
+        if (!logs) {
+          await preloadRoleLog();
+          logs = window._roleLogCache;
+        }
+        _allRoleLogCache = logs || [];
+        filterRoleLogTable();
+      };
+
+      window.filterRoleLogTable = function () {
+        const container = document.getElementById("roleLogContainer");
+        const search = (document.getElementById("roleLogSearchInput")?.value || "").toLowerCase();
+        let logs = _allRoleLogCache || [];
+        let filtered = !search
+          ? logs
+          : logs.filter(
+              (log) =>
+                (log.user_id || "").toLowerCase().includes(search) ||
+                (log.reason || "").toLowerCase().includes(search) ||
+                (log.created_at || "").toLowerCase().includes(search)
+            );
+        if (!filtered.length) {
+          container.innerHTML = `<div class='empty-state'><p data-i18n='admin.noRoleChanges'>No role changes found.</p></div>`;
+          if (window.applyLanguage)
+            window.applyLanguage(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg");
+          return;
+        }
+        // Add ARIA roles and column scopes to role log table
+        let html = `<div class='table-responsive'><table class='table table-sm table-bordered' role='table' aria-label='Role change log'><thead><tr><th scope='col' data-i18n='admin.roleLogDate'>Date</th><th scope='col' data-i18n='admin.roleLogUser'>User ID</th><th scope='col' data-i18n='admin.roleLogChange'>Change</th></tr></thead><tbody>`;
+        filtered.forEach((log) => {
+          html += `<tr><td>${log.created_at ? new Date(log.created_at).toLocaleString() : "-"}<\/td><td>${log.user_id || "-"}<\/td><td>${log.reason || "-"}<\/td><\/tr>`;
+        });
+        html += `<\/tbody><\/table><\/div>`;
+        container.innerHTML = html;
+        if (window.applyLanguage)
+          window.applyLanguage(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg");
+      };
+
+      /**
+       * Load and render all users for User Management section
+       */
+      async function loadAndRenderUsers() {
+        try {
+          let users = [];
+          // Demo mode
+          const localUser = localStorage.getItem("user");
+          const isDemoMode = localUser && currentUser.role === "admin";
+          if (isDemoMode) {
+            users = JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_USERS") || "[]");
+            // Mark superadmins (demo: first admin is superadmin)
+            if (users.length) {
+              const superadmins = users.filter((u) => u.role === "admin" && u.is_superadmin);
+              if (!superadmins.length) users[0].is_superadmin = true;
+            }
+          } else {
+            // Real mode: fetch from Supabase
+            const { data, error } = await supabase
+              .from("profiles")
+              .select("id, username, email, role, points_balance, neighborhood");
+            if (error) throw new Error("Failed to fetch users: " + error.message);
+            users = data || [];
+          }
+
+          renderUserTable(users);
+        } catch (err) {
+          document.getElementById("userTableContainer").innerHTML =
+            `<div class='empty-state'><p>Error loading users: ${err.message}</p></div>`;
         }
       }
 
@@ -534,29 +717,28 @@
           container.innerHTML = `
                     <div class="empty-state">
                         <div style="font-size: 4rem; margin-bottom: 1rem;">✅</div>
-                        <h3>No Pending Reviews</h3>
-                        <p>All submissions have been reviewed. Great job!</p>
+                        <h3 data-i18n="admin.noPendingReviews">No Pending Reviews</h3>
+                        <p data-i18n="admin.allReviewed">All submissions have been reviewed. Great job!</p>
                     </div>
                 `;
           return;
         }
 
         let tableHTML = `
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>User</th>
-                                <th>Campaign</th>
-                                <th>Before Photo</th>
-                                <th>After Photo</th>
-                                <th>Submitted</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-
+        <div class="table-responsive">
+            <table class="table table-hover" role="table" aria-label="Pending participations">
+                <thead>
+                    <tr>
+                        <th scope="col">User</th>
+                        <th scope="col">Campaign</th>
+                        <th scope="col">Before Photo</th>
+                        <th scope="col">After Photo</th>
+                        <th scope="col">Submitted</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+`;
         pendingParticipations.forEach((participation) => {
           const username = participation.profiles?.username || "Unknown User";
           const campaignTitle = participation.campaigns?.title || "Unknown Campaign";
@@ -581,11 +763,11 @@
                         <td>${submittedDate}</td>
                         <td>
                             <div class="action-buttons">
-                                <button class="btn-approve" onclick="handleApprove('${participation.id}', '${username}')">
-                                    ✅ Approve
+                                <button class="btn-approve" onclick="handleApprove('${participation.id}', '${username}')" data-i18n="admin.approve">
+                                  ✅ <span data-i18n="admin.approve">Approve</span>
                                 </button>
-                                <button class="btn-reject" onclick="handleReject('${participation.id}', '${username}')">
-                                    ❌ Reject
+                                <button class="btn-reject" onclick="handleReject('${participation.id}', '${username}')" data-i18n="admin.reject">
+                                  ❌ <span data-i18n="admin.reject">Reject</span>
                                 </button>
                             </div>
                         </td>
@@ -630,14 +812,14 @@
 
           // Show confirmation
           const result = await Swal.fire({
-            title: "Approve Submission?",
-            text: `Award 20 points to ${username}?`,
+            title: i18n.t("admin.approveSubmissionTitle"),
+            text: i18n.t("admin.awardPoints", { points: 20, username }),
             icon: "question",
             showCancelButton: true,
             confirmButtonColor: "#28a745",
             cancelButtonColor: "#6c757d",
-            confirmButtonText: "Yes, Approve",
-            cancelButtonText: "Cancel",
+            confirmButtonText: i18n.t("admin.yesApprove"),
+            cancelButtonText: i18n.t("common.cancel"),
           });
 
           if (!result.isConfirmed) {
@@ -646,7 +828,7 @@
 
           // Show loading
           await Swal.fire({
-            title: "Processing...",
+            title: i18n.t("common.loading"),
             allowOutsideClick: false,
             didOpen: () => {
               Swal.showLoading();
@@ -719,16 +901,16 @@
 
               await Swal.fire({
                 icon: "success",
-                title: "Approved!",
-                text: `${username} earned 20 points ✅`,
+                title: i18n.t("admin.approvedTitle"),
+                text: i18n.t("admin.earnedPoints", { username, points: 20 }),
                 confirmButtonColor: "#28a745",
               });
             } catch (demoError) {
               Swal.close();
               await Swal.fire({
                 icon: "error",
-                title: "Demo Mode Error",
-                text: demoError.message || "Failed to approve in Demo Mode.",
+                title: i18n.t("admin.demoModeError"),
+                text: demoError.message || i18n.t("admin.failedToApproveDemo"),
               });
               return;
             }
@@ -790,8 +972,8 @@
 
             await Swal.fire({
               icon: "success",
-              title: "Approved!",
-              text: `${username} earned 20 points ✅`,
+              title: i18n.t("admin.approvedTitle"),
+              text: i18n.t("admin.earnedPoints", { username, points: 20 }),
               confirmButtonColor: "#28a745",
             });
           }
@@ -801,8 +983,8 @@
         } catch (error) {
           await Swal.fire({
             icon: "error",
-            title: "Error",
-            text: error.message || "Failed to approve. Please try again.",
+            title: i18n.t("common.error"),
+            text: error.message || i18n.t("admin.failedToApprove"),
           });
         }
       }
@@ -820,18 +1002,18 @@
 
           // Prompt for rejection reason
           const result = await Swal.fire({
-            title: "Reject Submission?",
+            title: i18n.t("admin.rejectSubmissionTitle"),
             input: "textarea",
-            inputLabel: "Reason for rejection (optional)",
-            inputPlaceholder: "e.g., Photo quality is poor, location unclear, etc.",
+            inputLabel: i18n.t("admin.rejectionReasonLabel"),
+            inputPlaceholder: i18n.t("admin.rejectionReasonPlaceholder"),
             icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#dc3545",
             cancelButtonColor: "#6c757d",
-            confirmButtonText: "Yes, Reject",
-            cancelButtonText: "Cancel",
+            confirmButtonText: i18n.t("admin.yesReject"),
+            cancelButtonText: i18n.t("common.cancel"),
             inputAttributes: {
-              "aria-label": "Rejection reason",
+              "aria-label": i18n.t("admin.rejectionReasonAria"),
             },
           });
 
@@ -875,8 +1057,8 @@
 
             await Swal.fire({
               icon: "info",
-              title: "Rejected",
-              text: `${username}'s submission was rejected.`,
+              title: i18n.t("admin.rejectedTitle"),
+              text: i18n.t("admin.submissionRejected", { username }),
               confirmButtonColor: "#dc3545",
             });
           } else {
@@ -897,8 +1079,8 @@
 
             await Swal.fire({
               icon: "info",
-              title: "Rejected",
-              text: `${username}'s submission was rejected.`,
+              title: i18n.t("admin.rejectedTitle"),
+              text: i18n.t("admin.submissionRejected", { username }),
               confirmButtonColor: "#dc3545",
             });
           }
@@ -908,8 +1090,8 @@
         } catch (error) {
           await Swal.fire({
             icon: "error",
-            title: "Error",
-            text: error.message || "Failed to reject. Please try again.",
+            title: i18n.t("common.error"),
+            text: error.message || i18n.t("admin.failedToReject"),
           });
         }
       }

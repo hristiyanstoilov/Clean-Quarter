@@ -229,11 +229,11 @@
         try {
           // Initialize i18n first (realTime = false)
           await initI18n(false);
-          applyLanguage(localStorage.getItem("language") || "bg");
+          const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+          applyLanguage(lang);
 
           // Language selector
-          document.getElementById("languageSelector").value =
-            localStorage.getItem("language") || "bg";
+          document.getElementById("languageSelector").value = lang;
           document.getElementById("languageSelector").addEventListener("change", (e) => {
             // Just show a message - language changes only from profile page
             console.log("Language changes only from Profile page");
@@ -243,6 +243,9 @@
           requireAuth("../../index.html");
 
           const map = initializeMap();
+          setTimeout(() => {
+            map.invalidateSize();
+          }, 300);
           await loadMapData(map);
           await loadCampaignsList();
         } catch (error) {

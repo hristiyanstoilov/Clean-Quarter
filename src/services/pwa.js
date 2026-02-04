@@ -1,3 +1,5 @@
+import logger from "./logger.js";
+import { isBrowser, hasLocalStorage, hasNavigator } from "../utils/env.js";
 /**
  * PWA Service - Handles Progressive Web App functionality
  */
@@ -10,32 +12,36 @@
  */
 export async function initializePWA() {
   // Register Service Worker
-  if ("serviceWorker" in navigator) {
+  if (hasNavigator() && "serviceWorker" in navigator) {
     try {
       const registration = await navigator.serviceWorker.register("/public/service-worker.js");
-      console.log("✅ Service Worker registered:", registration);
+      logger.info("✅ Service Worker registered:", registration);
     } catch (error) {
-      console.warn("❌ Service Worker registration failed:", error);
+      logger.warn("❌ Service Worker registration failed:", error);
     }
   }
 
   // Request notification permission
-  if ("Notification" in window && Notification.permission === "default") {
+  if (isBrowser() && "Notification" in window && Notification.permission === "default") {
     Notification.requestPermission();
   }
 
   // Handle install prompt
   let deferredPrompt;
-  window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    showInstallPrompt(deferredPrompt);
-  });
+  if (isBrowser()) {
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      showInstallPrompt(deferredPrompt);
+    });
 
-  window.addEventListener("appinstalled", () => {
-    console.log("✅ App installed");
-    localStorage.setItem("pwaInstalled", "true");
-  });
+    window.addEventListener("appinstalled", () => {
+      logger.info("✅ App installed");
+      if (hasLocalStorage()) {
+        localStorage.setItem("pwaInstalled", "true");
+      }
+    });
+  }
 }
 
 /**
@@ -43,20 +49,22 @@ export async function initializePWA() {
  */
 function showInstallPrompt(deferredPrompt) {
   // Only show if not already installed
-  if (localStorage.getItem("pwaInstalled")) {
+  if (hasLocalStorage() && localStorage.getItem("pwaInstalled")) {
     return;
   }
 
   // Show install banner after 3 seconds
   setTimeout(() => {
     const banner = createInstallBanner();
-    document.body.appendChild(banner);
+    if (isBrowser()) {
+      document.body.appendChild(banner);
+    }
 
     banner.querySelector(".install-btn").addEventListener("click", async () => {
       if (deferredPrompt) {
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
-        console.log("User response:", outcome);
+        logger.info("User response:", outcome);
         deferredPrompt = null;
         banner.remove();
       }
@@ -73,6 +81,7 @@ function showInstallPrompt(deferredPrompt) {
  */
 function createInstallBanner() {
   const banner = document.createElement("div");
+  // SAFE: Only static HTML, no user content injected
   banner.innerHTML = `
         <div style="
             position: fixed;
@@ -130,7 +139,7 @@ function createInstallBanner() {
  * Send notification to user
  */
 export function sendNotification(title, options = {}) {
-  if ("Notification" in window && Notification.permission === "granted") {
+  if (isBrowser() && "Notification" in window && Notification.permission === "granted") {
     new Notification(title, {
       icon: "/public/icon-192x192.png",
       badge: "/public/icon-192x192.png",
@@ -143,7 +152,7 @@ export function sendNotification(title, options = {}) {
  * Check if app is online
  */
 export function isOnline() {
-  return navigator.onLine;
+  return hasNavigator() && navigator.onLine;
 }
 
 /**
@@ -151,9 +160,9 @@ export function isOnline() {
  */
 export function isInstalledPWA() {
   return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    window.navigator.standalone === true ||
-    document.referrer.includes("android-app://")
+    (isBrowser() && window.matchMedia("(display-mode: standalone)").matches) ||
+    (hasNavigator() && window.navigator.standalone === true) ||
+    (isBrowser() && document.referrer.includes("android-app://"))
   );
 }
 
@@ -168,7 +177,7 @@ export async function cacheData(key, data) {
     });
     await cache.put(key, response);
   } catch (error) {
-    console.warn("Error caching data:", error);
+    logger.warn("Error caching data:", error);
   }
 }
 
@@ -183,7 +192,7 @@ export async function getCachedData(key) {
       return await response.json();
     }
   } catch (error) {
-    console.warn("Error getting cached data:", error);
+    logger.warn("Error getting cached data:", error);
   }
   return null;
 }
@@ -191,9 +200,9 @@ export async function getCachedData(key) {
  * Register service worker
  */
 export async function registerServiceWorker() {
-  if (typeof navigator !== 'undefined' && navigator.serviceWorker && navigator.serviceWorker.register) {
-    await navigator.serviceWorker.register('/service-worker.js');
-    return 'ok';
+  if (hasNavigator() && navigator.serviceWorker && navigator.serviceWorker.register) {
+    await navigator.serviceWorker.register("/service-worker.js");
+    return "ok";
   }
   return false;
 }

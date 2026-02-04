@@ -1,5 +1,7 @@
 // Supabase will be dynamically imported inside functions to allow mocking in tests
 import { isEmpty } from "../utils/helpers.js";
+import { hasLocalStorage } from "../utils/env.js";
+import logger from "./logger.js";
 
 // Studentski Grad center coordinates
 const STUDENTSKI_GRAD_CENTER = {
@@ -34,7 +36,7 @@ const MARKER_CONFIG = {
  * @returns {Object} Leaflet map instance
  */
 export function initializeMap() {
-  if (typeof global !== 'undefined' && typeof vi !== 'undefined') {
+  if (typeof global !== "undefined" && typeof vi !== "undefined") {
     return {};
   }
   const map = L.map("map").setView([STUDENTSKI_GRAD_CENTER.lat, STUDENTSKI_GRAD_CENTER.lng], 13);
@@ -71,7 +73,6 @@ function createMarker(map, lat, lng, iconType, popupContent) {
   return marker;
 }
 
-
 /**
  * Fetch active campaigns and display them as RED markers
  * @param {Object} map - Leaflet map instance
@@ -79,10 +80,12 @@ function createMarker(map, lat, lng, iconType, popupContent) {
 export async function loadCampaignMarkers(map) {
   try {
     // Check if in demo mode
-    const user = JSON.parse((typeof localStorage !== 'undefined' && localStorage?.getItem) ? localStorage.getItem("user") || "{}" : "{}");
+    const user = hasLocalStorage() ? JSON.parse(localStorage.getItem("user") || "{}") : {};
     if (user && user.id === "demo-admin-001") {
       // Load demo campaigns from localStorage
-      const campaigns = JSON.parse((typeof localStorage !== 'undefined' && localStorage?.getItem) ? localStorage.getItem("CLEAN_QUARTER_DEMO_CAMPAIGNS") || "[]" : "[]");
+      const campaigns = hasLocalStorage()
+        ? JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_CAMPAIGNS") || "[]")
+        : [];
 
       if (isEmpty(campaigns)) return;
 
@@ -120,7 +123,7 @@ export async function loadCampaignMarkers(map) {
       createMarker(map, campaign.location_lat, campaign.location_lng, "campaign", popupContent);
     });
   } catch (error) {
-    console.error("Error loading campaign markers:", error);
+    logger.error("Error loading campaign markers:", error);
   }
 }
 
@@ -131,9 +134,9 @@ export async function loadCampaignMarkers(map) {
 export async function loadDisposalPointMarkers(map) {
   try {
     // Check if in demo mode - skip disposal points for demo
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const user = hasLocalStorage() ? JSON.parse(localStorage.getItem("user") || "{}") : {};
     if (user && user.id === "demo-admin-001") {
-      console.log("📝 Demo mode: skipping disposal points");
+      logger.info("📝 Demo mode: skipping disposal points");
       return;
     }
 
@@ -158,7 +161,7 @@ export async function loadDisposalPointMarkers(map) {
       createMarker(map, point.latitude, point.longitude, "disposal", popupContent);
     });
   } catch (error) {
-    console.error("Error loading disposal point markers:", error);
+    logger.error("Error loading disposal point markers:", error);
   }
 }
 
