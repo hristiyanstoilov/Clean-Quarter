@@ -13,44 +13,35 @@ const LOG_LEVELS = {
   FATAL: 4,
 };
 
-export class Logger {
+class Logger {
   constructor() {
-    this.level = LOG_LEVELS.INFO;
     this.logs = [];
     this.maxLogs = 1000;
-    // Always log in Vitest (test) environment
-    this.isDevelopment = true; // Always log in test and dev
+    this.level = LOG_LEVELS.DEBUG;
+    this.isDevelopment = true;
     this.listeners = new Set();
-  }
-
-  /**
-   * Set minimum log level
-   * @param {string} level - 'debug', 'info', 'warn', 'error', 'fatal'
-   */
-  setLevel(level) {
-    this.level = LOG_LEVELS[level.toUpperCase()] || LOG_LEVELS.INFO;
-  }
-
-  /**
-   * Subscribe to logs
-   * @param {Function} callback - Called when log is added
-   */
-  subscribe(callback) {
-    this.listeners.add(callback);
-    return () => this.listeners.delete(callback);
   }
 
   /**
    * Store log entry
    */
   storeLog(level, message, data = null, _skipListenerNotify = false) {
+    const userAgent =
+      typeof navigator !== "undefined" && navigator && navigator.userAgent
+        ? navigator.userAgent
+        : null;
+    const url =
+      typeof window !== "undefined" && window && window.location && window.location.href
+        ? window.location.href
+        : null;
+
     const logEntry = {
       timestamp: new Date().toISOString(),
       level,
       message,
       data,
-      userAgent: hasNavigator() && navigator.userAgent ? navigator.userAgent : null,
-      url: isBrowser() && window.location ? window.location.href : null,
+      userAgent,
+      url,
     };
 
     this.logs.push(logEntry);
@@ -82,19 +73,59 @@ export class Logger {
   }
 
   /**
+   * Subscribe to log events
+   * @param {Function} callback - Called when log is added
+   */
+  subscribe(callback) {
+    this.listeners.add(callback);
+    return () => this.listeners.delete(callback);
+  }
+
+  /**
    * Log debug message
    */
   debug(message, data = null) {
-    if (LOG_LEVELS.DEBUG >= this.level) return;
+    if (this.level > LOG_LEVELS.DEBUG) return;
     const entry = this.storeLog("DEBUG", message, data);
     if (this.isDevelopment) {
-      this.info(`🔍 [DEBUG] ${message}`, data);
+      console.log(`🔍 [DEBUG] ${message}`, data);
     }
     return entry;
   }
 
   /**
    * Log info message
+   */
+  info(...args) {
+    this._log("info", ...args);
+  }
+
+  /**
+   * Log warning message
+   */
+  warn(...args) {
+    this._log("warn", ...args);
+  }
+
+  /**
+   * Log error message
+   */
+  error(...args) {
+    this._log("error", ...args);
+  }
+
+  /**
+   * Log fatal error
+   */
+  fatal(message, data = null) {
+    this.storeLog("FATAL", message, data);
+    if (typeof console !== "undefined" && console.error) {
+      console.error(`💀 [FATAL] ${message}`, data);
+    }
+  }
+
+  /**
+   * Internal logging method
    */
   _log(level, ...args) {
     switch (level) {
@@ -124,46 +155,12 @@ export class Logger {
       }
     }
   }
-  info(...args) {
-    this._log("info", ...args);
-  }
 
   /**
-   * Log warning message
+   * Log API message
    */
-  warn(...args) {
-    this._log("warn", ...args);
-  }
-
-  /**
-   * Log error message
-   */
-  error(...args) {
-    this._log("error", ...args);
-  }
-
-  /**
-   * Log fatal error
-   */
-  fatal(message, error = null, data = null) {
-    const entry = this.storeLog("FATAL", message, {
-      error: error instanceof Error ? error.message : error,
-      stack: error instanceof Error ? error.stack : null,
-      data,
-    });
-    this.error(`🔴 [FATAL] ${message}`, error, data);
-    // In production, could send to error tracking service
-    return entry;
-  }
-
-  /**
-   * Log API call
-   */
-  logApi(method, url, status = null, duration = null, error = null) {
-    const message = `${method} ${url}`;
-    const data = { status, duration: `${duration}ms`, error };
-
-    if (status >= 400) {
+  logAPI(message, data = null, isError = false) {
+    if (isError) {
       this.warn(`API ${message}`, data);
     } else {
       this.debug(`API ${message}`, data);
