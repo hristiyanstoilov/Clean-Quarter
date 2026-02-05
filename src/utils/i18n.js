@@ -1,3 +1,4 @@
+import logger from "../services/logger.js";
 // Named export for testability
 export function getLanguage() {
   return getCurrentLanguage();
@@ -33,11 +34,15 @@ export async function initI18n(realTime = true) {
     // Lazy-load language from localStorage if not set
     if (!currentLanguage) {
       try {
-        currentLanguage = (typeof localStorage !== 'undefined' && localStorage.getItem("CLEAN_QUARTER_LANGUAGE")) || "bg";
-      } catch { currentLanguage = "bg"; }
+        currentLanguage =
+          (typeof localStorage !== "undefined" && localStorage.getItem("CLEAN_QUARTER_LANGUAGE")) ||
+          "bg";
+      } catch {
+        currentLanguage = "bg";
+      }
     }
 
-    console.log(
+    logger.info(
       "✅ i18n initialized with",
       Object.keys(translations),
       "languages (realTime:",
@@ -46,7 +51,7 @@ export async function initI18n(realTime = true) {
     );
     // Don't apply language here - let caller decide
   } catch (error) {
-    console.error("❌ Failed to load translations:", error);
+    logger.error("❌ Failed to load translations:", error);
   }
 }
 
@@ -66,7 +71,6 @@ export function t(key, lang) {
   return value || key;
 }
 
-
 /**
  * Set current language and apply it
  * @param {string} lang - 'bg' or 'en'
@@ -78,19 +82,18 @@ export function setLanguage(lang, force = false) {
     return;
   }
   if (!translations[lang]) {
-    console.error("❌ Language not supported:", lang);
+    logger.error("❌ Language not supported:", lang);
     return;
   }
   currentLanguage = lang;
   try {
-    if (typeof localStorage !== 'undefined') {
+    if (typeof localStorage !== "undefined") {
       localStorage.setItem("CLEAN_QUARTER_LANGUAGE", lang);
     }
   } catch {}
-  console.log("🌍 Language changed to:", lang);
+  logger.info("🌍 Language changed to:", lang);
   applyLanguage(lang);
 }
-
 
 /**
  * Get current language
@@ -99,8 +102,12 @@ export function setLanguage(lang, force = false) {
 export function getCurrentLanguage() {
   if (!currentLanguage) {
     try {
-      currentLanguage = (typeof localStorage !== 'undefined' && localStorage.getItem("CLEAN_QUARTER_LANGUAGE")) || "bg";
-    } catch { currentLanguage = "bg"; }
+      currentLanguage =
+        (typeof localStorage !== "undefined" && localStorage.getItem("CLEAN_QUARTER_LANGUAGE")) ||
+        "bg";
+    } catch {
+      currentLanguage = "bg";
+    }
   }
   return currentLanguage;
 }
@@ -110,10 +117,10 @@ export function getCurrentLanguage() {
  * Updates all elements with data-i18n attribute
  */
 export function applyLanguage(lang) {
-  if (typeof document !== 'undefined') {
+  if (typeof document !== "undefined") {
     document.documentElement.lang = lang;
 
-  // Update all elements with data-i18n attribute (for text content)
+    // Update all elements with data-i18n attribute (for text content)
     const elements = document.querySelectorAll("[data-i18n]");
     elements.forEach((element) => {
       const key = element.getAttribute("data-i18n");

@@ -1,11 +1,13 @@
+import logger from "../services/logger.js";
+import { isBrowser, hasLocalStorage, hasNavigator } from "./env.js";
 /**
  * Generate a random string of given length
  * @param {number} length
  * @returns {string}
  */
 export function randomString(length = 8) {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
   for (let i = 0; i < length; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
@@ -31,10 +33,13 @@ export function capitalize(str) {
  */
 export function getCurrentUser() {
   try {
-    const userJSON = localStorage.getItem("user");
-    return userJSON ? JSON.parse(userJSON) : null;
+    if (hasLocalStorage()) {
+      const userJSON = localStorage.getItem("user");
+      return userJSON ? JSON.parse(userJSON) : null;
+    }
+    return null;
   } catch (error) {
-    console.error("Error parsing stored user:", error);
+    logger.error("Error parsing stored user:", error);
     return null;
   }
 }
@@ -42,12 +47,16 @@ export function getCurrentUser() {
 /**
  * Save user to local storage
  * @param {Object} user - User object to save
+ *
+ * SECURITY: Only non-sensitive user data is stored. Never store tokens or secrets in localStorage.
  */
 export function saveUser(user) {
   try {
-    localStorage.setItem("user", JSON.stringify(user));
+    if (hasLocalStorage()) {
+      localStorage.setItem("user", JSON.stringify(user));
+    }
   } catch (error) {
-    console.error("Error saving user:", error);
+    logger.error("Error saving user:", error);
   }
 }
 
@@ -56,9 +65,11 @@ export function saveUser(user) {
  */
 export function removeUser() {
   try {
-    localStorage.removeItem("user");
+    if (hasLocalStorage()) {
+      localStorage.removeItem("user");
+    }
   } catch (error) {
-    console.error("Error removing user:", error);
+    logger.error("Error removing user:", error);
   }
 }
 
@@ -70,7 +81,9 @@ export function removeUser() {
 export function requireAuth(redirectUrl = "/index.html") {
   const user = getCurrentUser();
   if (!user) {
-    window.location.href = redirectUrl;
+    if (isBrowser()) {
+      window.location.href = redirectUrl;
+    }
     return false;
   }
   return true;
@@ -95,7 +108,7 @@ export async function showSuccess(title, text, timer = null) {
     config.timerProgressBar = true;
   }
 
-  if (typeof Swal !== 'undefined' && Swal?.fire) {
+  if (typeof Swal !== "undefined" && Swal?.fire) {
     return Swal.fire(config);
   }
   return Promise.resolve();
@@ -170,20 +183,17 @@ export async function showConfirm(title, text, confirmText = "Yes", cancelText =
 export function formatDate(date, format = "short") {
   try {
     const dateObj = typeof date === "string" ? new Date(date) : date;
-
     if (isNaN(dateObj.getTime())) {
       return "Invalid Date";
     }
-
     const options = {
       short: { year: "numeric", month: "short", day: "numeric" },
       long: { year: "numeric", month: "long", day: "numeric", weekday: "long" },
       time: { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" },
     };
-
     return dateObj.toLocaleDateString("en-US", options[format] || options.short);
   } catch (error) {
-    console.error("Error formatting date:", error);
+    logger.error("Error formatting date:", error);
     return "Invalid Date";
   }
 }
@@ -202,15 +212,13 @@ export function getTimeAgo(date) {
     const diffMins = Math.floor(diffSecs / 60);
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
-
     if (diffSecs < 60) return "just now";
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 30) return `${diffDays}d ago`;
-
     return formatDate(dateObj, "short");
   } catch (error) {
-    console.error("Error calculating time ago:", error);
+    logger.error("Error calculating time ago:", error);
     return "Unknown";
   }
 }
@@ -297,7 +305,7 @@ export function safeStringify(data) {
   try {
     return JSON.stringify(data);
   } catch (error) {
-    console.error("Error stringifying data:", error);
+    logger.error("Error stringifying data:", error);
     return "{}";
   }
 }
@@ -312,8 +320,7 @@ export function safeParse(jsonString, fallback = null) {
   try {
     return JSON.parse(jsonString);
   } catch (error) {
-    console.error("Error parsing JSON:", error);
-    // If fallback is an object with a fallback property, return fallback.fallback for test compatibility
+    logger.error("Error parsing JSON:", error);
     if (fallback && typeof fallback === "object" && "fallback" in fallback) {
       return fallback.fallback;
     }
@@ -346,7 +353,7 @@ export async function handleError(
   error,
   userMessage = "An error occurred. Please try again."
 ) {
-  console.error(`[${context}]`, error);
+  logger.error(`[${context}]`, error);
   await showError("Error", userMessage);
 }
 
@@ -357,10 +364,13 @@ export async function handleError(
  */
 export async function copyToClipboard(text) {
   try {
-    await navigator.clipboard.writeText(text);
-    return true;
+    if (hasNavigator() && navigator.clipboard) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+    return false;
   } catch (error) {
-    console.error("Error copying to clipboard:", error);
+    logger.error("Error copying to clipboard:", error);
     return false;
   }
 }
@@ -371,11 +381,10 @@ export async function copyToClipboard(text) {
  * @returns {string|null} Parameter value or null
  */
 export function getQueryParam(paramName) {
-  if (typeof window !== "undefined") {
+  if (isBrowser()) {
     const params = new URLSearchParams(window.location.search);
     return params.get(paramName);
   }
-  // Node.js fallback for Vitest
   return null;
 }
 
@@ -387,7 +396,7 @@ export function getQueryParam(paramName) {
  */
 export function buildUrl(baseUrl, params = {}) {
   let origin = "";
-  if (typeof window !== "undefined" && window.location && window.location.origin) {
+  if (isBrowser() && window.location && window.location.origin) {
     origin = window.location.origin;
   } else {
     origin = "http://localhost";

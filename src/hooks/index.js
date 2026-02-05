@@ -1,3 +1,4 @@
+import logger from "../services/logger.js";
 // Mock/testable hooks for integration tests
 export function useAuth() {
   return { user: null, isAuthenticated: false };
@@ -90,7 +91,7 @@ export function useFetch(url, options = {}) {
   // Auto-fetch if not cached
   if (!cached) {
     state.refetch().catch((err) => {
-      console.error("Auto-fetch error:", err);
+      logger.error("Auto-fetch error:", err);
     });
   }
 
