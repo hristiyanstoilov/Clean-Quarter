@@ -242,7 +242,7 @@ class Logger {
 }
 
 // Export singleton instance
-export { Logger as LoggerClass };
+export { Logger, Logger as LoggerClass };
 const logger = new Logger();
 export default logger;
 // Named exports for testability
