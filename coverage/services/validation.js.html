@@ -302,7 +302,17 @@
 <a name='L237'></a><a href='#L237'>237</a>
 <a name='L238'></a><a href='#L238'>238</a>
 <a name='L239'></a><a href='#L239'>239</a>
-<a name='L240'></a><a href='#L240'>240</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L240'></a><a href='#L240'>240</a>
+<a name='L241'></a><a href='#L241'>241</a>
+<a name='L242'></a><a href='#L242'>242</a>
+<a name='L243'></a><a href='#L243'>243</a>
+<a name='L244'></a><a href='#L244'>244</a>
+<a name='L245'></a><a href='#L245'>245</a>
+<a name='L246'></a><a href='#L246'>246</a>
+<a name='L247'></a><a href='#L247'>247</a>
+<a name='L248'></a><a href='#L248'>248</a>
+<a name='L249'></a><a href='#L249'>249</a>
+<a name='L250'></a><a href='#L250'>250</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -314,6 +324,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
@@ -457,11 +472,16 @@
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
@@ -552,7 +572,12 @@
 const rules = {
   // Text validation
   required: (value) =&gt; {
-    if (value === null || value === undefined || value === '' || (typeof value === 'string' &amp;&amp; value.trim() === '')) {
+    if (
+      value === null ||
+      value === undefined ||
+      value === "" ||
+      (typeof value === "string" &amp;&amp; value.trim() === "")
+    ) {
       return "Полето е задължително";
     }
     return null;
@@ -566,7 +591,7 @@ const rules = {
 &nbsp;
   minLength: (min) =&gt; {
     return (value) =&gt; {
-      <span class="missing-if-branch" title="if path not taken" >I</span>if (value === null || value === undefined || value === '') <span class="cstat-no" title="statement not covered" >return null;</span>
+      <span class="missing-if-branch" title="if path not taken" >I</span>if (value === null || value === undefined || value === "") <span class="cstat-no" title="statement not covered" >return null;</span>
       return value.length &gt;= min ? <span class="branch-0 cbranch-no" title="branch not covered" >null </span>: `Минимална дължина е ${min}`;
     };
   },
@@ -696,13 +721,18 @@ export function validateForm(data, schema) {
   const errors = {};
   for (const [field, fieldRules] of Object.entries(schema)) {
     const value = data[field];
-    const isEmpty = value === null || value === undefined || value === '' || (typeof value === 'string' &amp;&amp; value.trim() === '');
+    const isEmpty =
+      value === null ||
+      value === undefined ||
+      value === "" ||
+      (typeof value === "string" &amp;&amp; value.trim() === "");
     if (isEmpty) {
       // Only check required rule
-      let requiredRule = fieldRules.find(r =&gt; r === 'required' || <span class="branch-1 cbranch-no" title="branch not covered" >r === rules.required)</span>;
+      let requiredRule = fieldRules.find((r) =&gt; r === "required" || <span class="branch-1 cbranch-no" title="branch not covered" >r === rules.required)</span>;
       <span class="missing-if-branch" title="else path not taken" >E</span>if (requiredRule) {
-        let error = typeof requiredRule === 'function' ? <span class="branch-0 cbranch-no" title="branch not covered" >requiredRule(value) </span>: rules[requiredRule](value);
-        <span class="missing-if-branch" title="else path not taken" >E</span>if (typeof error === 'string' &amp;&amp; error) {
+        let error =
+          typeof requiredRule === "function" ? <span class="branch-0 cbranch-no" title="branch not covered" >requiredRule(value) </span>: rules[requiredRule](value);
+        <span class="missing-if-branch" title="else path not taken" >E</span>if (typeof error === "string" &amp;&amp; error) {
           errors[field] = error;
         }
       }
@@ -722,10 +752,10 @@ export function validateForm(data, schema) {
           error = rules[key](rule[key])(value);
         }
       }
-      <span class="missing-if-branch" title="else path not taken" >E</span>if (field === 'password') {
-        console.log('DEBUG password:', value, rule, error);
+      <span class="missing-if-branch" title="else path not taken" >E</span>if (field === "password") {
+        console.log("DEBUG password:", value, rule, error);
       }
-      if (typeof error === 'string' &amp;&amp; error) {
+      if (typeof error === "string" &amp;&amp; error) {
         errors[field] = error;
         break;
       }
@@ -787,7 +817,7 @@ export { rules, schemas };
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-23T04:35:09.617Z
+                at 2026-01-31T04:31:24.740Z
             </div>
         <script src="../prettify.js"></script>
         <script>
