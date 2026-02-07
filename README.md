@@ -104,3 +104,20 @@ public/             # Static assets
 ## License
 
 MIT License
+
+## Password Policy
+
+To protect your account, all passwords must meet the following requirements:
+
+- Minimum 8 characters
+- At least one uppercase letter (A-Z)
+- At least one lowercase letter (a-z)
+- At least one digit (0-9)
+
+Password strength is checked live in all forms. The same rules are enforced on the backend.
+
+If you have trouble creating a password, check the checklist shown during registration and profile update.
+
+---
+
+For developers: see `src/services/validation.js` for centralized password validation logic and `src/services/validation.test.js` for automated tests.
