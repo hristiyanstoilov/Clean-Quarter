@@ -213,7 +213,13 @@
 <a name='L148'></a><a href='#L148'>148</a>
 <a name='L149'></a><a href='#L149'>149</a>
 <a name='L150'></a><a href='#L150'>150</a>
-<a name='L151'></a><a href='#L151'>151</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L151'></a><a href='#L151'>151</a>
+<a name='L152'></a><a href='#L152'>152</a>
+<a name='L153'></a><a href='#L153'>153</a>
+<a name='L154'></a><a href='#L154'>154</a>
+<a name='L155'></a><a href='#L155'>155</a>
+<a name='L156'></a><a href='#L156'>156</a>
+<a name='L157'></a><a href='#L157'>157</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -249,7 +255,11 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
@@ -287,7 +297,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -304,7 +313,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -315,7 +323,11 @@
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -398,8 +410,12 @@ export async function initI18n(realTime = true) {
     // Lazy-load language from localStorage if not set
     <span class="missing-if-branch" title="else path not taken" >E</span>if (!currentLanguage) {
       try {
-        currentLanguage = (typeof localStorage !== 'undefined' &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >localStorage.getItem("CLEAN_QUARTER_LANGUAGE"))</span> || "bg";
-      } catch { <span class="cstat-no" title="statement not covered" >currentLanguage = "bg"; </span>}
+        currentLanguage =
+          (typeof localStorage !== "undefined" &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >localStorage.getItem("CLEAN_QUARTER_LANGUAGE"))</span> ||
+          "bg";
+      } catch {
+<span class="cstat-no" title="statement not covered" >        currentLanguage = "bg";</span>
+      }
     }
 &nbsp;
     console.log(
@@ -431,7 +447,6 @@ export function t(key, lang) {
   return value || key;
 }
 &nbsp;
-&nbsp;
 /**
  * Set current language and apply it
  * @param {string} lang - 'bg' or 'en'
@@ -448,14 +463,13 @@ export function setLanguage(lang, force = false) {
   }
   currentLanguage = lang;
   try {
-    <span class="missing-if-branch" title="if path not taken" >I</span>if (typeof localStorage !== 'undefined') {
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (typeof localStorage !== "undefined") {
 <span class="cstat-no" title="statement not covered" >      localStorage.setItem("CLEAN_QUARTER_LANGUAGE", lang);</span>
     }
   } catch {}
   console.log("🌍 Language changed to:", lang);
   applyLanguage(lang);
 }
-&nbsp;
 &nbsp;
 /**
  * Get current language
@@ -464,8 +478,12 @@ export function setLanguage(lang, force = false) {
 export function getCurrentLanguage() {
   <span class="missing-if-branch" title="if path not taken" >I</span>if (!currentLanguage) {
 <span class="cstat-no" title="statement not covered" >    try {</span>
-<span class="cstat-no" title="statement not covered" >      currentLanguage = (typeof localStorage !== 'undefined' &amp;&amp; localStorage.getItem("CLEAN_QUARTER_LANGUAGE")) || "bg";</span>
-    } catch { <span class="cstat-no" title="statement not covered" >currentLanguage = "bg"; </span>}
+<span class="cstat-no" title="statement not covered" >      currentLanguage =</span>
+        (typeof localStorage !== "undefined" &amp;&amp; localStorage.getItem("CLEAN_QUARTER_LANGUAGE")) ||
+        "bg";
+    } catch {
+<span class="cstat-no" title="statement not covered" >      currentLanguage = "bg";</span>
+    }
   }
   return currentLanguage;
 }
@@ -475,10 +493,10 @@ export function getCurrentLanguage() {
  * Updates all elements with data-i18n attribute
  */
 export function applyLanguage(lang) {
-  <span class="missing-if-branch" title="if path not taken" >I</span>if (typeof document !== 'undefined') {
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (typeof document !== "undefined") {
 <span class="cstat-no" title="statement not covered" >    document.documentElement.lang = lang;</span>
 &nbsp;
-  // Update all elements with data-i18n attribute (for text content)
+    // Update all elements with data-i18n attribute (for text content)
     const elements = <span class="cstat-no" title="statement not covered" >document.querySelectorAll("[data-i18n]");</span>
 <span class="cstat-no" title="statement not covered" >    elements.forEach(<span class="fstat-no" title="function not covered" >(e</span>lement) =&gt; {</span>
       const key = <span class="cstat-no" title="statement not covered" >element.getAttribute("data-i18n");</span>
@@ -520,7 +538,7 @@ export function <span class="fstat-no" title="function not covered" >getAvailabl
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-23T04:35:09.617Z
+                at 2026-01-31T04:31:24.740Z
             </div>
         <script src="../prettify.js"></script>
         <script>
