@@ -9,7 +9,7 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    minify: 'terser',
+    minify: 'esbuild', // Use esbuild (faster, no extra dependency)
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
