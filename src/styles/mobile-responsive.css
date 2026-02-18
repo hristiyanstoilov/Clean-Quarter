@@ -1,0 +1,46 @@
+/**
+ * Mobile responsive enhancements
+ */
+
+@media (max-width: 768px) {
+  .campaign-card {
+    margin-bottom: 1rem;
+  }
+
+  .campaign-card img {
+    max-height: 200px;
+    object-fit: cover;
+  }
+
+  .btn-group-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .map-container {
+    height: 300px;
+  }
+
+  .navbar-brand {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .map-container {
+    height: 250px;
+  }
+
+  .card-body {
+    padding: 0.75rem;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+  }
+}
