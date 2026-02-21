@@ -3,6 +3,21 @@ import logger from "./logger.js";
 import { showSuccess, showError } from "../utils/helpers.js";
 import { rules } from "./validation.js";
 
+// Rate limiting: max 5 login attempts per 15 minutes per email
+const loginAttempts = new Map();
+const MAX_ATTEMPTS = 5;
+const WINDOW_MS = 15 * 60 * 1000;
+
+function checkRateLimit(email) {
+  const now = Date.now();
+  const attempts = (loginAttempts.get(email) || []).filter((t) => now - t < WINDOW_MS);
+  if (attempts.length >= MAX_ATTEMPTS) {
+    throw new Error("Твърде много опити за вход. Опитайте отново след 15 минути.");
+  }
+  attempts.push(now);
+  loginAttempts.set(email, attempts);
+}
+
 /**
  * Register a new user with email, password, and metadata (neighborhood)
  * @param {string} email
@@ -45,17 +60,18 @@ export async function register(email, password, options = {}) {
 
     logger.info("✅ Auth signup successful, user ID:", authData.user.id);
 
-    // Create profile in database with metadata
+    // Upsert profile - trigger may have already created it, so update with neighborhood
     const userId = authData.user.id;
-    const { error: profileError } = await supabase.from("profiles").insert([
+    const { error: profileError } = await supabase.from("profiles").upsert(
       {
         id: userId,
         username: email.split("@")[0],
         role: "user",
         points_balance: 0,
-        neighborhood: options.neighborhood || null,
+        neighborhood: options.neighborhood || "Studentski Grad",
       },
-    ]);
+      { onConflict: "id" }
+    );
 
     if (profileError) {
       logger.error("❌ Profile creation error:", profileError);
@@ -64,7 +80,7 @@ export async function register(email, password, options = {}) {
 
     logger.info("✅ Profile created successfully");
 
-    await showSuccess("Registration Successful!", "Your account has been created.");
+    await showSuccess("Registration Successful!", "Your account has been created.", 1500);
     return authData.user;
   } catch (error) {
     logger.error("❌ Register error:", error);
@@ -81,6 +97,7 @@ export async function register(email, password, options = {}) {
  */
 export async function login(email, password) {
   try {
+    checkRateLimit(email);
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -88,7 +105,7 @@ export async function login(email, password) {
 
     if (error) throw error;
 
-    await showSuccess("Login Successful!", `Welcome, ${email}`);
+    await showSuccess("Login Successful!", `Welcome, ${email}`, 1500);
     return data.user;
   } catch (error) {
     await showError("Login Error", error);
@@ -106,7 +123,7 @@ export async function logout() {
 
     if (error) throw error;
 
-    await showSuccess("Logout Successful", "See you soon!");
+    await showSuccess("Logout Successful", "See you soon!", 1500);
   } catch (error) {
     await showError("Logout Error", error);
     throw error;

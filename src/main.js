@@ -21,11 +21,16 @@ async function handleDemoLogin(e) {
       localStorage.setItem("user", JSON.stringify(demoUser));
       if (typeof Swal !== "undefined") {
         await Swal.fire({
+          toast: true,
+          position: "top-end",
           icon: "success",
-          title: lang === "en" ? "🎮 Demo Mode Active" : "🎮 Демонстрационен режим",
-          text:
-            lang === "en" ? `Welcome ${demoUser.username}!` : `Добре дошъл, ${demoUser.username}!`,
-          timer: 1500,
+          title:
+            lang === "en"
+              ? `🎮 Demo Mode Active — Welcome ${demoUser.username}!`
+              : `🎮 Демо режим — Добре дошъл, ${demoUser.username}!`,
+          showConfirmButton: false,
+          timer: 2000,
+          timerProgressBar: true,
         });
       } else {
         alert(
@@ -34,7 +39,7 @@ async function handleDemoLogin(e) {
             : `🎮 Добре дошъл в демо режим, ${demoUser.username}!`
         );
       }
-      window.location.href = "./src/pages/dashboard.html";
+      window.location.href = "/dashboard";
     } else {
       throw new Error(lang === "en" ? "Demo user not found" : "Демо потребителят не е намерен");
     }
@@ -43,7 +48,6 @@ async function handleDemoLogin(e) {
     try {
       lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
     } catch {}
-    console.error("❌ Error:", error);
     if (typeof Swal !== "undefined") {
       await Swal.fire({
         icon: "error",
@@ -60,6 +64,7 @@ window.handleDemoLogin = handleDemoLogin;
 // Main entry point for the application
 import "./assets/style.css";
 import { login, register } from "./services/auth.js";
+import { saveUser } from "./utils/helpers.js";
 import { initPasswordStrengthMeter } from "./components/passwordStrength.js";
 import passwordToggle from "./components/passwordToggle.js";
 // Lazy-load non-critical modules for performance
@@ -72,6 +77,11 @@ function initAuthForms() {
 
   if (loginForm) {
     loginForm.addEventListener("submit", handleLogin);
+    passwordToggle({
+      inputId: "loginPassword",
+      toggleBtnId: "toggleLoginPassword",
+      eyeIconId: "loginPasswordEye",
+    });
   }
 
   if (registerForm) {
@@ -96,10 +106,9 @@ async function handleLogin(e) {
 
   try {
     const user = await login(email, password);
-    localStorage.setItem("user", JSON.stringify(user));
-    window.location.href = "./src/pages/dashboard.html";
+    saveUser(user);
+    window.location.href = "/dashboard";
   } catch (error) {
-    console.error("Login failed:", error);
     await Swal.fire({
       icon: "error",
       title: "Login Error",
@@ -135,25 +144,21 @@ async function handleRegister(e) {
     return;
   }
 
-  if (password.length < 6) {
+  if (password.length < 8) {
     await Swal.fire({
       icon: "error",
       title: "Слаба парола",
-      text: "Паролата трябва да има минимум 6 символа!",
+      text: "Паролата трябва да има минимум 8 символа!",
     });
     return;
   }
 
   try {
     const user = await register(email, password, { neighborhood });
-    localStorage.setItem("user", JSON.stringify(user));
+    saveUser(user);
 
-    console.log("User registered successfully:", email);
-
-    window.location.href = "./src/pages/dashboard.html";
+    window.location.href = "/dashboard";
   } catch (error) {
-    console.error("Registration failed:", error);
-
     await Swal.fire({
       icon: "error",
       title: "Регистрацията неуспешна",
@@ -165,15 +170,15 @@ async function handleRegister(e) {
 // Navigation function
 function loadPage(pageName) {
   const pages = {
-    index: "./src/pages/index.html",
-    dashboard: "./src/pages/dashboard.html",
-    "create-campaign": "./src/pages/create-campaign.html",
-    detail: "./src/pages/campaign-detail.html",
-    profile: "./src/pages/profile.html",
-    admin: "./src/pages/admin.html",
-    rewards: "./src/pages/rewards.html",
+    index: "/",
+    dashboard: "/dashboard",
+    "create-campaign": "/create-campaign",
+    detail: "/campaign",
+    profile: "/profile",
+    admin: "/admin",
+    rewards: "/rewards",
   };
-  window.location.href = pages[pageName] || "./";
+  window.location.href = pages[pageName] || "/";
 }
 
 window.navigateTo = loadPage;
@@ -202,7 +207,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Init forms
     initAuthForms();
   } catch (error) {
-    console.error("Failed to initialize i18n or forms:", error);
     initAuthForms();
   }
 });

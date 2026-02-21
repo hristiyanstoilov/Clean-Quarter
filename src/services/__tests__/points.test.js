@@ -1,5 +1,4 @@
 // Unit тест за изчисляване на точки
-import { describe, it, expect } from "vitest";
 import { calculatePoints } from "../points.js";
 
 describe("calculatePoints", () => {

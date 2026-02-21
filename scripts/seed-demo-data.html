@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seed Demo Data - Clean Quarter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .seed-container {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+        }
+        .seed-btn {
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        .seed-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .info-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="seed-container">
+        <h1 class="text-center mb-4">🌱 Seed Demo Data</h1>
+        <p class="text-center text-muted mb-4">
+            Създай демонстрационни потребители за тестване на Admin панела
+        </p>
+
+        <div class="d-grid gap-3">
+            <button onclick="seedUsers()" class="btn btn-primary seed-btn">
+                👥 Seed Demo Users (5 потребителя)
+            </button>
+            <button onclick="clearAllData()" class="btn btn-danger seed-btn">
+                🗑️ Clear All Demo Data
+            </button>
+            <a href="src/pages/admin.html" class="btn btn-success seed-btn">
+                🛡️ Към Admin Panel
+            </a>
+        </div>
+
+        <div class="info-box">
+            <h6>📋 Какво ще бъде създадено:</h6>
+            <ul class="mb-0 small">
+                <li><strong>2 Admins:</strong> admin_demo, sofia_admin</li>
+                <li><strong>3 Users:</strong> ivan_petrov, maria_georgieva, petar_dimitrov</li>
+                <li>Points: 20-200</li>
+                <li>Neighborhoods: Различни квартали в София</li>
+            </ul>
+        </div>
+
+        <div id="status" class="mt-3"></div>
+    </div>
+
+    <script>
+        function seedUsers() {
+            const demoUsers = [
+                {
+                    id: "demo-admin-001",
+                    username: "admin_demo",
+                    email: "admin@demo.com",
+                    role: "admin",
+                    points_balance: 150,
+                    neighborhood: "Студентски град",
+                    created_at: new Date().toISOString()
+                },
+                {
+                    id: "demo-user-001",
+                    username: "ivan_petrov",
+                    email: "ivan@example.com",
+                    role: "user",
+                    points_balance: 45,
+                    neighborhood: "Дървеница",
+                    created_at: new Date().toISOString()
+                },
+                {
+                    id: "demo-user-002",
+                    username: "maria_georgieva",
+                    email: "maria@example.com",
+                    role: "user",
+                    points_balance: 80,
+                    neighborhood: "Малинова долина",
+                    created_at: new Date().toISOString()
+                },
+                {
+                    id: "demo-user-003",
+                    username: "petar_dimitrov",
+                    email: "petar@example.com",
+                    role: "user",
+                    points_balance: 20,
+                    neighborhood: "Мусагеница",
+                    created_at: new Date().toISOString()
+                },
+                {
+                    id: "demo-admin-002",
+                    username: "sofia_admin",
+                    email: "sofia@demo.com",
+                    role: "admin",
+                    points_balance: 200,
+                    neighborhood: "Витоша (ВЕЦ)",
+                    created_at: new Date().toISOString()
+                }
+            ];
+
+            try {
+                localStorage.setItem('CLEAN_QUARTER_DEMO_USERS', JSON.stringify(demoUsers));
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Успех!',
+                    html: `
+                        <p>✅ Създадени са <strong>5 демо потребителя</strong></p>
+                        <p class="small text-muted">Сега отиди в Admin Panel и рефрешни страницата</p>
+                    `,
+                    confirmButtonText: 'OK',
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+
+                document.getElementById('status').innerHTML = `
+                    <div class="alert alert-success">
+                        <strong>✅ Success!</strong><br>
+                        Created 5 demo users in localStorage.<br>
+                        <small>Key: CLEAN_QUARTER_DEMO_USERS</small>
+                    </div>
+                `;
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Грешка',
+                    text: error.message
+                });
+            }
+        }
+
+        function clearAllData() {
+            Swal.fire({
+                title: 'Сигурен ли си?',
+                text: "Това ще изтрие всички demo данни от localStorage!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Да, изтрий!',
+                cancelButtonText: 'Отказ'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    localStorage.removeItem('CLEAN_QUARTER_DEMO_USERS');
+                    localStorage.removeItem('CLEAN_QUARTER_ROLE_LOG');
+                    localStorage.removeItem('CLEAN_QUARTER_DEMO_CAMPAIGNS');
+                    localStorage.removeItem('CLEAN_QUARTER_DEMO_PARTICIPATIONS');
+                    localStorage.removeItem('CLEAN_QUARTER_DEMO_TRANSACTIONS');
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Изтрито!',
+                        text: 'Всички demo данни са изтрити.',
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+
+                    document.getElementById('status').innerHTML = `
+                        <div class="alert alert-warning">
+                            <strong>🗑️ Cleared!</strong><br>
+                            All demo data removed from localStorage.
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        // Auto-check if data already exists
+        window.addEventListener('DOMContentLoaded', () => {
+            const existingUsers = localStorage.getItem('CLEAN_QUARTER_DEMO_USERS');
+            if (existingUsers) {
+                const users = JSON.parse(existingUsers);
+                document.getElementById('status').innerHTML = `
+                    <div class="alert alert-info">
+                        <strong>ℹ️ Info:</strong><br>
+                        Demo data already exists: <strong>${users.length} users</strong>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

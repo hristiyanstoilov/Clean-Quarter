@@ -1,5 +1,20 @@
 import logger from "../services/logger.js";
 import { isBrowser, hasLocalStorage, hasNavigator } from "./env.js";
+
+/**
+ * Escape HTML special characters to prevent XSS
+ * @param {string} text - Raw text to escape
+ * @returns {string} HTML-safe string
+ */
+export function escapeHTML(text) {
+  if (text === null || text === undefined) return "";
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 /**
  * Generate a random string of given length
  * @param {number} length
@@ -45,7 +60,7 @@ export function getCurrentUser() {
 }
 
 /**
- * Save user to local storage
+ * Save user to local storage (only non-sensitive fields)
  * @param {Object} user - User object to save
  *
  * SECURITY: Only non-sensitive user data is stored. Never store tokens or secrets in localStorage.
@@ -53,7 +68,14 @@ export function getCurrentUser() {
 export function saveUser(user) {
   try {
     if (hasLocalStorage()) {
-      localStorage.setItem("user", JSON.stringify(user));
+      const safeUser = {
+        id: user.id,
+        email: user.email,
+        username: user.user_metadata?.username || user.username,
+        role: user.role || user.user_metadata?.role,
+        neighborhood: user.user_metadata?.neighborhood || user.neighborhood,
+      };
+      localStorage.setItem("user", JSON.stringify(safeUser));
     }
   } catch (error) {
     logger.error("Error saving user:", error);
@@ -75,14 +97,19 @@ export function removeUser() {
 
 /**
  * Check if user is authenticated, redirect if not
- * @param {string} redirectUrl - URL to redirect to if not authenticated
+ * @param {string} redirectUrl - URL to redirect to if not authenticated (must be relative)
  * @returns {boolean} True if user exists, false otherwise
  */
-export function requireAuth(redirectUrl = "/index.html") {
+export function requireAuth(redirectUrl = "/") {
   const user = getCurrentUser();
   if (!user) {
     if (isBrowser()) {
-      window.location.href = redirectUrl;
+      // Prevent open redirect - only allow relative URLs
+      const safeUrl =
+        redirectUrl && !redirectUrl.includes("://") && !redirectUrl.startsWith("//")
+          ? redirectUrl
+          : "/";
+      window.location.href = safeUrl;
     }
     return false;
   }
@@ -149,6 +176,36 @@ export async function showInfo(title, text) {
     text,
     confirmButtonColor: "#17a2b8",
   });
+}
+
+/**
+ * Show a non-blocking SweetAlert2 toast notification (top-end corner).
+ * Use for success/info confirmations that don't require user interaction.
+ * @param {'success'|'info'|'warning'} icon
+ * @param {string} title - Message shown in toast
+ * @param {number} timer - Auto-close ms (default 2500)
+ */
+export async function showToast(icon, title, timer = 2500) {
+  if (typeof Swal === "undefined" || !Swal?.fire) return Promise.resolve();
+  return Swal.fire({
+    toast: true,
+    position: "top-end",
+    icon,
+    title,
+    showConfirmButton: false,
+    timer,
+    timerProgressBar: true,
+  });
+}
+
+/** Convenience: success toast */
+export async function showSuccessToast(title, timer = 2500) {
+  return showToast("success", title, timer);
+}
+
+/** Convenience: info toast */
+export async function showInfoToast(title, timer = 2500) {
+  return showToast("info", title, timer);
 }
 
 /**

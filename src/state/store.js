@@ -195,12 +195,11 @@ export class Store {
 
     this.state.notifications.push(notification);
     // Call the base notify to update listeners (don't recursively call self)
-    console.log("📢 State updated:", this.state);
     this.listeners.forEach((listener) => {
       try {
         listener(this.getState());
       } catch (error) {
-        console.error("❌ Listener error:", error);
+        // silently ignore
       }
     });
 
@@ -211,7 +210,7 @@ export class Store {
           try {
             listener(this.getState());
           } catch (error) {
-            console.error("❌ Listener error:", error);
+            // silently ignore
           }
         });
       }, duration);

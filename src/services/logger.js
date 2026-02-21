@@ -88,7 +88,6 @@ class Logger {
     if (this.level > LOG_LEVELS.DEBUG) return;
     const entry = this.storeLog("DEBUG", message, data);
     if (this.isDevelopment) {
-      console.log(`🔍 [DEBUG] ${message}`, data);
     }
     return entry;
   }
@@ -131,18 +130,10 @@ class Logger {
     switch (level) {
       case "info": {
         this.storeLog("INFO", args[0], args[1]);
-        if (typeof console !== "undefined" && console.log) {
-          const msg = typeof args[0] === "string" ? `ℹ️ [INFO] ${args[0]}` : "ℹ️ [INFO]";
-          console.log(msg, args[1]);
-        }
         break;
       }
       case "warn": {
         this.storeLog("WARN", args[0], args[1]);
-        if (typeof console !== "undefined" && console.warn) {
-          const msg = typeof args[0] === "string" ? `⚠️ [WARN] ${args[0]}` : "⚠️ [WARN]";
-          console.warn(msg, args[1]);
-        }
         break;
       }
       case "error": {

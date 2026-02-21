@@ -20,118 +20,17 @@
     <!-- SweetAlert2 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <style>
-      body {
-          margin: 0;
-          padding: 0;
-      }
+    <!-- Global Styles -->
+    <link rel="stylesheet" href="../assets/style.css" />
 
-      .navbar {
-          background-color: rgba(255, 255, 255, 0.95);
-          z-index: 1000;
-      }
-
-      .main-container {
-          display: grid;
-          grid-template-rows: auto 1fr;
-          min-height: 100vh;
-          padding-top: 56px;
-      }
-
-      #map {
-              <link rel="stylesheet" href="../assets/style.css">
-          padding: 2rem 1rem;
-          background-color: #f8f9fa;
-          width: 100%;
-          margin: 0;
-      }
-
-      .campaigns-header {
-          margin-bottom: 2rem;
-      }
-
-      /* Mobile-First Grid Layout */
-      .campaigns-grid {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 1rem;
-          width: 100%;
-      }
-
-      @media (min-width: 576px) {
-          .campaigns-grid {
-              grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-              gap: 1.25rem;
-          }
-      }
-
-      @media (min-width: 768px) {
-          .campaigns-grid {
-              grid-template-columns: repeat(2, 1fr);
-              gap: 1.5rem;
-          }
-      }
-
-      @media (min-width: 1024px) {
-          .campaigns-grid {
-              grid-template-columns: repeat(3, 1fr);
-              gap: 2rem;
-          }
-      }
-
-      .campaign-card {
-          transition: transform 0.2s, box-shadow 0.2s;
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-      }
-
-      .campaign-card:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-      }
-
-      .campaign-card img {
-          height: 200px;
-          object-fit: cover;
-      }
-
-      .campaign-card .card-body {
-          display: flex;
-          flex-direction: column;
-          flex-grow: 1;
-          padding: 1rem;
-      }
-
-      .campaign-card .btn {
-          min-height: 44px;
-          margin-top: auto;
-          padding: 0.75rem 1rem;
-          font-weight: 600;
-      }
-
-      .spinner-container {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          min-height: 200px;
-          width: 100%;
-      }
-
-      .no-campaigns-message {
-          text-align: center;
-          padding: 2rem 1rem;
-          color: #6c757d;
-      }
-    </style>
+    <!-- Dashboard Styles -->
+    <link rel="stylesheet" href="../assets/dashboard.css" />
   </head>
   <body>
     <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark">
       <div class="container-fluid">
-        <a class="navbar-brand" href="./dashboard.html">
-          <strong>Чист Квартал</strong>
-        </a>
+        <a class="navbar-brand" href="/dashboard"> ♻️ Чист Квартал </a>
         <button
           class="navbar-toggler"
           type="button"
@@ -143,15 +42,15 @@
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav ms-auto">
             <li class="nav-item">
-              <a class="nav-link" href="./create-campaign.html" data-i18n="nav.createCampaign"
+              <a class="nav-link" href="/create-campaign" data-i18n="nav.createCampaign"
                 >Нова кампания</a
               >
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="./rewards.html" data-i18n="nav.rewards">Награди</a>
+              <a class="nav-link" href="/rewards" data-i18n="nav.rewards">Награди</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="./profile.html" data-i18n="nav.profile">Профил</a>
+              <a class="nav-link" href="/profile" data-i18n="nav.profile">Профил</a>
             </li>
             <li class="nav-item">
               <select
@@ -164,9 +63,7 @@
               </select>
             </li>
             <li class="nav-item">
-              <button class="btn btn-danger btn-sm" id="logoutBtn" data-i18n="nav.logout">
-                Излизане
-              </button>
+              <a href="#" class="nav-link" id="logoutBtn" data-i18n="nav.logout">Излизане</a>
             </li>
           </ul>
         </div>
@@ -199,6 +96,14 @@
           <div id="noCampaignsMessage" class="no-campaigns-message" style="display: none">
             <p data-i18n="dashboard.noCampaigns">Няма активни кампании</p>
           </div>
+
+          <!-- Load More -->
+          <div id="loadMoreContainer" style="text-align: center; padding: 1.5rem 0; display: none">
+            <button id="loadMoreBtn" class="btn btn-outline-success btn-lg">
+              ⬇️ <span data-i18n="dashboard.loadMore">Зареди още</span>
+            </button>
+            <p id="campaignsCounter" class="text-muted mt-2" style="font-size: 0.9rem"></p>
+          </div>
         </div>
       </div>
     </div>
@@ -210,153 +115,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Dashboard Script -->
-    <script type="module">
-      import { initializeMap, loadMapData } from "../services/map.js";
-      import { logout } from "../services/auth.js";
-      import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
-      import supabase from "../services/supabase.js";
-      import {
-        requireAuth,
-        removeUser,
-        showLoading,
-        hideLoading,
-        handleError,
-        isEmpty,
-      } from "../utils/helpers.js";
-
-      // Initialize on page load
-      document.addEventListener("DOMContentLoaded", async () => {
-        try {
-          // Initialize i18n first (realTime = false)
-          await initI18n(false);
-          const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
-          applyLanguage(lang);
-
-          // Language selector
-          document.getElementById("languageSelector").value = lang;
-          document.getElementById("languageSelector").addEventListener("change", (e) => {
-            // Just show a message - language changes only from profile page
-            console.log("Language changes only from Profile page");
-          });
-
-          // Require authentication
-          requireAuth("../../index.html");
-
-          const map = initializeMap();
-          setTimeout(() => {
-            map.invalidateSize();
-          }, 300);
-          await loadMapData(map);
-          await loadCampaignsList();
-        } catch (error) {
-          console.error("Failed to initialize dashboard:", error.message);
-        }
-      });
-
-      /**
-       * Load and display campaigns list
-       */
-      async function loadCampaignsList() {
-        const loadingSpinnerId = "loadingSpinner";
-        const campaignsContainerId = "campaignsContainer";
-        const noCampaignsMessageId = "noCampaignsMessage";
-
-        try {
-          showLoading(loadingSpinnerId, [campaignsContainerId, noCampaignsMessageId]);
-
-          // Load campaigns based on user type
-          let campaigns = [];
-          const user = JSON.parse(localStorage.getItem("user"));
-
-          if (user && user.id === "demo-admin-001") {
-            // Demo mode
-            campaigns = JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_CAMPAIGNS") || "[]");
-          } else {
-            // Real data from Supabase
-            const { data, error } = await supabase
-              .from("campaigns")
-              .select("id, title, neighborhood, before_photo_url, status")
-              .eq("status", "active");
-
-            if (error) throw error;
-            campaigns = data || [];
-          }
-
-          hideLoading(loadingSpinnerId, {
-            [campaignsContainerId]: "grid",
-            [noCampaignsMessageId]: "none",
-          });
-
-          if (isEmpty(campaigns)) {
-            document.getElementById(noCampaignsMessageId).style.display = "block";
-            return;
-          }
-
-          // Render campaign cards
-          const campaignsContainer = document.getElementById(campaignsContainerId);
-          campaignsContainer.innerHTML = campaigns
-            .map(
-              (campaign) => `
-                    <div class="campaign-card-wrapper">
-                        <div class="card campaign-card">
-                            ${
-                              campaign.before_photo_url
-                                ? `
-                                <img src="${campaign.before_photo_url}" class="card-img-top" alt="${campaign.title}">
-                            `
-                                : `
-                                <div class="card-img-top bg-secondary" style="height: 200px; display: flex; align-items: center; justify-content: center;">
-                                    <span class="text-white">Няма снимка</span>
-                                </div>
-                            `
-                            }
-                            <div class="card-body d-flex flex-column">
-                                <h5 class="card-title">${campaign.title}</h5>
-                                <p class="card-text text-muted">
-                                    <small>📍 ${campaign.neighborhood || "Студентски град"}</small>
-                                </p>
-                                <div class="mt-auto">
-                                    <a href="./campaign-detail.html?id=${campaign.id}" class="btn btn-primary w-100">
-                                        Преглед
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `
-            )
-            .join("");
-        } catch (error) {
-          hideLoading(loadingSpinnerId);
-
-          await handleError(
-            "loadCampaignsList",
-            error,
-            "Failed to load campaigns. Please try again later."
-          );
-          document.getElementById(campaignsContainerId).innerHTML = `
-                    <div class="col-12">
-                        <div class="alert alert-danger" role="alert">
-                            Грешка при зареждане на кампаниите. Опитайте отново по-късно.
-                        </div>
-                    </div>
-                `;
-        }
-      }
-
-      /**
-       * Handle logout
-       */
-      document.getElementById("logoutBtn").addEventListener("click", async () => {
-        try {
-          await logout();
-          removeUser();
-
-          window.location.href = "../../index.html";
-        } catch (error) {
-          await handleError("logout", error, "Failed to logout. Please try again.");
-        }
-      });
-    </script>
+    <script type="module" src="../scripts/dashboard.js"></script>
   </body>
 </html>

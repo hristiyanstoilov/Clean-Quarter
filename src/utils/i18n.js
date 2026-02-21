@@ -18,12 +18,12 @@ let enableRealTimeSwitch = true; // Set to false to disable real-time switching
 export async function initI18n(realTime = true) {
   enableRealTimeSwitch = realTime;
   try {
-    // Load Bulgarian translations
-    const bgResponse = await fetch("/src/i18n/bg.json");
+    // Load Bulgarian translations (from public/i18n/ for production compatibility)
+    const bgResponse = await fetch("/i18n/bg.json");
     const bgData = await bgResponse.json();
 
     // Load English translations
-    const enResponse = await fetch("/src/i18n/en.json");
+    const enResponse = await fetch("/i18n/en.json");
     const enData = await enResponse.json();
 
     translations = {
@@ -58,16 +58,28 @@ export async function initI18n(realTime = true) {
 /**
  * Get translated text by key
  * @param {string} key - dot-separated key (e.g., 'nav.dashboard')
- * @param {string} lang - language code (optional, uses current language)
+ * @param {object|string} paramsOrLang - interpolation params object (e.g., {username: 'John'}) or language code
  * @returns {string} translated text or key if not found
  */
-export function t(key, lang) {
-  const language = lang || getCurrentLanguage();
+export function t(key, paramsOrLang) {
+  // Determine if second param is lang code (string) or interpolation params (object)
+  const isParamsObject = paramsOrLang && typeof paramsOrLang === "object";
+  const language = isParamsObject ? getCurrentLanguage() : paramsOrLang || getCurrentLanguage();
+  const params = isParamsObject ? paramsOrLang : null;
+
   const keys = key.split(".");
   let value = translations[language];
   for (const k of keys) {
     value = value?.[k];
   }
+
+  // If translation found and params provided, replace placeholders
+  if (value && params) {
+    Object.keys(params).forEach((paramKey) => {
+      value = value.replace(new RegExp(`{{\\s*${paramKey}\\s*}}`, "g"), params[paramKey]);
+    });
+  }
+
   return value || key;
 }
 
@@ -78,7 +90,6 @@ export function t(key, lang) {
  */
 export function setLanguage(lang, force = false) {
   if (!enableRealTimeSwitch && !force) {
-    console.warn("⚠️ Real-time language switching is disabled on this page");
     return;
   }
   if (!translations[lang]) {

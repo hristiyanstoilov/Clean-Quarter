@@ -67,7 +67,7 @@ class ErrorHandler {
       store.notify("Authentication failed. Please login again.", "error");
       logger.warn("Auth error", error);
       // Redirect to login
-      window.location.href = "/index.html";
+      window.location.href = "/";
     });
 
     // Validation errors
