@@ -1,0 +1,190 @@
+/* Authentication Page Styles */
+
+.auth-page {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.auth-container {
+  max-width: 500px;
+  width: 100%;
+}
+
+.auth-card {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
+.auth-header {
+  background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+  color: white;
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+
+.auth-header h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  color: white;
+}
+
+.auth-header p {
+  margin: 0;
+  font-size: 0.95rem;
+  opacity: 0.9;
+}
+
+.auth-body {
+  padding: 2rem 1.5rem;
+  max-height: 75vh;
+  overflow-y: auto;
+}
+
+.nav-tabs {
+  border-bottom: 2px solid #e9ecef;
+  margin-bottom: 2rem;
+  gap: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.nav-tabs .nav-link {
+  color: #000000 !important;
+  border: 2px solid transparent;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.3s ease;
+  background-color: transparent;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+}
+
+.nav-tabs .nav-link:hover {
+  color: #28a745 !important;
+  background-color: rgba(40, 167, 69, 0.08);
+  border-color: #28a745;
+}
+
+.nav-tabs .nav-link.active {
+  color: white !important;
+  background-color: #28a745;
+  border-color: #28a745;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-label {
+  color: #212529;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.form-control,
+.form-select {
+  border: 2px solid #e9ecef;
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #28a745;
+  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+  outline: none;
+}
+
+.form-control::placeholder {
+  color: #adb5bd;
+}
+
+.btn-auth {
+  width: 100%;
+  padding: 0.75rem;
+  font-weight: 600;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+}
+
+.btn-login {
+  background-color: #28a745;
+  color: white;
+}
+
+.btn-login:hover {
+  background-color: #218838;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.btn-register {
+  background-color: #17a2b8;
+  color: black !important;
+}
+
+.btn-register:hover {
+  background-color: #138496;
+  color: black !important;
+  box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+}
+
+.tab-content {
+  display: block;
+}
+
+.tab-pane {
+  display: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.tab-pane.active {
+  display: block;
+  opacity: 1;
+}
+
+/* Terms Modal Styling */
+#termsContent h4 {
+  background: #f1f8f4;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  border-left: 4px solid #28a745;
+  color: #1e7e34;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+#termsContent p {
+  margin-bottom: 0.9rem;
+}
+
+#termsContent ul {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+  list-style-type: disc;
+}
+
+#termsContent ul li {
+  margin-bottom: 0.4rem;
+  line-height: 1.6;
+}
+
+#termsContent strong {
+  color: #1e7e34;
+  font-weight: 600;
+}

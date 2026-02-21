@@ -1,0 +1,105 @@
+/* Dashboard Page Styles */
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.navbar {
+  background-color: rgba(255, 255, 255, 0.95);
+  z-index: 1000;
+}
+
+.main-container {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 100vh;
+  padding-top: 56px;
+}
+
+#map {
+  height: 400px;
+  width: 100%;
+  margin: 0;
+}
+
+.campaigns-header {
+  margin-bottom: 2rem;
+}
+
+/* Mobile-First Grid Layout */
+.campaigns-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  width: 100%;
+}
+
+.campaign-card {
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.campaign-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.campaign-card img {
+  height: 200px;
+  object-fit: cover;
+}
+
+.campaign-card .card-body {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  padding: 1rem;
+}
+
+.campaign-card .btn {
+  min-height: 44px;
+  margin-top: auto;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+}
+
+.spinner-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  width: 100%;
+}
+
+.no-campaigns-message {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: #6c757d;
+}
+
+/* Responsive Design */
+@media (min-width: 576px) {
+  .campaigns-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .campaigns-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .campaigns-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+}
