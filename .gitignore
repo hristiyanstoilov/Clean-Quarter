@@ -10,18 +10,32 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+coverage
 *.local
 
 # Environment variables
 .env
 .env.local
 .env.*.local
+.env.test
+netlify.env
+
+# MCP config (contains auth tokens)
+.mcp.json
 
 # IDE
 .vscode
 .idea
 *.swp
 *.swo
+
+# Claude Code (AI tooling - session data, memory)
+.claude/
+
+# Supabase CLI temp files
+supabase/.temp/
+supabase/docker-compose.test.yml
+supabase/TESTING.md
 
 # OS
 .DS_Store
