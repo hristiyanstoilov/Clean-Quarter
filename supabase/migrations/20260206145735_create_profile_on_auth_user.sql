@@ -1,13 +1,11 @@
--- Clean Quarter (Чист Квартал) Database Schema
--- Full schema snapshot matching production Supabase DB
--- Last synced: 2026-02-15
--- Seed data is in supabase/seed.sql
+-- Migration: create_profile_on_auth_user
+-- Synced from production Supabase (2026-02-15)
+-- This file represents the baseline schema
 
 -- ============================================================
--- 1. CREATE TABLES
+-- TABLES
 -- ============================================================
 
--- Profiles table (extends auth.users)
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   username TEXT NOT NULL,
@@ -24,7 +22,6 @@ CREATE TABLE IF NOT EXISTS profiles (
   deleted_at TIMESTAMP
 );
 
--- Disposal Points (locations for cleanup campaigns)
 CREATE TABLE IF NOT EXISTS disposal_points (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
@@ -38,7 +35,6 @@ CREATE TABLE IF NOT EXISTS disposal_points (
   user_id UUID
 );
 
--- Campaigns table
 CREATE TABLE IF NOT EXISTS campaigns (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
@@ -56,7 +52,6 @@ CREATE TABLE IF NOT EXISTS campaigns (
   deleted_by UUID REFERENCES profiles(id)
 );
 
--- Participations table
 CREATE TABLE IF NOT EXISTS participations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   campaign_id UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
@@ -70,7 +65,6 @@ CREATE TABLE IF NOT EXISTS participations (
   deleted_at TIMESTAMP
 );
 
--- Rewards table
 CREATE TABLE IF NOT EXISTS rewards (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
@@ -80,7 +74,6 @@ CREATE TABLE IF NOT EXISTS rewards (
   description TEXT
 );
 
--- Point Transactions table (history)
 CREATE TABLE IF NOT EXISTS point_transactions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
@@ -98,7 +91,6 @@ CREATE TABLE IF NOT EXISTS point_transactions (
   reference_type TEXT
 );
 
--- Reports table (moderation)
 CREATE TABLE IF NOT EXISTS reports (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   reported_by UUID NOT NULL REFERENCES profiles(id),
@@ -114,7 +106,6 @@ CREATE TABLE IF NOT EXISTS reports (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Notifications table
 CREATE TABLE IF NOT EXISTS notifications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES profiles(id),
@@ -127,7 +118,6 @@ CREATE TABLE IF NOT EXISTS notifications (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Comments table
 CREATE TABLE IF NOT EXISTS comments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   campaign_id TEXT NOT NULL,
@@ -140,10 +130,9 @@ CREATE TABLE IF NOT EXISTS comments (
 );
 
 -- ============================================================
--- 2. CREATE INDEXES
+-- INDEXES
 -- ============================================================
 
--- Campaigns indexes
 CREATE INDEX IF NOT EXISTS idx_campaigns_created_by ON campaigns(created_by);
 CREATE INDEX IF NOT EXISTS idx_campaigns_status ON campaigns(status);
 CREATE INDEX IF NOT EXISTS idx_campaigns_neighborhood ON campaigns(neighborhood);
@@ -151,17 +140,14 @@ CREATE INDEX IF NOT EXISTS idx_campaigns_deleted_at ON campaigns(deleted_at);
 CREATE INDEX IF NOT EXISTS idx_campaigns_deleted_by ON campaigns(deleted_by);
 CREATE INDEX IF NOT EXISTS idx_campaigns_disposal_point_id ON campaigns(disposal_point_id);
 
--- Comments indexes
 CREATE INDEX IF NOT EXISTS idx_comments_campaign_id ON comments(campaign_id);
 CREATE INDEX IF NOT EXISTS idx_comments_user_id ON comments(user_id);
 CREATE INDEX IF NOT EXISTS idx_comments_created_at ON comments(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_comments_deleted_by ON comments(deleted_by);
 CREATE INDEX IF NOT EXISTS idx_comments_active ON comments(campaign_id, deleted_at) WHERE (deleted_at IS NULL);
 
--- Disposal Points indexes
 CREATE INDEX IF NOT EXISTS idx_disposal_points_user_id ON disposal_points(user_id);
 
--- Notifications indexes
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_campaign_id ON notifications(campaign_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_participation_id ON notifications(participation_id);
@@ -170,23 +156,19 @@ CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
 CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON notifications(user_id, is_read) WHERE (is_read = false);
 
--- Participations indexes
 CREATE INDEX IF NOT EXISTS idx_participations_campaign_id ON participations(campaign_id);
 CREATE INDEX IF NOT EXISTS idx_participations_user_id ON participations(user_id);
 CREATE INDEX IF NOT EXISTS idx_participations_status ON participations(status);
 CREATE INDEX IF NOT EXISTS idx_participations_deleted_at ON participations(deleted_at);
 
--- Point Transactions indexes
 CREATE INDEX IF NOT EXISTS idx_point_transactions_user_id ON point_transactions(user_id);
 CREATE INDEX IF NOT EXISTS idx_point_transactions_campaign_id ON point_transactions(campaign_id);
 CREATE INDEX IF NOT EXISTS idx_point_transactions_participation_id ON point_transactions(participation_id);
 CREATE INDEX IF NOT EXISTS idx_point_transactions_reward_id ON point_transactions(reward_id);
 CREATE INDEX IF NOT EXISTS idx_point_transactions_type ON point_transactions(type);
 
--- Profiles indexes
 CREATE INDEX IF NOT EXISTS idx_profiles_is_superadmin ON profiles(is_superadmin);
 
--- Reports indexes
 CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status);
 CREATE INDEX IF NOT EXISTS idx_reports_entity ON reports(entity_type, entity_id);
 CREATE INDEX IF NOT EXISTS idx_reports_reported_by ON reports(reported_by);
@@ -194,7 +176,7 @@ CREATE INDEX IF NOT EXISTS idx_reports_reviewed_by ON reports(reviewed_by);
 CREATE INDEX IF NOT EXISTS idx_reports_created_at ON reports(created_at DESC);
 
 -- ============================================================
--- 3. ROW LEVEL SECURITY (RLS)
+-- RLS
 -- ============================================================
 
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
@@ -207,14 +189,14 @@ ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
 
--- Profiles RLS Policies
+-- Profiles
 CREATE POLICY "Users can view all profiles" ON profiles FOR SELECT USING (true);
 CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (id = auth.uid());
 CREATE POLICY "Superadmins can update any profile role" ON profiles FOR UPDATE USING (
   EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.is_superadmin = true)
 );
 
--- Campaigns RLS Policies
+-- Campaigns
 CREATE POLICY "Anyone can view active campaigns" ON campaigns FOR SELECT USING (deleted_at IS NULL);
 CREATE POLICY "Authenticated users can create campaigns" ON campaigns FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 CREATE POLICY "Users can update own campaigns" ON campaigns FOR UPDATE USING (created_by = auth.uid());
@@ -226,7 +208,7 @@ CREATE POLICY "Admins can delete any campaign" ON campaigns FOR DELETE USING (
   EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
 );
 
--- Participations RLS Policies
+-- Participations
 CREATE POLICY "Users can view all participations" ON participations FOR SELECT USING (true);
 CREATE POLICY "Users can create participations" ON participations FOR INSERT WITH CHECK (user_id = auth.uid());
 CREATE POLICY "Users can update own participations" ON participations FOR UPDATE USING (user_id = auth.uid());
@@ -234,33 +216,35 @@ CREATE POLICY "Admins can update any participation" ON participations FOR UPDATE
   EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
 );
 
--- Rewards RLS Policies
+-- Rewards
 CREATE POLICY "Anyone see rewards" ON rewards FOR SELECT USING (deleted_at IS NULL);
 
--- Point Transactions RLS Policies
+-- Point Transactions
+CREATE POLICY "Users can view own transactions" ON point_transactions FOR SELECT
+  USING (user_id = auth.uid());
 CREATE POLICY "Admins can insert transactions" ON point_transactions FOR INSERT WITH CHECK (
   EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
 );
 
--- Disposal Points RLS Policies
+-- Disposal Points
 CREATE POLICY "disposal_points_select_own" ON disposal_points FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "disposal_points_insert_own" ON disposal_points FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "disposal_points_update_own" ON disposal_points FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "disposal_points_delete_own" ON disposal_points FOR DELETE USING (auth.uid() = user_id);
 
--- Reports RLS Policies
+-- Reports
 CREATE POLICY "Authenticated users can view all reports" ON reports FOR SELECT USING (auth.uid() IS NOT NULL);
 CREATE POLICY "Authenticated users can create reports" ON reports FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 CREATE POLICY "Admins can update reports" ON reports FOR UPDATE USING (
   EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
 );
 
--- Notifications RLS Policies
+-- Notifications
 CREATE POLICY "Users can view own notifications" ON notifications FOR SELECT USING (user_id = auth.uid());
 CREATE POLICY "Users can update own notifications" ON notifications FOR UPDATE USING (user_id = auth.uid());
 CREATE POLICY "Authenticated triggers can insert notifications" ON notifications FOR INSERT WITH CHECK (true);
 
--- Comments RLS Policies
+-- Comments
 CREATE POLICY "Anyone can view comments" ON comments FOR SELECT USING (deleted_at IS NULL);
 CREATE POLICY "Users can create comments" ON comments FOR INSERT TO authenticated WITH CHECK (
   (auth.uid())::text = user_id AND deleted_at IS NULL
@@ -277,10 +261,9 @@ CREATE POLICY "Users can delete own comments" ON comments FOR UPDATE TO authenti
   )));
 
 -- ============================================================
--- 4. FUNCTIONS & TRIGGERS
+-- FUNCTIONS & TRIGGERS
 -- ============================================================
 
--- Auto-update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -296,7 +279,6 @@ CREATE TRIGGER update_campaigns_updated_at BEFORE UPDATE ON campaigns
 CREATE TRIGGER update_participations_updated_at BEFORE UPDATE ON participations
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Auto-update comments timestamp
 CREATE OR REPLACE FUNCTION update_comments_timestamp()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -308,7 +290,6 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trigger_update_comments_timestamp BEFORE UPDATE ON comments
   FOR EACH ROW EXECUTE FUNCTION update_comments_timestamp();
 
--- Auto-update reports timestamp
 CREATE OR REPLACE FUNCTION update_reports_timestamp()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -342,7 +323,7 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- Notify when campaign is completed
+-- Notification triggers
 CREATE OR REPLACE FUNCTION notify_campaign_completed()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -366,7 +347,6 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trigger_notify_campaign_completed AFTER UPDATE ON campaigns
   FOR EACH ROW EXECUTE FUNCTION notify_campaign_completed();
 
--- Notify when someone joins a campaign
 CREATE OR REPLACE FUNCTION notify_campaign_join()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -390,7 +370,6 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trigger_notify_campaign_join AFTER INSERT ON participations
   FOR EACH ROW EXECUTE FUNCTION notify_campaign_join();
 
--- Notify when participation is approved
 CREATE OR REPLACE FUNCTION notify_participation_approved()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -407,7 +386,6 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trigger_notify_participation_approved AFTER UPDATE ON participations
   FOR EACH ROW EXECUTE FUNCTION notify_participation_approved();
 
--- Notify when someone comments on a campaign
 CREATE OR REPLACE FUNCTION notify_new_comment()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -431,7 +409,6 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trigger_notify_new_comment AFTER INSERT ON comments
   FOR EACH ROW EXECUTE FUNCTION notify_new_comment();
 
--- Notify when points are earned
 CREATE OR REPLACE FUNCTION notify_points_earned()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -447,7 +424,6 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trigger_notify_points_earned AFTER INSERT ON point_transactions
   FOR EACH ROW EXECUTE FUNCTION notify_points_earned();
 
--- Notify when report is resolved
 CREATE OR REPLACE FUNCTION notify_report_resolved()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -463,7 +439,6 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trigger_notify_report_resolved AFTER UPDATE ON reports
   FOR EACH ROW EXECUTE FUNCTION notify_report_resolved();
 
--- Prevent duplicate reports within 24 hours
 CREATE OR REPLACE FUNCTION check_duplicate_report()
 RETURNS TRIGGER AS $$
 BEGIN
