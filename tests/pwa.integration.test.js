@@ -1,4 +1,3 @@
-import { describe, it, expect, vi } from 'vitest';
 import * as pwa from '../src/services/pwa.js';
 
 describe('pwa.js integration', () => {

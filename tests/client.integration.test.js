@@ -1,4 +1,3 @@
-import { describe, it, expect, vi } from 'vitest';
 import * as client from '../src/api/client.js';
 
 describe('client.js integration', () => {

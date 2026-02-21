@@ -1,4 +1,3 @@
-import { describe, it, expect } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 
 // Read config from env (works in CI and locally)

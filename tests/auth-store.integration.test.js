@@ -1,4 +1,3 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Robust global Swal mock for all tests in this file
 global.Swal = {
@@ -26,6 +25,7 @@ vi.mock('../src/services/supabase.js', () => {
       },
       from: vi.fn(() => ({
         insert: vi.fn(async () => ({ error: null })),
+        upsert: vi.fn(async () => ({ error: null })),
       })),
     },
   };

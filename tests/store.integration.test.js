@@ -1,4 +1,3 @@
-import { describe, it, expect, vi } from 'vitest';
 import * as store from '../src/state/store.js';
 
 describe('store.js integration', () => {

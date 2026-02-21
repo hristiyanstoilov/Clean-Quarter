@@ -1,4 +1,3 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as validation from '../src/services/validation.js';
 
 describe('validation.js integration', () => {

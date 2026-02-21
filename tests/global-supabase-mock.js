@@ -1,5 +1,5 @@
 // Auto-mock Supabase for all tests if config is missing
-import { beforeAll } from 'vitest';
+import { beforeAll, vi } from 'vitest';
 
 beforeAll(() => {
   if (!process.env.VITE_SUPABASE_URL || !process.env.VITE_SUPABASE_ANON_KEY) {

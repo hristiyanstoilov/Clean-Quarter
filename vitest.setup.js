@@ -16,4 +16,3 @@ global.localStorage = global.localStorage || {
   removeItem(key) { delete this.store[key]; },
   clear() { this.store = {}; }
 };
-import './tests/global-supabase-mock.js';

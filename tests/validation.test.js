@@ -1,4 +1,3 @@
-import { describe, it, expect } from 'vitest';
 import * as validation from '../src/services/validation.js';
 
 describe('services/validation.js', () => {

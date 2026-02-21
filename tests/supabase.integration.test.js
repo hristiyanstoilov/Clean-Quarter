@@ -1,4 +1,3 @@
-import { describe, it, expect, vi } from 'vitest';
 vi.mock('../src/services/supabase.js', () => ({
   default: {
     from: () => ({

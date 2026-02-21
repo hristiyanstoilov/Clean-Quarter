@@ -1,4 +1,3 @@
-import { describe, it, expect, vi } from 'vitest';
 import logger, { Logger as LoggerClass, getLogs, clearLogs } from '../src/services/logger.js';
 
 describe('services/logger.js', () => {

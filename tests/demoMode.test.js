@@ -1,4 +1,3 @@
-import { describe, it, expect, beforeEach } from 'vitest';
 import * as demoMode from '../src/utils/demoMode.js';
 
 // Mock localStorage for Node.js

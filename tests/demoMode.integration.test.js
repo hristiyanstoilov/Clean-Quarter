@@ -1,4 +1,3 @@
-import { describe, it, expect, vi } from 'vitest';
 import * as demoMode from '../src/utils/demoMode.js';
 
 describe('demoMode.js integration', () => {

@@ -2,11 +2,11 @@
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  setupFiles: ['./vitest.setup.js'],
   test: {
+    setupFiles: ['./vitest.setup.js'],
     include: [
       'tests/**/*.test.js',
-      'minimal-root.test.js'
+      'src/**/__tests__/**/*.test.js'
     ],
     environment: 'node',
     globals: true

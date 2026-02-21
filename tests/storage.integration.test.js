@@ -9,7 +9,6 @@ class MockURL {
 }
 global.URL = MockURL;
 
-import { describe, it, expect, vi } from 'vitest';
 // Patch: mock supabase.js before importing storage.js to avoid import.meta.env error
 vi.mock('../src/services/supabase.js', () => ({
   default: {

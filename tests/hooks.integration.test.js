@@ -1,4 +1,3 @@
-import { describe, it, expect, vi } from 'vitest';
 import * as hooks from '../src/hooks/index.js';
 
 describe('hooks/index.js integration', () => {
