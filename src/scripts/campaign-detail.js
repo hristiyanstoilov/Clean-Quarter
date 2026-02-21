@@ -1,0 +1,999 @@
+import supabase from "../services/supabase.js";
+import { initializeMap } from "../services/map.js";
+import { uploadCampaignPhoto } from "../services/storage.js";
+import { initI18n, applyLanguage } from "../utils/i18n.js";
+import { escapeHTML, showSuccessToast } from "../utils/helpers.js";
+
+// Global variables
+let campaign = null;
+let currentUser = null;
+let map = null;
+let userParticipation = null;
+let afterPhotoFile = null;
+let commentsChannel = null;
+
+// Initialize on page load
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    // Initialize i18n (realTime = false)
+    await initI18n(false);
+    applyLanguage(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg");
+
+    // Language selector
+    document.getElementById("languageSelector").value =
+      localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+    document.getElementById("languageSelector").addEventListener("change", () => {
+      // Language changes only from profile page
+    });
+
+    await checkAuth();
+    await loadCampaignDetail();
+  } catch (error) {
+    document.getElementById("errorState").style.display = "block";
+    document.getElementById("errorMessage").textContent = error.message;
+  }
+});
+
+/**
+ * Check if user is authenticated
+ */
+async function checkAuth() {
+  // First check localStorage for demo user
+  const storedUser = localStorage.getItem("user");
+  if (storedUser) {
+    try {
+      currentUser = JSON.parse(storedUser);
+      return;
+    } catch (e) {
+      // silently ignore
+    }
+  }
+
+  // Then try Supabase auth
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    window.location.href = "/";
+    return;
+  }
+
+  // Fetch profile to get role and username for comment moderation and display
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role, username")
+    .eq("id", user.id)
+    .single();
+
+  currentUser = { ...user, role: profile?.role, username: profile?.username };
+}
+
+/**
+ * Get campaign ID from URL parameters
+ */
+function getCampaignIdFromUrl() {
+  const segments = window.location.pathname.split("/");
+  return segments[segments.length - 1] || null;
+}
+
+/**
+ * Load and display campaign details
+ */
+async function loadCampaignDetail() {
+  try {
+    const campaignId = getCampaignIdFromUrl();
+
+    if (!campaignId) {
+      throw new Error("Campaign ID not provided in URL");
+    }
+
+    // Check if in demo mode
+    let campaignData = null;
+    let participations = [];
+    let userPart = null;
+    let userPartError = null;
+
+    if (currentUser && currentUser.id === "demo-admin-001") {
+      // Load demo campaign from localStorage
+      const allCampaigns = JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_CAMPAIGNS") || "[]");
+      campaignData = allCampaigns.find((c) => c.id === campaignId);
+
+      if (!campaignData) {
+        throw new Error("Campaign not found in demo data");
+      }
+
+      // Load demo participations
+      participations = JSON.parse(
+        localStorage.getItem("CLEAN_QUARTER_DEMO_PARTICIPATIONS") || "[]"
+      ).filter((p) => p.campaign_id === campaignId);
+
+      userPart = participations.find((p) => p.user_id === currentUser.id) || null;
+    } else {
+      // Fetch campaign data from Supabase (join creator profile for username display)
+      const { data, error: campaignError } = await supabase
+        .from("campaigns")
+        .select("*, creator:profiles!created_by(username)")
+        .eq("id", campaignId)
+        .single();
+
+      if (campaignError) {
+        throw new Error(`Campaign not found: ${campaignError.message}`);
+      }
+
+      campaignData = data;
+
+      // Fetch participation statistics
+      const { data: parts, error: participationError } = await supabase
+        .from("participations")
+        .select("id, status, user_id, after_photo_url")
+        .eq("campaign_id", campaignId);
+
+      if (participationError) {
+        // silently ignore
+      } else {
+        participations = parts;
+      }
+
+      // Fetch current user's participation
+      const { data: userPartData, error: userPartErr } = await supabase
+        .from("participations")
+        .select("*")
+        .eq("campaign_id", campaignId)
+        .eq("user_id", currentUser.id)
+        .single();
+
+      userPartError = userPartErr;
+      if (!userPartError) {
+        userPart = userPartData;
+      }
+    }
+
+    campaign = campaignData;
+
+    if (!userPartError && userPart) {
+      userParticipation = userPart;
+    }
+
+    // Display the campaign details
+    displayCampaignDetails(campaign, participations || []);
+
+    // Check delete eligibility and show button if applicable
+    await checkDeleteEligibility(campaignId, participations || []);
+
+    // Show participation UI
+    showParticipationUI();
+
+    // Load comments
+    await loadComments();
+
+    // Setup file input listener (with null check)
+    document.getElementById("afterPhoto")?.addEventListener("change", handleAfterPhotoSelect);
+
+    // Hide loading, show content
+    document.getElementById("loadingState").style.display = "none";
+    document.getElementById("campaignContent").style.display = "block";
+  } catch (error) {
+    showError(error.message);
+  }
+}
+
+/**
+ * Display campaign details on the page
+ */
+function displayCampaignDetails(campaignData, participations) {
+  // Get current language (default bg)
+  let lang = "bg";
+  try {
+    lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+  } catch {}
+
+  // Title (bilingual support)
+  let title = campaignData.title;
+  // Parse JSON if it's a string
+  if (typeof title === "string") {
+    try {
+      title = JSON.parse(title);
+    } catch (e) {
+      // If parsing fails, use as-is
+    }
+  }
+  if (title && typeof title === "object")
+    title = title[lang] || title.bg || Object.values(title)[0];
+  document.getElementById("campaignTitle").textContent = title;
+
+  // Before Photo
+  const photoElement = document.getElementById("beforePhoto");
+  photoElement.src = campaignData.before_photo_url;
+  photoElement.alt = `Before photo for ${title}`;
+
+  // Status
+  const statusBadge = document.getElementById("statusBadge");
+  statusBadge.textContent =
+    campaignData.status.charAt(0).toUpperCase() + campaignData.status.slice(1);
+  statusBadge.className = `badge-status badge-${campaignData.status}`;
+
+  // Description (bilingual support)
+  let desc = campaignData.description;
+  // Parse JSON if it's a string
+  if (typeof desc === "string") {
+    try {
+      desc = JSON.parse(desc);
+    } catch (e) {
+      // If parsing fails, use as-is
+    }
+  }
+  if (desc && typeof desc === "object") desc = desc[lang] || desc.bg || Object.values(desc)[0];
+  document.getElementById("campaignDescription").textContent = desc;
+
+  // Neighborhood (bilingual support)
+  let nbh = campaignData.neighborhood;
+  // Parse JSON if it's a string
+  if (typeof nbh === "string") {
+    try {
+      nbh = JSON.parse(nbh);
+    } catch (e) {
+      // If parsing fails, use as-is
+    }
+  }
+  if (nbh && typeof nbh === "object") nbh = nbh[lang] || nbh.bg || Object.values(nbh)[0];
+  document.getElementById("campaignNeighborhood").textContent = nbh;
+
+  // Created date
+  const createdDate = new Date(campaignData.created_at);
+  document.getElementById("campaignDate").textContent = createdDate.toLocaleDateString("bg-BG", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  // Created by (prefer joined username, fallback to UUID)
+  document.getElementById("createdBy").textContent =
+    campaignData.creator?.username || campaignData.created_by;
+
+  // Participation stats
+  const totalParticipants = participations.length;
+  const approvedCount = participations.filter((p) => p.status === "approved").length;
+  const pendingCount = participations.filter((p) => p.status === "pending").length;
+
+  document.getElementById("participantCount").textContent = totalParticipants;
+  document.getElementById("approvedCount").textContent = approvedCount;
+  document.getElementById("pendingCount").textContent = pendingCount;
+
+  // Location
+  document.getElementById("latitude").textContent = campaignData.location_lat.toFixed(6);
+  document.getElementById("longitude").textContent = campaignData.location_lng.toFixed(6);
+
+  // Initialize map with campaign location
+  initializeDetailMap(campaignData.location_lat, campaignData.location_lng);
+}
+
+/**
+ * Initialize map with campaign location
+ */
+function initializeDetailMap(lat, lng) {
+  map = initializeMap();
+
+  // Add marker for campaign location
+  L.marker([lat, lng], {
+    icon: L.icon({
+      iconUrl:
+        "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
+      shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41],
+    }),
+  })
+    .addTo(map)
+    .bindPopup(`Campaign Location: ${escapeHTML(campaign.title)}`);
+
+  // Center map on campaign location
+  map.setView([lat, lng], 15);
+
+  // Fix Leaflet rendering bug: ensure map fills container after visible
+  setTimeout(() => {
+    map.invalidateSize();
+  }, 300);
+}
+
+/**
+ * Check if current user can delete the campaign
+ * Requirements:
+ * 1. Current user must be the campaign creator
+ * 2. No other users have joined (creator's own auto-participation doesn't count)
+ */
+async function checkDeleteEligibility(_campaignId, participations) {
+  const isCreator = currentUser.id === campaign.created_by;
+
+  // Show edit button if user is creator
+  if (isCreator) {
+    document.getElementById("editCampaignBtn").style.display = "inline-block";
+  }
+
+  // Allow delete if no external participants have joined
+  // (creator's own participation with no after_photo doesn't block deletion)
+  const externalParticipants = participations.filter((p) => p.user_id !== currentUser.id);
+  const canDelete = isCreator && externalParticipants.length === 0;
+
+  if (canDelete) {
+    document.getElementById("deleteBtn").style.display = "inline-block";
+  }
+}
+
+/**
+ * Show participation UI based on user status
+ */
+function showParticipationUI() {
+  const isCreator = currentUser.id === campaign.created_by;
+  const joinSection = document.getElementById("joinSection");
+  const uploadSection = document.getElementById("uploadSection");
+
+  // Hide both sections by default
+  joinSection.style.display = "none";
+  uploadSection.style.display = "none";
+
+  if (!userParticipation) {
+    // Creator is auto-joined on campaign creation, so no join button for them
+    if (!isCreator) {
+      joinSection.style.display = "block";
+    }
+  } else {
+    // User has joined (includes creator) — show upload section
+    uploadSection.style.display = "block";
+
+    // Show status message based on participation status
+    showSubmissionStatus(userParticipation.status);
+
+    // If photo already uploaded and status is not rejected, disable upload
+    if (userParticipation.after_photo_url && userParticipation.status !== "rejected") {
+      document.getElementById("uploadPhotoForm").style.opacity = "0.6";
+      document.getElementById("uploadPhotoForm").style.pointerEvents = "none";
+      document.getElementById("uploadBtn").disabled = true;
+    }
+  }
+}
+
+/**
+ * Handle joining campaign
+ */
+async function handleJoin() {
+  const joinBtn = document.getElementById("joinBtn");
+
+  try {
+    joinBtn.disabled = true;
+
+    const campaignId = getCampaignIdFromUrl();
+
+    const isDemo = currentUser && currentUser.id === "demo-admin-001";
+
+    if (isDemo) {
+      // Demo mode: save participation to localStorage
+      const demoParts = JSON.parse(
+        localStorage.getItem("CLEAN_QUARTER_DEMO_PARTICIPATIONS") || "[]"
+      );
+      const newPart = {
+        id: `part-${Date.now()}`,
+        campaign_id: campaignId,
+        user_id: currentUser.id,
+        status: "pending",
+        after_photo_url: null,
+        points_earned: 0,
+        created_at: new Date().toISOString(),
+      };
+      demoParts.push(newPart);
+      localStorage.setItem("CLEAN_QUARTER_DEMO_PARTICIPATIONS", JSON.stringify(demoParts));
+      userParticipation = newPart;
+    } else {
+      // Real mode: use Supabase
+      const { data: participation, error: joinError } = await supabase
+        .from("participations")
+        .insert([
+          {
+            campaign_id: campaignId,
+            user_id: currentUser.id,
+            status: "pending",
+          },
+        ])
+        .select();
+
+      if (joinError) {
+        throw new Error(`Failed to join campaign: ${joinError.message}`);
+      }
+
+      userParticipation = participation[0];
+    }
+
+    // Show success message
+    await showSuccessToast("Joined! Upload your after photo to submit proof.");
+
+    // Update UI
+    showParticipationUI();
+  } catch (error) {
+    await Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: error.message || "Failed to join campaign. Please try again.",
+    });
+
+    joinBtn.disabled = false;
+  }
+}
+
+/**
+ * Handle after photo file selection
+ */
+function handleAfterPhotoSelect(e) {
+  afterPhotoFile = e.target.files[0];
+  const fileName = afterPhotoFile ? afterPhotoFile.name : "No file chosen";
+
+  document.getElementById("afterPhotoName").textContent = fileName;
+
+  // Show preview
+  if (afterPhotoFile) {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const preview = document.getElementById("afterPhotoPreview");
+      preview.src = event.target.result;
+      preview.style.display = "block";
+    };
+    reader.readAsDataURL(afterPhotoFile);
+
+    // Enable upload button
+    document.getElementById("uploadBtn").disabled = false;
+  } else {
+    document.getElementById("uploadBtn").disabled = true;
+  }
+}
+
+/**
+ * Handle uploading after photo
+ */
+async function handleUploadPhoto() {
+  const uploadBtn = document.getElementById("uploadBtn");
+
+  try {
+    if (!afterPhotoFile) {
+      throw new Error("No file selected");
+    }
+
+    uploadBtn.disabled = true;
+
+    // Show loading state
+    await Swal.fire({
+      title: "Uploading photo...",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
+    const isDemo = currentUser && currentUser.id === "demo-admin-001";
+    let photoUrl;
+
+    if (isDemo) {
+      // Demo mode: convert to data URL instead of uploading to Supabase Storage
+      photoUrl = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.readAsDataURL(afterPhotoFile);
+      });
+
+      // Update participation in localStorage
+      const demoParts = JSON.parse(
+        localStorage.getItem("CLEAN_QUARTER_DEMO_PARTICIPATIONS") || "[]"
+      );
+      const idx = demoParts.findIndex((p) => p.id === userParticipation.id);
+      if (idx !== -1) {
+        demoParts[idx].after_photo_url = photoUrl;
+        demoParts[idx].status = "pending";
+        localStorage.setItem("CLEAN_QUARTER_DEMO_PARTICIPATIONS", JSON.stringify(demoParts));
+      }
+    } else {
+      // Real mode: upload to Supabase Storage
+      photoUrl = await uploadCampaignPhoto(afterPhotoFile, "after");
+
+      const { error: updateError } = await supabase
+        .from("participations")
+        .update({
+          after_photo_url: photoUrl,
+          status: "pending",
+        })
+        .eq("id", userParticipation.id);
+
+      if (updateError) {
+        throw new Error(`Failed to update participation: ${updateError.message}`);
+      }
+    }
+
+    Swal.close();
+
+    // Update local state
+    userParticipation.after_photo_url = photoUrl;
+    userParticipation.status = "pending";
+
+    // Show success
+    await showSuccessToast("Proof submitted for admin approval!");
+
+    // Show status message
+    showSubmissionStatus("pending");
+
+    // Disable upload form
+    document.getElementById("uploadPhotoForm").style.opacity = "0.6";
+    document.getElementById("uploadPhotoForm").style.pointerEvents = "none";
+  } catch (error) {
+    await Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: error.message || "Failed to upload photo. Please try again.",
+    });
+
+    uploadBtn.disabled = false;
+  }
+}
+
+/**
+ * Show submission status message
+ */
+function showSubmissionStatus(status) {
+  const statusDiv = document.getElementById("submissionStatus");
+  statusDiv.style.display = "block";
+
+  if (status === "joined") {
+    statusDiv.className = "status-message status-pending";
+    statusDiv.textContent = "📝 Upload your after photo to submit proof.";
+  } else if (status === "pending") {
+    statusDiv.className = "status-message status-pending";
+    statusDiv.textContent = "⏳ Waiting for admin approval...";
+  } else if (status === "approved") {
+    statusDiv.className = "status-message status-approved";
+    statusDiv.textContent = "✅ Your proof has been approved! Points awarded.";
+  } else if (status === "rejected") {
+    statusDiv.className = "status-message status-rejected";
+    statusDiv.textContent = "❌ Your proof was rejected. Please try again with better photo.";
+  }
+}
+
+/**
+ * Handle campaign deletion
+ */
+async function handleDelete() {
+  const result = await Swal.fire({
+    title: "Delete Campaign?",
+    text: "Are you sure you want to delete this campaign? This action cannot be undone.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#dc3545",
+    cancelButtonColor: "#6c757d",
+    confirmButtonText: "Yes, Delete It",
+    cancelButtonText: "Cancel",
+  });
+
+  if (!result.isConfirmed) {
+    return;
+  }
+
+  try {
+    // Show loading state
+    await Swal.fire({
+      title: "Deleting campaign...",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
+    const campaignId = getCampaignIdFromUrl();
+
+    // Delete the campaign from database
+    // Note: CASCADE will delete related records
+    const { error: deleteError } = await supabase.from("campaigns").delete().eq("id", campaignId);
+
+    if (deleteError) {
+      throw new Error(`Failed to delete campaign: ${deleteError.message}`);
+    }
+
+    // Success notification
+    await showSuccessToast("Campaign deleted successfully.");
+
+    // Redirect to dashboard
+    window.location.href = "/dashboard";
+  } catch (error) {
+    await Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: error.message || "Failed to delete campaign. Please try again.",
+    });
+  }
+}
+
+/**
+ * Show error state
+ */
+function showError(message) {
+  document.getElementById("loadingState").style.display = "none";
+  document.getElementById("campaignContent").style.display = "none";
+  document.getElementById("errorState").style.display = "block";
+  document.getElementById("errorMessage").textContent = message;
+}
+
+/**
+ * Cleanup Realtime channel
+ */
+function cleanupRealtimeChannel() {
+  if (commentsChannel) {
+    supabase.removeChannel(commentsChannel);
+    commentsChannel = null;
+  }
+}
+
+/**
+ * Handle logout
+ */
+async function handleLogout() {
+  cleanupRealtimeChannel();
+  const { error } = await supabase.auth.signOut();
+  if (!error) {
+    localStorage.removeItem("user");
+    window.location.href = "/";
+  }
+}
+
+// Cleanup Realtime channel when navigating away
+window.addEventListener("beforeunload", cleanupRealtimeChannel);
+
+/**
+ * Toggle edit campaign form
+ */
+function toggleEditCampaign() {
+  const editSection = document.getElementById("editCampaignSection");
+
+  if (editSection.style.display === "none") {
+    // Show edit form — pre-fill with extracted display values (handles JSON bilingual format)
+    editSection.style.display = "block";
+
+    document.getElementById("editTitle").value = extractDisplayValue(campaign?.title);
+    document.getElementById("editDescription").value = extractDisplayValue(campaign?.description);
+/**
+ * Extract display value from a field that may be a plain string or a JSON bilingual object.
+ * e.g. "Почистване" → "Почистване"
+ *      '{"bg":"Почистване","en":"Cleanup"}' → "Почистване" (for lang=bg)
+ */
+function extractDisplayValue(value) {
+  if (!value) return "";
+  if (typeof value !== "string") return String(value);
+  try {
+    const parsed = JSON.parse(value);
+    if (typeof parsed === "object" && parsed !== null) {
+      const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+      return parsed[lang] || parsed.bg || parsed.en || Object.values(parsed)[0] || "";
+    }
+  } catch (_) {
+    // Not JSON — use as-is
+  }
+  return value;
+}
+
+    document.getElementById("editNeighborhood").value = campaign?.neighborhood || "Studentski Grad";
+    document.getElementById("editStatus").value = campaign?.status || "active";
+
+    editSection.scrollIntoView({ behavior: "smooth", block: "start" });
+  } else {
+    editSection.style.display = "none";
+  }
+}
+
+/**
+ * Handle save campaign changes
+ */
+async function handleSaveCampaign(e) {
+  e.preventDefault();
+
+  const newTitle = document.getElementById("editTitle").value.trim();
+  const newDescription = document.getElementById("editDescription").value.trim();
+  const newNeighborhood = document.getElementById("editNeighborhood").value;
+  const newStatus = document.getElementById("editStatus").value;
+
+  if (!newTitle || !newDescription) {
+    await Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "Title and description are required!",
+    });
+    return;
+  }
+
+  try {
+    // Show loading
+    Swal.fire({
+      title: "Saving...",
+      text: "Please wait",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
+    const campaignId = getCampaignIdFromUrl();
+
+    // Check if demo mode
+    const localUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+    if (localUser.id && localUser.id.startsWith("demo-")) {
+      // Demo mode - update localStorage
+      const demoCampaigns = JSON.parse(
+        localStorage.getItem("CLEAN_QUARTER_DEMO_CAMPAIGNS") || "[]"
+      );
+      const campaignIndex = demoCampaigns.findIndex((c) => c.id === campaignId);
+
+      if (campaignIndex !== -1) {
+        demoCampaigns[campaignIndex] = {
+          ...demoCampaigns[campaignIndex],
+          title: newTitle,
+          description: newDescription,
+          neighborhood: newNeighborhood,
+          status: newStatus,
+          updated_at: new Date().toISOString(),
+        };
+
+        localStorage.setItem("CLEAN_QUARTER_DEMO_CAMPAIGNS", JSON.stringify(demoCampaigns));
+
+        // Preserve creator join data when updating campaign state
+        campaign = { ...demoCampaigns[campaignIndex], creator: campaign.creator };
+
+        // Update UI (consistent with displayCampaignDetails)
+        document.getElementById("campaignTitle").textContent = newTitle;
+        document.getElementById("campaignDescription").textContent = newDescription;
+        document.getElementById("campaignNeighborhood").textContent = newNeighborhood;
+
+        const statusBadge = document.getElementById("statusBadge");
+        statusBadge.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+        statusBadge.className = `badge-status badge-${newStatus}`;
+
+        await showSuccessToast("Campaign updated successfully!");
+
+        toggleEditCampaign();
+      }
+    } else {
+      // Real mode - update Supabase
+      const { data, error } = await supabase
+        .from("campaigns")
+        .update({
+          title: newTitle,
+          description: newDescription,
+          neighborhood: newNeighborhood,
+          status: newStatus,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", campaignId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Preserve creator join data when updating campaign state
+      campaign = { ...data, creator: campaign.creator };
+
+      // Update UI (consistent with displayCampaignDetails)
+      document.getElementById("campaignTitle").textContent = newTitle;
+      document.getElementById("campaignDescription").textContent = newDescription;
+      document.getElementById("campaignNeighborhood").textContent = newNeighborhood;
+
+      const statusBadge = document.getElementById("statusBadge");
+      statusBadge.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+      statusBadge.className = `badge-status badge-${newStatus}`;
+
+      await showSuccessToast("Campaign updated successfully!");
+
+      toggleEditCampaign();
+    }
+  } catch (error) {
+    await Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: error.message || "Error saving changes",
+    });
+  }
+}
+
+// Add event listener to edit form
+document.getElementById("editCampaignForm")?.addEventListener("submit", handleSaveCampaign);
+
+/**
+ * Load comments for the current campaign
+ */
+async function loadComments() {
+  const campaignId = getCampaignIdFromUrl();
+  if (!campaignId) return;
+
+  const isDemo = currentUser && currentUser.id === "demo-admin-001";
+  let comments = [];
+
+  if (isDemo) {
+    const all = JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_COMMENTS") || "[]");
+    comments = all.filter((c) => c.campaign_id === campaignId && !c.deleted_at);
+  } else {
+    const { data, error } = await supabase
+      .from("comments")
+      .select("id, campaign_id, user_id, username, text, created_at")
+      .eq("campaign_id", campaignId)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: true });
+
+    if (!error) comments = data || [];
+  }
+
+  renderComments(comments);
+
+  // Setup Realtime subscription for live comment updates (real mode only, once)
+  const isRealMode = !(currentUser && currentUser.id === "demo-admin-001");
+  if (isRealMode && !commentsChannel) {
+    commentsChannel = supabase
+      .channel(`comments-${campaignId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "comments",
+          filter: `campaign_id=eq.${campaignId}`,
+        },
+        () => loadComments()
+      )
+      .subscribe();
+  }
+
+  // Show/hide add-comment form
+  const addForm = document.getElementById("addCommentForm");
+  const loginPrompt = document.getElementById("commentLoginPrompt");
+  if (currentUser) {
+    addForm.style.display = "block";
+    loginPrompt.style.display = "none";
+  } else {
+    addForm.style.display = "none";
+    loginPrompt.style.display = "block";
+  }
+}
+
+/**
+ * Render the comments list
+ */
+function renderComments(comments) {
+  const list = document.getElementById("commentsList");
+  if (!comments || comments.length === 0) {
+    list.innerHTML =
+      '<p class="text-muted" data-i18n="campaign.noComments">No comments yet. Be the first!</p>';
+    return;
+  }
+
+  const isAdmin =
+    currentUser && (currentUser.role === "admin" || currentUser.role === "superadmin");
+
+  list.innerHTML = comments
+    .map((c) => {
+      const isOwn =
+        currentUser && (currentUser.id === c.user_id || currentUser.id?.toString() === c.user_id);
+      const canDelete = isOwn || isAdmin;
+      const date = new Date(c.created_at).toLocaleString("bg-BG", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      return `
+        <div class="comment-item" id="comment-${escapeHTML(c.id)}">
+          <div class="comment-header d-flex align-items-center gap-2 mb-1">
+            <strong class="comment-username">${escapeHTML(c.username || "User")}</strong>
+            <span class="comment-date text-muted" style="font-size:0.82rem">${date}</span>
+            ${canDelete ? `<button class="btn btn-sm btn-link text-danger p-0 ms-auto" onclick="handleDeleteComment('${escapeHTML(c.id)}')" title="Delete">🗑️</button>` : ""}
+          </div>
+          <div class="comment-text">${escapeHTML(c.text)}</div>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+/**
+ * Handle posting a new comment
+ */
+async function handleAddComment() {
+  const input = document.getElementById("commentInput");
+  const text = input.value.trim();
+  if (!text) return;
+
+  const campaignId = getCampaignIdFromUrl();
+  const isDemo = currentUser && currentUser.id === "demo-admin-001";
+  const username =
+    currentUser?.username ||
+    currentUser?.user_metadata?.username ||
+    currentUser?.email?.split("@")[0] ||
+    "User";
+
+  document.getElementById("postCommentBtn").disabled = true;
+
+  try {
+    if (isDemo) {
+      const all = JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_COMMENTS") || "[]");
+      all.push({
+        id: "demo_comment_" + Date.now(),
+        campaign_id: campaignId,
+        user_id: currentUser.id,
+        username,
+        text,
+        created_at: new Date().toISOString(),
+        deleted_at: null,
+      });
+      localStorage.setItem("CLEAN_QUARTER_DEMO_COMMENTS", JSON.stringify(all));
+    } else {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase.from("comments").insert([
+        {
+          campaign_id: campaignId,
+          user_id: user.id.toString(),
+          username,
+          text,
+        },
+      ]);
+
+      if (error) {
+        await Swal.fire({ icon: "error", title: "Error", text: error.message });
+        return;
+      }
+    }
+
+    input.value = "";
+    await showSuccessToast("Comment posted.");
+    await loadComments();
+  } finally {
+    document.getElementById("postCommentBtn").disabled = false;
+  }
+}
+
+/**
+ * Handle deleting a comment (soft delete)
+ */
+async function handleDeleteComment(commentId) {
+  const isDemo = currentUser && currentUser.id === "demo-admin-001";
+
+  if (isDemo) {
+    const all = JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_COMMENTS") || "[]");
+    const idx = all.findIndex((c) => c.id === commentId);
+    if (idx !== -1) {
+      all[idx].deleted_at = new Date().toISOString();
+      localStorage.setItem("CLEAN_QUARTER_DEMO_COMMENTS", JSON.stringify(all));
+    }
+  } else {
+    const { error } = await supabase
+      .from("comments")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", commentId);
+
+    if (error) {
+      await Swal.fire({ icon: "error", title: "Error", text: error.message });
+      return;
+    }
+  }
+
+  await showSuccessToast("Comment deleted.");
+  await loadComments();
+}
+
+// Expose functions to window for onclick handlers
+window.handleLogout = handleLogout;
+window.handleDelete = handleDelete;
+window.handleJoin = handleJoin;
+window.handleUploadPhoto = handleUploadPhoto;
+window.toggleEditCampaign = toggleEditCampaign;
+window.handleAddComment = handleAddComment;
+window.handleDeleteComment = handleDeleteComment;
