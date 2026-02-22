@@ -440,7 +440,11 @@ function toggleEditMode() {
     // Show current avatar in preview
     const preview = document.getElementById("avatarPreview");
     if (userProfile?.avatar_url) {
-      preview.innerHTML = `<img src="${userProfile.avatar_url}" alt="Avatar" />`;
+      const img = document.createElement("img");
+      img.src = userProfile.avatar_url;
+      img.alt = "Avatar";
+      preview.textContent = "";
+      preview.appendChild(img);
     } else {
       preview.textContent = "👤";
     }
@@ -553,7 +557,11 @@ function displayAvatar(avatarUrl) {
   const avatarEl = document.getElementById("avatarDisplay");
   if (!avatarEl) return;
   if (avatarUrl) {
-    avatarEl.innerHTML = `<img src="${avatarUrl}" alt="Profile avatar" />`;
+    const img = document.createElement("img");
+    img.src = avatarUrl;
+    img.alt = "Profile avatar";
+    avatarEl.textContent = "";
+    avatarEl.appendChild(img);
   } else {
     avatarEl.textContent = "👤";
   }
@@ -572,7 +580,11 @@ if (avatarFileInput) {
     const preview = document.getElementById("avatarPreview");
     const reader = new FileReader();
     reader.onload = (ev) => {
-      preview.innerHTML = `<img src="${ev.target.result}" alt="Avatar preview" />`;
+      const img = document.createElement("img");
+      img.src = ev.target.result;
+      img.alt = "Avatar preview";
+      preview.textContent = "";
+      preview.appendChild(img);
     };
     reader.readAsDataURL(file);
   });
