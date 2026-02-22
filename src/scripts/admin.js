@@ -503,20 +503,14 @@ window.makeAdmin = async function (userId, username) {
       localStorage.setItem("CLEAN_QUARTER_ROLE_LOG", JSON.stringify(roleLog));
       window._roleLogCache = roleLog;
     } else {
-      // Real mode
-      const { error } = await supabase.from("profiles").update({ role: "admin" }).eq("id", userId);
+      // Real mode: atomic role change via SECURITY DEFINER RPC
+      const { data: result, error: rpcError } = await supabase.rpc("set_user_role", {
+        p_user_id: userId,
+        p_role: "admin",
+      });
 
-      if (error) throw new Error(error.message);
-
-      // Log role change
-      await supabase.from("point_transactions").insert([
-        {
-          user_id: userId,
-          amount: 0,
-          type: "role_change",
-          reason: `Made admin by ${currentUser.email}`,
-        },
-      ]);
+      if (rpcError) throw new Error(rpcError.message);
+      if (!result?.success) throw new Error(result?.error || "Failed to grant admin role");
     }
 
     Swal.close();
@@ -597,20 +591,14 @@ window.removeAdmin = async function (userId, username) {
       localStorage.setItem("CLEAN_QUARTER_ROLE_LOG", JSON.stringify(roleLog));
       window._roleLogCache = roleLog;
     } else {
-      // Real mode
-      const { error } = await supabase.from("profiles").update({ role: "user" }).eq("id", userId);
+      // Real mode: atomic role change via SECURITY DEFINER RPC
+      const { data: result, error: rpcError } = await supabase.rpc("set_user_role", {
+        p_user_id: userId,
+        p_role: "user",
+      });
 
-      if (error) throw new Error(error.message);
-
-      // Log role change
-      await supabase.from("point_transactions").insert([
-        {
-          user_id: userId,
-          amount: 0,
-          type: "role_change",
-          reason: `Removed from admin by ${currentUser.email}`,
-        },
-      ]);
+      if (rpcError) throw new Error(rpcError.message);
+      if (!result?.success) throw new Error(result?.error || "Failed to remove admin role");
     }
 
     Swal.close();
@@ -845,55 +833,16 @@ async function handleApprove(participationId, username) {
         return;
       }
     } else {
-      // REAL MODE: Use Supabase
-      const userId = participation.user_id;
+      // REAL MODE: atomic approve via SECURITY DEFINER RPC
+      const { data: result, error: rpcError } = await supabase.rpc("approve_participation", {
+        p_participation_id: participationId,
+      });
 
-      // Update participation status to 'approved'
-      const { error: updateParticipationError } = await supabase
-        .from("participations")
-        .update({ status: "approved" })
-        .eq("id", participationId);
-
-      if (updateParticipationError) {
-        throw new Error(`Failed to update participation: ${updateParticipationError.message}`);
+      if (rpcError) {
+        throw new Error(rpcError.message);
       }
-
-      // Get current user points
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("points_balance")
-        .eq("id", userId)
-        .single();
-
-      if (profileError) {
-        throw new Error(`Failed to fetch user profile: ${profileError.message}`);
-      }
-
-      const newPointsBalance = (profile.points_balance || 0) + POINTS_AWARDED;
-
-      // Update user points
-      const { error: updatePointsError } = await supabase
-        .from("profiles")
-        .update({ points_balance: newPointsBalance })
-        .eq("id", userId);
-
-      if (updatePointsError) {
-        throw new Error(`Failed to update points: ${updatePointsError.message}`);
-      }
-
-      // Record transaction
-      const { error: transactionError } = await supabase.from("point_transactions").insert([
-        {
-          user_id: userId,
-          amount: POINTS_AWARDED,
-          type: "earned",
-          reason: `Cleanup proof approved - ${participation.campaigns?.title || "Campaign"}`,
-          participation_id: participationId,
-        },
-      ]);
-
-      if (transactionError) {
-        console.warn("Failed to record point transaction:", transactionError.message);
+      if (!result?.success) {
+        throw new Error(result?.error || "Failed to approve participation");
       }
 
       Swal.close();
