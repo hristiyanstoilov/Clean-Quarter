@@ -205,18 +205,21 @@ function checkFormCompletion() {
   });
 
   // Show helpful message if not complete
+  const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+  const isBg = lang === "bg";
+
   if (!isComplete) {
     const missing = [];
-    if (!titleBg) missing.push("Заглавие");
-    if (!descBg) missing.push("Описание");
-    if (!nbh) missing.push("Квартал");
-    if (!hasFile) missing.push("Снимка");
-    if (!hasCoordinates) missing.push("Локация на картата");
+    if (!titleBg) missing.push(isBg ? "Заглавие" : "Title");
+    if (!descBg) missing.push(isBg ? "Описание" : "Description");
+    if (!nbh) missing.push(isBg ? "Квартал" : "Neighborhood");
+    if (!hasFile) missing.push(isBg ? "Снимка" : "Photo");
+    if (!hasCoordinates) missing.push(isBg ? "Локация на картата" : "Map location");
 
-    submitBtn.title = "Моля попълнете: " + missing.join(", ");
+    submitBtn.title = (isBg ? "Моля попълнете: " : "Please fill in: ") + missing.join(", ");
     submitBtn.style.cursor = "not-allowed";
   } else {
-    submitBtn.title = "Кликни за създаване на кампания";
+    submitBtn.title = isBg ? "Кликни за създаване на кампания" : "Click to create campaign";
     submitBtn.style.cursor = "pointer";
   }
 }
@@ -225,6 +228,9 @@ function checkFormCompletion() {
  * Update visual checklist showing what's complete and what's missing
  */
 function updateVisualChecklist(status) {
+  const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+  const isBg = lang === "bg";
+
   let checklist = document.getElementById("requirementsChecklist");
 
   // Create checklist if it doesn't exist
@@ -239,20 +245,24 @@ function updateVisualChecklist(status) {
   }
 
   const items = [
-    { key: "titleBg", label: "📝 Заглавие" },
-    { key: "descBg", label: "📄 Описание" },
-    { key: "nbh", label: "📍 Квартал" },
-    { key: "hasFile", label: "📸 Снимка" },
-    { key: "hasCoordinates", label: "🗺️ Локация на картата" },
+    { key: "titleBg", label: isBg ? "📝 Заглавие" : "📝 Title" },
+    { key: "descBg", label: isBg ? "📄 Описание" : "📄 Description" },
+    { key: "nbh", label: isBg ? "📍 Квартал" : "📍 Neighborhood" },
+    { key: "hasFile", label: isBg ? "📸 Снимка" : "📸 Photo" },
+    { key: "hasCoordinates", label: isBg ? "🗺️ Локация на картата" : "🗺️ Map location" },
   ];
 
   const completed = items.filter((item) => status[item.key]).length;
   const total = items.length;
 
+  const headingText = isBg ? "📋 Задължителни полета" : "📋 Required Fields";
+  const readyText = isBg ? "✅ Готово за изпращане!" : "✅ Ready to submit!";
+  const incompleteText = isBg ? "⚠️ Непълно" : "⚠️ Incomplete";
+
   checklist.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-      <h6 style="margin: 0; color: #856404; font-weight: bold;">📋 Required Fields (${completed}/${total})</h6>
-      <span style="font-size: 0.9rem; color: #856404;">${completed === total ? "✅ Ready to submit!" : "⚠️ Incomplete"}</span>
+      <h6 style="margin: 0; color: #856404; font-weight: bold;">${headingText} (${completed}/${total})</h6>
+      <span style="font-size: 0.9rem; color: #856404;">${completed === total ? readyText : incompleteText}</span>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.4rem; font-size: 0.9rem;">
       ${items
