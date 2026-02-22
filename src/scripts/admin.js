@@ -263,8 +263,7 @@ window.filterRoleLogTable = function () {
   if (!filtered.length) {
     container.innerHTML =
       "<div class='empty-state'><p data-i18n='admin.noRoleChanges'>No role changes found.</p></div>";
-    if (window.applyLanguage)
-      window.applyLanguage(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg");
+    applyLanguage(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg");
     return;
   }
   // Add ARIA roles and column scopes to role log table
@@ -275,8 +274,7 @@ window.filterRoleLogTable = function () {
   });
   html += "<\/tbody><\/table><\/div>";
   container.innerHTML = html;
-  if (window.applyLanguage)
-    window.applyLanguage(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg");
+  applyLanguage(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg");
 };
 
 /**
@@ -345,7 +343,7 @@ window.filterUserTable = function () {
         <p data-i18n='admin.noUsersFound'>No users found.</p>
       </div>
     `;
-    if (window.applyLanguage) applyLanguage(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg");
+    applyLanguage(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg");
     return;
   }
 
@@ -451,7 +449,7 @@ window.filterUserTable = function () {
   `;
 
   container.innerHTML = html;
-  if (window.applyLanguage) applyLanguage(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg");
+  applyLanguage(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg");
 };
 
 /**
@@ -895,6 +893,7 @@ async function handleApprove(participationId, username) {
       ]);
 
       if (transactionError) {
+        console.warn("Failed to record point transaction:", transactionError.message);
       }
 
       Swal.close();

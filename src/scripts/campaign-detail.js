@@ -647,18 +647,6 @@ async function handleLogout() {
 window.addEventListener("beforeunload", cleanupRealtimeChannel);
 
 /**
- * Toggle edit campaign form
- */
-function toggleEditCampaign() {
-  const editSection = document.getElementById("editCampaignSection");
-
-  if (editSection.style.display === "none") {
-    // Show edit form — pre-fill with extracted display values (handles JSON bilingual format)
-    editSection.style.display = "block";
-
-    document.getElementById("editTitle").value = extractDisplayValue(campaign?.title);
-    document.getElementById("editDescription").value = extractDisplayValue(campaign?.description);
-/**
  * Extract display value from a field that may be a plain string or a JSON bilingual object.
  * e.g. "Почистване" → "Почистване"
  *      '{"bg":"Почистване","en":"Cleanup"}' → "Почистване" (for lang=bg)
@@ -678,6 +666,18 @@ function extractDisplayValue(value) {
   return value;
 }
 
+/**
+ * Toggle edit campaign form
+ */
+function toggleEditCampaign() {
+  const editSection = document.getElementById("editCampaignSection");
+
+  if (editSection.style.display === "none") {
+    // Show edit form — pre-fill with extracted display values (handles JSON bilingual format)
+    editSection.style.display = "block";
+
+    document.getElementById("editTitle").value = extractDisplayValue(campaign?.title);
+    document.getElementById("editDescription").value = extractDisplayValue(campaign?.description);
     document.getElementById("editNeighborhood").value = campaign?.neighborhood || "Studentski Grad";
     document.getElementById("editStatus").value = campaign?.status || "active";
 
