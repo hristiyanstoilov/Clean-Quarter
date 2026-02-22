@@ -242,7 +242,8 @@ function displayCampaignDetails(campaignData, participations) {
 
   // Created date
   const createdDate = new Date(campaignData.created_at);
-  document.getElementById("campaignDate").textContent = createdDate.toLocaleDateString("bg-BG", {
+  const dateLocale = lang === "bg" ? "bg-BG" : "en-US";
+  document.getElementById("campaignDate").textContent = createdDate.toLocaleDateString(dateLocale, {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -878,7 +879,9 @@ function renderComments(comments) {
       const isOwn =
         currentUser && (currentUser.id === c.user_id || currentUser.id?.toString() === c.user_id);
       const canDelete = isOwn || isAdmin;
-      const date = new Date(c.created_at).toLocaleString("bg-BG", {
+      const commentLang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+      const commentLocale = commentLang === "bg" ? "bg-BG" : "en-US";
+      const date = new Date(c.created_at).toLocaleString(commentLocale, {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",

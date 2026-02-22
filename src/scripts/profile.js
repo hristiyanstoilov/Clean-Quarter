@@ -276,7 +276,9 @@ async function loadTransactions() {
           `;
 
     transactions.forEach((transaction) => {
-      const date = new Date(transaction.created_at).toLocaleDateString("en-US", {
+      const txLang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+      const txLocale = txLang === "bg" ? "bg-BG" : "en-US";
+      const date = new Date(transaction.created_at).toLocaleDateString(txLocale, {
         year: "numeric",
         month: "short",
         day: "numeric",
@@ -357,7 +359,9 @@ async function loadParticipations() {
 
     participations.forEach((participation) => {
       const campaign = participation.campaigns;
-      const date = new Date(participation.created_at).toLocaleDateString("en-US", {
+      const partLang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+      const partLocale = partLang === "bg" ? "bg-BG" : "en-US";
+      const date = new Date(participation.created_at).toLocaleDateString(partLocale, {
         year: "numeric",
         month: "short",
         day: "numeric",
