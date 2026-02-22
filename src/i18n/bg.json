@@ -72,7 +72,16 @@
     "amount": "Размер",
     "reason": "Причина",
     "noTransactions": "Няма транзакции",
-    "noParticipations": "Няма участия"
+    "noParticipations": "Няма участия",
+    "accountInfo": "📋 Информация за акаунта",
+    "neighborhoodLabel": "Квартал:",
+    "pointsLabel": "Точки:",
+    "emailLabel": "Имейл:",
+    "rankLabel": "Ранг:",
+    "transactionHistory": "💳 История на транзакциите",
+    "myParticipations": "🤝 Моите участия",
+    "usernamePlaceholder": "Въведи потребителско ime",
+    "newPasswordPlaceholder": "Въведи нова парола"
   },
   "campaign": {
     "title": "Детали на кампанията",

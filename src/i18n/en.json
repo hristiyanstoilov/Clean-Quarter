@@ -72,7 +72,16 @@
     "amount": "Amount",
     "reason": "Reason",
     "noTransactions": "No transactions",
-    "noParticipations": "No participations"
+    "noParticipations": "No participations",
+    "accountInfo": "📋 Account Information",
+    "neighborhoodLabel": "Neighborhood:",
+    "pointsLabel": "Points Balance:",
+    "emailLabel": "Email:",
+    "rankLabel": "Rank:",
+    "transactionHistory": "💳 Transaction History",
+    "myParticipations": "🤝 My Participations",
+    "usernamePlaceholder": "Enter username",
+    "newPasswordPlaceholder": "Enter new password"
   },
   "campaign": {
     "title": "Campaign Details",
