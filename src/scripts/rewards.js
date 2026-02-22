@@ -164,8 +164,10 @@ function renderRewards() {
                               <span>${reward.cost}</span>
                           </div>
                           <button
-                              class="${buttonClass}"
-                              onclick="handleBuy('${reward.id}', '${escapeHTML(reward.title)}', ${reward.cost})"
+                              class="${buttonClass} js-buy-btn"
+                              data-reward-id="${escapeHTML(reward.id)}"
+                              data-reward-title="${escapeHTML(reward.title)}"
+                              data-reward-cost="${Number(reward.cost)}"
                               ${buttonDisabled}
                           >
                               ${buttonText}
@@ -177,6 +179,13 @@ function renderRewards() {
   });
 
   container.innerHTML = html;
+
+  // Attach buy handlers via event delegation (avoids inline onclick with user data)
+  container.querySelectorAll(".js-buy-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      handleBuy(btn.dataset.rewardId, btn.dataset.rewardTitle, Number(btn.dataset.rewardCost));
+    });
+  });
 }
 
 /**
