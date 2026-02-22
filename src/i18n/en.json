@@ -80,6 +80,8 @@
     "rankLabel": "Rank:",
     "transactionHistory": "💳 Transaction History",
     "myParticipations": "🤝 My Participations",
+    "avatarHint": "JPEG, PNG or WebP, max 5MB",
+    "newPassword": "New Password",
     "usernamePlaceholder": "Enter username",
     "newPasswordPlaceholder": "Enter new password"
   },

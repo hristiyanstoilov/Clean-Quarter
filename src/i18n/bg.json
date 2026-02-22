@@ -80,6 +80,8 @@
     "rankLabel": "Ранг:",
     "transactionHistory": "💳 История на транзакциите",
     "myParticipations": "🤝 Моите участия",
+    "avatarHint": "JPEG, PNG или WebP, макс. 5MB",
+    "newPassword": "Нова парола",
     "usernamePlaceholder": "Въведи потребителско ime",
     "newPasswordPlaceholder": "Въведи нова парола"
   },
