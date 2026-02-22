@@ -74,6 +74,22 @@
     "noTransactions": "Няма транзакции",
     "noParticipations": "Няма участия"
   },
+  "createCampaign": {
+    "pageTitle": "Нова кампания",
+    "details": "Детайли на кампанията",
+    "titleLabel": "Заглавие",
+    "titlePlaceholder": "напр. Почистване на парка в неделя",
+    "autoTranslateHint": "Английската версия ще се генерира автоматично",
+    "descriptionLabel": "Описание",
+    "descriptionPlaceholder": "Опишете зоната за почистване...",
+    "neighborhoodLabel": "Квартал",
+    "bilingualHint": "Двуезичната версия се записва автоматично",
+    "beforePhotoLabel": "Снимка преди",
+    "photoHint": "JPEG, PNG или WebP, макс. 5MB",
+    "mapTitle": "📍 Избери локация на картата",
+    "mapHint": "Кликни на картата за да зададеш координатите на почистването",
+    "selectedLocation": "Избрана локация:"
+  },
   "campaign": {
     "title": "Детали на кампанията",
     "description": "Описание",

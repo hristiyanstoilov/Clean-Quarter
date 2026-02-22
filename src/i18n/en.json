@@ -74,6 +74,22 @@
     "noTransactions": "No transactions",
     "noParticipations": "No participations"
   },
+  "createCampaign": {
+    "pageTitle": "Create New Campaign",
+    "details": "Campaign Details",
+    "titleLabel": "Title",
+    "titlePlaceholder": "e.g. Sunday Park Cleanup",
+    "autoTranslateHint": "English version will be generated automatically",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Describe the cleanup area...",
+    "neighborhoodLabel": "Neighborhood",
+    "bilingualHint": "Bilingual version is saved automatically",
+    "beforePhotoLabel": "Before Photo",
+    "photoHint": "JPEG, PNG or WebP, max 5MB",
+    "mapTitle": "📍 Select Location on Map",
+    "mapHint": "Click on the map to set the cleanup location coordinates",
+    "selectedLocation": "Selected Location:"
+  },
   "campaign": {
     "title": "Campaign Details",
     "description": "Description",
