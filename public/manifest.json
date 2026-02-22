@@ -2,7 +2,7 @@
   "name": "Clean Quarter - Чист Квартал",
   "short_name": "Clean Quarter",
   "description": "Gamified neighborhood cleanup platform for Sofia. Earn points for cleaning and exchange them for rewards.",
-  "start_url": "/index.html",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
@@ -34,27 +34,13 @@
       "purpose": "maskable"
     }
   ],
-  "screenshots": [
-    {
-      "src": "/images/screenshot-1.png",
-      "sizes": "540x720",
-      "type": "image/png",
-      "form_factor": "narrow"
-    },
-    {
-      "src": "/images/screenshot-2.png",
-      "sizes": "540x720",
-      "type": "image/png",
-      "form_factor": "narrow"
-    }
-  ],
   "categories": ["productivity", "lifestyle"],
   "shortcuts": [
     {
       "name": "Dashboard",
       "short_name": "Dashboard",
       "description": "View your cleanup campaigns and points",
-      "url": "/src/pages/dashboard.html",
+      "url": "/dashboard",
       "icons": [
         {
           "src": "/images/icon-192x192.png",
@@ -66,7 +52,7 @@
       "name": "Create Campaign",
       "short_name": "New Campaign",
       "description": "Start a new cleanup campaign",
-      "url": "/src/pages/create-campaign.html",
+      "url": "/create-campaign",
       "icons": [
         {
           "src": "/images/icon-192x192.png",
@@ -78,7 +64,7 @@
       "name": "Rewards",
       "short_name": "Rewards",
       "description": "Exchange your points for rewards",
-      "url": "/src/pages/rewards.html",
+      "url": "/rewards",
       "icons": [
         {
           "src": "/images/icon-192x192.png",
