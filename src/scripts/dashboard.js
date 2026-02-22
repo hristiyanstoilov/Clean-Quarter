@@ -132,9 +132,11 @@ function updateLoadMoreUI() {
   } else {
     container.style.display = "block";
     if (counter) {
-      const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
       counter.textContent =
-        lang === "bg" ? `Показани ${shown} от ${total}` : `Showing ${shown} of ${total}`;
+        t("dashboard.showingOf")?.replace("{shown}", shown).replace("{total}", total) ||
+        (localStorage.getItem("CLEAN_QUARTER_LANGUAGE") === "bg"
+          ? `Показани ${shown} от ${total}`
+          : `Showing ${shown} of ${total}`);
     }
   }
 }
