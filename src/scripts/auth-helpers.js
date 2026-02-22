@@ -2,14 +2,14 @@
 import supabase from "../services/supabase.js";
 
 /**
- * Handle forgot password link
+ * Handle forgot password link — calls Supabase to send real reset email
  */
-export function handleForgotPassword(e) {
+export async function handleForgotPassword(e) {
   e.preventDefault();
-  Swal.fire({
+  const result = await Swal.fire({
     title: "Забравена парола",
     html:
-      "<p>Въведи своя имейл адрес и ще изпратим линк за восстановление.</p>" +
+      "<p>Въведи своя имейл адрес и ще изпратим линк за възстановяване.</p>" +
       '<input type="email" id="resetEmail" class="swal2-input" placeholder="your@email.com">',
     icon: "info",
     showCancelButton: true,
@@ -96,10 +96,11 @@ export function closeTermsModal() {
 }
 
 /**
- * Accept Terms and Conditions
+ * Accept Terms and Conditions — checks both terms and risk checkboxes
  */
 export function acceptTerms() {
   document.getElementById("acceptTerms").checked = true;
+  document.getElementById("acceptRisk").checked = true;
   closeTermsModal();
 }
 

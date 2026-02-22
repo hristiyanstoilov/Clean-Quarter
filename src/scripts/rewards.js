@@ -117,13 +117,15 @@ async function loadRewardsData() {
 function renderRewards() {
   const container = document.getElementById("rewardsGrid");
 
+  const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+
   if (rewards.length === 0) {
     container.innerHTML = `
               <div style="grid-column: 1 / -1;">
                   <div class="empty-state">
                       <div class="empty-state-icon">🎁</div>
-                      <h3>No Rewards Available</h3>
-                      <p>Rewards will be added soon. Come back later!</p>
+                      <h3>${lang === "en" ? "No Rewards Available" : "Няма налични награди"}</h3>
+                      <p>${lang === "en" ? "Rewards will be added soon. Come back later!" : "Скоро ще бъдат добавени награди. Върни се по-късно!"}</p>
                   </div>
               </div>
           `;
@@ -137,7 +139,17 @@ function renderRewards() {
     const outOfStock = reward.quantity_available !== null && reward.quantity_available <= 0;
     const canAfford = currentPoints >= reward.cost && !outOfStock;
     const buttonClass = canAfford ? "btn-buy" : "btn-buy btn-buy-insufficient";
-    const buttonText = outOfStock ? "Out of Stock" : canAfford ? "✓ Buy" : "✗ Not Enough Points";
+    const buttonText = outOfStock
+      ? lang === "en"
+        ? "Out of Stock"
+        : "Изчерпан"
+      : canAfford
+        ? lang === "en"
+          ? "✓ Buy"
+          : "✓ Купи"
+        : lang === "en"
+          ? "✗ Not Enough Points"
+          : "✗ Недостатъчно точки";
     const buttonDisabled = !canAfford ? "disabled" : "";
 
     const imageContent = reward.image_url
@@ -146,7 +158,7 @@ function renderRewards() {
 
     const stockLabel =
       reward.quantity_available !== null
-        ? `<span class="reward-stock">${reward.quantity_available} left</span>`
+        ? `<span class="reward-stock">${reward.quantity_available} ${lang === "en" ? "left" : "налични"}</span>`
         : "";
 
     html += `

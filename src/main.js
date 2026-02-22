@@ -130,7 +130,7 @@ async function handleRegister(e) {
     await Swal.fire({
       icon: "error",
       title: "Грешка",
-      text: "Все полета са задължителни!",
+      text: "Всички полета са задължителни!",
     });
     return;
   }

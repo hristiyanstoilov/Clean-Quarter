@@ -29,7 +29,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Language selector
     document.getElementById("languageSelector").value = lang;
     document.getElementById("languageSelector").addEventListener("change", (e) => {
-      // Just show a message - language changes only from profile page
+      setLanguage(e.target.value, true);
+      location.reload();
     });
 
     // Require authentication

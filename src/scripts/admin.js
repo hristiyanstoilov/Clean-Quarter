@@ -22,7 +22,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("languageSelector").value =
       localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
     document.getElementById("languageSelector").addEventListener("change", (e) => {
-      // Just show a message - language changes only from profile page
+      setLanguage(e.target.value, true);
+      location.reload();
     });
 
     await checkAuth();

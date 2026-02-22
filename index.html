@@ -75,11 +75,7 @@
                         <div class="tab-pane fade show active" id="login" role="tabpanel">
                             <form id="loginForm">
                                 <div class="form-group">
-                                                                                                            <div id="registerPasswordStrengthBar" style="height: 6px; background-color: #e9ecef; border-radius: 3px; overflow: hidden; margin-bottom: 0.5rem;">
-                                                                                                                <div id="registerPasswordStrength" style="height: 100%; width: 0%; background-color: #dc3545; transition: all 0.3s ease;"></div>
-                                                                                                            </div>
-                                            <!-- Password strength meter JS moved to main.js or external script. -->
-                                    <label for="loginEmail" class="form-label" data-i18n="auth.email">Имейл</label>
+                                                                                                            <label for="loginEmail" class="form-label" data-i18n="auth.email">Имейл</label>
                                     <input type="email" class="form-control" id="loginEmail" data-i18n-placeholder="auth.emailPlaceholder" placeholder="твоят@имейл.com" required>
                                 </div>
                                 <div class="form-group">
@@ -127,7 +123,11 @@
                                                                                 <span id="registerPasswordEye" aria-label="Покажи/Скрий парола" style="font-size: 1.2rem;">👁️</span>
                                                                             </button>
                                                                         </div>
-                                                                        <ul id="registerPasswordChecklist" class="form-text mt-2" style="list-style: none; padding-left: 0;">
+                                                                        
+                                        <div id="registerPasswordStrengthBar" style="height: 6px; background-color: #e9ecef; border-radius: 3px; overflow: hidden; margin-bottom: 0.5rem; margin-top: 0.5rem;">
+                                            <div id="registerPasswordStrength" style="height: 100%; width: 0%; background-color: #dc3545; transition: all 0.3s ease;"></div>
+                                        </div>
+                                        <ul id="registerPasswordChecklist" class="form-text mt-2" style="list-style: none; padding-left: 0;">
                                                                             <li id="pw-length" class="text-danger" data-i18n="auth.pwMinLength">• Мин. 8 символа</li>
                                                                             <li id="pw-uppercase" class="text-danger" data-i18n="auth.pwUppercase">• Главна буква (A-Z)</li>
                                                                             <li id="pw-lowercase" class="text-danger" data-i18n="auth.pwLowercase">• Малка буква (a-z)</li>

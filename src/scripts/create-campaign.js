@@ -103,7 +103,7 @@ function initMap() {
         }),
       })
         .addTo(map)
-        .bindPopup("Campaign Location")
+        .bindPopup("📍 Избрана локация")
         .openPopup();
       map.invalidateSize();
     }
@@ -132,7 +132,7 @@ function initMap() {
       }),
     })
       .addTo(map)
-      .bindPopup("Campaign Location")
+      .bindPopup("📍 Избрана локация")
       .openPopup();
     map.setView([lat, lng], 16);
     map.invalidateSize();
@@ -361,7 +361,7 @@ async function handleFormSubmit(e) {
       });
       localStorage.setItem("CLEAN_QUARTER_DEMO_PARTICIPATIONS", JSON.stringify(demoParts));
 
-      await showSuccessToast("Campaign created successfully!");
+      await showSuccessToast("Кампанията е създадена успешно!");
 
       window.location.href = "/dashboard";
     } else {
@@ -413,7 +413,7 @@ async function handleFormSubmit(e) {
         console.warn("Could not auto-join creator:", participationError.message);
       }
 
-      await showSuccessToast("Campaign created successfully!");
+      await showSuccessToast("Кампанията е създадена успешно!");
 
       // Redirect to dashboard
       window.location.href = "/dashboard";
