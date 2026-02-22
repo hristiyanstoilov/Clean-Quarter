@@ -421,8 +421,12 @@ async function handleFormSubmit(e) {
   } catch (error) {
     await Swal.fire({
       icon: "error",
-      title: "Error",
-      text: error.message || "Failed to create campaign. Please try again.",
+      title: (localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en" ? "Error" : "Грешка",
+      text:
+        error.message ||
+        ((localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en"
+          ? "Failed to create campaign. Please try again."
+          : "Неуспешно създаване. Опитай отново."),
     });
   } finally {
     // Re-enable submit button and hide spinner

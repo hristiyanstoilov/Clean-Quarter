@@ -196,8 +196,8 @@ async function loadAdminData() {
     document.getElementById("loadingState").style.display = "none";
     await Swal.fire({
       icon: "error",
-      title: "Error",
-      text: error.message || "Failed to load admin data.",
+      title: t("common.error") || "Грешка",
+      text: error.message || t("admin.failedToLoad") || "Грешка при зареждане.",
     });
   }
 }
@@ -898,7 +898,7 @@ async function handleReject(participationId, username) {
 
     // Show loading
     await Swal.fire({
-      title: "Processing...",
+      title: t("common.loading") || "Зареждане...",
       allowOutsideClick: false,
       didOpen: () => {
         Swal.showLoading();

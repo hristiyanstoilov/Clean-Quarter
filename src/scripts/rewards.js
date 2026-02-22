@@ -226,22 +226,35 @@ async function handleBuy(rewardId, rewardTitle, rewardCost) {
     if ((userProfile.points_balance || 0) < rewardCost) {
       await Swal.fire({
         icon: "error",
-        title: "Insufficient Points",
-        text: `You need ${rewardCost - (userProfile.points_balance || 0)} more points to buy this reward.`,
+        title:
+          (localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en"
+            ? "Insufficient Points"
+            : "Недостатъчно точки",
+        text:
+          (localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en"
+            ? `You need ${rewardCost - (userProfile.points_balance || 0)} more points to buy this reward.`
+            : `Нужни ти са още ${rewardCost - (userProfile.points_balance || 0)} точки за тази награда.`,
       });
       return;
     }
 
     // Show confirmation
     const result = await Swal.fire({
-      title: "Confirm Purchase?",
-      html: `<strong>${rewardTitle}</strong><br>Cost: <strong>${rewardCost} ⭐</strong>`,
+      title:
+        (localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en"
+          ? "Confirm Purchase?"
+          : "Потвърди покупката?",
+      html: `<strong>${rewardTitle}</strong><br>${(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en" ? "Cost" : "Цена"}: <strong>${rewardCost} ⭐</strong>`,
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#28a745",
       cancelButtonColor: "#6c757d",
-      confirmButtonText: "Yes, Buy It!",
-      cancelButtonText: "Cancel",
+      confirmButtonText:
+        (localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en"
+          ? "Yes, Buy It!"
+          : "Да, купи!",
+      cancelButtonText:
+        (localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en" ? "Cancel" : "Отмяна",
     });
 
     if (!result.isConfirmed) {
@@ -250,7 +263,10 @@ async function handleBuy(rewardId, rewardTitle, rewardCost) {
 
     // Show loading
     await Swal.fire({
-      title: "Processing...",
+      title:
+        (localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en"
+          ? "Processing..."
+          : "Обработване...",
       allowOutsideClick: false,
       didOpen: () => {
         Swal.showLoading();
@@ -323,8 +339,12 @@ async function handleBuy(rewardId, rewardTitle, rewardCost) {
   } catch (error) {
     await Swal.fire({
       icon: "error",
-      title: "Error",
-      text: error.message || "Failed to purchase reward. Please try again.",
+      title: (localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en" ? "Error" : "Грешка",
+      text:
+        error.message ||
+        ((localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en"
+          ? "Failed to purchase reward. Please try again."
+          : "Неуспешна покупка. Опитай отново."),
     });
   }
 }
