@@ -51,7 +51,8 @@
     "viewCampaign": "Преглед",
     "noCampaigns": "Няма активни кампании",
     "loading": "Зареждане на кампаниите...",
-    "loadMore": "Зареди още"
+    "loadMore": "Зареди още",
+    "showingOf": "Показани {shown} от {total}"
   },
   "profile": {
     "title": "Мой профил",
