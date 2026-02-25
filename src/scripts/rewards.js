@@ -305,9 +305,6 @@ async function handleBuy(rewardId, rewardTitle, rewardCost) {
 
     await showSuccessToast(`${rewardTitle} purchased! Balance: ${newPointsBalance} ⭐`);
 
-    // Update local state
-    userProfile.points_balance = newPointsBalance;
-
     // Reload rewards
     document.getElementById("pointsBalance").textContent = newPointsBalance;
     renderRewards();
