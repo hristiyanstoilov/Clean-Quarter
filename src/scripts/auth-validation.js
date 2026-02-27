@@ -97,8 +97,12 @@ if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
       .register("/public/service-worker.js")
-      .then((registration) => {})
-      .catch((error) => {});
+      .then((registration) => {
+        console.log("[SW] Registered:", registration.scope);
+      })
+      .catch((error) => {
+        console.warn("[SW] Registration failed:", error);
+      });
   });
 }
 
