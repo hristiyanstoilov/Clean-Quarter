@@ -63,59 +63,87 @@
 
     <!-- Main Container -->
     <div class="container">
-      <h1 class="mb-4">Create New Campaign</h1>
+      <h1 class="mb-4" data-i18n="createCampaign.pageTitle">Create New Campaign</h1>
 
       <!-- Campaign Form -->
       <div class="form-section">
-        <h3>Campaign Details</h3>
+        <h3 data-i18n="createCampaign.details">Campaign Details</h3>
 
         <form id="createCampaignForm">
           <!-- Title -->
           <div class="mb-3">
-            <label for="campaignTitleBg" class="form-label">Заглавие</label>
+            <label for="campaignTitleBg" class="form-label" data-i18n="createCampaign.titleLabel"
+              >Заглавие</label
+            >
             <input
               type="text"
               class="form-control"
               id="campaignTitleBg"
               placeholder="напр. Почистване на парка в неделя"
+              data-i18n-placeholder="createCampaign.titlePlaceholder"
               required
             />
-            <small class="text-muted">Английската версия ще се генерира автоматично</small>
+            <small class="text-muted" data-i18n="createCampaign.autoTranslateHint"
+              >Английската версия ще се генерира автоматично</small
+            >
           </div>
 
           <!-- Description -->
           <div class="mb-3">
-            <label for="campaignDescriptionBg" class="form-label">Описание</label>
+            <label
+              for="campaignDescriptionBg"
+              class="form-label"
+              data-i18n="createCampaign.descriptionLabel"
+              >Описание</label
+            >
             <textarea
               class="form-control"
               id="campaignDescriptionBg"
               rows="4"
               placeholder="Опишете зоната за почистване..."
+              data-i18n-placeholder="createCampaign.descriptionPlaceholder"
               required
             ></textarea>
-            <small class="text-muted">Английската версия ще се генерира автоматично</small>
+            <small class="text-muted" data-i18n="createCampaign.autoTranslateHint"
+              >Английската версия ще се генерира автоматично</small
+            >
           </div>
 
           <!-- Neighborhood -->
           <div class="mb-3">
-            <label for="campaignNeighborhood" class="form-label">Квартал</label>
+            <label
+              for="campaignNeighborhood"
+              class="form-label"
+              data-i18n="createCampaign.neighborhoodLabel"
+              >Квартал</label
+            >
             <select class="form-control" id="campaignNeighborhood" required>
-              <option value="">Избери квартал...</option>
-              <option value="Studentski Grad">Студентски град</option>
-              <option value="Darvenitsa">Дървеница</option>
-              <option value="Malinova Dolina">Малинова долина</option>
-              <option value="Musagenitsa">Мусагеница</option>
-              <option value="Vitosha (VEC)">Витоша (ВЕЦ)</option>
+              <option value="" data-i18n="auth.selectNeighborhood">Избери квартал...</option>
+              <option value="Studentski Grad" data-i18n="neighborhoods.studentskiGrad">
+                Студентски град
+              </option>
+              <option value="Darvenitsa" data-i18n="neighborhoods.darvenitsa">Дървеница</option>
+              <option value="Malinova Dolina" data-i18n="neighborhoods.malinovaDolina">
+                Малинова долина
+              </option>
+              <option value="Musagenitsa" data-i18n="neighborhoods.musagenitsa">Мусагеница</option>
+              <option value="Vitosha (VEC)" data-i18n="neighborhoods.vitoshaVec">
+                Витоша (ВЕЦ)
+              </option>
             </select>
-            <small class="text-muted">Двуезичната версия се записва автоматично</small>
+            <small class="text-muted" data-i18n="createCampaign.bilingualHint"
+              >Двуезичната версия се записва автоматично</small
+            >
           </div>
 
           <!-- Before Photo Upload -->
           <div class="mb-3">
-            <label for="beforePhoto" class="form-label">Before Photo</label>
+            <label for="beforePhoto" class="form-label" data-i18n="createCampaign.beforePhotoLabel"
+              >Before Photo</label
+            >
             <div class="file-input-wrapper">
               <label class="btn-file-input">
-                📁 Choose File
+                <span data-i18n="campaign.chooseFile">📁 Choose File</span>
                 <input
                   type="file"
                   id="beforePhoto"
@@ -123,30 +151,36 @@
                   required
                 />
               </label>
-              <span class="file-name" id="beforePhotoName">No file chosen</span>
+              <span class="file-name" id="beforePhotoName" data-i18n="campaign.noFileChosen"
+                >No file chosen</span
+              >
             </div>
-            <small class="text-muted">JPEG, PNG или WebP, макс. 5MB</small>
-            <img id="beforePhotoPreview" class="photo-preview" style="display: none" />
+            <small class="text-muted" data-i18n="createCampaign.photoHint"
+              >JPEG, PNG или WebP, макс. 5MB</small
+            >
+            <img id="beforePhotoPreview" class="photo-preview" alt="" style="display: none" />
           </div>
         </form>
       </div>
 
       <!-- Map Section -->
       <div class="map-container">
-        <h3>📍 Select Location on Map</h3>
-        <p class="text-muted">Click on the map to set the cleanup location coordinates</p>
+        <h3 data-i18n="createCampaign.mapTitle">📍 Select Location on Map</h3>
+        <p class="text-muted" data-i18n="createCampaign.mapHint">
+          Click on the map to set the cleanup location coordinates
+        </p>
         <div id="map"></div>
         <div class="coordinates-display" id="coordinatesDisplay" style="display: none">
-          <strong>Selected Location:</strong><br />
-          Latitude: <span id="latitude">-</span><br />
-          Longitude: <span id="longitude">-</span>
+          <strong data-i18n="createCampaign.selectedLocation">Selected Location:</strong><br />
+          <span data-i18n="campaign.latitude">Latitude</span>: <span id="latitude">-</span><br />
+          <span data-i18n="campaign.longitude">Longitude</span>: <span id="longitude">-</span>
         </div>
       </div>
 
       <!-- Submit Button -->
       <div class="form-section">
         <button type="submit" class="btn-submit" id="submitBtn" form="createCampaignForm" disabled>
-          Create Campaign
+          <span data-i18n="campaign.create">Create Campaign</span>
           <span class="loading-spinner" id="loadingSpinner">
             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
           </span>
