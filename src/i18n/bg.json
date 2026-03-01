@@ -73,7 +73,18 @@
     "amount": "Размер",
     "reason": "Причина",
     "noTransactions": "Няма транзакции",
-    "noParticipations": "Няма участия"
+    "noParticipations": "Няма участия",
+    "accountInfo": "📋 Информация за акаунта",
+    "neighborhoodLabel": "Квартал:",
+    "pointsLabel": "Точки:",
+    "emailLabel": "Имейл:",
+    "rankLabel": "Ранг:",
+    "transactionHistory": "💳 История на транзакциите",
+    "myParticipations": "🤝 Моите участия",
+    "avatarHint": "JPEG, PNG или WebP, макс. 5MB",
+    "newPassword": "Нова парола",
+    "usernamePlaceholder": "Въведи потребителско ime",
+    "newPasswordPlaceholder": "Въведи нова парола"
   },
   "createCampaign": {
     "pageTitle": "Нова кампания",

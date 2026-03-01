@@ -73,7 +73,18 @@
     "amount": "Amount",
     "reason": "Reason",
     "noTransactions": "No transactions",
-    "noParticipations": "No participations"
+    "noParticipations": "No participations",
+    "accountInfo": "📋 Account Information",
+    "neighborhoodLabel": "Neighborhood:",
+    "pointsLabel": "Points Balance:",
+    "emailLabel": "Email:",
+    "rankLabel": "Rank:",
+    "transactionHistory": "💳 Transaction History",
+    "myParticipations": "🤝 My Participations",
+    "avatarHint": "JPEG, PNG or WebP, max 5MB",
+    "newPassword": "New Password",
+    "usernamePlaceholder": "Enter username",
+    "newPasswordPlaceholder": "Enter new password"
   },
   "createCampaign": {
     "pageTitle": "Create New Campaign",
