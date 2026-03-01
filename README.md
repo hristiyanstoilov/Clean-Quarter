@@ -4,15 +4,6 @@
 
 **Live:** https://cleanquarter.netlify.app
 
-### Demo Credentials
-
-| Role | Email | Password |
-|------|-------|----------|
-| Regular user | `demo-user@cleanquarter.bg` | `Demo1234` |
-| Admin | `demo-admin@cleanquarter.bg` | `Demo1234` |
-
-> These accounts exist in the live Supabase project for grading purposes.
-
 ---
 
 ## Table of Contents
