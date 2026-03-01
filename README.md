@@ -390,6 +390,13 @@ Enforced in `src/services/validation.js` and checked live in forms.
 | Admin Panel | `/src/pages/admin.html` | Admin only | Approve/reject proofs, manage users & disposal points |
 | Rewards | `/src/pages/rewards.html` | Authenticated | Browse and redeem rewards with points |
 
+### Global UI features (present on all pages)
+
+| Feature | Description |
+|---------|-------------|
+| Notification bell 🔔 | Real-time badge in navbar — shows unread count, dropdown with last 20 notifications (approval, points, campaign updates), mark-as-read per item or all at once. Populated automatically by DB triggers. Hidden for demo users. |
+| Language selector | Switch between Bulgarian and English; preference persisted in localStorage |
+
 ---
 
 ## 9. Testing
@@ -412,7 +419,7 @@ SUPABASE_ADMIN_EMAIL=admin@example.com
 SUPABASE_ADMIN_PASSWORD=password
 ```
 
-Current coverage: **218 tests · 31 test files · 0 skipped**
+Current coverage: **449 tests · 40 test files · 0 skipped**
 
 ### E2E tests (Cypress)
 

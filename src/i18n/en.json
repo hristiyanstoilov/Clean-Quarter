@@ -12,6 +12,11 @@
     "logout": "Logout",
     "language": "Language"
   },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "empty": "No notifications"
+  },
   "auth": {
     "login": "Login",
     "register": "Register",
