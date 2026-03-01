@@ -129,7 +129,10 @@
     "noComments": "No comments yet. Be the first!",
     "loginToComment": "Log in to leave a comment.",
     "commentPosted": "Comment posted.",
-    "commentDeleted": "Comment deleted."
+    "commentDeleted": "Comment deleted.",
+    "proofRejected": "Your proof was rejected.",
+    "rejectionReason": "Reason",
+    "tryAgain": "Please upload a new photo and try again."
   },
   "rewards": {
     "title": "Rewards",

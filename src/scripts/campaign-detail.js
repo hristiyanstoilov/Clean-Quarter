@@ -360,7 +360,7 @@ function showParticipationUI() {
     uploadSection.style.display = "block";
 
     // Show status message based on participation status
-    showSubmissionStatus(userParticipation.status);
+    showSubmissionStatus(userParticipation.status, userParticipation.rejection_reason);
 
     // If photo already uploaded and status is not rejected, disable upload
     if (userParticipation.after_photo_url && userParticipation.status !== "rejected") {
@@ -552,7 +552,7 @@ async function handleUploadPhoto() {
 /**
  * Show submission status message
  */
-function showSubmissionStatus(status) {
+function showSubmissionStatus(status, rejectionReason) {
   const statusDiv = document.getElementById("submissionStatus");
   statusDiv.style.display = "block";
 
@@ -567,7 +567,10 @@ function showSubmissionStatus(status) {
     statusDiv.textContent = "✅ Your proof has been approved! Points awarded.";
   } else if (status === "rejected") {
     statusDiv.className = "status-message status-rejected";
-    statusDiv.textContent = "❌ Your proof was rejected. Please try again with better photo.";
+    const reasonText = rejectionReason
+      ? ` ${t("campaign.rejectionReason")}: "${escapeHTML(rejectionReason)}"`
+      : "";
+    statusDiv.innerHTML = `❌ ${t("campaign.proofRejected")}${reasonText} ${t("campaign.tryAgain")}`;
   }
 }
 
