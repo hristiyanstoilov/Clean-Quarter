@@ -7,8 +7,8 @@
 
 Go to: **Netlify Dashboard → Site settings → Environment variables**
 
-- [ ] `VITE_SUPABASE_URL` = `https://hulwbevuvbepnjpikjht.supabase.co`
-- [ ] `VITE_SUPABASE_ANON_KEY` = `sb_publishable_Hh_84smvpfvwTgUEH2qzTg_omdAe4tP`
+- [ ] `VITE_SUPABASE_URL` = _(вземи от Supabase Dashboard → Settings → API → Project URL)_
+- [ ] `VITE_SUPABASE_ANON_KEY` = _(вземи от Supabase Dashboard → Settings → API → anon public key)_
 
 **⚠️ Verify:**
 - [ ] Variable names start with `VITE_` (not just `SUPABASE_`)
