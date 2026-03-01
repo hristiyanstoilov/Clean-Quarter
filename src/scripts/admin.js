@@ -1,6 +1,6 @@
 import supabase from "../services/supabase.js";
 import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
-import { escapeHTML, showSuccessToast, showInfoToast } from "../utils/helpers.js";
+import { escapeHTML, showSuccessToast, showInfoToast, initSwalFallback } from "../utils/helpers.js";
 
 // Global variables
 let currentUser = null;
@@ -8,6 +8,8 @@ let pendingParticipations = [];
 
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", async () => {
+  // Ensure Swal is available even if CDN fails to load
+  initSwalFallback();
   try {
     // Close any lingering SweetAlert modals from previous sessions
     if (window.Swal && Swal.close) {
@@ -19,9 +21,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     applyLanguage(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg");
 
     // Language selector
-    document.getElementById("languageSelector").value =
-      localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
-    document.getElementById("languageSelector").addEventListener("change", (e) => {
+    const langSel = document.getElementById("languageSelector");
+    langSel.value = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+    langSel.style.display = "block";
+    langSel.addEventListener("change", (e) => {
       setLanguage(e.target.value, true);
       location.reload();
     });
@@ -640,12 +643,12 @@ function renderPendingTable() {
       <table class="table table-hover" role="table" aria-label="Pending participations">
           <thead>
               <tr>
-                  <th scope="col">User</th>
-                  <th scope="col">Campaign</th>
-                  <th scope="col">Before Photo</th>
-                  <th scope="col">After Photo</th>
-                  <th scope="col">Submitted</th>
-                  <th scope="col">Actions</th>
+                  <th scope="col" data-i18n="admin.username">User</th>
+                  <th scope="col" data-i18n="admin.campaign">Campaign</th>
+                  <th scope="col" data-i18n="admin.beforePhoto">Before Photo</th>
+                  <th scope="col" data-i18n="admin.afterPhoto">After Photo</th>
+                  <th scope="col" data-i18n="admin.submitted">Submitted</th>
+                  <th scope="col" data-i18n="admin.actions">Actions</th>
               </tr>
           </thead>
           <tbody>
@@ -682,18 +685,18 @@ function renderPendingTable() {
                   <td><strong>${escapeHTML(username)}</strong></td>
                   <td>${escapeHTML(campaignTitle)}</td>
                   <td>
-                      ${beforePhoto ? `<img src="${beforePhoto}" class="photo-thumbnail" alt="Before" onclick="showPhotoModal('${beforePhoto}')">` : "N/A"}
+                      ${beforePhoto ? `<img src="${beforePhoto}" class="photo-thumbnail" alt="${t("campaign.beforePhoto")}" onclick="showPhotoModal('${beforePhoto}')">` : `<span data-i18n="admin.noPhoto">${t("admin.noPhoto")}</span>`}
                   </td>
                   <td>
-                      ${afterPhoto ? `<img src="${afterPhoto}" class="photo-thumbnail" alt="After" onclick="showPhotoModal('${afterPhoto}')">` : "N/A"}
+                      ${afterPhoto ? `<img src="${afterPhoto}" class="photo-thumbnail" alt="${t("campaign.afterPhoto")}" onclick="showPhotoModal('${afterPhoto}')">` : `<span data-i18n="admin.noPhoto">${t("admin.noPhoto")}</span>`}
                   </td>
                   <td>${submittedDate}</td>
                   <td>
                       <div class="action-buttons">
-                          <button class="btn-approve" onclick="handleApprove('${participation.id}', '${username}')" data-i18n="admin.approve">
+                          <button class="btn-approve" onclick="handleApprove('${participation.id}', '${username}')">
                             ✅ <span data-i18n="admin.approve">Approve</span>
                           </button>
-                          <button class="btn-reject" onclick="handleReject('${participation.id}', '${username}')" data-i18n="admin.reject">
+                          <button class="btn-reject" onclick="handleReject('${participation.id}', '${username}')">
                             ❌ <span data-i18n="admin.reject">Reject</span>
                           </button>
                       </div>
@@ -709,6 +712,7 @@ function renderPendingTable() {
       `;
 
   container.innerHTML = tableHTML;
+  applyLanguage(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg");
 }
 
 /**

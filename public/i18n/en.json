@@ -51,7 +51,11 @@
     "viewCampaign": "View",
     "noCampaigns": "No active campaigns",
     "loading": "Loading campaigns...",
-    "loadMore": "Load more"
+    "loadMore": "Load more",
+    "showAll": "Show all neighborhoods",
+    "adminBannerLabel": "Admin:",
+    "adminBannerPending": "pending approvals",
+    "adminBannerBtn": "Go to Admin Panel"
   },
   "profile": {
     "title": "My Profile",
@@ -220,7 +224,12 @@
     "removeAdminConfirm": "Remove admin privileges from {{username}}?",
     "yesRemoveAdmin": "Yes, Remove Admin",
     "adminRemovedTitle": "Success!",
-    "adminRemovedMsg": "{{username}} is no longer an admin."
+    "adminRemovedMsg": "{{username}} is no longer an admin.",
+    "campaign": "Campaign",
+    "submitted": "Submitted",
+    "beforePhoto": "Before Photo",
+    "afterPhoto": "After Photo",
+    "noPhoto": "N/A"
   },
   "common": {
     "loading": "Loading...",

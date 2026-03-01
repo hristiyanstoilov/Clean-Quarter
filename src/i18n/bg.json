@@ -52,7 +52,11 @@
     "noCampaigns": "Няма активни кампании",
     "loading": "Зареждане на кампаниите...",
     "loadMore": "Зареди още",
-    "showingOf": "Показани {shown} от {total}"
+    "showingOf": "Показани {shown} от {total}",
+    "showAll": "Виж всички квартали",
+    "adminBannerLabel": "Администратор:",
+    "adminBannerPending": "чакащи одобрения",
+    "adminBannerBtn": "Към Admin панела"
   },
   "profile": {
     "title": "Мой профил",
@@ -248,7 +252,12 @@
     "removeAdminConfirm": "Да се премахнат админ правата на {{username}}?",
     "yesRemoveAdmin": "Да, премахни админ",
     "adminRemovedTitle": "Успех!",
-    "adminRemovedMsg": "{{username}} вече не е админ."
+    "adminRemovedMsg": "{{username}} вече не е админ.",
+    "campaign": "Кампания",
+    "submitted": "Изпратено",
+    "beforePhoto": "Снимка преди",
+    "afterPhoto": "Снимка след",
+    "noPhoto": "Няма снимка"
   },
   "common": {
     "loading": "Зареждане...",
