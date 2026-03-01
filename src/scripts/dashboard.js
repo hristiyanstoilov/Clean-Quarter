@@ -18,6 +18,9 @@ let currentOffset = 0;
 let totalCount = 0;
 let allDemoCampaigns = [];
 
+// Neighborhood filter state — null means "all"
+let currentNeighborhoodFilter = null;
+
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", async () => {
   try {
@@ -27,19 +30,38 @@ document.addEventListener("DOMContentLoaded", async () => {
     applyLanguage(lang);
 
     // Language selector
-    document.getElementById("languageSelector").value = lang;
-    document.getElementById("languageSelector").addEventListener("change", (e) => {
-      // Just show a message - language changes only from profile page
+    const langSelector = document.getElementById("languageSelector");
+    langSelector.value = lang;
+    langSelector.style.display = "block";
+    langSelector.addEventListener("change", (e) => {
+      setLanguage(e.target.value, true);
+      location.reload();
     });
 
     // Require authentication
     requireAuth("/");
 
+    // Role-based UI
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user?.role === "admin") {
+      document.getElementById("adminNavItem").style.display = "block";
+      loadAdminBanner();
+    }
+
+    // Default filter to user's neighborhood
+    if (user?.neighborhood) {
+      currentNeighborhoodFilter = user.neighborhood;
+      updateSectionTitle(user.neighborhood, lang);
+      document.getElementById("showAllBtn").style.display = "inline-flex";
+    }
+
+    // Leaflet is bundled via npm — always available
     const map = initializeMap();
     setTimeout(() => {
       map.invalidateSize();
     }, 300);
     await loadMapData(map);
+
     await loadCampaignsPage(false);
 
     // Load More button
@@ -47,9 +69,46 @@ document.addEventListener("DOMContentLoaded", async () => {
       .getElementById("loadMoreBtn")
       ?.addEventListener("click", () => loadCampaignsPage(true));
   } catch (error) {
-    // silently ignore
+    console.error("[dashboard] init error:", error);
+    const spinner = document.getElementById("loadingSpinner");
+    if (spinner) spinner.style.display = "none";
+    const container = document.getElementById("campaignsContainer");
+    if (container) {
+      container.style.display = "grid";
+      container.innerHTML =
+        '<div class="col-12"><div class="alert alert-warning">Грешка при зареждане. Опресни страницата.</div></div>';
+    }
   }
 });
+
+// Maps DB neighborhood keys → i18n keys for localized display
+const NEIGHBORHOOD_I18N = {
+  Darvenitsa: "darvenitsa",
+  "Studentski Grad": "studentskiGrad",
+  "Vitosha (VEC)": "vitoshaVec",
+  "Malinova Dolina": "malinovaDolina",
+  Musagenitsa: "musagenitsa",
+};
+
+/**
+ * Translate a raw DB neighborhood value to the current language label.
+ */
+function localizeNeighborhood(raw, lang) {
+  if (!raw) return "";
+  // Already a JSON object with bg/en keys
+  if (typeof raw === "object") return raw[lang] || raw.bg || raw.en || raw;
+  // Try JSON parse
+  try {
+    const parsed = JSON.parse(raw);
+    if (typeof parsed === "object") return parsed[lang] || parsed.bg || parsed.en || raw;
+  } catch (e) {
+    /* plain string */
+  }
+  // Plain string key — look up i18n
+  const i18nKey = NEIGHBORHOOD_I18N[raw];
+  if (i18nKey) return t(`neighborhoods.${i18nKey}`) || raw;
+  return raw;
+}
 
 /**
  * Build HTML for a single campaign card
@@ -70,18 +129,8 @@ function buildCampaignCard(campaign) {
       ? titleObj[currentLang] || titleObj.bg || titleObj.en || "Untitled"
       : titleObj || "Untitled";
 
-  let neighborhoodObj = campaign.neighborhood;
-  if (typeof neighborhoodObj === "string") {
-    try {
-      neighborhoodObj = JSON.parse(neighborhoodObj);
-    } catch (e) {
-      /* use as-is */
-    }
-  }
   const neighborhood =
-    typeof neighborhoodObj === "object"
-      ? neighborhoodObj[currentLang] || neighborhoodObj.bg || neighborhoodObj.en || ""
-      : neighborhoodObj || "Студентски град";
+    localizeNeighborhood(campaign.neighborhood, currentLang) || "Студентски град";
 
   const createdDate = campaign.created_at
     ? new Date(campaign.created_at).toLocaleDateString(currentLang === "bg" ? "bg-BG" : "en-US", {
@@ -98,7 +147,7 @@ function buildCampaignCard(campaign) {
       <div class="card campaign-card">
         ${
           campaign.before_photo_url
-            ? `<img src="${campaign.before_photo_url}" class="card-img-top" alt="${escapeHTML(title)}">`
+            ? `<img src="${campaign.before_photo_url}" class="card-img-top" alt="${escapeHTML(title)}" onerror="this.outerHTML='<div class=\\'card-img-top bg-secondary\\' style=\\'height:200px;display:flex;align-items:center;justify-content:center;\\'><span class=\\'text-white\\'>Няма снимка</span></div>'">`
             : '<div class="card-img-top bg-secondary" style="height:200px;display:flex;align-items:center;justify-content:center;"><span class="text-white">Няма снимка</span></div>'
         }
         <div class="card-body d-flex flex-column">
@@ -106,11 +155,9 @@ function buildCampaignCard(campaign) {
           <p class="card-text text-muted mb-1"><small>📍 ${escapeHTML(neighborhood)}</small></p>
           ${createdDate ? `<p class="card-text text-muted mb-1"><small>📅 ${createdDate}</small></p>` : ""}
           ${creator ? `<p class="card-text text-muted mb-2"><small>👤 ${escapeHTML(creator)}</small></p>` : ""}
-          <div class="mt-auto">
-            <a href="/campaign/${campaign.id}" class="btn btn-primary w-100">
-              ${t("dashboard.viewCampaign") || "Преглед"}
-            </a>
-          </div>
+          <a href="/campaign/${campaign.id}" class="btn btn-primary w-100">
+            ${t("dashboard.viewCampaign") || "Преглед"}
+          </a>
         </div>
       </div>
     </div>`;
@@ -173,13 +220,19 @@ async function loadCampaignsPage(append = false) {
       campaigns = allDemoCampaigns.slice(currentOffset, currentOffset + PAGE_SIZE);
     } else {
       // Real mode — paginated Supabase query
-      const { data, error, count } = await supabase
+      let query = supabase
         .from("campaigns")
         .select(
           "id, title, neighborhood, before_photo_url, status, created_at, created_by, creator:profiles!created_by(username)",
           { count: "exact" }
         )
-        .eq("status", "active")
+        .eq("status", "active");
+
+      if (currentNeighborhoodFilter) {
+        query = query.eq("neighborhood", currentNeighborhoodFilter);
+      }
+
+      const { data, error, count } = await query
         .order("created_at", { ascending: false })
         .range(currentOffset, currentOffset + PAGE_SIZE - 1);
 
@@ -231,6 +284,55 @@ async function loadCampaignsPage(append = false) {
     }
   }
 }
+
+/**
+ * Load admin banner with pending participations count
+ */
+async function loadAdminBanner() {
+  try {
+    const { count } = await supabase
+      .from("participations")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending")
+      .is("deleted_at", null);
+
+    const banner = document.getElementById("adminBanner");
+    const pendingEl = document.getElementById("pendingCount");
+    if (banner && pendingEl) {
+      pendingEl.textContent = count ?? 0;
+      banner.style.display = "block";
+    }
+  } catch (e) {
+    // не показваме банера при грешка
+  }
+}
+
+/**
+ * Update campaigns section title to show active neighborhood filter
+ */
+function updateSectionTitle(neighborhood, lang) {
+  const title = document.getElementById("campaignsSectionTitle");
+  if (!title) return;
+  const label = localizeNeighborhood(neighborhood, lang) || neighborhood;
+  title.textContent = lang === "en" ? `Cleanups in ${label}` : `Почистване в ${label}`;
+}
+
+/**
+ * Remove neighborhood filter and reload all campaigns
+ */
+window.showAllCampaigns = async function () {
+  const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+  currentNeighborhoodFilter = null;
+
+  const title = document.getElementById("campaignsSectionTitle");
+  if (title) {
+    title.setAttribute("data-i18n", "dashboard.nearYou");
+    title.textContent = lang === "en" ? "Cleanups near you" : "Почистване в близост до вас";
+  }
+
+  document.getElementById("showAllBtn").style.display = "none";
+  await loadCampaignsPage(false);
+};
 
 /**
  * Handle logout

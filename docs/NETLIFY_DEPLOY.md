@@ -1,12 +1,22 @@
 # 🚀 Netlify Deployment Guide
 
 ## Prerequisites
-- GitHub repository connected to Netlify
 - Supabase project with credentials
 
-## Step-by-Step Deployment
+## Deployment Options
 
-### 1. Push to GitHub
+### Option A — Manual (drag & drop)
+
+1. `npm run build` локално
+2. Отвори Netlify → сайта → **Deploys**
+3. Влачи само **`dist/`** папката в дропзоната
+4. `_redirects` и `_headers` са вградени в `dist/` и се прилагат автоматично
+
+> ⚠️ Качвай само `dist/`, не цялата проектна папка.
+
+### Option B — Git-based (auto deploy)
+
+#### 1. Push to GitHub
 ```bash
 git add .
 git commit -m "chore: prepare for Netlify deployment"

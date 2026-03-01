@@ -80,7 +80,12 @@ export async function register(email, password, options = {}) {
 
     logger.info("✅ Profile created successfully");
 
-    await showSuccess("Registration Successful!", "Your account has been created.", 1500);
+    const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+    await showSuccess(
+      lang === "en" ? "Registration Successful!" : "Регистрацията е успешна!",
+      lang === "en" ? "Your account has been created." : "Акаунтът ти е създаден.",
+      1500
+    );
     return authData.user;
   } catch (error) {
     logger.error("❌ Register error:", error);
@@ -105,7 +110,12 @@ export async function login(email, password) {
 
     if (error) throw error;
 
-    await showSuccess("Login Successful!", `Welcome, ${email}`, 1500);
+    const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+    await showSuccess(
+      lang === "en" ? "Login Successful!" : "Успешен вход!",
+      lang === "en" ? `Welcome, ${email}` : `Добре дошъл, ${email}`,
+      1500
+    );
     return data.user;
   } catch (error) {
     await showError("Login Error", error);
@@ -123,7 +133,12 @@ export async function logout() {
 
     if (error) throw error;
 
-    await showSuccess("Logout Successful", "See you soon!", 1500);
+    const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+    await showSuccess(
+      lang === "en" ? "Logout Successful" : "Излезе успешно",
+      lang === "en" ? "See you soon!" : "До скоро!",
+      1500
+    );
   } catch (error) {
     await showError("Logout Error", error);
     throw error;

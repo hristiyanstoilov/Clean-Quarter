@@ -8,7 +8,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const canRun = !!supabaseUrl && !!supabaseAnonKey;
 
 (canRun ? describe : describe.skip)('Supabase REAL integration', () => {
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  const supabase = canRun ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
   it('fetches campaigns from real Supabase', async () => {
     const { data, error } = await supabase

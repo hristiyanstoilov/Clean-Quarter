@@ -44,10 +44,50 @@ body {
   color: #333;
 }
 
+/* Container - Bootstrap fallback */
+.container,
+.container-fluid {
+  width: 100%;
+  margin-right: auto;
+  margin-left: auto;
+  padding-right: 0.75rem;
+  padding-left: 0.75rem;
+}
+
 /* Navbar Styles */
 .navbar {
   background-color: var(--primary-color) !important;
   box-shadow: var(--shadow-md);
+  /* Bootstrap fallback: ensure flex layout even without CDN */
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+}
+
+/* Force horizontal navbar layout on medium+ screens (≥768px).
+   Replicates Bootstrap's navbar-expand-lg behaviour so the navbar
+   works even when Bootstrap CSS fails to load from CDN. */
+@media (min-width: 768px) {
+  .navbar-collapse {
+    display: flex !important;
+    flex-basis: auto;
+    flex-grow: 1;
+    align-items: center;
+  }
+  .navbar-nav {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    margin-left: auto;
+    padding-left: 0;
+    list-style: none;
+    gap: 0.25rem;
+  }
+  .navbar-toggler {
+    display: none !important;
+  }
 }
 
 /* Navbar Links - White Text for High Contrast */
@@ -95,12 +135,98 @@ body {
   outline-offset: 2px;
 }
 
-/* Button Styles */
+/* Button Styles - Bootstrap fallbacks so buttons work without CDN */
+.btn {
+  display: inline-block;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-base);
+  background-color: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  color: inherit;
+}
+
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.btn-lg {
+  padding: 0.5rem 1rem;
+  font-size: 1.25rem;
+}
+
+.btn-outline-secondary {
+  color: var(--secondary-color);
+  border-color: var(--secondary-color);
+  background-color: transparent;
+}
+
+.btn-outline-secondary:hover {
+  background-color: var(--secondary-color);
+  color: white;
+}
+
+.btn-danger {
+  background-color: var(--danger-color);
+  border-color: var(--danger-color);
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #bd2130;
+  border-color: #bd2130;
+}
+
 .btn-primary {
   background-color: var(--primary-color);
   border-color: var(--primary-color);
+  color: white;
   transition: var(--transition-base);
   border-radius: var(--radius-sm);
+}
+
+/* Form controls - Bootstrap fallbacks */
+.form-select,
+.form-control {
+  display: block;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #212529;
+  background-color: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: var(--radius-sm);
+  width: 100%;
+}
+
+/* Text inputs and textareas */
+.form-control {
+  padding: 0.375rem 0.75rem;
+}
+
+/* Select dropdowns — add chevron arrow */
+.form-select {
+  padding: 0.25rem 2.25rem 0.25rem 0.75rem;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+  cursor: pointer;
+}
+
+.form-select-sm {
+  padding: 0.25rem 2rem 0.25rem 0.5rem;
+  font-size: 0.875rem;
 }
 
 .btn-primary:hover {
@@ -268,4 +394,9 @@ button:disabled,
     grid-template-columns: 1fr !important;
     gap: 1rem !important;
   }
+}
+
+/* Fix Leaflet 1.9.x mix-blend-mode: plus-lighter causing tiles to wash out on light backgrounds */
+.leaflet-container img.leaflet-tile {
+  mix-blend-mode: normal !important;
 }

@@ -277,15 +277,9 @@ npm test               # Run unit + integration tests (Vitest)
 npx cypress open       # Open Cypress E2E test runner
 ```
 
-### Demo / test credentials
+### Test accounts
 
-| Role | Email | Password |
-|------|-------|----------|
-| Regular user | `harr1@abv.bg` | `Test123456` |
-| Admin | `xarizax@abv.bg` | `Test123456` |
-
-> These accounts exist on the **live** Supabase project.
-> For local dev, register a new account and optionally set `role = 'admin'` in the `profiles` table via Supabase Dashboard → Table Editor.
+For local dev, register a new account and optionally set `role = 'admin'` in the `profiles` table via Supabase Dashboard → Table Editor.
 
 ### Password requirements
 

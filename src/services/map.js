@@ -1,4 +1,6 @@
 // Supabase will be dynamically imported inside functions to allow mocking in tests
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { isEmpty } from "../utils/helpers.js";
 import { hasLocalStorage } from "../utils/env.js";
 import logger from "./logger.js";
@@ -9,36 +11,40 @@ const STUDENTSKI_GRAD_CENTER = {
   lng: 23.3219,
 };
 
-// Marker icon configurations
-const MARKER_ICONS = {
-  campaign: {
-    iconUrl:
-      "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
-    color: "red",
-  },
-  disposal: {
-    iconUrl:
-      "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
-    color: "green",
-  },
+// Color map for each marker type
+const MARKER_TYPE_COLORS = {
+  campaign: "red",
+  disposal: "green",
 };
 
-const MARKER_CONFIG = {
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-};
+/**
+ * Create a colored SVG map marker icon using L.divIcon.
+ * No external image dependencies — works offline and without CDN.
+ * @param {string} color - 'red' | 'green' | 'blue'
+ * @returns {L.DivIcon}
+ */
+export function createMarkerIcon(color) {
+  const colorMap = { red: "#e74c3c", green: "#27ae60", blue: "#2980b9" };
+  const fill = colorMap[color] || "#e74c3c";
+  const svg =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="24" height="36">' +
+    `<path fill="${fill}" stroke="white" stroke-width="1" d="M12 1C6.48 1 2 5.48 2 11c0 7 10 23 10 23s10-16 10-23c0-5.52-4.48-10-10-10z"/>` +
+    '<circle cx="12" cy="11" r="4" fill="white"/>' +
+    "</svg>";
+  return L.divIcon({
+    html: svg,
+    className: "",
+    iconSize: [24, 36],
+    iconAnchor: [12, 36],
+    popupAnchor: [0, -36],
+  });
+}
 
 /**
  * Initialize the map centered on Studentski Grad
  * @returns {Object} Leaflet map instance
  */
 export function initializeMap() {
-  if (typeof global !== "undefined" && typeof vi !== "undefined") {
-    return {};
-  }
   const map = L.map("map").setView([STUDENTSKI_GRAD_CENTER.lat, STUDENTSKI_GRAD_CENTER.lng], 13);
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -60,13 +66,9 @@ export function initializeMap() {
  * @param {string} popupContent - HTML content for popup
  */
 function createMarker(map, lat, lng, iconType, popupContent) {
-  const iconConfig = MARKER_ICONS[iconType];
-
+  const color = MARKER_TYPE_COLORS[iconType] || "red";
   const marker = L.marker([lat, lng], {
-    icon: L.icon({
-      iconUrl: iconConfig.iconUrl,
-      ...MARKER_CONFIG,
-    }),
+    icon: createMarkerIcon(color),
   }).addTo(map);
 
   marker.bindPopup(popupContent);

@@ -65,6 +65,7 @@ window.handleDemoLogin = handleDemoLogin;
 import "./assets/style.css";
 import { login, register } from "./services/auth.js";
 import { saveUser } from "./utils/helpers.js";
+import supabase from "./services/supabase.js";
 import { initPasswordStrengthMeter } from "./components/passwordStrength.js";
 import passwordToggle from "./components/passwordToggle.js";
 // Lazy-load non-critical modules for performance
@@ -106,7 +107,17 @@ async function handleLogin(e) {
 
   try {
     const user = await login(email, password);
-    saveUser(user);
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role, username, neighborhood")
+      .eq("id", user.id)
+      .single();
+    saveUser({
+      ...user,
+      role: profile?.role,
+      username: profile?.username,
+      neighborhood: profile?.neighborhood,
+    });
     window.location.href = "/dashboard";
   } catch (error) {
     await Swal.fire({
@@ -130,7 +141,7 @@ async function handleRegister(e) {
     await Swal.fire({
       icon: "error",
       title: "Грешка",
-      text: "Все полета са задължителни!",
+      text: "Всички полета са задължителни!",
     });
     return;
   }
@@ -155,7 +166,17 @@ async function handleRegister(e) {
 
   try {
     const user = await register(email, password, { neighborhood });
-    saveUser(user);
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role, username, neighborhood")
+      .eq("id", user.id)
+      .single();
+    saveUser({
+      ...user,
+      role: profile?.role,
+      username: profile?.username,
+      neighborhood: profile?.neighborhood,
+    });
 
     window.location.href = "/dashboard";
   } catch (error) {

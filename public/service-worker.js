@@ -3,7 +3,7 @@
  * Handles offline support, caching, and background sync
  */
 
-const CACHE_NAME = 'clean-quarter-v1';
+const CACHE_NAME = 'clean-quarter-v2';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
@@ -19,12 +19,9 @@ const STATIC_ASSETS = [
     '/src/services/auth.js',
     '/src/services/map.js',
     '/src/services/storage.js',
-    '/src/services/supabase.js',
-    'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
-    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css',
-    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js',
-    'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js',
-    'https://cdn.jsdelivr.net/npm/sweetalert2@11'
+    '/src/services/supabase.js'
+    // CDN resources (Bootstrap, Leaflet, SweetAlert2) are intentionally NOT cached
+    // so the browser always fetches the latest version from the CDN.
 ];
 
 /**
@@ -69,6 +66,13 @@ self.addEventListener('fetch', (event) => {
 
     // Skip non-GET requests
     if (request.method !== 'GET') {
+        return;
+    }
+
+    // Skip external URLs (CDN, OSM tiles, etc.) — let the browser handle them directly.
+    // Service worker fetch() is governed by connect-src CSP, not img-src/style-src,
+    // so intercepting external requests causes 503 errors.
+    if (url.origin !== self.location.origin) {
         return;
     }
 

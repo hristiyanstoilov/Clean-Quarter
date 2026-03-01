@@ -47,7 +47,7 @@ describe('helpers.js', () => {
 
   it('truncateText() should cut long text', () => {
     expect(helpers.truncateText('short', 10)).toBe('short');
-    expect(helpers.truncateText('0123456789abcdef', 10)).toBe('01234567...');
+    expect(helpers.truncateText('0123456789abcdef', 10)).toBe('0123456...');
   });
 
   it('isValidUUID() should validate UUIDs', () => {

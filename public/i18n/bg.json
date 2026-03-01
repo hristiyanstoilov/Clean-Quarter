@@ -51,7 +51,11 @@
     "viewCampaign": "Преглед",
     "noCampaigns": "Няма активни кампании",
     "loading": "Зареждане на кампаниите...",
-    "loadMore": "Зареди още"
+    "loadMore": "Зареди още",
+    "showAll": "Виж всички квартали",
+    "adminBannerLabel": "Администратор:",
+    "adminBannerPending": "чакащи одобрения",
+    "adminBannerBtn": "Към Admin панела"
   },
   "profile": {
     "title": "Мой профил",
@@ -125,7 +129,10 @@
     "noComments": "Няма коментари. Бъдете първи!",
     "loginToComment": "Влезте в профила си за да коментирате.",
     "commentPosted": "Коментарът е публикуван.",
-    "commentDeleted": "Коментарът е изтрит."
+    "commentDeleted": "Коментарът е изтрит.",
+    "proofRejected": "Доказателството ти е отхвърлено.",
+    "rejectionReason": "Причина",
+    "tryAgain": "Качи нова снимка и опитай отново."
   },
   "rewards": {
     "title": "Награди",
@@ -220,7 +227,12 @@
     "removeAdminConfirm": "Да се премахнат админ правата на {{username}}?",
     "yesRemoveAdmin": "Да, премахни админ",
     "adminRemovedTitle": "Успех!",
-    "adminRemovedMsg": "{{username}} вече не е админ."
+    "adminRemovedMsg": "{{username}} вече не е админ.",
+    "campaign": "Кампания",
+    "submitted": "Изпратено",
+    "beforePhoto": "Снимка преди",
+    "afterPhoto": "Снимка след",
+    "noPhoto": "Няма снимка"
   },
   "common": {
     "loading": "Зареждане...",

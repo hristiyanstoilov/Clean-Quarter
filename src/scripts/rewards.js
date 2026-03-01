@@ -1,6 +1,6 @@
 import supabase from "../services/supabase.js";
 import { initI18n, applyLanguage, setLanguage } from "../utils/i18n.js";
-import { escapeHTML, showSuccessToast } from "../utils/helpers.js";
+import { escapeHTML, showSuccessToast, initSwalFallback } from "../utils/helpers.js";
 
 // Global variables
 let currentUser = null;
@@ -9,17 +9,27 @@ let rewards = [];
 
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", async () => {
+  initSwalFallback();
   try {
     // Initialize i18n first (realTime = false)
     await initI18n(false);
     applyLanguage(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg");
 
     // Language selector
-    document.getElementById("languageSelector").value =
-      localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
-    document.getElementById("languageSelector").addEventListener("change", (e) => {
-      // Just show a message - language changes only from profile page
+    const langSel = document.getElementById("languageSelector");
+    langSel.value = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+    langSel.style.display = "block";
+    langSel.addEventListener("change", (e) => {
+      setLanguage(e.target.value, true);
+      location.reload();
     });
+
+    // Show admin nav if user is admin
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    if (storedUser?.role === "admin") {
+      const adminNavItem = document.getElementById("adminNavItem");
+      if (adminNavItem) adminNavItem.style.display = "block";
+    }
 
     await checkAuth();
     await loadRewardsData();
@@ -117,13 +127,15 @@ async function loadRewardsData() {
 function renderRewards() {
   const container = document.getElementById("rewardsGrid");
 
+  const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+
   if (rewards.length === 0) {
     container.innerHTML = `
               <div style="grid-column: 1 / -1;">
                   <div class="empty-state">
                       <div class="empty-state-icon">🎁</div>
-                      <h3>No Rewards Available</h3>
-                      <p>Rewards will be added soon. Come back later!</p>
+                      <h3>${lang === "en" ? "No Rewards Available" : "Няма налични награди"}</h3>
+                      <p>${lang === "en" ? "Rewards will be added soon. Come back later!" : "Скоро ще бъдат добавени награди. Върни се по-късно!"}</p>
                   </div>
               </div>
           `;
@@ -137,7 +149,17 @@ function renderRewards() {
     const outOfStock = reward.quantity_available !== null && reward.quantity_available <= 0;
     const canAfford = currentPoints >= reward.cost && !outOfStock;
     const buttonClass = canAfford ? "btn-buy" : "btn-buy btn-buy-insufficient";
-    const buttonText = outOfStock ? "Out of Stock" : canAfford ? "✓ Buy" : "✗ Not Enough Points";
+    const buttonText = outOfStock
+      ? lang === "en"
+        ? "Out of Stock"
+        : "Изчерпан"
+      : canAfford
+        ? lang === "en"
+          ? "✓ Buy"
+          : "✓ Купи"
+        : lang === "en"
+          ? "✗ Not Enough Points"
+          : "✗ Недостатъчно точки";
     const buttonDisabled = !canAfford ? "disabled" : "";
 
     const imageContent = reward.image_url
@@ -146,7 +168,7 @@ function renderRewards() {
 
     const stockLabel =
       reward.quantity_available !== null
-        ? `<span class="reward-stock">${reward.quantity_available} left</span>`
+        ? `<span class="reward-stock">${reward.quantity_available} ${lang === "en" ? "left" : "налични"}</span>`
         : "";
 
     html += `
@@ -214,31 +236,47 @@ async function handleBuy(rewardId, rewardTitle, rewardCost) {
     if ((userProfile.points_balance || 0) < rewardCost) {
       await Swal.fire({
         icon: "error",
-        title: "Insufficient Points",
-        text: `You need ${rewardCost - (userProfile.points_balance || 0)} more points to buy this reward.`,
+        title:
+          (localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en"
+            ? "Insufficient Points"
+            : "Недостатъчно точки",
+        text:
+          (localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en"
+            ? `You need ${rewardCost - (userProfile.points_balance || 0)} more points to buy this reward.`
+            : `Нужни ти са още ${rewardCost - (userProfile.points_balance || 0)} точки за тази награда.`,
       });
       return;
     }
 
     // Show confirmation
     const result = await Swal.fire({
-      title: "Confirm Purchase?",
-      html: `<strong>${rewardTitle}</strong><br>Cost: <strong>${rewardCost} ⭐</strong>`,
+      title:
+        (localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en"
+          ? "Confirm Purchase?"
+          : "Потвърди покупката?",
+      html: `<strong>${rewardTitle}</strong><br>${(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en" ? "Cost" : "Цена"}: <strong>${rewardCost} ⭐</strong>`,
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#28a745",
       cancelButtonColor: "#6c757d",
-      confirmButtonText: "Yes, Buy It!",
-      cancelButtonText: "Cancel",
+      confirmButtonText:
+        (localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en"
+          ? "Yes, Buy It!"
+          : "Да, купи!",
+      cancelButtonText:
+        (localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en" ? "Cancel" : "Отмяна",
     });
 
     if (!result.isConfirmed) {
       return;
     }
 
-    // Show loading
-    await Swal.fire({
-      title: "Processing...",
+    // Show loading (no await — fire-and-close pattern to avoid deadlock)
+    Swal.fire({
+      title:
+        (localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en"
+          ? "Processing..."
+          : "Обработване...",
       allowOutsideClick: false,
       didOpen: () => {
         Swal.showLoading();
@@ -311,8 +349,12 @@ async function handleBuy(rewardId, rewardTitle, rewardCost) {
   } catch (error) {
     await Swal.fire({
       icon: "error",
-      title: "Error",
-      text: error.message || "Failed to purchase reward. Please try again.",
+      title: (localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en" ? "Error" : "Грешка",
+      text:
+        error.message ||
+        ((localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en"
+          ? "Failed to purchase reward. Please try again."
+          : "Неуспешна покупка. Опитай отново."),
     });
   }
 }
