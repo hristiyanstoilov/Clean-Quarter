@@ -474,8 +474,8 @@ window.makeAdmin = async function (userId, username) {
 
     if (!result.isConfirmed) return;
 
-    // Show loading
-    await Swal.fire({
+    // Show loading — no await: Swal.fire(loading) must not block the code that follows
+    Swal.fire({
       title: t("common.loading") || "Processing...",
       allowOutsideClick: false,
       didOpen: () => Swal.showLoading(),
@@ -562,8 +562,8 @@ window.removeAdmin = async function (userId, username) {
 
     if (!result.isConfirmed) return;
 
-    // Show loading
-    await Swal.fire({
+    // Show loading — no await: Swal.fire(loading) must not block the code that follows
+    Swal.fire({
       title: t("common.loading") || "Processing...",
       allowOutsideClick: false,
       didOpen: () => Swal.showLoading(),
@@ -757,8 +757,8 @@ async function handleApprove(participationId, username) {
       return;
     }
 
-    // Show loading
-    await Swal.fire({
+    // Show loading — no await: Swal.fire(loading) must not block the code that follows
+    Swal.fire({
       title: t("common.loading"),
       allowOutsideClick: false,
       didOpen: () => {
@@ -900,8 +900,8 @@ async function handleReject(participationId, username) {
 
     const rejectionReason = result.value || "No reason provided";
 
-    // Show loading
-    await Swal.fire({
+    // Show loading — no await: Swal.fire(loading) must not block the code that follows
+    Swal.fire({
       title: t("common.loading") || "Зареждане...",
       allowOutsideClick: false,
       didOpen: () => {
