@@ -33,19 +33,30 @@
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-          <div class="ms-auto" style="display: flex; gap: 1rem; align-items: center">
-            <a href="/dashboard" data-i18n="nav.dashboard">Dashboard</a>
-            <a href="/profile" data-i18n="nav.profile">Profile</a>
-            <select
-              id="languageSelector"
-              class="form-select form-select-sm"
-              style="max-width: 150px; display: none"
-            >
-              <option value="bg">🇧🇬 Български</option>
-              <option value="en">🇬🇧 English</option>
-            </select>
-            <a href="#" onclick="handleLogout()" data-i18n="nav.logout">Logout</a>
-          </div>
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/dashboard" data-i18n="nav.dashboard">Начало</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/rewards" data-i18n="nav.rewards">Награди</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/profile" data-i18n="nav.profile">Профил</a>
+            </li>
+            <li class="nav-item">
+              <select
+                id="languageSelector"
+                class="form-select form-select-sm"
+                style="max-width: 150px; margin: 0.5rem 0.5rem; display: none"
+              >
+                <option value="bg">🇧🇬 Български</option>
+                <option value="en">🇬🇧 English</option>
+              </select>
+            </li>
+            <li class="nav-item">
+              <a href="#" class="nav-link" onclick="handleLogout()" data-i18n="nav.logout">Изход</a>
+            </li>
+          </ul>
         </div>
       </div>
     </nav>

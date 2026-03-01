@@ -1,6 +1,6 @@
 import supabase from "../services/supabase.js";
 import { initI18n, applyLanguage, setLanguage } from "../utils/i18n.js";
-import { escapeHTML, showSuccessToast } from "../utils/helpers.js";
+import { escapeHTML, showSuccessToast, initSwalFallback } from "../utils/helpers.js";
 
 // Global variables
 let currentUser = null;
@@ -9,18 +9,27 @@ let rewards = [];
 
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", async () => {
+  initSwalFallback();
   try {
     // Initialize i18n first (realTime = false)
     await initI18n(false);
     applyLanguage(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg");
 
     // Language selector
-    document.getElementById("languageSelector").value =
-      localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
-    document.getElementById("languageSelector").addEventListener("change", (e) => {
+    const langSel = document.getElementById("languageSelector");
+    langSel.value = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+    langSel.style.display = "block";
+    langSel.addEventListener("change", (e) => {
       setLanguage(e.target.value, true);
       location.reload();
     });
+
+    // Show admin nav if user is admin
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    if (storedUser?.role === "admin") {
+      const adminNavItem = document.getElementById("adminNavItem");
+      if (adminNavItem) adminNavItem.style.display = "block";
+    }
 
     await checkAuth();
     await loadRewardsData();
@@ -262,8 +271,8 @@ async function handleBuy(rewardId, rewardTitle, rewardCost) {
       return;
     }
 
-    // Show loading
-    await Swal.fire({
+    // Show loading (no await — fire-and-close pattern to avoid deadlock)
+    Swal.fire({
       title:
         (localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en"
           ? "Processing..."

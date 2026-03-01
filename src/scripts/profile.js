@@ -1,7 +1,7 @@
 import supabase from "../services/supabase.js";
 import { uploadAvatar } from "../services/storage.js";
 import { initI18n, applyLanguage, setLanguage } from "../utils/i18n.js";
-import { escapeHTML, showSuccessToast } from "../utils/helpers.js";
+import { escapeHTML, showSuccessToast, initSwalFallback } from "../utils/helpers.js";
 import { rules } from "../services/validation.js";
 // Global variables
 let currentUser = null;
@@ -10,6 +10,7 @@ let avatarFile = null;
 
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", async () => {
+  initSwalFallback();
   // Password input and related elements (declare once)
   const passwordInput = document.getElementById("editPassword");
   const strengthBar = document.getElementById("editPasswordStrength");
@@ -56,12 +57,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     applyLanguage(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg");
 
     // Language selector - ENABLE REAL-TIME FOR PROFILE
-    document.getElementById("languageSelector").value =
-      localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
-    document.getElementById("languageSelector").addEventListener("change", (e) => {
-      setLanguage(e.target.value, true); // Force update with true flag
+    const langSel = document.getElementById("languageSelector");
+    langSel.value = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+    langSel.style.display = "block";
+    langSel.addEventListener("change", (e) => {
+      setLanguage(e.target.value, true);
       location.reload();
     });
+
+    // Show admin nav if user is admin
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    if (storedUser?.role === "admin") {
+      const adminNavItem = document.getElementById("adminNavItem");
+      if (adminNavItem) adminNavItem.style.display = "block";
+    }
 
     await checkAuth();
     await loadProfileData();
@@ -549,6 +558,7 @@ async function handleSaveProfile(e) {
       document.getElementById("neighborhoodDisplay").textContent = newNeighborhood;
       document.getElementById("neighborhoodValue").textContent = newNeighborhood;
 
+      Swal.close();
       await showSuccessToast("Профилът е обновен успешно!");
 
       toggleEditMode();
@@ -589,6 +599,7 @@ async function handleSaveProfile(e) {
       document.getElementById("neighborhoodValue").textContent = newNeighborhood;
       displayAvatar(newAvatarUrl);
 
+      Swal.close();
       await showSuccessToast("Профилът е обновен успешно!");
 
       toggleEditMode();
