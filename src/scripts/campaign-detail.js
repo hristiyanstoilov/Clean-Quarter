@@ -1,8 +1,9 @@
+import L from "leaflet";
 import supabase from "../services/supabase.js";
-import { initializeMap } from "../services/map.js";
+import { initializeMap, createMarkerIcon } from "../services/map.js";
 import { uploadCampaignPhoto } from "../services/storage.js";
-import { initI18n, applyLanguage } from "../utils/i18n.js";
-import { escapeHTML, showSuccessToast } from "../utils/helpers.js";
+import { initI18n, applyLanguage, setLanguage } from "../utils/i18n.js";
+import { escapeHTML, showSuccessToast, initSwalFallback } from "../utils/helpers.js";
 
 // Global variables
 let campaign = null;
@@ -14,17 +15,27 @@ let commentsChannel = null;
 
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", async () => {
+  initSwalFallback();
   try {
     // Initialize i18n (realTime = false)
     await initI18n(false);
     applyLanguage(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg");
 
     // Language selector
-    document.getElementById("languageSelector").value =
-      localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
-    document.getElementById("languageSelector").addEventListener("change", () => {
-      // Language changes only from profile page
+    const langSel = document.getElementById("languageSelector");
+    langSel.value = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+    langSel.style.display = "block";
+    langSel.addEventListener("change", (e) => {
+      setLanguage(e.target.value, true);
+      location.reload();
     });
+
+    // Show admin nav if user is admin
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    if (storedUser?.role === "admin") {
+      const adminNavItem = document.getElementById("adminNavItem");
+      if (adminNavItem) adminNavItem.style.display = "block";
+    }
 
     await checkAuth();
     await loadCampaignDetail();
@@ -268,8 +279,17 @@ function displayCampaignDetails(campaignData, participations) {
   document.getElementById("latitude").textContent = campaignData.location_lat.toFixed(6);
   document.getElementById("longitude").textContent = campaignData.location_lng.toFixed(6);
 
-  // Initialize map with campaign location
-  initializeDetailMap(campaignData.location_lat, campaignData.location_lng);
+  // Initialize map with campaign location — isolated so map failure never crashes the page
+  try {
+    initializeDetailMap(campaignData.location_lat, campaignData.location_lng);
+  } catch (mapErr) {
+    const mapEl = document.getElementById("map");
+    if (mapEl) {
+      mapEl.style.cssText =
+        "display:flex;align-items:center;justify-content:center;background:#f8f9fa;color:#6c757d;font-size:0.9rem;height:200px;";
+      mapEl.textContent = "Картата не може да се зареди.";
+    }
+  }
 }
 
 /**
@@ -280,15 +300,7 @@ function initializeDetailMap(lat, lng) {
 
   // Add marker for campaign location
   L.marker([lat, lng], {
-    icon: L.icon({
-      iconUrl:
-        "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
-      shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-      iconSize: [25, 41],
-      iconAnchor: [12, 41],
-      popupAnchor: [1, -34],
-      shadowSize: [41, 41],
-    }),
+    icon: createMarkerIcon("blue"),
   })
     .addTo(map)
     .bindPopup(`Campaign Location: ${escapeHTML(campaign.title)}`);
@@ -464,8 +476,8 @@ async function handleUploadPhoto() {
 
     uploadBtn.disabled = true;
 
-    // Show loading state
-    await Swal.fire({
+    // Show loading state (no await — fire-and-close pattern to avoid deadlock)
+    Swal.fire({
       title: "Uploading photo...",
       allowOutsideClick: false,
       didOpen: () => {
@@ -579,8 +591,8 @@ async function handleDelete() {
   }
 
   try {
-    // Show loading state
-    await Swal.fire({
+    // Show loading state (no await — fire-and-close pattern to avoid deadlock)
+    Swal.fire({
       title: "Deleting campaign...",
       allowOutsideClick: false,
       didOpen: () => {
@@ -755,6 +767,7 @@ async function handleSaveCampaign(e) {
         statusBadge.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
         statusBadge.className = `badge-status badge-${newStatus}`;
 
+        Swal.close();
         await showSuccessToast("Campaign updated successfully!");
 
         toggleEditCampaign();
@@ -788,6 +801,7 @@ async function handleSaveCampaign(e) {
       statusBadge.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
       statusBadge.className = `badge-status badge-${newStatus}`;
 
+      Swal.close();
       await showSuccessToast("Campaign updated successfully!");
 
       toggleEditCampaign();

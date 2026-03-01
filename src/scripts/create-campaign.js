@@ -1,7 +1,8 @@
-import { initializeMap } from "../services/map.js";
+import L from "leaflet";
+import { initializeMap, createMarkerIcon } from "../services/map.js";
 import { uploadCampaignPhoto } from "../services/storage.js";
 import { initI18n, applyLanguage, setLanguage } from "../utils/i18n.js";
-import { showSuccessToast } from "../utils/helpers.js";
+import { showSuccessToast, initSwalFallback } from "../utils/helpers.js";
 import supabase from "../services/supabase.js";
 
 // Global variables
@@ -14,30 +15,43 @@ let currentUser = null;
  * Initialize the page on load
  */
 window.addEventListener("DOMContentLoaded", async () => {
+  initSwalFallback();
   try {
     // Initialize i18n first (realTime = false)
     await initI18n(false);
     applyLanguage(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg");
 
     // Language selector
-    document.getElementById("languageSelector").value =
-      localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
-    document.getElementById("languageSelector").addEventListener("change", (e) => {
-      // Just show a message - language changes only from profile page
+    const langSel = document.getElementById("languageSelector");
+    langSel.value = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+    langSel.style.display = "block";
+    langSel.addEventListener("change", (e) => {
+      setLanguage(e.target.value, true);
+      location.reload();
     });
 
     // Show admin nav if user is admin
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     if (user && user.role === "admin") {
-      const adminNav = document.getElementById("adminNav");
-      if (adminNav) adminNav.style.display = "block";
+      const adminNavItem = document.getElementById("adminNavItem");
+      if (adminNavItem) adminNavItem.style.display = "block";
     }
 
     await checkAuth();
+    // Always register event listeners regardless of map status
+    setupEventListeners();
     setTimeout(() => {
-      initMap();
-      setupEventListeners();
-    }, 500);
+      try {
+        initMap();
+      } catch (mapError) {
+        const mapEl = document.getElementById("map");
+        if (mapEl) {
+          mapEl.style.cssText =
+            "display:flex;align-items:center;justify-content:center;background:#f8f9fa;color:#6c757d;font-size:0.9rem;";
+          mapEl.textContent = "Картата не може да се зареди. Проверете интернет връзката.";
+        }
+      }
+    }, 300);
   } catch (error) {
     // silently ignore
   }
@@ -91,16 +105,7 @@ function initMap() {
         map.removeLayer(window.selectionMarker);
       }
       window.selectionMarker = L.marker([selectedCoordinates.lat, selectedCoordinates.lng], {
-        icon: L.icon({
-          iconUrl:
-            "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
-          shadowUrl:
-            "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-          iconSize: [25, 41],
-          iconAnchor: [12, 41],
-          popupAnchor: [1, -34],
-          shadowSize: [41, 41],
-        }),
+        icon: createMarkerIcon("blue"),
       })
         .addTo(map)
         .bindPopup("📍 Избрана локация")
@@ -121,15 +126,7 @@ function initMap() {
       map.removeLayer(window.selectionMarker);
     }
     window.selectionMarker = L.marker([lat, lng], {
-      icon: L.icon({
-        iconUrl:
-          "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
-        shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41],
-      }),
+      icon: createMarkerIcon("blue"),
     })
       .addTo(map)
       .bindPopup("📍 Избрана локация")
