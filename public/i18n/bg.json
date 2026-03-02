@@ -57,6 +57,7 @@
     "noCampaigns": "Няма активни кампании",
     "loading": "Зареждане на кампаниите...",
     "loadMore": "Зареди още",
+    "showingOf": "Показани {shown} от {total}",
     "showAll": "Виж всички квартали",
     "adminBannerLabel": "Администратор:",
     "adminBannerPending": "чакащи одобрения",

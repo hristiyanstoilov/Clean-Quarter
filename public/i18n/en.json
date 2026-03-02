@@ -57,6 +57,7 @@
     "noCampaigns": "No active campaigns",
     "loading": "Loading campaigns...",
     "loadMore": "Load more",
+    "showingOf": "Showing {shown} of {total}",
     "showAll": "Show all neighborhoods",
     "adminBannerLabel": "Admin:",
     "adminBannerPending": "pending approvals",
