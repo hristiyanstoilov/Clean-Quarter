@@ -30,6 +30,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     await checkAuth();
+
+    // Notification bell (skip demo users)
+    if (currentUser?.id && currentUser.id !== "demo-admin-001") {
+      import("../services/notifications.js").then(({ initNotificationBell }) => {
+        initNotificationBell(currentUser.id);
+      });
+    }
+
     await loadAdminData();
   } catch (error) {
     // silently ignore

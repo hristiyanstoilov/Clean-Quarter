@@ -37,6 +37,13 @@ window.addEventListener("DOMContentLoaded", async () => {
       if (adminNavItem) adminNavItem.style.display = "block";
     }
 
+    // Notification bell (skip demo users)
+    if (user?.id && user.id !== "demo-admin-001") {
+      import("../services/notifications.js").then(({ initNotificationBell }) => {
+        initNotificationBell(user.id);
+      });
+    }
+
     await checkAuth();
     // Always register event listeners regardless of map status
     setupEventListeners();

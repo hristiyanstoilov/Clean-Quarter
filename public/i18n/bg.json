@@ -12,6 +12,11 @@
     "logout": "Изход",
     "language": "Език"
   },
+  "notifications": {
+    "title": "Известия",
+    "markAllRead": "Маркирай всички",
+    "empty": "Няма известия"
+  },
   "auth": {
     "login": "Вход",
     "register": "Регистрация",

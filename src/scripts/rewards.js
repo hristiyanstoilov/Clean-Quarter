@@ -31,6 +31,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (adminNavItem) adminNavItem.style.display = "block";
     }
 
+    // Notification bell (skip demo users)
+    if (storedUser?.id && storedUser.id !== "demo-admin-001") {
+      import("../services/notifications.js").then(({ initNotificationBell }) => {
+        initNotificationBell(storedUser.id);
+      });
+    }
+
     await checkAuth();
     await loadRewardsData();
   } catch (error) {

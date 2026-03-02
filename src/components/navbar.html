@@ -31,6 +31,41 @@
         <li class="nav-item" id="adminNav" style="display: none">
           <a class="nav-link" href="/admin" data-i18n="nav.admin">Admin</a>
         </li>
+        <!-- Notification Bell -->
+        <li class="nav-item" id="notificationNavItem" style="display: none">
+          <div class="notification-bell" id="notificationBell">
+            <button class="notification-btn" id="notificationBtn" aria-label="Notifications">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                fill="currentColor"
+                viewBox="0 0 16 16"
+              >
+                <path
+                  d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zm.995-14.901a1 1 0 1 0-1.99 0A5.002 5.002 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7 0-2.42-1.72-4.44-4.005-4.901z"
+                />
+              </svg>
+              <span class="notification-badge d-none" id="notificationBadge">0</span>
+            </button>
+            <div class="notification-dropdown" id="notificationDropdown" style="display: none">
+              <div class="notification-header">
+                <span data-i18n="notifications.title">Известия</span>
+                <button
+                  class="notification-mark-all"
+                  id="markAllReadBtn"
+                  data-i18n="notifications.markAllRead"
+                >
+                  Маркирай всички
+                </button>
+              </div>
+              <div class="notification-list" id="notificationList">
+                <p class="notification-empty" data-i18n="notifications.empty">Няма известия</p>
+              </div>
+            </div>
+          </div>
+        </li>
+
         <li class="nav-item">
           <select
             id="languageSelector"
@@ -81,6 +116,11 @@
       });
     }
 
+    // Setup notification bell (skip for demo users — no real DB access)
+    if (user.id && user.id !== "demo-admin-001") {
+      await initNotifications(user.id);
+    }
+
     // Setup language selector
     const langSelector = document.getElementById("languageSelector");
     if (langSelector) {
@@ -98,6 +138,13 @@
         setLanguage(e.target.value);
       });
     }
+  }
+
+  // ─── Notification bell ──────────────────────────────────────────────────────
+
+  async function initNotifications(userId) {
+    const { initNotificationBell } = await import("../../services/notifications.js");
+    await initNotificationBell(userId);
   }
 
   // Initialize when DOM is ready

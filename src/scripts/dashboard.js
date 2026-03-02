@@ -48,6 +48,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       loadAdminBanner();
     }
 
+    // Notification bell (skip demo users)
+    if (user?.id && user.id !== "demo-admin-001") {
+      import("../services/notifications.js").then(({ initNotificationBell }) => {
+        initNotificationBell(user.id);
+      });
+    }
+
     // Default filter to user's neighborhood
     if (user?.neighborhood) {
       currentNeighborhoodFilter = user.neighborhood;
