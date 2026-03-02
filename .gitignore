@@ -37,6 +37,15 @@ supabase/.temp/
 supabase/docker-compose.test.yml
 supabase/TESTING.md
 
+# Ad-hoc manual test scripts (contain hardcoded credentials — never commit)
+e2e-admin.cjs
+e2e-user.cjs
+test-admin.mjs
+test-admin-real.mjs
+test-admin2-real.mjs
+test-superadmin.mjs
+test-user-real.mjs
+
 # OS
 .DS_Store
 Thumbs.db

@@ -24,7 +24,7 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark">
       <div class="container-fluid">
-        <a class="navbar-brand" href="/dashboard">♻️ Clean Quarter</a>
+        <a class="navbar-brand" href="/dashboard">♻️ Чист Квартал</a>
         <button
           class="navbar-toggler"
           type="button"
@@ -34,20 +34,69 @@
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-          <div class="ms-auto" style="display: flex; gap: 1rem; align-items: center">
-            <a href="/dashboard" data-i18n="nav.dashboard">Dashboard</a>
-            <a href="/rewards" data-i18n="nav.rewards">Rewards</a>
-            <a href="/profile" data-i18n="nav.profile">Profile</a>
-            <select
-              id="languageSelector"
-              class="form-select form-select-sm"
-              style="max-width: 150px"
-            >
-              <option value="bg">🇧🇬 Български</option>
-              <option value="en">🇬🇧 English</option>
-            </select>
-            <a href="#" onclick="handleLogout()" data-i18n="nav.logout">Logout</a>
-          </div>
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/dashboard" data-i18n="nav.dashboard">Начало</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/create-campaign" data-i18n="nav.createCampaign"
+                >Нова кампания</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/rewards" data-i18n="nav.rewards">Награди</a>
+            </li>
+            <li class="nav-item" id="adminNavItem" style="display: none">
+              <a class="nav-link" href="/admin" data-i18n="nav.admin">Админ</a>
+            </li>
+            <!-- Notification Bell -->
+            <li class="nav-item" id="notificationNavItem" style="display: none">
+              <div class="notification-bell" id="notificationBell">
+                <button class="notification-btn" id="notificationBtn" aria-label="Notifications">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    fill="currentColor"
+                    viewBox="0 0 16 16"
+                  >
+                    <path
+                      d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zm.995-14.901a1 1 0 1 0-1.99 0A5.002 5.002 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7 0-2.42-1.72-4.44-4.005-4.901z"
+                    />
+                  </svg>
+                  <span class="notification-badge d-none" id="notificationBadge">0</span>
+                </button>
+                <div class="notification-dropdown" id="notificationDropdown" style="display: none">
+                  <div class="notification-header">
+                    <span data-i18n="notifications.title">Известия</span>
+                    <button
+                      class="notification-mark-all"
+                      id="markAllReadBtn"
+                      data-i18n="notifications.markAllRead"
+                    >
+                      Маркирай всички
+                    </button>
+                  </div>
+                  <div class="notification-list" id="notificationList">
+                    <p class="notification-empty" data-i18n="notifications.empty">Няма известия</p>
+                  </div>
+                </div>
+              </div>
+            </li>
+            <li class="nav-item">
+              <select
+                id="languageSelector"
+                class="form-select form-select-sm"
+                style="max-width: 150px; margin: 0.5rem 0.5rem; display: none"
+              >
+                <option value="bg">🇧🇬 Български</option>
+                <option value="en">🇬🇧 English</option>
+              </select>
+            </li>
+            <li class="nav-item">
+              <a href="#" class="nav-link" onclick="handleLogout()" data-i18n="nav.logout">Изход</a>
+            </li>
+          </ul>
         </div>
       </div>
     </nav>
@@ -71,9 +120,12 @@
           </div>
           <div class="profile-info">
             <h1 id="userEmail">-</h1>
-            <p><strong>Neighborhood:</strong> <span id="neighborhoodDisplay">-</span></p>
             <p>
-              <strong>Points Balance:</strong>
+              <strong data-i18n="profile.neighborhoodLabel">Neighborhood:</strong>
+              <span id="neighborhoodDisplay">-</span>
+            </p>
+            <p>
+              <strong data-i18n="profile.pointsLabel">Points Balance:</strong>
               <span id="pointsDisplay" style="font-size: 1.2rem; font-weight: bold; color: #ffd700"
                 >0 ⭐</span
               >
@@ -90,25 +142,25 @@
 
         <!-- Account Info Section -->
         <div class="section">
-          <h2>📋 Account Information</h2>
+          <h2 data-i18n="profile.accountInfo">📋 Account Information</h2>
 
           <div class="info-row">
-            <div class="info-label">Email:</div>
+            <div class="info-label" data-i18n="profile.emailLabel">Email:</div>
             <div class="info-value" id="emailValue">-</div>
           </div>
 
           <div class="info-row">
-            <div class="info-label">Neighborhood:</div>
+            <div class="info-label" data-i18n="profile.neighborhoodLabel">Neighborhood:</div>
             <div class="info-value" id="neighborhoodValue">-</div>
           </div>
 
           <div class="info-row">
-            <div class="info-label">Points Balance:</div>
+            <div class="info-label" data-i18n="profile.pointsLabel">Points Balance:</div>
             <div class="info-value"><strong id="pointsValue">0</strong> ⭐</div>
           </div>
 
           <div class="info-row">
-            <div class="info-label">Rank:</div>
+            <div class="info-label" data-i18n="profile.rankLabel">Rank:</div>
             <div class="info-value"><span id="rankValue">-</span></div>
           </div>
         </div>
@@ -145,7 +197,8 @@
                 type="text"
                 class="form-control"
                 id="editUsername"
-                placeholder="Въведи потребителско име"
+                placeholder="Въведи потребителско ime"
+                data-i18n-placeholder="profile.usernamePlaceholder"
                 required
               />
             </div>
@@ -155,7 +208,7 @@
                 >Квартал</label
               >
               <select class="form-select" id="editNeighborhood" required>
-                <option value="">Избери квартал...</option>
+                <option value="" data-i18n="auth.selectNeighborhood">Избери квартал...</option>
                 <option value="Studentski Grad" data-i18n="neighborhoods.studentskiGrad">
                   Студентски град
                 </option>
@@ -203,6 +256,7 @@
                   class="form-control"
                   id="editPassword"
                   placeholder="Въведи нова парола"
+                  data-i18n-placeholder="profile.newPasswordPlaceholder"
                   autocomplete="new-password"
                 />
                 <button
@@ -231,10 +285,18 @@
                 class="form-text mt-2"
                 style="list-style: none; padding-left: 0"
               >
-                <li id="edit-pw-length" class="text-danger">• Мин. 8 символа</li>
-                <li id="edit-pw-uppercase" class="text-danger">• Главна буква (A-Z)</li>
-                <li id="edit-pw-lowercase" class="text-danger">• Малка буква (a-z)</li>
-                <li id="edit-pw-digit" class="text-danger">• Число (0-9)</li>
+                <li id="edit-pw-length" class="text-danger">
+                  • <span data-i18n="auth.pwMinLength">Мин. 8 символа</span>
+                </li>
+                <li id="edit-pw-uppercase" class="text-danger">
+                  • <span data-i18n="auth.pwUppercase">Главна буква (A-Z)</span>
+                </li>
+                <li id="edit-pw-lowercase" class="text-danger">
+                  • <span data-i18n="auth.pwLowercase">Малка буква (a-z)</span>
+                </li>
+                <li id="edit-pw-digit" class="text-danger">
+                  • <span data-i18n="auth.pwDigit">Число (0-9)</span>
+                </li>
               </ul>
             </div>
 
@@ -256,24 +318,24 @@
 
         <!-- Point Transactions Section -->
         <div class="section">
-          <h2>💳 Transaction History</h2>
+          <h2 data-i18n="profile.transactionHistory">💳 Transaction History</h2>
 
           <div id="transactionsContainer">
             <div class="empty-state">
               <div class="empty-state-icon">📊</div>
-              <p>No transactions yet</p>
+              <p data-i18n="profile.noTransactions">No transactions yet</p>
             </div>
           </div>
         </div>
 
         <!-- My Participations Section -->
         <div class="section">
-          <h2>🤝 My Participations</h2>
+          <h2 data-i18n="profile.myParticipations">🤝 My Participations</h2>
 
           <div id="participationsContainer">
             <div class="empty-state">
               <div class="empty-state-icon">🎪</div>
-              <p>You haven't joined any campaigns yet</p>
+              <p data-i18n="profile.noParticipations">You haven't joined any campaigns yet</p>
             </div>
           </div>
         </div>

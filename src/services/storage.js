@@ -78,7 +78,7 @@ export async function uploadAvatar(file, userId) {
       throw new Error("File too large. Maximum size: 5MB");
     }
     const ext = file.name?.split(".").pop() || "jpg";
-    const fileName = `${userId}-${Date.now()}.${ext}`;
+    const fileName = `${userId}/${userId}-${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("avatars").upload(fileName, file, {
       upsert: true,
     });

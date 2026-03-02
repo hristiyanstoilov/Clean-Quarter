@@ -12,6 +12,11 @@
     "logout": "Logout",
     "language": "Language"
   },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "empty": "No notifications"
+  },
   "auth": {
     "login": "Login",
     "register": "Register",
@@ -51,7 +56,12 @@
     "viewCampaign": "View",
     "noCampaigns": "No active campaigns",
     "loading": "Loading campaigns...",
-    "loadMore": "Load more"
+    "loadMore": "Load more",
+    "showingOf": "Showing {shown} of {total}",
+    "showAll": "Show all neighborhoods",
+    "adminBannerLabel": "Admin:",
+    "adminBannerPending": "pending approvals",
+    "adminBannerBtn": "Go to Admin Panel"
   },
   "profile": {
     "title": "My Profile",
@@ -72,7 +82,34 @@
     "amount": "Amount",
     "reason": "Reason",
     "noTransactions": "No transactions",
-    "noParticipations": "No participations"
+    "noParticipations": "No participations",
+    "accountInfo": "📋 Account Information",
+    "neighborhoodLabel": "Neighborhood:",
+    "pointsLabel": "Points Balance:",
+    "emailLabel": "Email:",
+    "rankLabel": "Rank:",
+    "transactionHistory": "💳 Transaction History",
+    "myParticipations": "🤝 My Participations",
+    "avatarHint": "JPEG, PNG or WebP, max 5MB",
+    "newPassword": "New Password",
+    "usernamePlaceholder": "Enter username",
+    "newPasswordPlaceholder": "Enter new password"
+  },
+  "createCampaign": {
+    "pageTitle": "Create New Campaign",
+    "details": "Campaign Details",
+    "titleLabel": "Title",
+    "titlePlaceholder": "e.g. Sunday Park Cleanup",
+    "autoTranslateHint": "English version will be generated automatically",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Describe the cleanup area...",
+    "neighborhoodLabel": "Neighborhood",
+    "bilingualHint": "Bilingual version is saved automatically",
+    "beforePhotoLabel": "Before Photo",
+    "photoHint": "JPEG, PNG or WebP, max 5MB",
+    "mapTitle": "📍 Select Location on Map",
+    "mapHint": "Click on the map to set the cleanup location coordinates",
+    "selectedLocation": "Selected Location:"
   },
   "campaign": {
     "title": "Campaign Details",
@@ -125,7 +162,10 @@
     "noComments": "No comments yet. Be the first!",
     "loginToComment": "Log in to leave a comment.",
     "commentPosted": "Comment posted.",
-    "commentDeleted": "Comment deleted."
+    "commentDeleted": "Comment deleted.",
+    "proofRejected": "Your proof was rejected.",
+    "rejectionReason": "Reason",
+    "tryAgain": "Please upload a new photo and try again."
   },
   "rewards": {
     "title": "Rewards",
@@ -220,7 +260,12 @@
     "removeAdminConfirm": "Remove admin privileges from {{username}}?",
     "yesRemoveAdmin": "Yes, Remove Admin",
     "adminRemovedTitle": "Success!",
-    "adminRemovedMsg": "{{username}} is no longer an admin."
+    "adminRemovedMsg": "{{username}} is no longer an admin.",
+    "campaign": "Campaign",
+    "submitted": "Submitted",
+    "beforePhoto": "Before Photo",
+    "afterPhoto": "After Photo",
+    "noPhoto": "N/A"
   },
   "common": {
     "loading": "Loading...",

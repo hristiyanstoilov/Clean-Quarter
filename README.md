@@ -277,15 +277,9 @@ npm test               # Run unit + integration tests (Vitest)
 npx cypress open       # Open Cypress E2E test runner
 ```
 
-### Demo / test credentials
+### Test accounts
 
-| Role | Email | Password |
-|------|-------|----------|
-| Regular user | `harr1@abv.bg` | `Test123456` |
-| Admin | `xarizax@abv.bg` | `Test123456` |
-
-> These accounts exist on the **live** Supabase project.
-> For local dev, register a new account and optionally set `role = 'admin'` in the `profiles` table via Supabase Dashboard → Table Editor.
+For local dev, register a new account and optionally set `role = 'admin'` in the `profiles` table via Supabase Dashboard → Table Editor.
 
 ### Password requirements
 
@@ -396,6 +390,13 @@ Enforced in `src/services/validation.js` and checked live in forms.
 | Admin Panel | `/src/pages/admin.html` | Admin only | Approve/reject proofs, manage users & disposal points |
 | Rewards | `/src/pages/rewards.html` | Authenticated | Browse and redeem rewards with points |
 
+### Global UI features (present on all pages)
+
+| Feature | Description |
+|---------|-------------|
+| Notification bell 🔔 | Real-time badge in navbar — shows unread count, dropdown with last 20 notifications (approval, points, campaign updates), mark-as-read per item or all at once. Populated automatically by DB triggers. Hidden for demo users. |
+| Language selector | Switch between Bulgarian and English; preference persisted in localStorage |
+
 ---
 
 ## 9. Testing
@@ -418,7 +419,7 @@ SUPABASE_ADMIN_EMAIL=admin@example.com
 SUPABASE_ADMIN_PASSWORD=password
 ```
 
-Current coverage: **218 tests · 31 test files · 0 skipped**
+Current coverage: **449 tests · 40 test files · 0 skipped**
 
 ### E2E tests (Cypress)
 

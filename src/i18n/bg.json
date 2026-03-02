@@ -12,6 +12,11 @@
     "logout": "Изход",
     "language": "Език"
   },
+  "notifications": {
+    "title": "Известия",
+    "markAllRead": "Маркирай всички",
+    "empty": "Няма известия"
+  },
   "auth": {
     "login": "Вход",
     "register": "Регистрация",
@@ -51,7 +56,12 @@
     "viewCampaign": "Преглед",
     "noCampaigns": "Няма активни кампании",
     "loading": "Зареждане на кампаниите...",
-    "loadMore": "Зареди още"
+    "loadMore": "Зареди още",
+    "showingOf": "Показани {shown} от {total}",
+    "showAll": "Виж всички квартали",
+    "adminBannerLabel": "Администратор:",
+    "adminBannerPending": "чакащи одобрения",
+    "adminBannerBtn": "Към Admin панела"
   },
   "profile": {
     "title": "Мой профил",
@@ -72,7 +82,34 @@
     "amount": "Размер",
     "reason": "Причина",
     "noTransactions": "Няма транзакции",
-    "noParticipations": "Няма участия"
+    "noParticipations": "Няма участия",
+    "accountInfo": "📋 Информация за акаунта",
+    "neighborhoodLabel": "Квартал:",
+    "pointsLabel": "Точки:",
+    "emailLabel": "Имейл:",
+    "rankLabel": "Ранг:",
+    "transactionHistory": "💳 История на транзакциите",
+    "myParticipations": "🤝 Моите участия",
+    "avatarHint": "JPEG, PNG или WebP, макс. 5MB",
+    "newPassword": "Нова парола",
+    "usernamePlaceholder": "Въведи потребителско ime",
+    "newPasswordPlaceholder": "Въведи нова парола"
+  },
+  "createCampaign": {
+    "pageTitle": "Нова кампания",
+    "details": "Детайли на кампанията",
+    "titleLabel": "Заглавие",
+    "titlePlaceholder": "напр. Почистване на парка в неделя",
+    "autoTranslateHint": "Английската версия ще се генерира автоматично",
+    "descriptionLabel": "Описание",
+    "descriptionPlaceholder": "Опишете зоната за почистване...",
+    "neighborhoodLabel": "Квартал",
+    "bilingualHint": "Двуезичната версия се записва автоматично",
+    "beforePhotoLabel": "Снимка преди",
+    "photoHint": "JPEG, PNG или WebP, макс. 5MB",
+    "mapTitle": "📍 Избери локация на картата",
+    "mapHint": "Кликни на картата за да зададеш координатите на почистването",
+    "selectedLocation": "Избрана локация:"
   },
   "campaign": {
     "title": "Детали на кампанията",
@@ -125,7 +162,10 @@
     "noComments": "Няма коментари. Бъдете първи!",
     "loginToComment": "Влезте в профила си за да коментирате.",
     "commentPosted": "Коментарът е публикуван.",
-    "commentDeleted": "Коментарът е изтрит."
+    "commentDeleted": "Коментарът е изтрит.",
+    "proofRejected": "Доказателството ти е отхвърлено.",
+    "rejectionReason": "Причина",
+    "tryAgain": "Качи нова снимка и опитай отново."
   },
   "rewards": {
     "title": "Награди",
@@ -220,7 +260,12 @@
     "removeAdminConfirm": "Да се премахнат админ правата на {{username}}?",
     "yesRemoveAdmin": "Да, премахни админ",
     "adminRemovedTitle": "Успех!",
-    "adminRemovedMsg": "{{username}} вече не е админ."
+    "adminRemovedMsg": "{{username}} вече не е админ.",
+    "campaign": "Кампания",
+    "submitted": "Изпратено",
+    "beforePhoto": "Снимка преди",
+    "afterPhoto": "Снимка след",
+    "noPhoto": "Няма снимка"
   },
   "common": {
     "loading": "Зареждане...",

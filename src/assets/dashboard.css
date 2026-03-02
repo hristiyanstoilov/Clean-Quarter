@@ -5,16 +5,10 @@ body {
   padding: 0;
 }
 
-.navbar {
-  background-color: rgba(255, 255, 255, 0.95);
-  z-index: 1000;
-}
-
 .main-container {
   display: grid;
   grid-template-rows: auto 1fr;
-  min-height: 100vh;
-  padding-top: 56px;
+  min-height: calc(100vh - 56px);
 }
 
 #map {
@@ -33,6 +27,10 @@ body {
   grid-template-columns: 1fr;
   gap: 1rem;
   width: 100%;
+}
+
+.campaign-card-wrapper {
+  height: 100%;
 }
 
 .campaign-card {

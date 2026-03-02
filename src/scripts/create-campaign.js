@@ -1,7 +1,8 @@
-import { initializeMap } from "../services/map.js";
+import L from "leaflet";
+import { initializeMap, createMarkerIcon } from "../services/map.js";
 import { uploadCampaignPhoto } from "../services/storage.js";
 import { initI18n, applyLanguage, setLanguage } from "../utils/i18n.js";
-import { showSuccessToast } from "../utils/helpers.js";
+import { showSuccessToast, initSwalFallback } from "../utils/helpers.js";
 import supabase from "../services/supabase.js";
 
 // Global variables
@@ -14,30 +15,50 @@ let currentUser = null;
  * Initialize the page on load
  */
 window.addEventListener("DOMContentLoaded", async () => {
+  initSwalFallback();
   try {
     // Initialize i18n first (realTime = false)
     await initI18n(false);
     applyLanguage(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg");
 
     // Language selector
-    document.getElementById("languageSelector").value =
-      localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
-    document.getElementById("languageSelector").addEventListener("change", (e) => {
-      // Just show a message - language changes only from profile page
+    const langSel = document.getElementById("languageSelector");
+    langSel.value = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+    langSel.style.display = "block";
+    langSel.addEventListener("change", (e) => {
+      setLanguage(e.target.value, true);
+      location.reload();
     });
 
     // Show admin nav if user is admin
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     if (user && user.role === "admin") {
-      const adminNav = document.getElementById("adminNav");
-      if (adminNav) adminNav.style.display = "block";
+      const adminNavItem = document.getElementById("adminNavItem");
+      if (adminNavItem) adminNavItem.style.display = "block";
+    }
+
+    // Notification bell (skip demo users)
+    if (user?.id && user.id !== "demo-admin-001") {
+      import("../services/notifications.js").then(({ initNotificationBell }) => {
+        initNotificationBell(user.id);
+      });
     }
 
     await checkAuth();
+    // Always register event listeners regardless of map status
+    setupEventListeners();
     setTimeout(() => {
-      initMap();
-      setupEventListeners();
-    }, 500);
+      try {
+        initMap();
+      } catch (mapError) {
+        const mapEl = document.getElementById("map");
+        if (mapEl) {
+          mapEl.style.cssText =
+            "display:flex;align-items:center;justify-content:center;background:#f8f9fa;color:#6c757d;font-size:0.9rem;";
+          mapEl.textContent = "Картата не може да се зареди. Проверете интернет връзката.";
+        }
+      }
+    }, 300);
   } catch (error) {
     // silently ignore
   }
@@ -91,19 +112,10 @@ function initMap() {
         map.removeLayer(window.selectionMarker);
       }
       window.selectionMarker = L.marker([selectedCoordinates.lat, selectedCoordinates.lng], {
-        icon: L.icon({
-          iconUrl:
-            "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
-          shadowUrl:
-            "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-          iconSize: [25, 41],
-          iconAnchor: [12, 41],
-          popupAnchor: [1, -34],
-          shadowSize: [41, 41],
-        }),
+        icon: createMarkerIcon("blue"),
       })
         .addTo(map)
-        .bindPopup("Campaign Location")
+        .bindPopup("📍 Избрана локация")
         .openPopup();
       map.invalidateSize();
     }
@@ -121,18 +133,10 @@ function initMap() {
       map.removeLayer(window.selectionMarker);
     }
     window.selectionMarker = L.marker([lat, lng], {
-      icon: L.icon({
-        iconUrl:
-          "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
-        shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41],
-      }),
+      icon: createMarkerIcon("blue"),
     })
       .addTo(map)
-      .bindPopup("Campaign Location")
+      .bindPopup("📍 Избрана локация")
       .openPopup();
     map.setView([lat, lng], 16);
     map.invalidateSize();
@@ -205,18 +209,21 @@ function checkFormCompletion() {
   });
 
   // Show helpful message if not complete
+  const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+  const isBg = lang === "bg";
+
   if (!isComplete) {
     const missing = [];
-    if (!titleBg) missing.push("Заглавие");
-    if (!descBg) missing.push("Описание");
-    if (!nbh) missing.push("Квартал");
-    if (!hasFile) missing.push("Снимка");
-    if (!hasCoordinates) missing.push("Локация на картата");
+    if (!titleBg) missing.push(isBg ? "Заглавие" : "Title");
+    if (!descBg) missing.push(isBg ? "Описание" : "Description");
+    if (!nbh) missing.push(isBg ? "Квартал" : "Neighborhood");
+    if (!hasFile) missing.push(isBg ? "Снимка" : "Photo");
+    if (!hasCoordinates) missing.push(isBg ? "Локация на картата" : "Map location");
 
-    submitBtn.title = "Моля попълнете: " + missing.join(", ");
+    submitBtn.title = (isBg ? "Моля попълнете: " : "Please fill in: ") + missing.join(", ");
     submitBtn.style.cursor = "not-allowed";
   } else {
-    submitBtn.title = "Кликни за създаване на кампания";
+    submitBtn.title = isBg ? "Кликни за създаване на кампания" : "Click to create campaign";
     submitBtn.style.cursor = "pointer";
   }
 }
@@ -225,6 +232,9 @@ function checkFormCompletion() {
  * Update visual checklist showing what's complete and what's missing
  */
 function updateVisualChecklist(status) {
+  const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+  const isBg = lang === "bg";
+
   let checklist = document.getElementById("requirementsChecklist");
 
   // Create checklist if it doesn't exist
@@ -239,20 +249,24 @@ function updateVisualChecklist(status) {
   }
 
   const items = [
-    { key: "titleBg", label: "📝 Заглавие" },
-    { key: "descBg", label: "📄 Описание" },
-    { key: "nbh", label: "📍 Квартал" },
-    { key: "hasFile", label: "📸 Снимка" },
-    { key: "hasCoordinates", label: "🗺️ Локация на картата" },
+    { key: "titleBg", label: isBg ? "📝 Заглавие" : "📝 Title" },
+    { key: "descBg", label: isBg ? "📄 Описание" : "📄 Description" },
+    { key: "nbh", label: isBg ? "📍 Квартал" : "📍 Neighborhood" },
+    { key: "hasFile", label: isBg ? "📸 Снимка" : "📸 Photo" },
+    { key: "hasCoordinates", label: isBg ? "🗺️ Локация на картата" : "🗺️ Map location" },
   ];
 
   const completed = items.filter((item) => status[item.key]).length;
   const total = items.length;
 
+  const headingText = isBg ? "📋 Задължителни полета" : "📋 Required Fields";
+  const readyText = isBg ? "✅ Готово за изпращане!" : "✅ Ready to submit!";
+  const incompleteText = isBg ? "⚠️ Непълно" : "⚠️ Incomplete";
+
   checklist.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-      <h6 style="margin: 0; color: #856404; font-weight: bold;">📋 Required Fields (${completed}/${total})</h6>
-      <span style="font-size: 0.9rem; color: #856404;">${completed === total ? "✅ Ready to submit!" : "⚠️ Incomplete"}</span>
+      <h6 style="margin: 0; color: #856404; font-weight: bold;">${headingText} (${completed}/${total})</h6>
+      <span style="font-size: 0.9rem; color: #856404;">${completed === total ? readyText : incompleteText}</span>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.4rem; font-size: 0.9rem;">
       ${items
@@ -351,7 +365,7 @@ async function handleFormSubmit(e) {
       });
       localStorage.setItem("CLEAN_QUARTER_DEMO_PARTICIPATIONS", JSON.stringify(demoParts));
 
-      await showSuccessToast("Campaign created successfully!");
+      await showSuccessToast("Кампанията е създадена успешно!");
 
       window.location.href = "/dashboard";
     } else {
@@ -403,7 +417,7 @@ async function handleFormSubmit(e) {
         console.warn("Could not auto-join creator:", participationError.message);
       }
 
-      await showSuccessToast("Campaign created successfully!");
+      await showSuccessToast("Кампанията е създадена успешно!");
 
       // Redirect to dashboard
       window.location.href = "/dashboard";
@@ -411,8 +425,12 @@ async function handleFormSubmit(e) {
   } catch (error) {
     await Swal.fire({
       icon: "error",
-      title: "Error",
-      text: error.message || "Failed to create campaign. Please try again.",
+      title: (localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en" ? "Error" : "Грешка",
+      text:
+        error.message ||
+        ((localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en"
+          ? "Failed to create campaign. Please try again."
+          : "Неуспешно създаване. Опитай отново."),
     });
   } finally {
     // Re-enable submit button and hide spinner

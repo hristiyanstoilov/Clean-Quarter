@@ -149,6 +149,10 @@ export async function showSuccess(title, text, timer = null) {
  */
 export async function showError(title, text, timer = null) {
   const errorText = text instanceof Error ? text.message : text;
+  if (typeof Swal === "undefined" || !Swal?.fire) {
+    window.alert(`${title}\n${errorText}`);
+    return Promise.resolve();
+  }
   const config = {
     icon: "error",
     title,
@@ -170,6 +174,10 @@ export async function showError(title, text, timer = null) {
  * @param {string} text - Message text
  */
 export async function showInfo(title, text) {
+  if (typeof Swal === "undefined" || !Swal?.fire) {
+    window.alert(`${title}\n${text}`);
+    return Promise.resolve();
+  }
   return Swal.fire({
     icon: "info",
     title,
@@ -217,6 +225,9 @@ export async function showInfoToast(title, timer = 2500) {
  * @returns {Promise<boolean>} True if confirmed, false if cancelled
  */
 export async function showConfirm(title, text, confirmText = "Yes", cancelText = "Cancel") {
+  if (typeof Swal === "undefined" || !Swal?.fire) {
+    return window.confirm(`${title}\n${text}`);
+  }
   const result = await Swal.fire({
     icon: "warning",
     title,
@@ -229,6 +240,33 @@ export async function showConfirm(title, text, confirmText = "Yes", cancelText =
   });
 
   return result.isConfirmed;
+}
+
+/**
+ * Install a minimal Swal polyfill using native browser dialogs.
+ * No-op if window.Swal already exists (CDN loaded successfully).
+ * Call this at the start of any script that uses Swal.fire() directly.
+ */
+export function initSwalFallback() {
+  if (typeof window === "undefined" || window.Swal) return;
+  window.Swal = {
+    fire(opts = {}) {
+      // Loading dialogs (showLoading) — resolve immediately, no UI needed
+      if (typeof opts.didOpen === "function") return Promise.resolve({});
+      if (opts.showCancelButton) {
+        const msg = [opts.title, opts.text].filter(Boolean).join("\n");
+        return Promise.resolve({ isConfirmed: window.confirm(msg), isDismissed: false });
+      }
+      const msg = [opts.title, opts.text].filter(Boolean).join("\n");
+      window.alert(msg);
+      return Promise.resolve({ isConfirmed: true, isDismissed: false });
+    },
+    showLoading() {},
+    close() {},
+    isVisible() {
+      return false;
+    },
+  };
 }
 
 /**

@@ -12,6 +12,11 @@
     "logout": "Logout",
     "language": "Language"
   },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "empty": "No notifications"
+  },
   "auth": {
     "login": "Login",
     "register": "Register",
@@ -51,7 +56,11 @@
     "viewCampaign": "View",
     "noCampaigns": "No active campaigns",
     "loading": "Loading campaigns...",
-    "loadMore": "Load more"
+    "loadMore": "Load more",
+    "showAll": "Show all neighborhoods",
+    "adminBannerLabel": "Admin:",
+    "adminBannerPending": "pending approvals",
+    "adminBannerBtn": "Go to Admin Panel"
   },
   "profile": {
     "title": "My Profile",
@@ -125,7 +134,10 @@
     "noComments": "No comments yet. Be the first!",
     "loginToComment": "Log in to leave a comment.",
     "commentPosted": "Comment posted.",
-    "commentDeleted": "Comment deleted."
+    "commentDeleted": "Comment deleted.",
+    "proofRejected": "Your proof was rejected.",
+    "rejectionReason": "Reason",
+    "tryAgain": "Please upload a new photo and try again."
   },
   "rewards": {
     "title": "Rewards",
@@ -220,7 +232,12 @@
     "removeAdminConfirm": "Remove admin privileges from {{username}}?",
     "yesRemoveAdmin": "Yes, Remove Admin",
     "adminRemovedTitle": "Success!",
-    "adminRemovedMsg": "{{username}} is no longer an admin."
+    "adminRemovedMsg": "{{username}} is no longer an admin.",
+    "campaign": "Campaign",
+    "submitted": "Submitted",
+    "beforePhoto": "Before Photo",
+    "afterPhoto": "After Photo",
+    "noPhoto": "N/A"
   },
   "common": {
     "loading": "Loading...",

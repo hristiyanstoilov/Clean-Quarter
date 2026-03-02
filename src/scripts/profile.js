@@ -1,7 +1,7 @@
 import supabase from "../services/supabase.js";
 import { uploadAvatar } from "../services/storage.js";
 import { initI18n, applyLanguage, setLanguage } from "../utils/i18n.js";
-import { escapeHTML, showSuccessToast } from "../utils/helpers.js";
+import { escapeHTML, showSuccessToast, initSwalFallback } from "../utils/helpers.js";
 import { rules } from "../services/validation.js";
 // Global variables
 let currentUser = null;
@@ -10,6 +10,7 @@ let avatarFile = null;
 
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", async () => {
+  initSwalFallback();
   // Password input and related elements (declare once)
   const passwordInput = document.getElementById("editPassword");
   const strengthBar = document.getElementById("editPasswordStrength");
@@ -56,12 +57,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     applyLanguage(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg");
 
     // Language selector - ENABLE REAL-TIME FOR PROFILE
-    document.getElementById("languageSelector").value =
-      localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
-    document.getElementById("languageSelector").addEventListener("change", (e) => {
-      setLanguage(e.target.value, true); // Force update with true flag
+    const langSel = document.getElementById("languageSelector");
+    langSel.value = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+    langSel.style.display = "block";
+    langSel.addEventListener("change", (e) => {
+      setLanguage(e.target.value, true);
       location.reload();
     });
+
+    // Show admin nav if user is admin
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    if (storedUser?.role === "admin") {
+      const adminNavItem = document.getElementById("adminNavItem");
+      if (adminNavItem) adminNavItem.style.display = "block";
+    }
+
+    // Notification bell (skip demo users)
+    if (storedUser?.id && storedUser.id !== "demo-admin-001") {
+      import("../services/notifications.js").then(({ initNotificationBell }) => {
+        initNotificationBell(storedUser.id);
+      });
+    }
 
     await checkAuth();
     await loadProfileData();
@@ -207,18 +223,19 @@ async function loadProfileData() {
  */
 function displayRank(points) {
   let rank, rankText, emoji;
+  const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
 
   if (points < 50) {
     rank = "bronze";
-    rankText = "Bronze";
+    rankText = lang === "en" ? "Bronze" : "Бронз";
     emoji = "🥉";
   } else if (points < 100) {
     rank = "silver";
-    rankText = "Silver";
+    rankText = lang === "en" ? "Silver" : "Сребро";
     emoji = "🥈";
   } else {
     rank = "gold";
-    rankText = "Gold";
+    rankText = lang === "en" ? "Gold" : "Злато";
     emoji = "🥇";
   }
 
@@ -226,7 +243,8 @@ function displayRank(points) {
   rankBadge.className = `rank-badge rank-${rank}`;
   rankBadge.innerHTML = `<span>${emoji}</span> ${rankText} (${points} ⭐)`;
 
-  document.getElementById("rankValue").textContent = `${rankText} - ${points} points`;
+  const pointsLabel = lang === "en" ? "points" : "точки";
+  document.getElementById("rankValue").textContent = `${rankText} - ${points} ${pointsLabel}`;
 }
 
 /**
@@ -255,7 +273,7 @@ async function loadTransactions() {
       document.getElementById("transactionsContainer").innerHTML = `
                   <div class="empty-state">
                       <div class="empty-state-icon">📊</div>
-                      <p>No transactions yet</p>
+                      <p>Все още няма транзакции</p>
                   </div>
               `;
       return;
@@ -266,17 +284,19 @@ async function loadTransactions() {
                   <table class="table">
                       <thead>
                           <tr>
-                              <th>Date</th>
-                              <th>Type</th>
-                              <th>Amount</th>
-                              <th>Reason</th>
+                              <th>Дата</th>
+                              <th>Тип</th>
+                              <th>Количество</th>
+                              <th>Причина</th>
                           </tr>
                       </thead>
                       <tbody>
           `;
 
     transactions.forEach((transaction) => {
-      const date = new Date(transaction.created_at).toLocaleDateString("en-US", {
+      const txLang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+      const txLocale = txLang === "bg" ? "bg-BG" : "en-US";
+      const date = new Date(transaction.created_at).toLocaleDateString(txLocale, {
         year: "numeric",
         month: "short",
         day: "numeric",
@@ -284,8 +304,8 @@ async function loadTransactions() {
 
       const typeBadge =
         transaction.type === "earned"
-          ? '<span class="badge-earned">✓ Earned</span>'
-          : '<span class="badge-spent">✗ Spent</span>';
+          ? '<span class="badge-earned">✓ Спечелени</span>'
+          : '<span class="badge-spent">✗ Изразходвани</span>';
 
       const amount =
         transaction.type === "earned"
@@ -312,7 +332,7 @@ async function loadTransactions() {
   } catch (error) {
     document.getElementById("transactionsContainer").innerHTML = `
               <div class="empty-state" style="color: #dc3545;">
-                  <p>Failed to load transactions</p>
+                  <p>Грешка при зареждане на транзакциите</p>
               </div>
           `;
   }
@@ -323,6 +343,33 @@ async function loadTransactions() {
  */
 async function loadParticipations() {
   try {
+    // Demo mode — no real participations in DB
+    if (currentUser.id === "demo-admin-001") {
+      const demoParts = JSON.parse(
+        localStorage.getItem("CLEAN_QUARTER_DEMO_PARTICIPATIONS") || "[]"
+      );
+      const demoCampaigns = JSON.parse(
+        localStorage.getItem("CLEAN_QUARTER_DEMO_CAMPAIGNS") || "[]"
+      );
+      // Enrich with campaign data
+      const enriched = demoParts.map((p) => ({
+        ...p,
+        campaigns: demoCampaigns.find((c) => c.id === p.campaign_id) || null,
+      }));
+      if (!enriched.length) {
+        document.getElementById("participationsContainer").innerHTML = `
+                  <div class="empty-state">
+                      <div class="empty-state-icon">🎪</div>
+                      <p>Все още не си се присъединил към кампания</p>
+                      <a href="/dashboard" style="color: #28a745; text-decoration: none; font-weight: bold;">Виж кампаниите →</a>
+                  </div>
+              `;
+        return;
+      }
+      renderParticipations(enriched);
+      return;
+    }
+
     const { data: participations, error } = await supabase
       .from("participations")
       .select(
@@ -346,62 +393,66 @@ async function loadParticipations() {
       document.getElementById("participationsContainer").innerHTML = `
                   <div class="empty-state">
                       <div class="empty-state-icon">🎪</div>
-                      <p>You haven't joined any campaigns yet</p>
-                      <a href="/dashboard" style="color: #28a745; text-decoration: none; font-weight: bold;">Browse campaigns →</a>
+                      <p>Все още не си се присъединил към кампания</p>
+                      <a href="/dashboard" style="color: #28a745; text-decoration: none; font-weight: bold;">Виж кампаниите →</a>
                   </div>
               `;
       return;
     }
 
-    let html = "";
-
-    participations.forEach((participation) => {
-      const campaign = participation.campaigns;
-      const date = new Date(participation.created_at).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
-
-      let statusBadge = "";
-      switch (participation.status) {
-        case "joined":
-          statusBadge = '<span class="participation-status status-joined">📝 Joined</span>';
-          break;
-        case "pending":
-          statusBadge = '<span class="participation-status status-pending">⏳ Pending</span>';
-          break;
-        case "approved":
-          statusBadge = '<span class="participation-status status-approved">✅ Approved</span>';
-          break;
-        case "rejected":
-          statusBadge = '<span class="participation-status status-rejected">❌ Rejected</span>';
-          break;
-      }
-
-      html += `
-                  <div class="participation-item">
-                      <div class="participation-header">
-                          <div class="participation-title">${escapeHTML(campaign?.title || "Unknown Campaign")}</div>
-                          ${statusBadge}
-                      </div>
-                      <div class="participation-details">
-                          <p><strong>Neighborhood:</strong> ${escapeHTML(campaign?.neighborhood || "Unknown")}</p>
-                          <p><strong>Joined:</strong> ${date}</p>
-                          <p><strong>Status:</strong> ${participation.status.charAt(0).toUpperCase() + participation.status.slice(1)}</p>
-                      </div>
-                  </div>
-              `;
-    });
-
-    document.getElementById("participationsContainer").innerHTML = html;
+    renderParticipations(participations);
   } catch (error) {
     document.getElementById("participationsContainer").innerHTML = `
               <div class="empty-state" style="color: #dc3545;">
-                  <p>Failed to load participations</p>
+                  <p>Грешка при зареждане на участията</p>
               </div>
           `;
   }
+}
+
+function renderParticipations(participations) {
+  let html = "";
+
+  participations.forEach((participation) => {
+    const campaign = participation.campaigns;
+    const date = new Date(participation.created_at).toLocaleDateString("bg-BG", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+
+    let statusBadge = "";
+    switch (participation.status) {
+      case "joined":
+        statusBadge = '<span class="participation-status status-joined">📝 Присъединил се</span>';
+        break;
+      case "pending":
+        statusBadge = '<span class="participation-status status-pending">⏳ Изчакване</span>';
+        break;
+      case "approved":
+        statusBadge = '<span class="participation-status status-approved">✅ Одобрен</span>';
+        break;
+      case "rejected":
+        statusBadge = '<span class="participation-status status-rejected">❌ Отхвърлен</span>';
+        break;
+    }
+
+    html += `
+                <div class="participation-item">
+                    <div class="participation-header">
+                        <div class="participation-title">${escapeHTML(campaign?.title || "Непозната кампания")}</div>
+                        ${statusBadge}
+                    </div>
+                    <div class="participation-details">
+                        <p><strong>Квартал:</strong> ${escapeHTML(campaign?.neighborhood || "Неизвестен")}</p>
+                        <p><strong>Дата:</strong> ${date}</p>
+                        <p><strong>Статус:</strong> ${participation.status.charAt(0).toUpperCase() + participation.status.slice(1)}</p>
+                    </div>
+                </div>
+            `;
+  });
+
+  document.getElementById("participationsContainer").innerHTML = html;
 }
 
 /**
@@ -440,7 +491,11 @@ function toggleEditMode() {
     // Show current avatar in preview
     const preview = document.getElementById("avatarPreview");
     if (userProfile?.avatar_url) {
-      preview.innerHTML = `<img src="${userProfile.avatar_url}" alt="Avatar" />`;
+      const img = document.createElement("img");
+      img.src = userProfile.avatar_url;
+      img.alt = "Avatar";
+      preview.textContent = "";
+      preview.appendChild(img);
     } else {
       preview.textContent = "👤";
     }
@@ -464,6 +519,7 @@ async function handleSaveProfile(e) {
 
   const newUsername = document.getElementById("editUsername").value.trim();
   const newNeighborhood = document.getElementById("editNeighborhood").value;
+  const newPassword = document.getElementById("editPassword").value;
 
   if (!newUsername) {
     await Swal.fire({
@@ -472,6 +528,15 @@ async function handleSaveProfile(e) {
       text: "Потребителското име е задължително!",
     });
     return;
+  }
+
+  // Validate new password if provided
+  if (newPassword) {
+    const pwError = rules.password(newPassword);
+    if (pwError) {
+      await Swal.fire({ icon: "error", title: "Слаба парола", text: pwError });
+      return;
+    }
   }
 
   try {
@@ -489,7 +554,7 @@ async function handleSaveProfile(e) {
     const localUser = JSON.parse(localStorage.getItem("user") || "{}");
 
     if (localUser.id === "demo-admin-001") {
-      // Demo mode - update localStorage
+      // Demo mode - update localStorage (password change not supported in demo)
       localUser.username = newUsername;
       localUser.neighborhood = newNeighborhood;
 
@@ -500,6 +565,7 @@ async function handleSaveProfile(e) {
       document.getElementById("neighborhoodDisplay").textContent = newNeighborhood;
       document.getElementById("neighborhoodValue").textContent = newNeighborhood;
 
+      Swal.close();
       await showSuccessToast("Профилът е обновен успешно!");
 
       toggleEditMode();
@@ -524,6 +590,13 @@ async function handleSaveProfile(e) {
 
       if (error) throw error;
 
+      // Change password if a new one was provided
+      if (newPassword) {
+        const { error: pwError } = await supabase.auth.updateUser({ password: newPassword });
+        if (pwError) throw new Error(`Грешка при смяна на парола: ${pwError.message}`);
+        document.getElementById("editPassword").value = "";
+      }
+
       userProfile = data;
       avatarFile = null;
 
@@ -533,6 +606,7 @@ async function handleSaveProfile(e) {
       document.getElementById("neighborhoodValue").textContent = newNeighborhood;
       displayAvatar(newAvatarUrl);
 
+      Swal.close();
       await showSuccessToast("Профилът е обновен успешно!");
 
       toggleEditMode();
@@ -553,7 +627,11 @@ function displayAvatar(avatarUrl) {
   const avatarEl = document.getElementById("avatarDisplay");
   if (!avatarEl) return;
   if (avatarUrl) {
-    avatarEl.innerHTML = `<img src="${avatarUrl}" alt="Profile avatar" />`;
+    const img = document.createElement("img");
+    img.src = avatarUrl;
+    img.alt = "Profile avatar";
+    avatarEl.textContent = "";
+    avatarEl.appendChild(img);
   } else {
     avatarEl.textContent = "👤";
   }
@@ -572,7 +650,11 @@ if (avatarFileInput) {
     const preview = document.getElementById("avatarPreview");
     const reader = new FileReader();
     reader.onload = (ev) => {
-      preview.innerHTML = `<img src="${ev.target.result}" alt="Avatar preview" />`;
+      const img = document.createElement("img");
+      img.src = ev.target.result;
+      img.alt = "Avatar preview";
+      preview.textContent = "";
+      preview.appendChild(img);
     };
     reader.readAsDataURL(file);
   });
