@@ -154,7 +154,7 @@ describe("Notification bell — page HTML elements", () => {
 
     it(`${name}: has #notificationNavItem (hidden by default)`, () => {
       expect(html).toContain('id="notificationNavItem"');
-      expect(html).toMatch(/id="notificationNavItem"[^>]*style="display:none"/);
+      expect(html).toMatch(/id="notificationNavItem"[^>]*style="display:\s*none"/);
     });
 
     it(`${name}: has #notificationBell wrapper`, () => {
