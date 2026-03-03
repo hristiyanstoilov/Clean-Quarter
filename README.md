@@ -320,6 +320,7 @@ Enforced in `src/services/validation.js` and checked live in forms.
 │   │   ├── supabase.js             # Supabase client + all DB operations
 │   │   ├── auth.js                 # Login, register, logout, session
 │   │   ├── map.js                  # Leaflet map initialisation & markers
+│   │   ├── notifications.js        # Notification bell — fetch, render, realtime
 │   │   ├── points.js               # Points calculation logic
 │   │   ├── storage.js              # Photo upload to Supabase Storage
 │   │   ├── validation.js           # Form validation (password, fields)
@@ -355,7 +356,7 @@ Enforced in `src/services/validation.js` and checked live in forms.
 │       └── rewards.css
 │
 ├── supabase/
-│   ├── migrations/                 # 30 timestamped SQL migration files
+│   ├── migrations/                 # 42 timestamped SQL migration files
 │   │                               # (mirror of what is applied in Supabase)
 │   ├── schema.sql                  # Full schema snapshot (reference only)
 │   └── seed.sql                    # Development seed data
@@ -383,12 +384,12 @@ Enforced in `src/services/validation.js` and checked live in forms.
 | Page | Route | Who can access | Description |
 |------|-------|----------------|-------------|
 | Landing | `/` | Everyone | Login and register |
-| Dashboard | `/src/pages/dashboard.html` | Authenticated | Interactive map + campaign list with filters |
-| Create Campaign | `/src/pages/create-campaign.html` | Authenticated | New cleanup with map picker and before-photo |
-| Campaign Detail | `/src/pages/campaign-detail.html?id=...` | Authenticated | View details, join, upload after-photo, comments |
-| Profile | `/src/pages/profile.html` | Authenticated | Point balance, history, avatar, language toggle |
-| Admin Panel | `/src/pages/admin.html` | Admin only | Approve/reject proofs, manage users & disposal points |
-| Rewards | `/src/pages/rewards.html` | Authenticated | Browse and redeem rewards with points |
+| Dashboard | `/dashboard` | Authenticated | Interactive map + campaign list with filters |
+| Create Campaign | `/create-campaign` | Authenticated | New cleanup with map picker and before-photo |
+| Campaign Detail | `/campaign-detail?id=...` | Authenticated | View details, join, upload after-photo, comments |
+| Profile | `/profile` | Authenticated | Point balance, history, avatar, language toggle |
+| Admin Panel | `/admin` | Admin only | Approve/reject proofs, manage users & disposal points |
+| Rewards | `/rewards` | Authenticated | Browse and redeem rewards with points |
 
 ### Global UI features (present on all pages)
 
@@ -419,7 +420,7 @@ SUPABASE_ADMIN_EMAIL=admin@example.com
 SUPABASE_ADMIN_PASSWORD=password
 ```
 
-Current coverage: **449 tests · 40 test files · 0 skipped**
+Current coverage: **449 tests · 40 test files** (28 RLS tests skipped without `.env.test`)
 
 ### E2E tests (Cypress)
 
