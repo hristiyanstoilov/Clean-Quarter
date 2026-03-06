@@ -8,7 +8,7 @@
 
 1. [Executive Summary](#1-executive-summary)
 2. [Product Vision & Strategy](#2-product-vision--strategy)
-3. User Segments & Personas *(coming soon)*
+3. [User Segments & Personas](#3-user-segments--personas)
 4. Core User Journeys *(coming soon)*
 5. Feature Breakdown *(coming soon)*
 6. System Architecture *(coming soon)*
@@ -104,3 +104,96 @@ The codebase does not implement payment processing. The inferred model has two t
 ### Expansion Potential
 
 The current 5-neighborhood implementation is a deliberate geographic constraint, not a technical limitation. The neighborhood list is a hardcoded array — expanding requires a one-line code change + a DB migration. The architecture supports multi-city deployment today.
+
+---
+
+## 3. User Segments & Personas
+
+### Segment 1: The Active Resident (Primary User)
+
+**Profile:** 20–45, environmentally conscious, lives or studies in target neighborhoods, smartphone-native
+
+**Goals:** Contribute to neighborhood improvement, track personal impact, earn rewards
+
+**Flows used:** Register → Browse map → Join campaign → Upload proof → Redeem rewards
+
+**Pain points handled by product:**
+- Discovers campaigns near them via neighborhood-filtered dashboard
+- Gets notified when their submission is approved
+- Sees concrete reward for effort (points → goods)
+
+---
+
+### Segment 2: The Organizer (Campaign Creator)
+
+**Profile:** Community activist, student association leader, local NGO volunteer
+
+**Goals:** Mobilize participation, coordinate cleanup logistics, upload before-photo evidence
+
+**Flows used:** Create campaign (title, description, map pin, before photo) → Monitor participants → View campaign detail
+
+**Implicit product decision:** Organizer and participant are the same user type — no separate "organizer" role in schema. Any authenticated user can create campaigns.
+
+---
+
+### Segment 3: The Admin (Trust & Safety Layer)
+
+**Profile:** Platform operator or trusted community moderator, likely 1–3 people in current deployment
+
+**Goals:** Verify photo evidence, prevent gaming the points system, manage user roles, monitor reports
+
+**Flows used:** Admin panel → Review pending participations → Approve/reject with photo → Manage users → Handle reports
+
+**Permissions enforced in code:**
+- Cannot self-approve (DB trigger blocks it)
+- Cannot demote superadmin
+- Role changes are logged immutably
+
+---
+
+### Segment 4: Anonymous Visitor
+
+**Access:** Read-only. Can view active campaigns and rewards. Cannot create, join, or interact.
+
+**Business rationale:** SEO discoverability of campaigns + low-friction for prospective users to evaluate before registering.
+
+---
+
+### Permission Logic Analysis
+
+The system implements a **two-tier RBAC** with a superadmin escape hatch:
+
+```
+anonymous  → read (campaigns, rewards)
+user       → anonymous + create/join campaigns, upload, redeem, comment, report
+admin      → user + approve/reject, manage users, manage disposal points, manage rewards
+superadmin → admin + cannot be demoted (DB-enforced flag)
+```
+
+**Key security insight:** Authorization is enforced at **two independent layers** — RLS policies in PostgreSQL AND application-level checks in JS. Neither layer alone is sufficient; together they prevent privilege escalation even if the frontend is bypassed.
+
+---
+
+### Permissions Matrix
+
+| Feature | Regular User | Admin | Superadmin |
+|---------|:------------:|:-----:|:----------:|
+| Create Campaign | ✓ | ✓ | ✓ |
+| Join Campaign | ✓ | ✓ | ✓ |
+| Upload After Photo | ✓ | ✓ | ✓ |
+| View Dashboard | ✓ | ✓ | ✓ |
+| Edit Own Profile | ✓ | ✓ | ✓ |
+| View Rewards | ✓ | ✓ | ✓ |
+| Redeem Rewards | ✓ | ✓ | ✓ |
+| Comment on Campaign | ✓ | ✓ | ✓ |
+| Report Content | ✓ | ✓ | ✓ |
+| Approve Participations | ✗ | ✓ | ✓ |
+| Reject Participations | ✗ | ✓ | ✓ |
+| Make User Admin | ✗ | ✓ | ✓ |
+| Remove Admin | ✗ | ✓ (except self) | ✓ |
+| View All Users | ✗ | ✓ | ✓ |
+| View Role Audit Log | ✗ | ✓ | ✓ |
+| Delete Any Campaign | ✗ | ✓ | ✓ |
+| Delete Any Comment | ✗ | ✓ | ✓ |
+| Manage Reports | ✗ | ✓ | ✓ |
+| Be Demoted | ✓ | ✓ | ✗ (DB-enforced) |
