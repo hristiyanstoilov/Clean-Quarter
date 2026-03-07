@@ -9,7 +9,7 @@
 1. [Executive Summary](#1-executive-summary)
 2. [Product Vision & Strategy](#2-product-vision--strategy)
 3. [User Segments & Personas](#3-user-segments--personas)
-4. Core User Journeys *(coming soon)*
+4. [Core User Journeys](#4-core-user-journeys)
 5. Feature Breakdown *(coming soon)*
 6. System Architecture *(coming soon)*
 7. Non-Functional Requirements *(coming soon)*
@@ -197,3 +197,123 @@ superadmin → admin + cannot be demoted (DB-enforced flag)
 | Delete Any Comment | ✗ | ✓ | ✓ |
 | Manage Reports | ✗ | ✓ | ✓ |
 | Be Demoted | ✓ | ✓ | ✗ (DB-enforced) |
+
+---
+
+## 4. Core User Journeys
+
+### Journey 1: New User Activation
+
+```
+1. Landing page → Register (email, password, neighborhood)
+2. Password strength validated client-side (8+, uppercase, lowercase, digit)
+3. Supabase Auth creates auth.users row
+4. DB trigger auto-creates profiles row with role='user', points_balance=0
+5. Redirect to Dashboard
+6. Neighborhood filter pre-set to user's neighborhood
+7. Map loads campaign markers
+```
+
+**Failure states handled:**
+- Invalid email format → inline error
+- Weak password → strength meter + blocking validation
+- Email already registered → Supabase error surfaced
+- No neighborhood selected → blocking validation
+
+---
+
+### Journey 2: Campaign Participation (Core Value Loop)
+
+```
+1. Dashboard → Click campaign marker or card → Campaign Detail
+2. Click "Join Campaign" → Creates participations record (status=pending)
+3. Upload "after" photo (JPEG/PNG/WebP, max 5MB)
+4. Admin reviews in Admin Panel → Approves
+5. DB trigger fires:
+   - points_earned = 20 on participation
+   - point_transactions row created (type=earned, amount=20)
+   - profiles.points_balance += 20
+   - notification created (type=approval)
+6. User sees notification bell badge → Opens dropdown → "Approved! +20 points"
+7. User navigates to Rewards → Sees updated balance
+8. Redeems reward → points_balance decreases → transaction (type=spent) created
+```
+
+**Edge cases handled:**
+- User cannot participate twice (DB unique constraint: user_id + campaign_id)
+- Admin cannot approve their own participation (DB trigger blocks self-approval)
+- Points balance cannot go below reward cost (redemption validates balance >= cost)
+
+---
+
+### Journey 3: Campaign Creation
+
+```
+1. Authenticated user → /create-campaign
+2. Fill title (3–100 chars), description (10–1000 chars)
+3. Select neighborhood from dropdown
+4. Click map to pin exact location → lat/lng captured
+5. Upload before photo (JPEG/PNG/WebP, max 5MB) → stored in Supabase Storage
+6. Submit → campaigns row created (status=active)
+7. Redirect to Dashboard → new marker visible on map
+```
+
+**Failure states handled:**
+- No map pin → blocking validation ("coordinates required")
+- Photo wrong format or oversized → client-side rejection before upload
+- Title/description too short or too long → inline errors
+
+---
+
+### Journey 4: Admin Approval Workflow
+
+```
+1. Admin navigates to /admin
+2. Role check: profiles.role === 'admin' (RLS + JS redirect)
+3. Pending table loads participations where status='pending' with after_photo_url
+4. Admin clicks photo thumbnail → full-size modal
+5. Click Approve:
+   - Supabase RPC: approve_participation(participation_id)
+   - status → approved, points_earned = 20
+   - point_transaction row inserted
+   - profiles.points_balance += 20
+   - notification inserted via DB trigger
+6. Row removed from pending table
+```
+
+**Failure states handled:**
+- Non-admin visits /admin → JS redirect to landing page
+- RLS blocks direct DB manipulation even if redirect bypassed
+- Rejection reason is optional — gap noted in Section 9
+
+---
+
+### Journey 5: Demo Mode Evaluation
+
+```
+1. Landing → "Demo Mode (Admin)" button
+2. demo-admin-001 user created in localStorage (no Supabase required)
+3. 5 sample campaigns, 3 participations, 10 rewards, 5 transactions seeded
+4. All 7 pages fully operational via localStorage reads/writes
+5. Approve/reject/redeem all work and persist within session
+6. Notifications skipped (no Supabase Realtime in demo)
+```
+
+**Business value:** Enables zero-friction stakeholder demos and evaluations without exposing production data or requiring account creation.
+
+---
+
+### Journey 6: Report & Moderation
+
+```
+1. Authenticated user views a campaign or profile
+2. Clicks "Report" → selects reason (spam/inappropriate/harassment/fake/other)
+3. Adds optional description → submits
+4. reports row created (status=pending)
+5. Admin views reports in Admin Panel → reviews, updates status
+6. DB trigger fires notify_report_resolved → user notified
+```
+
+**Failure states handled:**
+- Duplicate report from same user on same entity within 24h → DB trigger blocks it
+- Report reason required (enum constraint at DB level)
