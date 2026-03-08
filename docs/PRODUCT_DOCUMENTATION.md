@@ -10,7 +10,7 @@
 2. [Product Vision & Strategy](#2-product-vision--strategy)
 3. [User Segments & Personas](#3-user-segments--personas)
 4. [Core User Journeys](#4-core-user-journeys)
-5. Feature Breakdown *(coming soon)*
+5. [Feature Breakdown](#5-feature-breakdown)
 6. System Architecture *(coming soon)*
 7. Non-Functional Requirements *(coming soon)*
 8. Trade-offs & Product Decisions *(coming soon)*
@@ -317,3 +317,153 @@ superadmin → admin + cannot be demoted (DB-enforced flag)
 **Failure states handled:**
 - Duplicate report from same user on same entity within 24h → DB trigger blocks it
 - Report reason required (enum constraint at DB level)
+
+---
+
+## 5. Feature Breakdown
+
+### Feature 1: Campaign Management
+
+**Description:** CRUD operations for neighborhood cleanup campaigns with geo-coordinates, photo evidence, and status tracking.
+
+**User value:** Residents can discover, join, and organize cleanups with full context (location, before photo, participation count).
+
+**Business value:** Creates the content inventory that drives platform engagement and verifiable environmental impact data.
+
+**Technical implementation:**
+- Campaigns stored in PostgreSQL with soft-delete (`deleted_at`)
+- Location stored as lat/lng floats — simple but limits geo-query capabilities
+- Status machine: `active → completed | cancelled` (no reversal)
+- Before photo required at creation; after photo uploaded per participant
+
+**Dependencies:** Supabase Storage (photos), Leaflet (map display), RLS policies
+
+**Constraints:** Campaign deletion blocked if external participants exist — protects participation records from orphaning.
+
+---
+
+### Feature 2: Points Economy
+
+**Description:** 20-point reward per approved cleanup, spendable on business-sponsored rewards.
+
+**User value:** Tangible incentive that converts volunteer effort into redeemable goods.
+
+**Business value:** Drives retention (users return to earn more), creates a local loyalty ecosystem.
+
+**Technical implementation:**
+- Points awarded via Supabase RPC `approve_participation()` — atomic, cannot partial-fail
+- Immutable audit log via `point_transactions` table (append-only)
+- Balance stored denormalized on `profiles.points_balance` for fast reads
+- Transaction types: `earned | spent | role_change | admin_adjustment`
+
+**Hardcoded constraint:** 20 points per approval — not configurable via UI. Identified as a product rigidity gap in Section 9.
+
+**Dependencies:** Admin approval flow, DB triggers, Supabase RPC
+
+---
+
+### Feature 3: Real-time Notification Bell
+
+**Description:** In-app notification system with unread badge, dropdown, and Supabase Realtime subscription.
+
+**User value:** Users learn immediately when their submission is approved — no polling or page refresh required.
+
+**Business value:** Reduces churn at the critical approval moment; users who get instant feedback return.
+
+**Technical implementation:**
+- Notifications created exclusively by PostgreSQL triggers — no application-layer creation
+- Supabase Realtime channel per user: `notifications-user-{userId}`
+- Latest 20 notifications displayed; badge capped at 99+
+- Mark-read at individual or bulk level
+- Notification types: `approval | campaign_update | system | moderation | achievement | points`
+
+**Dependencies:** Supabase Realtime, PostgreSQL triggers, navbar component
+
+---
+
+### Feature 4: Interactive Map
+
+**Description:** Leaflet.js map showing active campaign locations (red markers) and waste disposal points (green markers).
+
+**User value:** Spatial discovery — users find cleanups near them visually, not just via list.
+
+**Business value:** Geographic data on campaign density reveals neighborhood engagement levels.
+
+**Technical implementation:**
+- OpenStreetMap tiles (no API key required, zero cost)
+- SVG divIcons (no external image dependencies)
+- Default center: Studentski Grad (42.6977°N, 23.3219°E)
+- No marker clustering — all markers render simultaneously
+
+**Scalability note:** With 100+ campaigns, marker overlap becomes a UX problem. No clustering library is implemented — identified as a gap in Section 9.
+
+---
+
+### Feature 5: Internationalization (BG/EN)
+
+**Description:** Full UI translation between Bulgarian and English, persisted per user in localStorage.
+
+**User value:** Accessible to English-speaking residents, students, and expats in Sofia.
+
+**Business value:** Broadens addressable market; enables international evaluators to assess the platform.
+
+**Technical implementation:**
+- Custom i18n module — no external library dependency
+- `data-i18n` HTML attributes auto-translated on page load
+- `t(key, params)` function for dynamic strings with parameter substitution
+- Translation files in both `src/i18n/` (dev) and `public/i18n/` (production)
+
+**Known operational risk:** Two separate translation file locations must be kept in sync manually — divergence causes raw key strings on production.
+
+---
+
+### Feature 6: Demo Mode
+
+**Description:** Full platform simulation using localStorage — no Supabase account or internet connection required.
+
+**User value:** Zero-friction evaluation for new users and stakeholders.
+
+**Business value:** Enables live demos without exposing production data; critical for pitches and academic evaluations.
+
+**Technical implementation:**
+- Demo user ID `demo-admin-001` is the universal switch condition across all 7 page scripts
+- All pages have parallel demo/real code paths
+- Pre-seeded: 5 campaigns, 3 participations, 10 rewards, 5 transactions
+
+**Technical debt:** The `demo-admin-001` condition is scattered across 7 script files — high maintenance burden if demo behavior needs to change globally.
+
+---
+
+### Feature 7: Admin Panel
+
+**Description:** Unified dashboard for participation approval, user management, role assignment, and audit log.
+
+**User value (admin):** Single place to manage all trust and safety operations.
+
+**Business value:** Enables platform operators to maintain points system integrity and reward fairness.
+
+**Technical implementation:**
+- Role check enforced by both RLS (PostgreSQL) and JS redirect on page load
+- Atomic operations via Supabase RPCs: `approve_participation()`, `set_user_role()`
+- Role change audit log stored in `point_transactions` (type=`role_change`)
+- Confirmation dialogs via SweetAlert2 before all destructive actions
+
+**Dependencies:** Supabase RPC, RLS policies, SweetAlert2
+
+---
+
+### Feature 8: PWA (Progressive Web App)
+
+**Description:** Installable web app with offline asset caching and system push notifications.
+
+**User value:** Native-app-like experience on mobile; home screen installation; works offline for cached content.
+
+**Business value:** Increases engagement via home screen placement; reduces barrier to repeat use.
+
+**Technical implementation:**
+- Service worker at `/public/service-worker.js`
+- Install prompt banner shown after 3-second delay on first visit
+- `cacheData()` / `getCachedData()` API for manual offline storage
+- Browser push notification permission requested on initialization
+
+**Dependencies:** Service Worker API, Browser Notifications API, Vite build output
