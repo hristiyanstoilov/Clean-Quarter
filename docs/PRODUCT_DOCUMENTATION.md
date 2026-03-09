@@ -11,7 +11,7 @@
 3. [User Segments & Personas](#3-user-segments--personas)
 4. [Core User Journeys](#4-core-user-journeys)
 5. [Feature Breakdown](#5-feature-breakdown)
-6. System Architecture *(coming soon)*
+6. [System Architecture](#6-system-architecture)
 7. Non-Functional Requirements *(coming soon)*
 8. Trade-offs & Product Decisions *(coming soon)*
 9. Gaps for Enterprise Readiness *(coming soon)*
@@ -467,3 +467,119 @@ superadmin → admin + cannot be demoted (DB-enforced flag)
 - Browser push notification permission requested on initialization
 
 **Dependencies:** Service Worker API, Browser Notifications API, Vite build output
+
+---
+
+## 6. System Architecture
+
+### Frontend Architecture
+
+**Pattern:** Multi-page application (MPA) with ES Module scripts — no framework, no virtual DOM.
+
+**Why this matters for product:** Each page is an independent HTML entry point. Adding a new page requires no changes to existing pages. The tradeoff: shared state between pages is limited to localStorage and URL params — no in-memory global state survives navigation.
+
+**Build:** Vite produces separate JS bundles per page (code splitting by entry point). Users only download code for the page they visit.
+
+```
+index.html               → main bundle
+src/pages/dashboard.html → dashboard bundle
+src/pages/admin.html     → admin bundle
+...                      → one bundle per page
+```
+
+---
+
+### Backend Structure
+
+**Provider:** Supabase — managed PostgreSQL + Auth + Storage + Realtime
+
+| Supabase Service | What it provides |
+|-----------------|-----------------|
+| PostgreSQL | Data persistence, RLS, triggers, RPC functions |
+| Auth | JWT sessions, sign-up/sign-in, token refresh |
+| Storage | S3-compatible file storage (photos, avatars) |
+| Realtime | WebSocket subscriptions to DB changes |
+
+**Custom backend logic:** Zero custom server code. All business logic lives in PostgreSQL (triggers, RPC functions) or client-side JS.
+
+---
+
+### Data Model Overview
+
+9 tables, all with Row-Level Security enabled:
+
+```
+auth.users ──────────────── 1:1 ──→ profiles
+profiles ────────────────── 1:N ──→ campaigns (created_by)
+profiles ────────────────── 1:N ──→ participations (user_id)
+profiles ────────────────── 1:N ──→ point_transactions
+profiles ────────────────── 1:N ──→ notifications
+profiles ────────────────── 1:N ──→ reports
+campaigns ───────────────── 1:N ──→ participations (CASCADE delete)
+campaigns ───────────────── 1:N ──→ comments
+participations ──────────── 1:1 ──→ point_transactions (per approval)
+rewards ─────────────────── 1:N ──→ point_transactions (redemptions)
+disposal_points ─────────── standalone (user-scoped)
+```
+
+**Key design decisions:**
+- `profiles.points_balance` is denormalized — stored directly for fast reads, updated atomically via RPC
+- Soft deletes on: campaigns, rewards, participations, comments (`deleted_at` + `deleted_by`)
+- `point_transactions` is append-only — immutable audit ledger
+- Location stored as lat/lng floats, not PostGIS geometry — simpler but limits radius/proximity queries
+
+---
+
+### Authentication & Authorization Model
+
+**Authentication:** Supabase JWT — stateless tokens stored in browser memory by the Supabase client, auto-refreshed transparently.
+
+**Authorization — two independent layers:**
+
+```
+Layer 1: PostgreSQL RLS policies
+  → Enforced at DB level
+  → Cannot be bypassed from the frontend
+  → Even direct API calls respect RLS
+
+Layer 2: JavaScript role checks
+  → UI-level redirects and conditional rendering
+  → Protects UX, not data (data protected by Layer 1)
+```
+
+**Role hierarchy:**
+```
+anonymous  → read public data only
+user       → full participation features
+admin      → trust & safety operations
+superadmin → admin + immutable (cannot be demoted)
+```
+
+**Rate limiting:** Login capped at 5 attempts / 15 minutes per email — implemented client-side only (not server-enforced — see Section 9).
+
+---
+
+### External Integrations
+
+| Service | Purpose | Dependency level |
+|---------|---------|:----------------:|
+| Supabase | Auth, DB, Storage, Realtime | Critical |
+| OpenStreetMap | Map tiles (via Leaflet) | Degraded UX without |
+| Netlify | Hosting, CDN, URL redirects | Deployment only |
+| Bootstrap 5 (CDN) | UI component library | Visual degradation |
+| SweetAlert2 (CDN) | Confirmation dialogs | Non-critical |
+
+---
+
+### Scalability Implications
+
+| Component | Current state | Bottleneck threshold |
+|-----------|--------------|---------------------|
+| Campaign list | Paginated (9/page) | None — scales linearly |
+| Map markers | All active loaded at once | ~100 campaigns (no clustering) |
+| Notifications | Latest 20 per user | None — truncated query |
+| Admin pending table | No pagination | ~100 pending items |
+| Neighborhoods | 5 (hardcoded array) | Code change required to expand |
+| Points per approval | 20 (hardcoded) | Code change required to adjust |
+| Storage | Supabase free tier (1GB) | ~10,000 photos at 100KB avg |
+| Realtime connections | 1 channel per active user | Supabase free tier: 200 concurrent |
