@@ -12,7 +12,7 @@
 4. [Core User Journeys](#4-core-user-journeys)
 5. [Feature Breakdown](#5-feature-breakdown)
 6. [System Architecture](#6-system-architecture)
-7. Non-Functional Requirements *(coming soon)*
+7. [Non-Functional Requirements](#7-non-functional-requirements)
 8. Trade-offs & Product Decisions *(coming soon)*
 9. Gaps for Enterprise Readiness *(coming soon)*
 10. Suggested Product Roadmap *(coming soon)*
@@ -583,3 +583,72 @@ superadmin → admin + immutable (cannot be demoted)
 | Points per approval | 20 (hardcoded) | Code change required to adjust |
 | Storage | Supabase free tier (1GB) | ~10,000 photos at 100KB avg |
 | Realtime connections | 1 channel per active user | Supabase free tier: 200 concurrent |
+
+---
+
+## 7. Non-Functional Requirements
+
+### Performance
+
+| Concern | Implementation | Gap |
+|---------|---------------|-----|
+| Page load | Per-page JS bundles via Vite code splitting | — |
+| CDN assets | Bootstrap + Leaflet served from CDN (browser-cached) | CDN downtime = broken UI |
+| Image uploads | Max 5MB enforced client-side | No server-side compression or resize |
+| Campaign list | Paginated at 9 items/page | — |
+| Map markers | All active markers loaded at once | Degrades at ~100+ campaigns |
+| Points balance | Denormalized on `profiles` — single field read | — |
+
+---
+
+### Security
+
+| Mechanism | Implementation | Notes |
+|-----------|---------------|-------|
+| SQL injection | Impossible — Supabase client uses parameterized queries exclusively | — |
+| XSS | `escapeHTML()` utility for all user content rendered in HTML | — |
+| CSRF | Not applicable — REST API with JWT, no cookie-based sessions | — |
+| Auth bypass | RLS enforced at DB level — JS bypass has zero effect on data | — |
+| Privilege escalation | `is_superadmin` flag prevents top admin demotion | — |
+| File upload abuse | Type validation (JPEG/PNG/WebP) + 5MB size limit | Client-side only |
+| Report spam | DB trigger blocks duplicate reports within 24h per entity/user | — |
+| Login brute force | 5 attempts / 15 min per email | **Client-side only — bypassable via direct API call** |
+
+---
+
+### Reliability
+
+| Pattern | Implementation |
+|---------|---------------|
+| Offline support | PWA service worker caches static assets |
+| Error handling | Centralized `errorHandler.js` — type-based strategies, retry with exponential backoff |
+| Soft deletes | campaigns, rewards, comments, participations — no permanent data loss on delete |
+| Audit trail | `point_transactions` is append-only; `deleted_by` tracked on all soft deletes |
+| Data integrity | DB constraints (unique participations, comment length, reward cost range) |
+| Atomic operations | Points awarded via RPC — cannot partial-fail |
+
+---
+
+### Maintainability
+
+| Concern | Implementation |
+|---------|---------------|
+| Code organization | Service-oriented — UI (HTML), controllers (scripts/), business logic (services/), utilities (utils/) |
+| Linting | ESLint + Prettier enforced via Husky pre-commit hooks |
+| Test coverage | 449 tests across 44 files — unit, integration, RLS policies, E2E |
+| i18n | All user-facing strings externalized to JSON translation files |
+| DB versioning | 43 sequential SQL migrations — never edited after applied |
+| Build tooling | Vite with `rollup-plugin-visualizer` for bundle size analysis |
+
+---
+
+### Observability
+
+| Concern | Implementation | Gap |
+|---------|---------------|-----|
+| Application logging | Custom `logger.js` with dev/prod differentiation | No external log aggregation |
+| Error tracking | Centralized `errorHandler.js` with listener pattern | No Sentry / external service |
+| Analytics | None | No page views, funnel, or event tracking |
+| Performance monitoring | None | No Core Web Vitals, no APM |
+| Uptime monitoring | None | Supabase or Netlify outages are undetected |
+| Alerting | None | Admin has no proactive system notifications |
