@@ -13,7 +13,7 @@
 5. [Feature Breakdown](#5-feature-breakdown)
 6. [System Architecture](#6-system-architecture)
 7. [Non-Functional Requirements](#7-non-functional-requirements)
-8. Trade-offs & Product Decisions *(coming soon)*
+8. [Trade-offs & Product Decisions](#8-trade-offs--product-decisions)
 9. Gaps for Enterprise Readiness *(coming soon)*
 10. Suggested Product Roadmap *(coming soon)*
 
@@ -652,3 +652,49 @@ superadmin → admin + immutable (cannot be demoted)
 | Performance monitoring | None | No Core Web Vitals, no APM |
 | Uptime monitoring | None | Supabase or Netlify outages are undetected |
 | Alerting | None | Admin has no proactive system notifications |
+
+---
+
+## 8. Trade-offs & Product Decisions
+
+### What Was Optimized For
+
+| Priority | Decision | Evidence in code |
+|----------|----------|-----------------|
+| Speed to production | No custom backend — Supabase handles auth, DB, storage, realtime | Zero server-side code files |
+| Security by default | RLS at DB layer — buggy frontend cannot expose unauthorized data | RLS policies on all 9 tables |
+| Zero infrastructure cost | Supabase free tier + Netlify free tier | No paid service dependencies |
+| Demo-ability | Full localStorage demo without Supabase | `demoMode.js` + parallel code paths in all 7 scripts |
+| Bilingualism from day one | BG/EN not retrofitted — built in from the start | `data-i18n` attributes throughout all HTML |
+| Audit integrity | Append-only point ledger, soft deletes everywhere | `point_transactions`, `deleted_at` on 4 tables |
+
+---
+
+### What Constraints Are Visible
+
+| Constraint | Where it appears | Impact |
+|-----------|-----------------|--------|
+| Fixed 20 points per approval | Hardcoded in `admin.js` and RPC | Cannot reward harder campaigns more |
+| Fixed 5 neighborhoods | Hardcoded array in multiple files | Adding a neighborhood requires code change |
+| Manual Netlify deployment | No CI/CD auto-deploy configured | Every release requires manual drag-and-drop |
+| Client-side login rate limiting | `auth.js` — not server-enforced | Bypassable via direct Supabase API call |
+| No image optimization | Raw uploads, no resize or compression | Large files slow page loads |
+| Single language per session | Language switch triggers full page reload | Minor UX friction on toggle |
+| No email notifications | Only in-app via notification bell | Users miss approvals without platform visit |
+
+---
+
+### What Was Deliberately Simplified
+
+| Simplification | Rationale |
+|---------------|-----------|
+| No custom server | Eliminates backend infrastructure, deployment complexity, and maintenance overhead |
+| Vanilla JS (no framework) | Reduces bundle size, build complexity, and learning curve for contributors |
+| lat/lng floats instead of PostGIS | Avoids PostGIS extension setup; sufficient for visual map display at current scale |
+| No campaign categories | Reduces DB schema complexity; all cleanups treated as equivalent in current scope |
+| Single before photo per campaign | Simpler upload flow; sufficient for proof-of-need at MVP stage |
+| Single after photo per participant | Simpler approval flow; one photo = one approval decision |
+| No search | Campaign discovery via map + neighborhood filter sufficient at current data volume |
+| No social features | Follows, shares, public profiles add complexity without core value at MVP |
+| Demo mode via localStorage | No separate demo environment or seed DB needed; works fully offline |
+| No multi-tenancy | Single namespace for all neighborhoods; no organization/district isolation layer |
