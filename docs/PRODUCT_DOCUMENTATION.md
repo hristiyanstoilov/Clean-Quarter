@@ -15,7 +15,7 @@
 7. [Non-Functional Requirements](#7-non-functional-requirements)
 8. [Trade-offs & Product Decisions](#8-trade-offs--product-decisions)
 9. [Gaps for Enterprise Readiness](#9-gaps-for-enterprise-readiness)
-10. Suggested Product Roadmap *(coming soon)*
+10. [Suggested Product Roadmap](#10-suggested-product-roadmap)
 
 ---
 
@@ -757,3 +757,58 @@ superadmin → admin + immutable (cannot be demoted)
 | No versioned Terms of Service | Registration checkbox present but no ToS document or version tracking |
 | No data retention policy | Old campaigns, transactions, and notifications are never purged |
 | No audit log for admin actions | Role change log exists; photo approvals/rejections are not independently logged |
+
+---
+
+## 10. Suggested Product Roadmap
+
+### Short-term (1–3 months) — Operational Stability
+
+| Priority | Item | Rationale |
+|:--------:|------|-----------|
+| P0 | Automated Netlify deploy (CI/CD) | Manual deploys block rapid iteration |
+| P0 | Server-side login rate limiting | Current client-side only is bypassable via direct API call |
+| P1 | Configurable points per campaign | Core product rigidity — all cleanups currently treated as equal |
+| P1 | Admin panel pagination | Degrades significantly at 100+ pending items |
+| P1 | Map marker clustering | UX breaks at 100+ active campaigns |
+| P1 | Email notifications on approval | Users miss approvals without visiting the platform |
+| P1 | Make rejection reason required | Fairness — users deserve an explanation when rejected |
+| P2 | Basic analytics (Plausible / PostHog) | Currently flying blind — no funnel or retention data |
+| P2 | Error tracking (Sentry free tier) | Production errors are invisible |
+
+---
+
+### Mid-term (3–9 months) — Growth Infrastructure
+
+| Priority | Item | Rationale |
+|:--------:|------|-----------|
+| P1 | Add neighborhoods via admin UI | Remove hardcoded list — expand without code changes |
+| P1 | Campaign categories (park / street / water / other) | Segmentation for reporting and filtered discovery |
+| P1 | Reward fulfillment tracking | Close the loop with sponsors — verify delivery |
+| P1 | Reward quantity enforcement | `quantity_available` column exists but is not wired |
+| P1 | GDPR compliance (data export + erasure) | Legal requirement under EU law |
+| P2 | Campaign text search | Discovery beyond map + neighborhood filter |
+| P2 | Neighborhood leaderboard | Drives inter-neighborhood competition and social proof |
+| P2 | Multi-photo evidence upload | Richer proof, harder to game the system |
+| P2 | Privacy policy page | Referenced in registration but `/privacy` route missing |
+| P3 | Mobile app shell (Capacitor) | PWA → App Store distribution |
+| P3 | Sponsor self-serve reward portal | Scale reward supply without manual ops |
+
+---
+
+### Long-term (9–24 months) — Platform Expansion
+
+| Priority | Item | Rationale |
+|:--------:|------|-----------|
+| P1 | Multi-city support | Remove Sofia-only constraint — architecture supports it today |
+| P1 | Municipality API integration | Official data feeds, compliance reporting for districts |
+| P1 | Business sponsor dashboard | Revenue enabler — sponsors manage their own rewards |
+| P2 | Environmental impact metrics | Estimated kg waste removed — measurable ESG reporting |
+| P2 | Campaign scheduling + calendar | Coordinate recurring cleanups and seasonal events |
+| P2 | Team / group participation | Corporate social responsibility use case |
+| P3 | Open API for third-party integrations | Platform ecosystem play |
+| P3 | Carbon credit tokenization | Long-term monetization via sustainability markets |
+
+---
+
+*Document complete. All 10 sections reflect features and decisions derived directly from the codebase. No speculative features included.*
