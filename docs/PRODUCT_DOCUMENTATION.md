@@ -14,7 +14,7 @@
 6. [System Architecture](#6-system-architecture)
 7. [Non-Functional Requirements](#7-non-functional-requirements)
 8. [Trade-offs & Product Decisions](#8-trade-offs--product-decisions)
-9. Gaps for Enterprise Readiness *(coming soon)*
+9. [Gaps for Enterprise Readiness](#9-gaps-for-enterprise-readiness)
 10. Suggested Product Roadmap *(coming soon)*
 
 ---
@@ -698,3 +698,62 @@ superadmin → admin + immutable (cannot be demoted)
 | No social features | Follows, shares, public profiles add complexity without core value at MVP |
 | Demo mode via localStorage | No separate demo environment or seed DB needed; works fully offline |
 | No multi-tenancy | Single namespace for all neighborhoods; no organization/district isolation layer |
+
+---
+
+## 9. Gaps for Enterprise Readiness
+
+### Missing Governance Layers
+
+| Gap | Impact | Recommendation |
+|-----|--------|----------------|
+| Points per campaign not configurable | Cannot reward harder/larger cleanups more | Add `points_value` column to `campaigns` table |
+| No reward fulfillment tracking | No way to verify rewards were actually delivered | Add `fulfilled_at`, `fulfilled_by` to `point_transactions` |
+| No campaign categories/types | No segmentation for reporting or discovery | Add `category` enum to `campaigns` |
+| No rate limiting on campaign creation | Spam campaigns are technically possible | Add client-side + server-side rate limit |
+| No moderation queue for new campaigns | All campaigns go public immediately | Add `status='pending'` for first-time creators |
+| Rejection reason optional | Unfair rejections with no explanation | Make `rejection_reason` required on reject action |
+| No reward quantity enforcement | `quantity_available` column exists but not decremented on redemption | Wire redemption to decrement quantity |
+
+---
+
+### Missing Analytics
+
+| Gap | Impact |
+|-----|--------|
+| No event tracking | Cannot measure registration → join → upload → approval funnel |
+| No retention metrics | Cannot measure DAU / WAU / MAU |
+| No neighborhood engagement data | Cannot identify which areas are most/least active |
+| No reward redemption analytics | Cannot measure reward ROI for sponsors |
+| No campaign completion rate | Cannot identify campaigns that attract no participants |
+| No A/B testing infrastructure | Cannot optimize onboarding or conversion flows |
+
+**Recommendation:** Integrate [Plausible](https://plausible.io) (privacy-compliant, EU-hosted) or [PostHog](https://posthog.com) (self-hostable, open-source).
+
+---
+
+### Missing Monitoring
+
+| Gap | Impact |
+|-----|--------|
+| No error tracking service | Production errors are invisible unless a user reports them |
+| No uptime monitoring | Supabase or Netlify outages go undetected |
+| No performance monitoring | Slow pages are undetected — no Core Web Vitals tracking |
+| No alerting | Admin has no proactive notification of system issues |
+| No deployment notifications | No confirmation when a deploy succeeds or fails |
+
+**Recommendation:** [Sentry](https://sentry.io) (free tier) for error tracking; [UptimeRobot](https://uptimerobot.com) (free) for availability monitoring.
+
+---
+
+### Missing Compliance Elements
+
+| Gap | Relevance |
+|-----|-----------|
+| No GDPR data export | Required under EU law — users can request all their data |
+| No right-to-erasure | `deleted_at` exists but photos remain in Supabase Storage after soft delete |
+| No privacy policy page | Referenced in registration checkbox but `/privacy` route does not exist |
+| No cookie consent banner | Required if analytics or tracking is added |
+| No versioned Terms of Service | Registration checkbox present but no ToS document or version tracking |
+| No data retention policy | Old campaigns, transactions, and notifications are never purged |
+| No audit log for admin actions | Role change log exists; photo approvals/rejections are not independently logged |
