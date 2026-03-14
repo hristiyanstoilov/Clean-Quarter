@@ -2,6 +2,7 @@ import { initializeMap, loadMapData } from "../services/map.js";
 import { logout } from "../services/auth.js";
 import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
 import supabase from "../services/supabase.js";
+import { fetchWeather } from "../services/weather.js";
 import {
   requireAuth,
   removeUser,
@@ -61,6 +62,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       updateSectionTitle(user.neighborhood, lang);
       document.getElementById("showAllBtn").style.display = "inline-flex";
     }
+
+    // Weather widget — non-blocking, loaded before map
+    loadWeatherWidget(user);
 
     // Leaflet is bundled via npm — always available
     const map = initializeMap();
@@ -168,6 +172,43 @@ function buildCampaignCard(campaign) {
         </div>
       </div>
     </div>`;
+}
+
+/**
+ * Render the weather widget above the map.
+ * In demo mode shows static data. If fetch fails, widget stays hidden.
+ */
+async function loadWeatherWidget(user) {
+  const widget = document.getElementById("weatherWidget");
+  if (!widget) return;
+
+  let weather;
+
+  if (user?.id === "demo-admin-001") {
+    weather = { temperature: 22, condition: "clear", icon: "☀️", isGoodWeather: true };
+  } else {
+    weather = await fetchWeather();
+  }
+
+  if (!weather) return; // API failed — stay hidden
+
+  const msgKey =
+    weather.condition === "clear" ||
+    weather.condition === "mostly_clear" ||
+    weather.condition === "cloudy"
+      ? "good"
+      : weather.condition === "showers"
+        ? "showers"
+        : weather.condition; // fog | rain | snow | storm
+
+  const msg = t(`weather.${msgKey}`) || "";
+
+  document.getElementById("weatherIcon").textContent = weather.icon;
+  document.getElementById("weatherTemp").textContent = `${weather.temperature}°C`;
+  document.getElementById("weatherMsg").textContent = msg ? `— ${msg}` : "";
+
+  if (!weather.isGoodWeather) widget.classList.add("weather-warning");
+  widget.style.display = "flex";
 }
 
 /**

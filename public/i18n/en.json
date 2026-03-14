@@ -50,6 +50,14 @@
     "musagenitsa": "Musagenitsa",
     "studentskiGrad": "Studentski Grad"
   },
+  "weather": {
+    "good": "Great day for a cleanup!",
+    "fog": "Foggy conditions. Take care while cleaning.",
+    "rain": "Rain expected. Plan your cleanup earlier.",
+    "snow": "Snowfall expected. Consider rescheduling.",
+    "showers": "Possible showers. Check the forecast.",
+    "storm": "Stormy weather. We recommend postponing the cleanup."
+  },
   "dashboard": {
     "title": "Campaigns",
     "nearYou": "Cleanups Near You",
