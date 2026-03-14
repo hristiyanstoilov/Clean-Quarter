@@ -54,7 +54,8 @@ export default defineConfig({
         campaignDetail: resolve(__dirname, 'src/pages/campaign-detail.html'),
         profile: resolve(__dirname, 'src/pages/profile.html'),
         admin: resolve(__dirname, 'src/pages/admin.html'),
-        rewards: resolve(__dirname, 'src/pages/rewards.html')
+        rewards: resolve(__dirname, 'src/pages/rewards.html'),
+        privacy: resolve(__dirname, 'src/pages/privacy.html')
       },
       plugins: [visualizer({ open: true, filename: 'dist/bundle-stats.html' })]
     }

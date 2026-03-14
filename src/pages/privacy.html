@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="bg">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Условия и Поверителност — Clean Quarter</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <style>
+      body {
+        background: #f8f9fa;
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+      }
+      .page-header {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        padding: 2.5rem 2rem;
+      }
+      .content-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        margin-bottom: 2rem;
+      }
+      .content-body {
+        padding: 2.5rem;
+        line-height: 1.7;
+        font-size: 0.95rem;
+        color: #2d3748;
+      }
+      .section-header-green {
+        background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+        padding: 1.5rem;
+        border-radius: 12px;
+        border-left: 5px solid #28a745;
+        margin-bottom: 1.5rem;
+      }
+      .section-header-blue {
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        padding: 1.5rem;
+        border-radius: 12px;
+        border-left: 5px solid #2196f3;
+        margin-bottom: 1.5rem;
+      }
+      .subsection {
+        background: #f1f8f4;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid #28a745;
+      }
+      .divider {
+        margin: 2.5rem 0;
+        border: none;
+        height: 2px;
+        background: linear-gradient(to right, transparent, #28a745, transparent);
+      }
+      .lang-btn {
+        cursor: pointer;
+      }
+      .lang-btn.active {
+        font-weight: 700;
+      }
+      #contentEn {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-header">
+      <div class="container">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+          <div>
+            <h1 style="margin: 0; font-size: 1.8rem; font-weight: 700">
+              📋 <span id="pageTitle">Условия за използване и Поверителност</span>
+            </h1>
+            <p style="margin: 0.5rem 0 0 0; opacity: 0.9">Clean Quarter / Чист Квартал</p>
+          </div>
+          <div class="d-flex gap-2 align-items-center">
+            <button
+              class="btn btn-outline-light btn-sm lang-btn active"
+              id="btnBg"
+              onclick="showLang('bg')"
+            >
+              БГ
+            </button>
+            <button
+              class="btn btn-outline-light btn-sm lang-btn"
+              id="btnEn"
+              onclick="showLang('en')"
+            >
+              EN
+            </button>
+            <a href="/" class="btn btn-light btn-sm ms-2">← <span id="backLabel">Назад</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container py-4" style="max-width: 820px">
+      <!-- BULGARIAN CONTENT -->
+      <div id="contentBg">
+        <div class="content-card">
+          <div class="content-body">
+            <div class="section-header-green">
+              <h3 style="color: #1e7e34; margin: 0; font-size: 1.4rem; font-weight: 700">
+                ОБЩИ УСЛОВИЯ ЗА ПОЛЗВАНЕ
+              </h3>
+              <p style="margin: 0.5rem 0 0 0; color: #2d5016; font-size: 0.9rem; font-weight: 600">
+                "Clean Quarter / Чист Квартал"
+              </p>
+            </div>
+            <p style="font-size: 0.9rem; color: #666; margin-bottom: 1.5rem">
+              <strong>Последна актуализация: 17.01.2026 г.</strong>
+            </p>
+
+            <div class="subsection">
+              <h4 style="color: #1e7e34; margin: 0; font-size: 1.1rem; font-weight: 600">
+                1. ПРЕДМЕТ И ОБЩИ РАЗПОРЕДБИ
+              </h4>
+            </div>
+            <p>
+              <strong>1.1.</strong> Настоящите Общи условия уреждат отношенията между Християн
+              Стоилов Стоилов, називан по-долу за краткост „Администратор", и лицата, използващи
+              мобилното приложение "Clean Quarter / Чист Квартал", наричани по-долу „Потребители".
+            </p>
+            <p>
+              <strong>1.2.</strong> Приложението е софтуерна платформа, която позволява на граждани
+              доброволно да организират и участват в инициативи за почистване на околната среда, да
+              споделят снимки и да комуникират помежду си.
+            </p>
+            <p>
+              <strong>1.3.</strong> С натискането на бутона „Регистрация" и/или отмятането на
+              чекбокса „Съгласен съм с Общите условия", Потребителят декларира, че е запознат с
+              настоящите условия, съгласен е с тях и се задължава да ги спазва.
+            </p>
+
+            <div class="subsection">
+              <h4 style="color: #1e7e34; margin: 0; font-size: 1.1rem; font-weight: 600">
+                2. РЕГИСТРАЦИЯ И ВЪЗРАСТОВИ ОГРАНИЧЕНИЯ
+              </h4>
+            </div>
+            <p><strong>2.1.</strong> Регистрацията в Приложението е доброволна и безплатна.</p>
+            <p>
+              <strong>2.2.</strong> Услугите на Приложението са предназначени за лица, навършили 16
+              (шестнадесет) години.
+            </p>
+            <p>
+              <strong>2.3.</strong> Лица под 18 години следва да използват Приложението и да
+              участват във физически дейности по почистване само със знанието и съгласието на
+              родител/настойник.
+            </p>
+            <p>
+              <strong>2.4.</strong> Администраторът си запазва правото да изтрие профила на всеки
+              потребител, за когото се установи, че е под посочената възраст или е предоставил
+              неверни данни.
+            </p>
+
+            <div class="subsection">
+              <h4 style="color: #1e7e34; margin: 0; font-size: 1.1rem; font-weight: 600">
+                3. ХАРАКТЕР НА ДЕЙНОСТТА И ОТКАЗ ОТ ОТГОВОРНОСТ
+              </h4>
+            </div>
+            <p>
+              <strong>3.1. Доброволен принцип:</strong> Използването на Приложението и участието във
+              физическо почистване е изцяло доброволно. Между Потребителя и Администратора НЕ
+              възникват трудови правоотношения, граждански договори или ангажименти за наемане на
+              работа.
+            </p>
+            <p>
+              <strong>3.2. Личен риск:</strong> Потребителят разбира и приема, че участието в акции
+              за почистване крие рискове за здравето и безопасността.
+            </p>
+            <p>
+              <strong>3.3. Освобождаване от отговорност:</strong> Потребителят участва в
+              почистването на свой собствен риск. Администраторът НЕ носи отговорност за физически
+              травми, злополуки, имуществени вреди или действия на трети лица.
+            </p>
+            <p>
+              <strong>3.4. Задължения за безопасност:</strong> Потребителят се задължава да използва
+              лични предпазни средства и да НЕ докосва опасни отпадъци. При откриване на такива —
+              тел. 112.
+            </p>
+
+            <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem">
+              4. ПРАВИЛА ЗА ТРЕТИРАНЕ НА ОТПАДЪЦИ
+            </h4>
+            <p>
+              <strong>4.1.</strong> Приложението е информационен инструмент и не заменя общинските
+              служби по чистота.
+            </p>
+            <p>
+              <strong>4.2.</strong> Потребителят се задължава да изхвърля събраните отпадъци
+              ЕДИНСТВЕНО в регламентираните за целта места.
+            </p>
+            <p>
+              <strong>4.3.</strong> Строго се забранява струпването на събрани отпадъци на тротоари
+              или други площи извън контейнерите.
+            </p>
+
+            <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem">
+              5. СЪДЪРЖАНИЕ ОТ ПОТРЕБИТЕЛИ И АВТОРСКИ ПРАВА
+            </h4>
+            <p><strong>5.1.</strong> Потребителите могат да качват снимки, коментари и текстове.</p>
+            <p>
+              <strong>5.2. Лиценз:</strong> С качването на съдържание, Потребителят предоставя на
+              Администратора неизключителен, безвъзмезден лиценз за използването му.
+            </p>
+            <p>
+              <strong>5.3.</strong> Забранява се публикуването на обидно, незаконно или спам
+              съдържание. Администраторът има право да премахва такова съдържание без предизвестие.
+            </p>
+
+            <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem">
+              6. ГЕЙМИФИКАЦИЯ И НАГРАДИ
+            </h4>
+            <p>
+              <strong>6.1.</strong> Виртуалните точки и награди нямат паричен еквивалент и не могат
+              да бъдат обменяни за валута.
+            </p>
+            <p>
+              <strong>6.2.</strong> Администраторът има право да променя механиката на точките при
+              съмнение за измама.
+            </p>
+
+            <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem">
+              7. ПРИЛОЖИМО ПРАВО
+            </h4>
+            <p>
+              За всички неуредени въпроси се прилага действащото законодателство на Република
+              България.
+            </p>
+
+            <hr class="divider" />
+
+            <div class="section-header-blue">
+              <h3 style="color: #0d47a1; margin: 0; font-size: 1.4rem; font-weight: 700">
+                ПОЛИТИКА ЗА ПОВЕРИТЕЛНОСТ
+              </h3>
+              <p style="margin: 0.5rem 0 0 0; color: #1565c0; font-size: 0.9rem; font-weight: 600">
+                "Clean Quarter / Чист Квартал"
+              </p>
+            </div>
+            <p style="font-size: 0.9rem; color: #666; margin-bottom: 1.5rem">
+              <strong>В сила от: 17.01.2026 г.</strong>
+            </p>
+
+            <p>
+              Настоящата Политика за поверителност описва как приложението събира, използва и
+              съхранява Вашите лични данни в съответствие с GDPR — Регламент (ЕС) 2016/679.
+            </p>
+
+            <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem">
+              1. АДМИНИСТРАТОР НА ЛИЧНИ ДАННИ
+            </h4>
+            <p>
+              <strong>Християн Стоилов Стоилов</strong><br />Физическо лице, разработчик на
+              софтуер<br />Имейл: <strong>support.cleanquarter@gmail.com</strong>
+            </p>
+
+            <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem">
+              2. КАКВИ ДАННИ СЪБИРАМЕ
+            </h4>
+            <ul style="margin-left: 1.5rem; margin-bottom: 0.7rem">
+              <li>
+                <strong>Данни за акаунт:</strong> Потребителско име, имейл адрес и парола
+                (криптирана).
+              </li>
+              <li>
+                <strong>Потребителско съдържание:</strong> Снимки на замърсени/почистени площи.
+              </li>
+              <li>
+                <strong>Местоположение:</strong> GPS координати при създаване на кампания или
+                сигнал.
+              </li>
+              <li><strong>Технически данни:</strong> IP адрес, вид на устройството, crash logs.</li>
+            </ul>
+
+            <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem">
+              3. ЗА КАКВИ ЦЕЛИ ИЗПОЛЗВАМЕ ДАННИТЕ
+            </h4>
+            <ul style="margin-left: 1.5rem; margin-bottom: 0.7rem">
+              <li>Регистрация на профил и предоставяне на услугата.</li>
+              <li>Изчисляване на точки, нива и класирания.</li>
+              <li>Анализ на грешки и оптимизация на работата.</li>
+              <li>Изпращане на важни съобщения относно промени в условията.</li>
+            </ul>
+
+            <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem">
+              4. СПОДЕЛЯНЕ НА ДАННИ
+            </h4>
+            <p>
+              Ние НЕ продаваме Вашите лични данни. Споделяме само с доставчици на хостинг,
+              картографски услуги и аналитични инструменти — само доколкото е необходимо за работата
+              на платформата.
+            </p>
+
+            <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem">
+              5. ВАШИТЕ ПРАВА (GDPR)
+            </h4>
+            <ul style="margin-left: 1.5rem; margin-bottom: 0.7rem">
+              <li><strong>Право на достъп</strong> — да поискате какви данни обработваме.</li>
+              <li>
+                <strong>Право на коригиране</strong> — да промените грешни данни в профила си.
+              </li>
+              <li>
+                <strong>Право на изтриване</strong> — да поискате изтриване на профила и данните Ви.
+              </li>
+              <li>
+                <strong>Право на преносимост</strong> — да получите данните си в четим формат.
+              </li>
+            </ul>
+            <p>За упражняване на правата: <strong>support.cleanquarter@gmail.com</strong></p>
+
+            <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem">
+              6. СЪХРАНЕНИЕ И СИГУРНОСТ
+            </h4>
+            <p>
+              Данните се съхраняват докато имате активен профил. При изтриване на профила —
+              заличаване в срок до 30 дни. Прилагаме криптиране и сигурни сървъри за защита на
+              данните.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ENGLISH CONTENT -->
+      <div id="contentEn">
+        <div class="content-card">
+          <div class="content-body">
+            <div class="section-header-green">
+              <h3 style="color: #1e7e34; margin: 0; font-size: 1.4rem; font-weight: 700">
+                GENERAL TERMS AND CONDITIONS
+              </h3>
+              <p style="margin: 0.5rem 0 0 0; color: #2d5016; font-size: 0.9rem; font-weight: 600">
+                "Clean Quarter"
+              </p>
+            </div>
+            <p style="font-size: 0.9rem; color: #666; margin-bottom: 1.5rem">
+              <strong>Last updated: January 17, 2026</strong>
+            </p>
+
+            <div class="subsection">
+              <h4 style="color: #1e7e34; margin: 0; font-size: 1.1rem; font-weight: 600">
+                1. SUBJECT AND GENERAL PROVISIONS
+              </h4>
+            </div>
+            <p>
+              <strong>1.1.</strong> These General Terms govern the relationship between Hristiyan
+              Stoilov Stoilov (the "Administrator") and the persons using the "Clean Quarter"
+              application (the "Users").
+            </p>
+            <p>
+              <strong>1.2.</strong> The Application is a software platform that allows citizens to
+              voluntarily organize and participate in environmental cleaning initiatives, share
+              photos, and communicate.
+            </p>
+            <p>
+              <strong>1.3.</strong> By clicking "Register" or checking "I agree to the Terms", the
+              User declares they are familiar with and bound by these conditions.
+            </p>
+
+            <div class="subsection">
+              <h4 style="color: #1e7e34; margin: 0; font-size: 1.1rem; font-weight: 600">
+                2. REGISTRATION AND AGE RESTRICTIONS
+              </h4>
+            </div>
+            <p><strong>2.1.</strong> Registration is voluntary and free of charge.</p>
+            <p><strong>2.2.</strong> The Application is intended for persons aged 16 and above.</p>
+            <p>
+              <strong>2.3.</strong> Persons under 18 should participate in cleaning activities only
+              with parental/guardian knowledge and consent.
+            </p>
+
+            <div class="subsection">
+              <h4 style="color: #1e7e34; margin: 0; font-size: 1.1rem; font-weight: 600">
+                3. DISCLAIMER AND SAFETY
+              </h4>
+            </div>
+            <p>
+              <strong>3.1.</strong> Participation is entirely voluntary. No employment or
+              contractual obligations arise.
+            </p>
+            <p>
+              <strong>3.2.</strong> The User participates at their own risk. The Administrator is
+              NOT liable for physical injuries, property damage, or third-party actions.
+            </p>
+            <p>
+              <strong>3.3.</strong> Users must use protective equipment and must NOT handle
+              hazardous waste. Call 112 if found.
+            </p>
+
+            <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem">
+              4. WASTE DISPOSAL RULES
+            </h4>
+            <p>
+              Collected waste must ONLY be disposed of in designated public containers. Illegal
+              dumping is strictly prohibited.
+            </p>
+
+            <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem">
+              5. USER CONTENT AND COPYRIGHT
+            </h4>
+            <p>
+              By uploading content, the User grants the Administrator a non-exclusive, royalty-free
+              license to use it. Publishing offensive, illegal, or spam content is forbidden.
+            </p>
+
+            <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem">
+              6. GAMIFICATION AND REWARDS
+            </h4>
+            <p>
+              Virtual points and rewards have no monetary equivalent and cannot be exchanged for
+              currency. The Administrator may modify point mechanics in case of suspected fraud.
+            </p>
+
+            <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem">
+              7. APPLICABLE LAW
+            </h4>
+            <p>Bulgarian law applies to all matters not covered by these Terms.</p>
+
+            <hr class="divider" />
+
+            <div class="section-header-blue">
+              <h3 style="color: #0d47a1; margin: 0; font-size: 1.4rem; font-weight: 700">
+                PRIVACY POLICY
+              </h3>
+              <p style="margin: 0.5rem 0 0 0; color: #1565c0; font-size: 0.9rem; font-weight: 600">
+                "Clean Quarter"
+              </p>
+            </div>
+            <p style="font-size: 0.9rem; color: #666; margin-bottom: 1.5rem">
+              <strong>Effective date: January 17, 2026</strong>
+            </p>
+
+            <p>
+              This Privacy Policy describes how the Application collects, uses, and stores your
+              personal data in accordance with GDPR — Regulation (EU) 2016/679.
+            </p>
+
+            <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem">
+              1. DATA CONTROLLER
+            </h4>
+            <p>
+              <strong>Hristiyan Stoilov Stoilov</strong><br />Individual, Software Developer<br />Email:
+              <strong>support.cleanquarter@gmail.com</strong>
+            </p>
+
+            <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem">
+              2. DATA WE COLLECT
+            </h4>
+            <ul style="margin-left: 1.5rem; margin-bottom: 0.7rem">
+              <li>
+                <strong>Account data:</strong> Username, email address, and password (encrypted).
+              </li>
+              <li><strong>User content:</strong> Photos of polluted/cleaned areas.</li>
+              <li>
+                <strong>Location:</strong> GPS coordinates when creating a campaign or report.
+              </li>
+              <li><strong>Technical data:</strong> IP address, device type, crash logs.</li>
+            </ul>
+
+            <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem">
+              3. HOW WE USE YOUR DATA
+            </h4>
+            <ul style="margin-left: 1.5rem; margin-bottom: 0.7rem">
+              <li>Profile registration and service delivery.</li>
+              <li>Points calculation, levels, and leaderboards.</li>
+              <li>Error analysis and app optimization.</li>
+              <li>Important communications regarding policy changes.</li>
+            </ul>
+
+            <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem">
+              4. DATA SHARING
+            </h4>
+            <p>
+              We do NOT sell your personal data. We share only with hosting, mapping, and analytics
+              providers as strictly necessary for the platform to operate.
+            </p>
+
+            <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem">
+              5. YOUR RIGHTS (GDPR)
+            </h4>
+            <ul style="margin-left: 1.5rem; margin-bottom: 0.7rem">
+              <li><strong>Right of access</strong> — request what data we process about you.</li>
+              <li>
+                <strong>Right to rectification</strong> — correct inaccurate data in your profile.
+              </li>
+              <li>
+                <strong>Right to erasure</strong> — request deletion of your profile and data.
+              </li>
+              <li>
+                <strong>Right to portability</strong> — receive your data in a readable format.
+              </li>
+            </ul>
+            <p>To exercise your rights: <strong>support.cleanquarter@gmail.com</strong></p>
+
+            <h4 style="color: #212529; margin-top: 1.2rem; margin-bottom: 0.7rem">
+              6. RETENTION AND SECURITY
+            </h4>
+            <p>
+              Data is stored while your profile is active. Upon deletion, personal data is erased
+              within 30 days. We apply encryption and secure servers to protect your data.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function showLang(lang) {
+        document.getElementById("contentBg").style.display = lang === "bg" ? "block" : "none";
+        document.getElementById("contentEn").style.display = lang === "en" ? "block" : "none";
+        document.getElementById("btnBg").classList.toggle("active", lang === "bg");
+        document.getElementById("btnEn").classList.toggle("active", lang === "en");
+        document.getElementById("pageTitle").textContent =
+          lang === "bg"
+            ? "Условия за използване и Поверителност"
+            : "Terms & Conditions and Privacy Policy";
+        document.getElementById("backLabel").textContent = lang === "bg" ? "Назад" : "Back";
+      }
+      // Sync with app language preference
+      const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+      if (lang === "en") showLang("en");
+    </script>
+  </body>
+</html>
