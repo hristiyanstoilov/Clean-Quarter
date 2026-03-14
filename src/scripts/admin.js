@@ -885,7 +885,7 @@ async function handleReject(participationId, username) {
       throw new Error("Participation not found");
     }
 
-    // Prompt for rejection reason
+    // Prompt for rejection reason (required)
     const result = await Swal.fire({
       title: t("admin.rejectSubmissionTitle"),
       input: "textarea",
@@ -900,13 +900,18 @@ async function handleReject(participationId, username) {
       inputAttributes: {
         "aria-label": t("admin.rejectionReasonAria"),
       },
+      inputValidator: (value) => {
+        if (!value || !value.trim()) {
+          return t("admin.rejectionReasonRequired") || "Моля, въведи причина за отхвърляне";
+        }
+      },
     });
 
     if (!result.isConfirmed) {
       return;
     }
 
-    const rejectionReason = result.value || "No reason provided";
+    const rejectionReason = result.value.trim();
 
     // Show loading — no await: Swal.fire(loading) must not block the code that follows
     Swal.fire({
