@@ -31,6 +31,7 @@
 | **Anonymous** | Browse campaigns and rewards (read-only) |
 | **User** | Register/login, create campaigns, join campaigns, upload before/after photos, earn points, redeem rewards, view own profile and transaction history |
 | **Admin** | Everything a user can do + approve/reject cleanup submissions, award points, manage disposal points, manage user roles, view all reports |
+| **Superadmin** | Everything an admin can do + cannot be demoted (enforced at DB level) |
 
 ### Core User Journey
 
@@ -209,6 +210,8 @@ All tables have RLS enabled. Policies enforce:
 | `reports` | Authenticated INSERT; user sees own; admin sees all |
 | `notifications` | Users see and update own; INSERT via DB triggers only |
 
+**Authorization is enforced at two independent layers:** PostgreSQL RLS policies (data layer — cannot be bypassed from the frontend) and JavaScript role checks (UX layer — redirects and conditional rendering). Neither layer alone is sufficient; together they prevent privilege escalation even if the frontend is bypassed.
+
 ---
 
 ## 6. Local Development Setup
@@ -356,7 +359,7 @@ Enforced in `src/services/validation.js` and checked live in forms.
 │       └── rewards.css
 │
 ├── supabase/
-│   ├── migrations/                 # 42 timestamped SQL migration files
+│   ├── migrations/                 # 43 timestamped SQL migration files
 │   │                               # (mirror of what is applied in Supabase)
 │   ├── schema.sql                  # Full schema snapshot (reference only)
 │   └── seed.sql                    # Development seed data
@@ -372,7 +375,8 @@ Enforced in `src/services/validation.js` and checked live in forms.
 │   └── e2e/
 │       ├── 00-critical-paths.cy.js # Auth, campaign CRUD, participation
 │       ├── 01-admin-workflows.cy.js
-│       └── 02-campaign-details.cy.js
+│       ├── 02-campaign-details.cy.js
+│       └── 03-auth-flows.cy.js
 │
 └── docs/                           # Additional guides & architecture docs
 ```
@@ -390,6 +394,7 @@ Enforced in `src/services/validation.js` and checked live in forms.
 | Profile | `/profile` | Authenticated | Point balance, history, avatar, language toggle |
 | Admin Panel | `/admin` | Admin only | Approve/reject proofs, manage users & disposal points |
 | Rewards | `/rewards` | Authenticated | Browse and redeem rewards with points |
+| Demo Mode | N/A (localStorage) | Everyone | Full platform simulation — no account or internet required |
 
 ### Global UI features (present on all pages)
 
@@ -420,7 +425,7 @@ SUPABASE_ADMIN_EMAIL=admin@example.com
 SUPABASE_ADMIN_PASSWORD=password
 ```
 
-Current coverage: **449 tests · 40 test files** (28 RLS tests skipped without `.env.test`)
+Current coverage: **449 tests · 44 test files** (28 RLS tests skipped without `.env.test`)
 
 ### E2E tests (Cypress)
 
@@ -428,6 +433,23 @@ Current coverage: **449 tests · 40 test files** (28 RLS tests skipped without `
 npx cypress open      # Interactive
 npx cypress run       # Headless CI
 ```
+
+---
+
+## 10. Product Documentation
+
+Full enterprise-grade documentation is available in [`docs/PRODUCT_DOCUMENTATION.md`](docs/PRODUCT_DOCUMENTATION.md), covering:
+
+- Executive summary & problem statement
+- Product vision, strategy & business model
+- User segments, personas & permissions matrix
+- Core user journeys (6 flows with failure states)
+- Feature breakdown (8 features with technical details)
+- System architecture & scalability analysis
+- Non-functional requirements (performance, security, reliability)
+- Trade-offs & product decisions
+- Gaps for enterprise readiness
+- Suggested product roadmap (short / mid / long-term)
 
 ---
 
