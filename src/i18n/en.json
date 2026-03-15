@@ -174,7 +174,15 @@
     "commentDeleted": "Comment deleted.",
     "proofRejected": "Your proof was rejected.",
     "rejectionReason": "Reason",
-    "tryAgain": "Please upload a new photo and try again."
+    "tryAgain": "Please upload a new photo and try again.",
+    "scheduledDate": "Cleanup Date",
+    "startTime": "Start Time",
+    "endTime": "End Time (optional)",
+    "timeRange": "{start} – {end}",
+    "noDate": "Time TBD",
+    "pastDateError": "Date cannot be in the past",
+    "scheduledLabel": "When",
+    "dateTimePlaceholder": "Select date and time"
   },
   "rewards": {
     "title": "Rewards",

@@ -174,7 +174,15 @@
     "commentDeleted": "Коментарът е изтрит.",
     "proofRejected": "Доказателството ти е отхвърлено.",
     "rejectionReason": "Причина",
-    "tryAgain": "Качи нова снимка и опитай отново."
+    "tryAgain": "Качи нова снимка и опитай отново.",
+    "scheduledDate": "Дата на почистването",
+    "startTime": "Начален час",
+    "endTime": "Краен час (по желание)",
+    "timeRange": "{start} – {end}",
+    "noDate": "Час неуточнен",
+    "pastDateError": "Датата не може да е в миналото",
+    "scheduledLabel": "Кога",
+    "dateTimePlaceholder": "Изберете дата и час"
   },
   "rewards": {
     "title": "Награди",
