@@ -14,11 +14,21 @@ const devRewrites = {
         '/profile': '/src/pages/profile.html',
         '/rewards': '/src/pages/rewards.html',
         '/admin': '/src/pages/admin.html',
+        '/privacy': '/src/pages/privacy.html',
       };
       const base = req.url.split('?')[0];
       if (map[base]) {
         const qs = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
         res.writeHead(302, { Location: map[base] + qs });
+        res.end();
+        return;
+      }
+      // Dynamic routes: /campaign/:id — pass ID as ?id= so getCampaignIdFromUrl() works after redirect
+      if (base.startsWith('/campaign/')) {
+        const id = base.slice('/campaign/'.length);
+        const existingQs = req.url.includes('?') ? req.url.slice(req.url.indexOf('?') + 1) : '';
+        const qs = id ? `id=${id}${existingQs ? '&' + existingQs : ''}` : existingQs;
+        res.writeHead(302, { Location: '/src/pages/campaign-detail.html' + (qs ? '?' + qs : '') });
         res.end();
         return;
       }

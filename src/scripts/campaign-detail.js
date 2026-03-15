@@ -92,6 +92,10 @@ async function checkAuth() {
  * Get campaign ID from URL parameters
  */
 function getCampaignIdFromUrl() {
+  // In dev (Vite), ID is passed as ?id= query param after redirect.
+  // In production (Netlify 200 rewrite), ID is the last path segment.
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("id")) return params.get("id");
   const segments = window.location.pathname.split("/");
   return segments[segments.length - 1] || null;
 }
