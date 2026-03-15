@@ -143,13 +143,20 @@ function buildCampaignCard(campaign) {
   const neighborhood =
     localizeNeighborhood(campaign.neighborhood, currentLang) || "Студентски град";
 
-  const createdDate = campaign.created_at
-    ? new Date(campaign.created_at).toLocaleDateString(currentLang === "bg" ? "bg-BG" : "en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      })
-    : "";
+  // Build scheduled date/time label
+  let scheduledLabel = "";
+  if (campaign.scheduled_date && campaign.start_time) {
+    const [yr, mo, dy] = campaign.scheduled_date.split("-");
+    const locale = currentLang === "bg" ? "bg-BG" : "en-US";
+    const dateFmt = new Date(+yr, +mo - 1, +dy).toLocaleDateString(locale, {
+      day: "numeric",
+      month: "short",
+    });
+    const startFmt = campaign.start_time.slice(0, 5);
+    scheduledLabel = campaign.end_time
+      ? `${dateFmt} · ${startFmt} – ${campaign.end_time.slice(0, 5)}`
+      : `${dateFmt} · ${startFmt}`;
+  }
 
   const creator = campaign.creator?.username || campaign.creator_username || "";
 
@@ -164,7 +171,7 @@ function buildCampaignCard(campaign) {
         <div class="card-body d-flex flex-column">
           <h5 class="card-title">${escapeHTML(title)}</h5>
           <p class="card-text text-muted mb-1"><small>📍 ${escapeHTML(neighborhood)}</small></p>
-          ${createdDate ? `<p class="card-text text-muted mb-1"><small>📅 ${createdDate}</small></p>` : ""}
+          ${scheduledLabel ? `<p class="card-text text-muted mb-1"><small>📅 ${escapeHTML(scheduledLabel)}</small></p>` : ""}
           ${creator ? `<p class="card-text text-muted mb-2"><small>👤 ${escapeHTML(creator)}</small></p>` : ""}
           <a href="/campaign/${campaign.id}" class="btn btn-primary w-100">
             ${t("dashboard.viewCampaign") || "Преглед"}
@@ -267,7 +274,7 @@ async function loadCampaignsPage(append = false) {
       let query = supabase
         .from("campaigns")
         .select(
-          "id, title, neighborhood, before_photo_url, status, created_at, created_by, creator:profiles!created_by(username)",
+          "id, title, neighborhood, before_photo_url, status, created_at, scheduled_date, start_time, end_time, created_by, creator:profiles!created_by(username)",
           { count: "exact" }
         )
         .eq("status", "active");
@@ -277,7 +284,7 @@ async function loadCampaignsPage(append = false) {
       }
 
       const { data, error, count } = await query
-        .order("created_at", { ascending: false })
+        .order("scheduled_date", { ascending: true })
         .range(currentOffset, currentOffset + PAGE_SIZE - 1);
 
       if (error) throw error;
