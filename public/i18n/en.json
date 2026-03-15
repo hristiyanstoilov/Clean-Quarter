@@ -52,6 +52,7 @@
   },
   "weather": {
     "good": "Great day for a cleanup!",
+    "cloudy": "Overcast, but still good for a cleanup.",
     "fog": "Foggy conditions. Take care while cleaning.",
     "rain": "Rain expected. Plan your cleanup earlier.",
     "snow": "Snowfall expected. Consider rescheduling.",

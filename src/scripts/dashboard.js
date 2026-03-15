@@ -193,13 +193,9 @@ async function loadWeatherWidget(user) {
   if (!weather) return; // API failed — stay hidden
 
   const msgKey =
-    weather.condition === "clear" ||
-    weather.condition === "mostly_clear" ||
-    weather.condition === "cloudy"
+    weather.condition === "clear" || weather.condition === "mostly_clear"
       ? "good"
-      : weather.condition === "showers"
-        ? "showers"
-        : weather.condition; // fog | rain | snow | storm
+      : weather.condition; // cloudy | fog | rain | snow | showers | storm
 
   const msg = t(`weather.${msgKey}`) || "";
 
