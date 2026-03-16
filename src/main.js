@@ -64,6 +64,7 @@ window.handleDemoLogin = handleDemoLogin;
 // Main entry point for the application
 import "./assets/style.css";
 import { login, register } from "./services/auth.js";
+import { rules } from "./services/validation.js";
 import { saveUser } from "./utils/helpers.js";
 import supabase from "./services/supabase.js";
 import { initPasswordStrengthMeter } from "./components/passwordStrength.js";
@@ -155,12 +156,9 @@ async function handleRegister(e) {
     return;
   }
 
-  if (password.length < 8) {
-    await Swal.fire({
-      icon: "error",
-      title: "Слаба парола",
-      text: "Паролата трябва да има минимум 8 символа!",
-    });
+  const passwordError = rules.password(password);
+  if (passwordError) {
+    await Swal.fire({ icon: "error", title: "Слаба парола", text: passwordError });
     return;
   }
 

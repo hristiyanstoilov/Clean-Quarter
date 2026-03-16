@@ -167,11 +167,3 @@ export async function getUser() {
     return null;
   }
 }
-
-// Validate password before password change (if implemented)
-export async function changePassword(userId, newPassword) {
-  const passwordError = rules.password(newPassword);
-  if (passwordError) {
-    throw new Error(passwordError);
-  }
-}

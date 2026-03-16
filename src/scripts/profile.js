@@ -8,9 +8,81 @@ let currentUser = null;
 let userProfile = null;
 let avatarFile = null;
 
+/**
+ * Handle password recovery flow — triggered when user arrives via reset email link.
+ * Supabase appends #type=recovery&access_token=... to the redirect URL.
+ * Returns true if recovery was handled (page should stop further init).
+ */
+async function handlePasswordRecovery() {
+  const hash = new URLSearchParams(window.location.hash.substring(1));
+  if (hash.get("type") !== "recovery") return false;
+
+  // Clear hash immediately so a page refresh doesn't re-trigger the flow
+  history.replaceState(null, "", window.location.pathname);
+
+  // Check for expired token — Supabase sets error_code in hash when token is invalid
+  if (hash.get("error_code") === "otp_expired" || hash.get("error")) {
+    await Swal.fire({
+      icon: "error",
+      title: "Линкът е изтекъл",
+      text: "Линкът за смяна на парола е изтекъл. Моля, заяви нов.",
+      confirmButtonColor: "#28a745",
+    });
+    window.location.href = "/";
+    return true;
+  }
+
+  const { value: newPassword } = await Swal.fire({
+    title: "Нова парола",
+    html:
+      "<p>Въведи новата си парола:</p>" +
+      '<input type="password" id="recoveryPassword" class="swal2-input" placeholder="Нова парола (мин. 8 символа)">',
+    icon: "info",
+    confirmButtonColor: "#28a745",
+    confirmButtonText: "Запази паролата",
+    showCancelButton: false,
+    allowOutsideClick: false,
+    preConfirm: () => {
+      const pw = document.getElementById("recoveryPassword").value;
+      const pwError = rules.password(pw);
+      if (pwError) {
+        Swal.showValidationMessage(pwError);
+        return false;
+      }
+      return pw;
+    },
+  });
+
+  if (!newPassword) return true;
+
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) {
+    await Swal.fire({
+      icon: "error",
+      title: "Грешка",
+      text: error.message || "Неуспешна смяна на парола. Опитайте отново.",
+    });
+  } else {
+    await Swal.fire({
+      icon: "success",
+      title: "Паролата е сменена",
+      text: "Влез с новата си парола.",
+      confirmButtonColor: "#28a745",
+      timer: 3000,
+      timerProgressBar: true,
+    });
+    await supabase.auth.signOut();
+    window.location.href = "/";
+  }
+  return true;
+}
+
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", async () => {
   initSwalFallback();
+
+  // Handle password recovery before anything else — exits early if recovery link detected
+  if (await handlePasswordRecovery()) return;
   // Password input and related elements (declare once)
   const passwordInput = document.getElementById("editPassword");
   const strengthBar = document.getElementById("editPasswordStrength");

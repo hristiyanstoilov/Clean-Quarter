@@ -36,7 +36,8 @@ const pages = [
     name: "Profile",
     html: "src/pages/profile.html",
     js: "src/scripts/profile.js",
-    optionalIds: [],
+    // recoveryPassword is injected dynamically by SweetAlert2 html: option — not in profile.html
+    optionalIds: ["recoveryPassword"],
   },
   {
     name: "Campaign Detail",
