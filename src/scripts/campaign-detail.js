@@ -2,7 +2,7 @@ import L from "leaflet";
 import supabase from "../services/supabase.js";
 import { initializeMap, createMarkerIcon } from "../services/map.js";
 import { uploadCampaignPhoto } from "../services/storage.js";
-import { initI18n, applyLanguage, setLanguage } from "../utils/i18n.js";
+import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
 import { escapeHTML, showSuccessToast, initSwalFallback } from "../utils/helpers.js";
 
 // Global variables
@@ -92,6 +92,10 @@ async function checkAuth() {
  * Get campaign ID from URL parameters
  */
 function getCampaignIdFromUrl() {
+  // In dev (Vite), ID is passed as ?id= query param after redirect.
+  // In production (Netlify 200 rewrite), ID is the last path segment.
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("id")) return params.get("id");
   const segments = window.location.pathname.split("/");
   return segments[segments.length - 1] || null;
 }
@@ -258,6 +262,29 @@ function displayCampaignDetails(campaignData, participations) {
   if (nbh && typeof nbh === "object") nbh = nbh[lang] || nbh.bg || Object.values(nbh)[0];
   document.getElementById("campaignNeighborhood").textContent = nbh;
 
+  // Scheduled date + time range
+  const scheduledEl = document.getElementById("campaignScheduled");
+  if (scheduledEl) {
+    if (campaignData.scheduled_date && campaignData.start_time) {
+      const dateLocale2 = lang === "bg" ? "bg-BG" : "en-US";
+      const [yr, mo, dy] = campaignData.scheduled_date.split("-");
+      const scheduledFormatted = new Date(+yr, +mo - 1, +dy).toLocaleDateString(dateLocale2, {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+      const startFmt = campaignData.start_time.slice(0, 5);
+      if (campaignData.end_time) {
+        const endFmt = campaignData.end_time.slice(0, 5);
+        scheduledEl.textContent = `${scheduledFormatted} · ${t("campaign.timeRange").replace("{start}", startFmt).replace("{end}", endFmt)}`;
+      } else {
+        scheduledEl.textContent = `${scheduledFormatted} · ${startFmt}`;
+      }
+    } else {
+      scheduledEl.textContent = t("campaign.noDate") || "Time TBD";
+    }
+  }
+
   // Created date
   const createdDate = new Date(campaignData.created_at);
   const dateLocale = lang === "bg" ? "bg-BG" : "en-US";
@@ -305,12 +332,37 @@ function displayCampaignDetails(campaignData, participations) {
 function initializeDetailMap(lat, lng) {
   map = initializeMap();
 
+  // Build popup content with title + scheduled date/time
+  let popupTitle = campaign.title;
+  try {
+    const parsed = JSON.parse(popupTitle);
+    const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+    if (typeof parsed === "object") popupTitle = parsed[lang] || parsed.bg || popupTitle;
+  } catch (_) {
+    /* plain string */
+  }
+
+  let popupTime = "";
+  if (campaign.scheduled_date && campaign.start_time) {
+    const [yr, mo, dy] = campaign.scheduled_date.split("-");
+    const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+    const locale = lang === "bg" ? "bg-BG" : "en-US";
+    const dateFmt = new Date(+yr, +mo - 1, +dy).toLocaleDateString(locale, {
+      day: "numeric",
+      month: "short",
+    });
+    const startFmt = campaign.start_time.slice(0, 5);
+    popupTime = campaign.end_time
+      ? `<br><small>📅 ${dateFmt} · ${startFmt} – ${campaign.end_time.slice(0, 5)}</small>`
+      : `<br><small>📅 ${dateFmt} · ${startFmt}</small>`;
+  }
+
   // Add marker for campaign location
   L.marker([lat, lng], {
     icon: createMarkerIcon("blue"),
   })
     .addTo(map)
-    .bindPopup(`Campaign Location: ${escapeHTML(campaign.title)}`);
+    .bindPopup(`<strong>${escapeHTML(popupTitle)}</strong>${popupTime}`);
 
   // Center map on campaign location
   map.setView([lat, lng], 15);
@@ -703,6 +755,11 @@ function toggleEditCampaign() {
     document.getElementById("editDescription").value = extractDisplayValue(campaign?.description);
     document.getElementById("editNeighborhood").value = campaign?.neighborhood || "Studentski Grad";
     document.getElementById("editStatus").value = campaign?.status || "active";
+    document.getElementById("editScheduledDate").value = campaign?.scheduled_date || "";
+    document.getElementById("editStartTime").value = campaign?.start_time?.slice(0, 5) || "";
+    document.getElementById("editEndTime").value = campaign?.end_time?.slice(0, 5) || "";
+    // Set min date to today
+    document.getElementById("editScheduledDate").min = new Date().toISOString().split("T")[0];
 
     editSection.scrollIntoView({ behavior: "smooth", block: "start" });
   } else {
@@ -720,12 +777,24 @@ async function handleSaveCampaign(e) {
   const newDescription = document.getElementById("editDescription").value.trim();
   const newNeighborhood = document.getElementById("editNeighborhood").value;
   const newStatus = document.getElementById("editStatus").value;
+  const newScheduledDate = document.getElementById("editScheduledDate").value;
+  const newStartTime = document.getElementById("editStartTime").value;
+  const newEndTime = document.getElementById("editEndTime").value || null;
 
   if (!newTitle || !newDescription) {
     await Swal.fire({
       icon: "error",
       title: "Error",
       text: "Title and description are required!",
+    });
+    return;
+  }
+
+  if (newScheduledDate && newScheduledDate < new Date().toISOString().split("T")[0]) {
+    await Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: t("campaign.pastDateError") || "Date cannot be in the past",
     });
     return;
   }
@@ -760,6 +829,9 @@ async function handleSaveCampaign(e) {
           description: newDescription,
           neighborhood: newNeighborhood,
           status: newStatus,
+          scheduled_date: newScheduledDate || null,
+          start_time: newStartTime || null,
+          end_time: newEndTime,
           updated_at: new Date().toISOString(),
         };
 
@@ -791,6 +863,9 @@ async function handleSaveCampaign(e) {
           description: newDescription,
           neighborhood: newNeighborhood,
           status: newStatus,
+          scheduled_date: newScheduledDate || null,
+          start_time: newStartTime || null,
+          end_time: newEndTime,
           updated_at: new Date().toISOString(),
         })
         .eq("id", campaignId)

@@ -154,6 +154,11 @@
           </div>
 
           <div class="detail-row">
+            <div class="detail-label" data-i18n="campaign.scheduledLabel">When</div>
+            <div class="detail-value" id="campaignScheduled"></div>
+          </div>
+
+          <div class="detail-row">
             <div class="detail-label" data-i18n="campaign.createdDate">Created Date</div>
             <div class="detail-value" id="campaignDate"></div>
           </div>
@@ -224,6 +229,28 @@
                 <option value="active" data-i18n="campaign.statusActive">Active</option>
                 <option value="completed" data-i18n="campaign.statusCompleted">Completed</option>
               </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="editScheduledDate" class="form-label" data-i18n="campaign.scheduledDate"
+                >Cleanup Date</label
+              >
+              <input type="date" class="form-control" id="editScheduledDate" required />
+            </div>
+
+            <div class="mb-3 row g-2">
+              <div class="col">
+                <label for="editStartTime" class="form-label" data-i18n="campaign.startTime"
+                  >Start Time</label
+                >
+                <input type="time" class="form-control" id="editStartTime" required />
+              </div>
+              <div class="col">
+                <label for="editEndTime" class="form-label" data-i18n="campaign.endTime"
+                  >End Time (optional)</label
+                >
+                <input type="time" class="form-control" id="editEndTime" />
+              </div>
             </div>
 
             <div class="d-flex gap-2">

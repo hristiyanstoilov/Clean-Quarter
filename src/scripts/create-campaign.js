@@ -1,7 +1,7 @@
 import L from "leaflet";
 import { initializeMap, createMarkerIcon } from "../services/map.js";
 import { uploadCampaignPhoto } from "../services/storage.js";
-import { initI18n, applyLanguage, setLanguage } from "../utils/i18n.js";
+import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
 import { showSuccessToast, initSwalFallback } from "../utils/helpers.js";
 import supabase from "../services/supabase.js";
 
@@ -158,6 +158,12 @@ function setupEventListeners() {
   document.getElementById("campaignTitleBg").addEventListener("input", checkFormCompletion);
   document.getElementById("campaignDescriptionBg").addEventListener("input", checkFormCompletion);
   document.getElementById("campaignNeighborhood").addEventListener("change", checkFormCompletion);
+  document.getElementById("campaignDate").addEventListener("change", checkFormCompletion);
+  document.getElementById("campaignStartTime").addEventListener("change", checkFormCompletion);
+
+  // Set min date to today
+  const todayStr = new Date().toISOString().split("T")[0];
+  document.getElementById("campaignDate").min = todayStr;
 }
 
 /**
@@ -193,7 +199,10 @@ function checkFormCompletion() {
   const hasFile = beforePhotoFile !== null;
   const hasCoordinates = selectedCoordinates.lat !== null && selectedCoordinates.lng !== null;
 
-  const isComplete = titleBg && descBg && nbh && hasFile && hasCoordinates;
+  const scheduledDate = document.getElementById("campaignDate").value;
+  const startTime = document.getElementById("campaignStartTime").value;
+  const isComplete =
+    titleBg && descBg && nbh && hasFile && hasCoordinates && scheduledDate && startTime;
 
   // Update submit button
   const submitBtn = document.getElementById("submitBtn");
@@ -206,6 +215,8 @@ function checkFormCompletion() {
     nbh,
     hasFile,
     hasCoordinates,
+    scheduledDate,
+    startTime,
   });
 
   // Show helpful message if not complete
@@ -219,6 +230,8 @@ function checkFormCompletion() {
     if (!nbh) missing.push(isBg ? "Квартал" : "Neighborhood");
     if (!hasFile) missing.push(isBg ? "Снимка" : "Photo");
     if (!hasCoordinates) missing.push(isBg ? "Локация на картата" : "Map location");
+    if (!scheduledDate) missing.push(isBg ? "Дата на почистването" : "Cleanup date");
+    if (!startTime) missing.push(isBg ? "Начален час" : "Start time");
 
     submitBtn.title = (isBg ? "Моля попълнете: " : "Please fill in: ") + missing.join(", ");
     submitBtn.style.cursor = "not-allowed";
@@ -254,6 +267,8 @@ function updateVisualChecklist(status) {
     { key: "nbh", label: isBg ? "📍 Квартал" : "📍 Neighborhood" },
     { key: "hasFile", label: isBg ? "📸 Снимка" : "📸 Photo" },
     { key: "hasCoordinates", label: isBg ? "🗺️ Локация на картата" : "🗺️ Map location" },
+    { key: "scheduledDate", label: isBg ? "📅 Дата на почистването" : "📅 Cleanup date" },
+    { key: "startTime", label: isBg ? "🕐 Начален час" : "🕐 Start time" },
   ];
 
   const completed = items.filter((item) => status[item.key]).length;
@@ -304,10 +319,28 @@ async function handleFormSubmit(e) {
     const neighborhoodSelect = document.getElementById("campaignNeighborhood");
     const nbhBg = neighborhoodSelect.value;
     const { lat, lng } = selectedCoordinates;
+    const scheduledDate = document.getElementById("campaignDate").value;
+    const startTime = document.getElementById("campaignStartTime").value;
+    const endTime = document.getElementById("campaignEndTime").value || null;
 
     // Basic validation
-    if (!titleBg || !descBg || !nbhBg || lat === null || lng === null || !beforePhotoFile) {
+    if (
+      !titleBg ||
+      !descBg ||
+      !nbhBg ||
+      lat === null ||
+      lng === null ||
+      !beforePhotoFile ||
+      !scheduledDate ||
+      !startTime
+    ) {
       throw new Error("Моля попълнете всички полета и изберете локация на картата");
+    }
+
+    // Date validation — cannot be in the past
+    const today = new Date().toISOString().split("T")[0];
+    if (scheduledDate < today) {
+      throw new Error(t("campaign.pastDateError") || "Датата не може да е в миналото");
     }
 
     // Check if we're in demo mode
@@ -343,6 +376,9 @@ async function handleFormSubmit(e) {
         creator_username: currentUser.username || "admin_demo",
         neighborhood: nbhBg,
         status: "active",
+        scheduled_date: scheduledDate,
+        start_time: startTime,
+        end_time: endTime,
         created_at: new Date().toISOString(),
         participation_count: 0,
       };
@@ -395,6 +431,9 @@ async function handleFormSubmit(e) {
             created_by: user.id,
             neighborhood: nbhBg,
             status: "active",
+            scheduled_date: scheduledDate,
+            start_time: startTime,
+            end_time: endTime,
           },
         ])
         .select();

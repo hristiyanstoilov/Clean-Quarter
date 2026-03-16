@@ -1,5 +1,22 @@
 /* Dashboard Page Styles */
 
+#weatherWidget {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1rem;
+  font-size: 0.9rem;
+  background: #f0f9f4;
+  border-bottom: 1px solid #c3e6cb;
+  color: #155724;
+}
+
+#weatherWidget.weather-warning {
+  background: #fff3cd;
+  border-bottom-color: #ffc107;
+  color: #856404;
+}
+
 body {
   margin: 0;
   padding: 0;

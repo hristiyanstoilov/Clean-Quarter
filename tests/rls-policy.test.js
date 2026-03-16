@@ -102,6 +102,8 @@ describe.skipIf(!canRun)('RLS Policy Integration Tests (requires real credential
           created_by: userId,
           neighborhood: 'Studentski Grad',
           status: 'active',
+          scheduled_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          start_time: '10:00',
         })
         .select()
         .single();

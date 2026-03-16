@@ -2,6 +2,7 @@ import { initializeMap, loadMapData } from "../services/map.js";
 import { logout } from "../services/auth.js";
 import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
 import supabase from "../services/supabase.js";
+import { fetchWeather } from "../services/weather.js";
 import {
   requireAuth,
   removeUser,
@@ -61,6 +62,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       updateSectionTitle(user.neighborhood, lang);
       document.getElementById("showAllBtn").style.display = "inline-flex";
     }
+
+    // Weather widget — non-blocking, loaded before map
+    loadWeatherWidget(user);
 
     // Leaflet is bundled via npm — always available
     const map = initializeMap();
@@ -139,13 +143,20 @@ function buildCampaignCard(campaign) {
   const neighborhood =
     localizeNeighborhood(campaign.neighborhood, currentLang) || "Студентски град";
 
-  const createdDate = campaign.created_at
-    ? new Date(campaign.created_at).toLocaleDateString(currentLang === "bg" ? "bg-BG" : "en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      })
-    : "";
+  // Build scheduled date/time label
+  let scheduledLabel = "";
+  if (campaign.scheduled_date && campaign.start_time) {
+    const [yr, mo, dy] = campaign.scheduled_date.split("-");
+    const locale = currentLang === "bg" ? "bg-BG" : "en-US";
+    const dateFmt = new Date(+yr, +mo - 1, +dy).toLocaleDateString(locale, {
+      day: "numeric",
+      month: "short",
+    });
+    const startFmt = campaign.start_time.slice(0, 5);
+    scheduledLabel = campaign.end_time
+      ? `${dateFmt} · ${startFmt} – ${campaign.end_time.slice(0, 5)}`
+      : `${dateFmt} · ${startFmt}`;
+  }
 
   const creator = campaign.creator?.username || campaign.creator_username || "";
 
@@ -160,7 +171,7 @@ function buildCampaignCard(campaign) {
         <div class="card-body d-flex flex-column">
           <h5 class="card-title">${escapeHTML(title)}</h5>
           <p class="card-text text-muted mb-1"><small>📍 ${escapeHTML(neighborhood)}</small></p>
-          ${createdDate ? `<p class="card-text text-muted mb-1"><small>📅 ${createdDate}</small></p>` : ""}
+          ${scheduledLabel ? `<p class="card-text text-muted mb-1"><small>📅 ${escapeHTML(scheduledLabel)}</small></p>` : ""}
           ${creator ? `<p class="card-text text-muted mb-2"><small>👤 ${escapeHTML(creator)}</small></p>` : ""}
           <a href="/campaign/${campaign.id}" class="btn btn-primary w-100">
             ${t("dashboard.viewCampaign") || "Преглед"}
@@ -168,6 +179,39 @@ function buildCampaignCard(campaign) {
         </div>
       </div>
     </div>`;
+}
+
+/**
+ * Render the weather widget above the map.
+ * In demo mode shows static data. If fetch fails, widget stays hidden.
+ */
+async function loadWeatherWidget(user) {
+  const widget = document.getElementById("weatherWidget");
+  if (!widget) return;
+
+  let weather;
+
+  if (user?.id === "demo-admin-001") {
+    weather = { temperature: 22, condition: "clear", icon: "☀️", isGoodWeather: true };
+  } else {
+    weather = await fetchWeather();
+  }
+
+  if (!weather) return; // API failed — stay hidden
+
+  const msgKey =
+    weather.condition === "clear" || weather.condition === "mostly_clear"
+      ? "good"
+      : weather.condition; // cloudy | fog | rain | snow | showers | storm
+
+  const msg = t(`weather.${msgKey}`) || "";
+
+  document.getElementById("weatherIcon").textContent = weather.icon;
+  document.getElementById("weatherTemp").textContent = `${weather.temperature}°C`;
+  document.getElementById("weatherMsg").textContent = msg ? `— ${msg}` : "";
+
+  if (!weather.isGoodWeather) widget.classList.add("weather-warning");
+  widget.style.display = "flex";
 }
 
 /**
@@ -230,7 +274,7 @@ async function loadCampaignsPage(append = false) {
       let query = supabase
         .from("campaigns")
         .select(
-          "id, title, neighborhood, before_photo_url, status, created_at, created_by, creator:profiles!created_by(username)",
+          "id, title, neighborhood, before_photo_url, status, created_at, scheduled_date, start_time, end_time, created_by, creator:profiles!created_by(username)",
           { count: "exact" }
         )
         .eq("status", "active");
@@ -240,7 +284,7 @@ async function loadCampaignsPage(append = false) {
       }
 
       const { data, error, count } = await query
-        .order("created_at", { ascending: false })
+        .order("scheduled_date", { ascending: true })
         .range(currentOffset, currentOffset + PAGE_SIZE - 1);
 
       if (error) throw error;
