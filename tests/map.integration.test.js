@@ -1,4 +1,6 @@
 // vi.mock is hoisted automatically — runs before any imports
+vi.mock('leaflet.markercluster', () => ({}));
+
 vi.mock('leaflet', () => ({
   default: {
     map: vi.fn(() => ({
@@ -14,6 +16,9 @@ vi.mock('leaflet', () => ({
     })),
     icon: vi.fn(() => ({})),
     divIcon: vi.fn(() => ({})),
+    markerClusterGroup: vi.fn(() => ({
+      addLayer: vi.fn(),
+    })),
   },
 }));
 
