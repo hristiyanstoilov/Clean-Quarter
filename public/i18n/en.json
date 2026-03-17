@@ -206,6 +206,13 @@
     "categoryNone": "No category",
     "categoryPlaceholder": "-- Select category --"
   },
+  "leaderboard": {
+    "title": "🏆 Neighborhood Rankings",
+    "points": "points",
+    "participants": "participants",
+    "yourNeighborhood": "your neighborhood",
+    "noData": "No data yet"
+  },
   "rewards": {
     "title": "Rewards",
     "cost": "Cost",

@@ -80,6 +80,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     await loadCampaignsPage(false);
 
+    // Leaderboard — non-blocking, runs in parallel
+    loadLeaderboard(user);
+
     // Load More button
     document
       .getElementById("loadMoreBtn")
@@ -401,6 +404,99 @@ window.showAllCampaigns = async function () {
   document.getElementById("showAllBtn").style.display = "none";
   await loadCampaignsPage(false);
 };
+
+const MEDAL = ["🥇", "🥈", "🥉"];
+
+/**
+ * Load neighborhood leaderboard — groups profiles by neighborhood,
+ * sums points and counts participants, renders top 5.
+ * @param {Object|null} currentUser - logged-in user from localStorage
+ */
+async function loadLeaderboard(currentUser) {
+  const container = document.getElementById("leaderboardContainer");
+  if (!container) return;
+
+  const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+
+  try {
+    let rows;
+
+    // Demo mode — build leaderboard from localStorage campaigns
+    if (currentUser?.id === "demo-admin-001") {
+      const demoCampaigns = JSON.parse(
+        localStorage.getItem("CLEAN_QUARTER_DEMO_CAMPAIGNS") || "[]"
+      );
+      const map = {};
+      demoCampaigns.forEach((c) => {
+        const n = c.neighborhood || "studentski_grad";
+        if (!map[n]) map[n] = { neighborhood: n, total_points: 0, participant_count: 0 };
+        map[n].total_points += 20;
+        map[n].participant_count += 1;
+      });
+      rows = Object.values(map).sort((a, b) => b.total_points - a.total_points);
+    } else {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("neighborhood, points_balance")
+        .not("neighborhood", "is", null);
+
+      if (error) throw error;
+
+      // Group client-side by neighborhood
+      const map = {};
+      (data || []).forEach(({ neighborhood, points_balance }) => {
+        if (!map[neighborhood])
+          map[neighborhood] = { neighborhood, total_points: 0, participant_count: 0 };
+        map[neighborhood].total_points += points_balance || 0;
+        map[neighborhood].participant_count += 1;
+      });
+      rows = Object.values(map).sort((a, b) => b.total_points - a.total_points);
+    }
+
+    if (!rows.length) {
+      container.innerHTML = `<p class="text-muted">${lang === "en" ? "No data yet" : "Все още няма данни"}</p>`;
+      return;
+    }
+
+    const userNeighborhood = currentUser?.neighborhood || null;
+    const pointsLabel = lang === "en" ? "points" : "точки";
+    const participantsLabel = lang === "en" ? "participants" : "участника";
+    const yourLabel = lang === "en" ? "your neighborhood" : "твоят квартал";
+
+    const cards = rows.slice(0, 5).map((row, i) => {
+      const medal = MEDAL[i] || `${i + 1}.`;
+      const i18nKey = NEIGHBORHOOD_I18N[row.neighborhood];
+      const name = i18nKey ? t(i18nKey) || row.neighborhood : row.neighborhood;
+      const isYours = row.neighborhood === userNeighborhood;
+      const maxPoints = rows[0].total_points || 1;
+      const pct = Math.round((row.total_points / maxPoints) * 100);
+
+      return `
+        <div class="leaderboard-card${isYours ? " leaderboard-card--yours" : ""}">
+          <div class="leaderboard-rank">${medal}</div>
+          <div class="leaderboard-info">
+            <div class="leaderboard-name">
+              ${escapeHTML(name)}
+              ${isYours ? `<span class="leaderboard-badge">${yourLabel}</span>` : ""}
+            </div>
+            <div class="leaderboard-bar-wrap">
+              <div class="leaderboard-bar" style="width:${pct}%"></div>
+            </div>
+            <div class="leaderboard-stats">
+              <strong>${row.total_points}</strong> ${pointsLabel}
+              &nbsp;·&nbsp;
+              ${row.participant_count} ${participantsLabel}
+            </div>
+          </div>
+        </div>`;
+    });
+
+    container.innerHTML = cards.join("");
+  } catch (err) {
+    // Leaderboard is non-critical — fail silently
+    console.warn("[leaderboard] failed to load:", err.message);
+  }
+}
 
 /**
  * Filter campaigns by category
