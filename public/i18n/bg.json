@@ -26,6 +26,7 @@
     "neighborhood": "Твой квартал",
     "demoMode": "🎮 Demo режим (Админ)",
     "forgotPassword": "Забравена парола?",
+    "tooManyAttempts": "Твърде много опити за вход. Опитайте отново след 15 минути.",
     "rememberMe": "Запомни ме",
     "emailPlaceholder": "твоят@имейл.com",
     "passwordPlaceholder": "Въведи парола",

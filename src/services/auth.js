@@ -3,21 +3,6 @@ import logger from "./logger.js";
 import { showSuccess, showError } from "../utils/helpers.js";
 import { rules } from "./validation.js";
 
-// Rate limiting: max 5 login attempts per 15 minutes per email
-const loginAttempts = new Map();
-const MAX_ATTEMPTS = 5;
-const WINDOW_MS = 15 * 60 * 1000;
-
-function checkRateLimit(email) {
-  const now = Date.now();
-  const attempts = (loginAttempts.get(email) || []).filter((t) => now - t < WINDOW_MS);
-  if (attempts.length >= MAX_ATTEMPTS) {
-    throw new Error("Твърде много опити за вход. Опитайте отново след 15 минути.");
-  }
-  attempts.push(now);
-  loginAttempts.set(email, attempts);
-}
-
 /**
  * Register a new user with email, password, and metadata (neighborhood)
  * @param {string} email
@@ -102,13 +87,41 @@ export async function register(email, password, options = {}) {
  */
 export async function login(email, password) {
   try {
-    checkRateLimit(email);
+    // Server-side rate limit check (fail-open: if RPC errors, allow login)
+    try {
+      const { data: rateData } = await supabase.rpc("check_login_rate_limit", {
+        p_email: email,
+      });
+      if (rateData && !rateData.allowed) {
+        const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+        throw new Error(
+          lang === "en"
+            ? "Too many login attempts. Please try again in 15 minutes."
+            : "Твърде много опити за вход. Опитайте отново след 15 минути."
+        );
+      }
+    } catch (rateLimitError) {
+      // Re-throw only if it's our own rate limit error, not an RPC failure
+      if (rateLimitError.message.includes("опити") || rateLimitError.message.includes("attempts")) {
+        throw rateLimitError;
+      }
+      logger.warn("Rate limit RPC unavailable, proceeding with login:", rateLimitError.message);
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) throw error;
+    if (error) {
+      // Record failed attempt server-side (fire-and-forget, don't block on error)
+      try {
+        supabase.rpc("record_login_attempt", { p_email: email });
+      } catch (e) {
+        logger.warn("Failed to record login attempt:", e.message);
+      }
+      throw error;
+    }
 
     const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
     await showSuccess(
