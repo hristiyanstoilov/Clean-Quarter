@@ -387,6 +387,12 @@ async function checkDeleteEligibility(_campaignId, participations) {
     document.getElementById("editCampaignBtn").style.display = "inline-block";
   }
 
+  // Show report button for logged-in non-creators (not in demo mode)
+  const isDemo = currentUser.id === "demo-admin-001";
+  if (!isCreator && !isDemo) {
+    document.getElementById("reportBtn").style.display = "inline-block";
+  }
+
   // Allow delete if no external participants have joined
   // (creator's own participation with no after_photo doesn't block deletion)
   const externalParticipants = participations.filter((p) => p.user_id !== currentUser.id);
@@ -1091,6 +1097,100 @@ async function handleDeleteComment(commentId) {
   await loadComments();
 }
 
+/**
+ * Handle campaign report — shows SweetAlert2 modal with reason picker,
+ * then inserts a row into the reports table.
+ */
+async function handleReport() {
+  const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+
+  const reasonOptions = {
+    spam: lang === "en" ? "Spam" : "Спам",
+    inappropriate: lang === "en" ? "Inappropriate content" : "Неподходящо съдържание",
+    harassment: lang === "en" ? "Harassment" : "Тормоз",
+    fake: lang === "en" ? "Fake campaign" : "Фалшива кампания",
+    other: lang === "en" ? "Other" : "Друго",
+  };
+
+  const selectOptions = Object.entries(reasonOptions)
+    .map(([value, label]) => `<option value="${value}">${label}</option>`)
+    .join("");
+
+  const { value: formValues, isConfirmed } = await Swal.fire({
+    title: lang === "en" ? "Report Campaign" : "Докладвай кампанията",
+    html: `
+      <div class="mb-3 text-start">
+        <label class="form-label fw-semibold">${lang === "en" ? "Reason" : "Причина"}</label>
+        <select id="reportReason" class="form-select">
+          ${selectOptions}
+        </select>
+      </div>
+      <div class="mb-1 text-start">
+        <label class="form-label fw-semibold">${lang === "en" ? "Additional description (optional)" : "Допълнително описание (по желание)"}</label>
+        <textarea id="reportDescription" class="form-control" rows="3"
+          placeholder="${lang === "en" ? "Describe the issue..." : "Опиши проблема..."}"></textarea>
+      </div>
+    `,
+    confirmButtonText: lang === "en" ? "Submit Report" : "Изпрати доклад",
+    showCancelButton: true,
+    cancelButtonText: lang === "en" ? "Cancel" : "Отказ",
+    preConfirm: () => ({
+      reason: document.getElementById("reportReason").value,
+      description: document.getElementById("reportDescription").value.trim(),
+    }),
+  });
+
+  if (!isConfirmed || !formValues) return;
+
+  try {
+    const supabaseModule = await import("./supabase.js");
+    const supabase = supabaseModule.default || supabaseModule;
+
+    const { error } = await supabase.from("reports").insert({
+      reported_by: currentUser.id,
+      entity_type: "campaign",
+      entity_id: campaign.id,
+      reason: formValues.reason,
+      description: formValues.description || null,
+    });
+
+    if (error) {
+      const alreadyReported = error.message && error.message.includes("already reported");
+      await Swal.fire({
+        icon: "warning",
+        title: lang === "en" ? "Already Reported" : "Вече докладвано",
+        text:
+          lang === "en"
+            ? "You have already reported this in the last 24 hours."
+            : "Вече си докладвал това в последните 24 часа.",
+      });
+      if (!alreadyReported) throw error;
+      return;
+    }
+
+    await Swal.fire({
+      icon: "success",
+      title: lang === "en" ? "Report Submitted" : "Докладвано",
+      text:
+        lang === "en"
+          ? "Report submitted. We will review it shortly."
+          : "Докладвано успешно. Ще разгледаме сигнала.",
+      timer: 2000,
+      showConfirmButton: false,
+    });
+
+    // Hide the report button after successful report
+    document.getElementById("reportBtn").style.display = "none";
+  } catch (error) {
+    logger.error("Error submitting report:", error);
+    await Swal.fire({
+      icon: "error",
+      title: lang === "en" ? "Error" : "Грешка",
+      text: error.message,
+    });
+  }
+}
+
 // Expose functions to window for onclick handlers
 window.handleLogout = handleLogout;
 window.handleDelete = handleDelete;
@@ -1099,3 +1199,4 @@ window.handleUploadPhoto = handleUploadPhoto;
 window.toggleEditCampaign = toggleEditCampaign;
 window.handleAddComment = handleAddComment;
 window.handleDeleteComment = handleDeleteComment;
+window.handleReport = handleReport;

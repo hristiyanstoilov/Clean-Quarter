@@ -195,6 +195,9 @@ async function loadAdminData() {
     // Render pending table
     renderPendingTable();
 
+    // Load reports
+    await loadReports();
+
     // Show admin content
     document.getElementById("loadingState").style.display = "none";
     document.getElementById("adminContent").style.display = "block";
@@ -985,9 +988,137 @@ async function handleLogout() {
   }
 }
 
+/**
+ * Load pending reports and render them in the admin reports table.
+ */
+async function loadReports() {
+  const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+  const container = document.getElementById("reportsTableContainer");
+  if (!container) return;
+
+  try {
+    const { data: reports, error } = await supabase
+      .from("reports")
+      .select(
+        "id, reason, description, created_at, status, entity_id, entity_type, reporter:profiles!reported_by(username)"
+      )
+      .eq("status", "pending")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    if (!reports || reports.length === 0) {
+      container.innerHTML = `<p class="text-muted" data-i18n="admin.noReports">${lang === "en" ? "No pending reports" : "Няма нови доклади"}</p>`;
+      return;
+    }
+
+    const locale = lang === "bg" ? "bg-BG" : "en-US";
+    const rows = reports
+      .map((r) => {
+        const date = new Date(r.created_at).toLocaleString(locale, {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        const reporter = r.reporter?.username || "—";
+        const reasonMap = {
+          spam: lang === "en" ? "Spam" : "Спам",
+          inappropriate: lang === "en" ? "Inappropriate" : "Неподходящо",
+          harassment: lang === "en" ? "Harassment" : "Тормоз",
+          fake: lang === "en" ? "Fake" : "Фалшиво",
+          other: lang === "en" ? "Other" : "Друго",
+        };
+        const reason = reasonMap[r.reason] || r.reason;
+
+        return `
+          <tr>
+            <td>${date}</td>
+            <td>${reporter}</td>
+            <td><strong>${reason}</strong></td>
+            <td>${r.description ? r.description : "—"}</td>
+            <td>
+              <button class="btn btn-sm btn-success me-1"
+                onclick="handleResolveReport('${r.id}', 'resolved')"
+                data-i18n="admin.resolveReport">
+                ${lang === "en" ? "Resolve" : "Реши"}
+              </button>
+              <button class="btn btn-sm btn-secondary"
+                onclick="handleResolveReport('${r.id}', 'dismissed')"
+                data-i18n="admin.dismissReport">
+                ${lang === "en" ? "Dismiss" : "Отхвърли"}
+              </button>
+            </td>
+          </tr>`;
+      })
+      .join("");
+
+    container.innerHTML = `
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered">
+          <thead>
+            <tr>
+              <th data-i18n="admin.reportDate">${lang === "en" ? "Date" : "Дата"}</th>
+              <th data-i18n="admin.reportedBy">${lang === "en" ? "Reported by" : "Докладвано от"}</th>
+              <th data-i18n="admin.reportReason">${lang === "en" ? "Reason" : "Причина"}</th>
+              <th data-i18n="admin.reportDescription">${lang === "en" ? "Description" : "Описание"}</th>
+              <th data-i18n="admin.actions">${lang === "en" ? "Actions" : "Действия"}</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  } catch (e) {
+    logger.error("Error loading reports:", e);
+  }
+}
+
+/**
+ * Resolve or dismiss a report.
+ * @param {string} reportId
+ * @param {'resolved'|'dismissed'} newStatus
+ */
+async function handleResolveReport(reportId, newStatus) {
+  const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+
+  const { error } = await supabase
+    .from("reports")
+    .update({
+      status: newStatus,
+      reviewed_by: currentUser?.id,
+      reviewed_at: new Date().toISOString(),
+    })
+    .eq("id", reportId);
+
+  if (error) {
+    await Swal.fire({ icon: "error", title: t("common.error"), text: error.message });
+    return;
+  }
+
+  const msg =
+    newStatus === "resolved"
+      ? lang === "en"
+        ? "Report resolved."
+        : "Докладът е разрешен."
+      : lang === "en"
+        ? "Report dismissed."
+        : "Докладът е отхвърлен.";
+
+  await Swal.fire({
+    icon: "success",
+    title: t("common.success"),
+    text: msg,
+    timer: 1500,
+    showConfirmButton: false,
+  });
+  await loadReports();
+}
+
 // Expose functions to window for onclick handlers
 window.handleLogout = handleLogout;
 window.handleApprove = handleApprove;
 window.handleReject = handleReject;
 window.showPhotoModal = showPhotoModal;
 window.closePhotoModal = closePhotoModal;
+window.handleResolveReport = handleResolveReport;
