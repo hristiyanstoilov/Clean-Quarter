@@ -239,6 +239,20 @@ function getRewardEmoji(category) {
  */
 async function handleBuy(rewardId, rewardTitle, rewardCost) {
   try {
+    const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+
+    // Check if reward is still in stock (guards against race conditions)
+    const reward = rewards.find((r) => r.id === rewardId);
+    if (reward && reward.quantity_available !== null && reward.quantity_available <= 0) {
+      await Swal.fire({
+        icon: "warning",
+        title: lang === "en" ? "Out of Stock" : "Изчерпан",
+        text:
+          lang === "en" ? "This reward is no longer available." : "Тази награда вече не е налична.",
+      });
+      return;
+    }
+
     // Check if user has enough points
     if ((userProfile.points_balance || 0) < rewardCost) {
       await Swal.fire({
@@ -333,6 +347,31 @@ async function handleBuy(rewardId, rewardTitle, rewardCost) {
         throw new Error(rpcError.message);
       }
       if (!result.success) {
+        const isOutOfStock =
+          result.error === "Out of stock" || result.error === "Insufficient points";
+        if (isOutOfStock) {
+          Swal.close();
+          await Swal.fire({
+            icon: "warning",
+            title:
+              result.error === "Out of stock"
+                ? lang === "en"
+                  ? "Out of Stock"
+                  : "Изчерпан"
+                : lang === "en"
+                  ? "Insufficient Points"
+                  : "Недостатъчно точки",
+            text:
+              result.error === "Out of stock"
+                ? lang === "en"
+                  ? "This reward is no longer available."
+                  : "Тази награда вече не е налична."
+                : lang === "en"
+                  ? "You don't have enough points for this reward."
+                  : "Нямаш достатъчно точки за тази награда.",
+          });
+          return;
+        }
         throw new Error(result.error || "Purchase failed");
       }
 
