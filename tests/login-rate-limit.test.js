@@ -158,7 +158,7 @@ describe("Login rate limit — successful login flow", () => {
 
 describe("Login rate limit — migration file", () => {
   const migration = readFileSync(
-    "supabase/migrations/20260317090000_add_login_rate_limiting.sql",
+    "supabase/migrations/20260317081759_add_login_rate_limiting.sql",
     "utf-8"
   );
 
