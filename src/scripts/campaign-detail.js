@@ -1156,16 +1156,18 @@ async function handleReport() {
 
     if (error) {
       const alreadyReported = error.message && error.message.includes("already reported");
-      await Swal.fire({
-        icon: "warning",
-        title: lang === "en" ? "Already Reported" : "Вече докладвано",
-        text:
-          lang === "en"
-            ? "You have already reported this in the last 24 hours."
-            : "Вече си докладвал това в последните 24 часа.",
-      });
-      if (!alreadyReported) throw error;
-      return;
+      if (alreadyReported) {
+        await Swal.fire({
+          icon: "warning",
+          title: lang === "en" ? "Already Reported" : "Вече докладвано",
+          text:
+            lang === "en"
+              ? "You have already reported this in the last 24 hours."
+              : "Вече си докладвал това в последните 24 часа.",
+        });
+        return;
+      }
+      throw error;
     }
 
     await Swal.fire({

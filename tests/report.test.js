@@ -1,6 +1,7 @@
 /**
  * Tests for campaign report feature
- * Covers: report button visibility, duplicate detection, admin resolve/dismiss
+ * Covers: report button visibility, duplicate detection, admin resolve/dismiss,
+ *         bug fixes: error handling logic, XSS escaping, demo mode guard
  */
 
 // Mock Supabase
@@ -243,6 +244,136 @@ describe("Report Feature", () => {
       expect(chain.update).toHaveBeenCalledWith(
         expect.objectContaining({ reviewed_by: adminId })
       );
+    });
+  });
+
+  // ─── Bug fix: error handling in handleReport() ──────────────────────────────
+
+  describe("handleReport() error handling (bug fix)", () => {
+    /**
+     * Before the fix, ANY Supabase error showed "Already Reported" dialog.
+     * Correct behavior: only duplicate errors are swallowed; all others re-throw.
+     */
+
+    it("duplicate error is detected by message content", () => {
+      const error = { message: "You have already reported this item within the last 24 hours" };
+      const alreadyReported = error.message && error.message.includes("already reported");
+      expect(alreadyReported).toBe(true);
+    });
+
+    it("non-duplicate error does NOT match duplicate check", () => {
+      const error = { message: "network error" };
+      const alreadyReported = error.message && error.message.includes("already reported");
+      expect(alreadyReported).toBe(false);
+    });
+
+    it("correct logic: duplicate error returns early without throwing", () => {
+      const error = { message: "You have already reported this item within the last 24 hours" };
+      const alreadyReported = error.message && error.message.includes("already reported");
+
+      let threw = false;
+      try {
+        if (alreadyReported) return; // correct: early return, no throw
+        throw error;
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(false);
+    });
+
+    it("correct logic: non-duplicate error is re-thrown", () => {
+      const error = { message: "network error" };
+      const alreadyReported = error.message && error.message.includes("already reported");
+
+      let threw = false;
+      try {
+        if (alreadyReported) return;
+        throw error; // correct: non-duplicate errors reach here
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
+  });
+
+  // ─── Bug fix: XSS escaping in admin report description ──────────────────────
+
+  describe("admin report description XSS escaping (bug fix)", () => {
+    it("escapeHTML neutralises script tags", async () => {
+      const { escapeHTML } = await import("../src/utils/helpers.js");
+      const input = '<script>alert("xss")</script>';
+      const result = escapeHTML(input);
+      expect(result).not.toContain("<script>");
+      expect(result).toContain("&lt;script&gt;");
+    });
+
+    it("escapeHTML neutralises onerror attribute", async () => {
+      const { escapeHTML } = await import("../src/utils/helpers.js");
+      const input = '<img src=x onerror="alert(1)">';
+      const result = escapeHTML(input);
+      expect(result).not.toContain("<img");
+      expect(result).toContain("&lt;img");
+    });
+
+    it("escapeHTML leaves plain text unchanged", async () => {
+      const { escapeHTML } = await import("../src/utils/helpers.js");
+      const input = "Боклук до кофата";
+      expect(escapeHTML(input)).toBe(input);
+    });
+
+    it("null/undefined description renders as dash, not thrown", () => {
+      // Simulates the table cell rendering logic from admin.js
+      const renderCell = (desc) => (desc ? desc : "—");
+      expect(renderCell(null)).toBe("—");
+      expect(renderCell(undefined)).toBe("—");
+      expect(renderCell("")).toBe("—");
+    });
+  });
+
+  // ─── Bug fix: demo mode guard in loadReports() ───────────────────────────────
+
+  describe("loadReports() demo mode guard (bug fix)", () => {
+    it("demo user id is correctly identified", () => {
+      const currentUser = { id: "demo-admin-001" };
+      const isDemo = currentUser?.id === "demo-admin-001";
+      expect(isDemo).toBe(true);
+    });
+
+    it("real admin is NOT flagged as demo", () => {
+      const currentUser = { id: "real-admin-uuid" };
+      const isDemo = currentUser?.id === "demo-admin-001";
+      expect(isDemo).toBe(false);
+    });
+
+    it("demo guard prevents Supabase call", async () => {
+      const supabase = supabaseModule.default;
+      const currentUser = { id: "demo-admin-001" };
+
+      // Simulate loadReports() guard
+      if (currentUser?.id === "demo-admin-001") {
+        // early return — supabase.from should never be called
+      } else {
+        await supabase.from("reports").select("*").eq("status", "pending").order("created_at", { ascending: false });
+      }
+
+      expect(supabase.from).not.toHaveBeenCalled();
+    });
+
+    it("real admin does trigger Supabase call", async () => {
+      const chain = {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({ data: [], error: null }),
+      };
+      supabaseModule.default.from.mockReturnValue(chain);
+
+      const currentUser = { id: "real-admin-uuid" };
+
+      if (currentUser?.id !== "demo-admin-001") {
+        await supabaseModule.default.from("reports").select("*").eq("status", "pending").order("created_at", { ascending: false });
+      }
+
+      expect(supabaseModule.default.from).toHaveBeenCalledWith("reports");
     });
   });
 

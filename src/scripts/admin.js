@@ -996,6 +996,11 @@ async function loadReports() {
   const container = document.getElementById("reportsTableContainer");
   if (!container) return;
 
+  if (currentUser?.id === "demo-admin-001") {
+    container.innerHTML = `<p class="text-muted" data-i18n="admin.noReports">${lang === "en" ? "No pending reports" : "Няма нови доклади"}</p>`;
+    return;
+  }
+
   try {
     const { data: reports, error } = await supabase
       .from("reports")
@@ -1037,7 +1042,7 @@ async function loadReports() {
             <td>${date}</td>
             <td>${reporter}</td>
             <td><strong>${reason}</strong></td>
-            <td>${r.description ? r.description : "—"}</td>
+            <td>${r.description ? escapeHTML(r.description) : "—"}</td>
             <td>
               <button class="btn btn-sm btn-success me-1"
                 onclick="handleResolveReport('${r.id}', 'resolved')"
