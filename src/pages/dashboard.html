@@ -145,6 +145,50 @@
             </button>
           </div>
 
+          <!-- Category Filter -->
+          <div class="category-filter" id="categoryFilter">
+            <button
+              class="btn-category active"
+              data-category=""
+              onclick="filterByCategory(this)"
+              data-i18n="campaign.categoryAll"
+            >
+              Всички
+            </button>
+            <button
+              class="btn-category"
+              data-category="park"
+              onclick="filterByCategory(this)"
+              data-i18n="campaign.categoryPark"
+            >
+              🌳 Парк
+            </button>
+            <button
+              class="btn-category"
+              data-category="street"
+              onclick="filterByCategory(this)"
+              data-i18n="campaign.categoryStreet"
+            >
+              🛣️ Улица
+            </button>
+            <button
+              class="btn-category"
+              data-category="water"
+              onclick="filterByCategory(this)"
+              data-i18n="campaign.categoryWater"
+            >
+              💧 Вода
+            </button>
+            <button
+              class="btn-category"
+              data-category="other"
+              onclick="filterByCategory(this)"
+              data-i18n="campaign.categoryOther"
+            >
+              📦 Друго
+            </button>
+          </div>
+
           <!-- Loading Spinner -->
           <div id="loadingSpinner" class="spinner-container">
             <div class="spinner-border text-primary" role="status">

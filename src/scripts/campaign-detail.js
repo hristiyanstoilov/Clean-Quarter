@@ -262,6 +262,22 @@ function displayCampaignDetails(campaignData, participations) {
   if (nbh && typeof nbh === "object") nbh = nbh[lang] || nbh.bg || Object.values(nbh)[0];
   document.getElementById("campaignNeighborhood").textContent = nbh;
 
+  // Category
+  const categoryEl = document.getElementById("campaignCategory");
+  if (categoryEl) {
+    const categoryMap = {
+      park: lang === "en" ? "🌳 Park" : "🌳 Парк",
+      street: lang === "en" ? "🛣️ Street" : "🛣️ Улица",
+      water: lang === "en" ? "💧 Water" : "💧 Воден обект",
+      other: lang === "en" ? "📦 Other" : "📦 Друго",
+    };
+    categoryEl.textContent = campaignData.category
+      ? categoryMap[campaignData.category] || campaignData.category
+      : lang === "en"
+        ? "—"
+        : "—";
+  }
+
   // Scheduled date + time range
   const scheduledEl = document.getElementById("campaignScheduled");
   if (scheduledEl) {

@@ -18,9 +18,13 @@ const PAGE_SIZE = 9;
 let currentOffset = 0;
 let totalCount = 0;
 let allDemoCampaigns = [];
+let rawDemoCampaigns = []; // unfiltered source — preserved across filter changes
 
 // Neighborhood filter state — null means "all"
 let currentNeighborhoodFilter = null;
+
+// Category filter state — null means "all"
+let currentCategoryFilter = null;
 
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", async () => {
@@ -263,9 +267,17 @@ async function loadCampaignsPage(append = false) {
     const user = JSON.parse(localStorage.getItem("user"));
 
     if (user && user.id === "demo-admin-001") {
-      // Demo mode — load all once, then slice
+      // Demo mode — load raw once, filter client-side on each reset
       if (!append) {
-        allDemoCampaigns = JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_CAMPAIGNS") || "[]");
+        rawDemoCampaigns = JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_CAMPAIGNS") || "[]");
+        let filtered = rawDemoCampaigns;
+        if (currentNeighborhoodFilter) {
+          filtered = filtered.filter((c) => c.neighborhood === currentNeighborhoodFilter);
+        }
+        if (currentCategoryFilter) {
+          filtered = filtered.filter((c) => c.category === currentCategoryFilter);
+        }
+        allDemoCampaigns = filtered;
         totalCount = allDemoCampaigns.length;
       }
       campaigns = allDemoCampaigns.slice(currentOffset, currentOffset + PAGE_SIZE);
@@ -274,13 +286,17 @@ async function loadCampaignsPage(append = false) {
       let query = supabase
         .from("campaigns")
         .select(
-          "id, title, neighborhood, before_photo_url, status, created_at, scheduled_date, start_time, end_time, created_by, creator:profiles!created_by(username)",
+          "id, title, neighborhood, category, before_photo_url, status, created_at, scheduled_date, start_time, end_time, created_by, creator:profiles!created_by(username)",
           { count: "exact" }
         )
         .eq("status", "active");
 
       if (currentNeighborhoodFilter) {
         query = query.eq("neighborhood", currentNeighborhoodFilter);
+      }
+
+      if (currentCategoryFilter) {
+        query = query.eq("category", currentCategoryFilter);
       }
 
       const { data, error, count } = await query
@@ -382,6 +398,20 @@ window.showAllCampaigns = async function () {
   }
 
   document.getElementById("showAllBtn").style.display = "none";
+  await loadCampaignsPage(false);
+};
+
+/**
+ * Filter campaigns by category
+ */
+window.filterByCategory = async function (btn) {
+  const category = btn.dataset.category || null;
+  currentCategoryFilter = category;
+
+  // Update active button state
+  document.querySelectorAll(".btn-category").forEach((b) => b.classList.remove("active"));
+  btn.classList.add("active");
+
   await loadCampaignsPage(false);
 };
 
