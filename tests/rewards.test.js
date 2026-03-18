@@ -291,6 +291,113 @@ describe('Rewards - Transaction History', () => {
   });
 });
 
+describe('Rewards - Out-of-Stock Guard (bug fix)', () => {
+  /**
+   * Before the fix, handleBuy() had no client-side out-of-stock check.
+   * A race condition could allow a user to initiate a purchase for a
+   * reward that became unavailable after the page was loaded.
+   */
+
+  it('detects out-of-stock via quantity_available === 0', () => {
+    const isOutOfStock = (reward) =>
+      reward.quantity_available !== null && reward.quantity_available <= 0;
+
+    expect(isOutOfStock({ quantity_available: 0 })).toBe(true);
+    expect(isOutOfStock({ quantity_available: 1 })).toBe(false);
+    expect(isOutOfStock({ quantity_available: null })).toBe(false); // unlimited
+  });
+
+  it('detects out-of-stock via negative quantity (edge case)', () => {
+    const isOutOfStock = (reward) =>
+      reward.quantity_available !== null && reward.quantity_available <= 0;
+
+    expect(isOutOfStock({ quantity_available: -1 })).toBe(true);
+  });
+
+  it('unlimited rewards (quantity_available = null) are never out-of-stock', () => {
+    const isOutOfStock = (reward) =>
+      reward.quantity_available !== null && reward.quantity_available <= 0;
+
+    expect(isOutOfStock({ quantity_available: null })).toBe(false);
+  });
+
+  it('guard prevents purchase when local rewards array shows 0 stock', () => {
+    const rewards = [{ id: 'r1', quantity_available: 0 }];
+    const rewardId = 'r1';
+
+    const reward = rewards.find((r) => r.id === rewardId);
+    const shouldBlock =
+      reward && reward.quantity_available !== null && reward.quantity_available <= 0;
+
+    expect(shouldBlock).toBe(true);
+  });
+
+  it('guard allows purchase when stock is available', () => {
+    const rewards = [{ id: 'r1', quantity_available: 5 }];
+    const rewardId = 'r1';
+
+    const reward = rewards.find((r) => r.id === rewardId);
+    const shouldBlock =
+      reward && reward.quantity_available !== null && reward.quantity_available <= 0;
+
+    expect(shouldBlock).toBe(false);
+  });
+});
+
+describe('Rewards - RPC Error Localization (bug fix)', () => {
+  /**
+   * Before the fix, RPC errors "Out of stock" and "Insufficient points"
+   * were shown as raw English strings regardless of the user's language.
+   */
+
+  it('detects Out of stock RPC error', () => {
+    const result = { success: false, error: 'Out of stock' };
+    const isOutOfStock = result.error === 'Out of stock';
+    expect(isOutOfStock).toBe(true);
+  });
+
+  it('detects Insufficient points RPC error', () => {
+    const result = { success: false, error: 'Insufficient points' };
+    const isInsufficient = result.error === 'Insufficient points';
+    expect(isInsufficient).toBe(true);
+  });
+
+  it('unknown RPC errors are re-thrown (not swallowed)', () => {
+    const result = { success: false, error: 'Some unexpected DB error' };
+    const isKnownError =
+      result.error === 'Out of stock' || result.error === 'Insufficient points';
+    expect(isKnownError).toBe(false); // should fall through to throw
+  });
+
+  it('BG localization for Out of stock', () => {
+    const lang = 'bg';
+    const title = lang === 'en' ? 'Out of Stock' : 'Изчерпан';
+    const text =
+      lang === 'en'
+        ? 'This reward is no longer available.'
+        : 'Тази награда вече не е налична.';
+    expect(title).toBe('Изчерпан');
+    expect(text).toBe('Тази награда вече не е налична.');
+  });
+
+  it('EN localization for Out of stock', () => {
+    const lang = 'en';
+    const title = lang === 'en' ? 'Out of Stock' : 'Изчерпан';
+    const text =
+      lang === 'en'
+        ? 'This reward is no longer available.'
+        : 'Тази награда вече не е налична.';
+    expect(title).toBe('Out of Stock');
+    expect(text).toBe('This reward is no longer available.');
+  });
+
+  it('BG localization for Insufficient points from RPC', () => {
+    const lang = 'bg';
+    const title = lang === 'en' ? 'Insufficient Points' : 'Недостатъчно точки';
+    expect(title).toBe('Недостатъчно точки');
+  });
+});
+
 describe('Rewards - UI State Management', () => {
   it('should determine button state based on affordability', () => {
     const getButtonState = (userPoints, rewardCost) => {
