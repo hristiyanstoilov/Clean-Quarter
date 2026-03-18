@@ -44,7 +44,8 @@ const pages = [
     html: "src/pages/campaign-detail.html",
     js: "src/scripts/campaign-detail.js",
     // editCampaignForm is accessed with ?. — safe if absent
-    optionalIds: [],
+    // reportReason and reportDescription are injected dynamically by SweetAlert2 html: option
+    optionalIds: ["reportReason", "reportDescription"],
   },
   {
     name: "Create Campaign",

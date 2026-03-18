@@ -133,6 +133,28 @@ body {
   outline: none;
 }
 
+.btn-report {
+  padding: 0.75rem 1.5rem;
+  background-color: #fd7e14;
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: bold;
+  transition: var(--transition-base);
+}
+
+.btn-report:hover {
+  background-color: #e8690a;
+  transform: scale(1.05);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-report:focus-visible {
+  box-shadow: 0 0 0 3px rgba(253, 126, 20, 0.25);
+  outline: none;
+}
+
 .btn-delete {
   padding: 0.75rem 1.5rem;
   background-color: var(--danger-color);
@@ -377,6 +399,7 @@ body {
   }
 
   .action-buttons .btn-back,
+  .action-buttons .btn-report,
   .action-buttons .btn-delete,
   .action-buttons .btn-join {
     width: 100%;
