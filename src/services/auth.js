@@ -94,15 +94,17 @@ export async function login(email, password) {
       });
       if (rateData && !rateData.allowed) {
         const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
-        throw new Error(
+        const err = new Error(
           lang === "en"
             ? "Too many login attempts. Please try again in 15 minutes."
             : "Твърде много опити за вход. Опитайте отново след 15 минути."
         );
+        err.isRateLimit = true;
+        throw err;
       }
     } catch (rateLimitError) {
       // Re-throw only if it's our own rate limit error, not an RPC failure
-      if (rateLimitError.message.includes("опити") || rateLimitError.message.includes("attempts")) {
+      if (rateLimitError.isRateLimit === true) {
         throw rateLimitError;
       }
       logger.warn("Rate limit RPC unavailable, proceeding with login:", rateLimitError.message);
@@ -114,12 +116,10 @@ export async function login(email, password) {
     });
 
     if (error) {
-      // Record failed attempt server-side (fire-and-forget, don't block on error)
-      try {
-        supabase.rpc("record_login_attempt", { p_email: email });
-      } catch (e) {
-        logger.warn("Failed to record login attempt:", e.message);
-      }
+      // Record failed attempt server-side (fire-and-forget, does not block login flow)
+      supabase
+        .rpc("record_login_attempt", { p_email: email })
+        .catch((e) => logger.warn("Failed to record login attempt:", e.message));
       throw error;
     }
 
