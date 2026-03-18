@@ -54,15 +54,6 @@ export async function handleForgotPassword(e) {
 }
 
 /**
- * Show Terms and Conditions modal
- */
-export function showTermsModal(e) {
-  e.preventDefault();
-  updateTermsLanguage();
-  document.getElementById("termsModal").style.display = "block";
-}
-
-/**
  * Update terms modal content based on current language
  */
 function updateTermsLanguage() {
@@ -106,6 +97,5 @@ export function acceptTerms() {
 
 // Make functions globally available
 window.handleForgotPassword = handleForgotPassword;
-window.showTermsModal = showTermsModal;
 window.closeTermsModal = closeTermsModal;
 window.acceptTerms = acceptTerms;
