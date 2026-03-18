@@ -45,6 +45,7 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
+    sourcemap: true, // Required for readable Sentry stack traces
     minify: 'esbuild', // Use esbuild (faster, no extra dependency)
     rollupOptions: {
       input: {

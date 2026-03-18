@@ -69,6 +69,10 @@ import { saveUser } from "./utils/helpers.js";
 import supabase from "./services/supabase.js";
 import { initPasswordStrengthMeter } from "./components/passwordStrength.js";
 import passwordToggle from "./components/passwordToggle.js";
+import { initSentry, setSentryUser } from "./services/sentry.js";
+
+// Initialize Sentry as early as possible
+initSentry();
 // Lazy-load non-critical modules for performance
 let initializePWA, initI18n, setLanguage, applyLanguage;
 
@@ -119,6 +123,7 @@ async function handleLogin(e) {
       username: profile?.username,
       neighborhood: profile?.neighborhood,
     });
+    setSentryUser({ id: user.id, email: user.email, neighborhood: profile?.neighborhood });
     window.location.href = "/dashboard";
   } catch (error) {
     await Swal.fire({
@@ -175,7 +180,7 @@ async function handleRegister(e) {
       username: profile?.username,
       neighborhood: profile?.neighborhood,
     });
-
+    setSentryUser({ id: user.id, email: user.email, neighborhood: profile?.neighborhood });
     window.location.href = "/dashboard";
   } catch (error) {
     await Swal.fire({

@@ -5,6 +5,7 @@
 
 import store from "../state/store.js";
 import logger from "./logger.js";
+import { captureError } from "./sentry.js";
 
 /**
  * Error Types
@@ -132,6 +133,9 @@ class ErrorHandler {
       error instanceof AppError
         ? error
         : new AppError(error?.message || "Unknown error", ERROR_TYPES.UNKNOWN, error);
+
+    // Send to Sentry (no-op if DSN not configured)
+    captureError(appError, { type: appError.type, details: appError.details });
 
     // Store error in store
     store.addError(appError.message, appError.type);

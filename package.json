@@ -36,6 +36,7 @@
     "vitest": "^0.34.6"
   },
   "dependencies": {
+    "@sentry/browser": "^10.44.0",
     "@supabase/supabase-js": "^2.38.0",
     "leaflet": "^1.9.4"
   }
