@@ -454,14 +454,16 @@ async function loadLeaderboard(currentUser) {
     }
 
     if (!rows.length) {
-      container.innerHTML = `<p class="text-muted">${lang === "en" ? "No data yet" : "Все още няма данни"}</p>`;
+      container.innerHTML = `<p class="text-muted">${t("leaderboard.noData") || (lang === "en" ? "No data yet" : "Все още няма данни")}</p>`;
       return;
     }
 
     const userNeighborhood = currentUser?.neighborhood || null;
-    const pointsLabel = lang === "en" ? "points" : "точки";
-    const participantsLabel = lang === "en" ? "participants" : "участника";
-    const yourLabel = lang === "en" ? "your neighborhood" : "твоят квартал";
+    const pointsLabel = t("leaderboard.points") || (lang === "en" ? "points" : "точки");
+    const participantsLabel =
+      t("leaderboard.participants") || (lang === "en" ? "participants" : "участника");
+    const yourLabel =
+      t("leaderboard.yourNeighborhood") || (lang === "en" ? "your neighborhood" : "твоят квартал");
 
     const cards = rows.slice(0, 5).map((row, i) => {
       const medal = MEDAL[i] || `${i + 1}.`;
