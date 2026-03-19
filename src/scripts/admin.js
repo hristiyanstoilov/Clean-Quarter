@@ -1,6 +1,18 @@
 import supabase from "../services/supabase.js";
 import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
 import { escapeHTML, showSuccessToast, showInfoToast, initSwalFallback } from "../utils/helpers.js";
+import {
+  getDemoParticipations,
+  getDemoCampaigns,
+  getDemoUsers,
+  saveDemoUsers,
+  updateDemoUser,
+  updateDemoParticipation,
+  getDemoTransactions,
+  addDemoTransaction,
+  getDemoRoleLog,
+  saveDemoRoleLog,
+} from "../utils/demoMode.js";
 
 // Global variables
 let currentUser = null;
@@ -113,11 +125,9 @@ async function loadAdminData() {
 
     if (isDemoMode) {
       // DEMO MODE: Load from localStorage
-      const participations = JSON.parse(
-        localStorage.getItem("CLEAN_QUARTER_DEMO_PARTICIPATIONS") || "[]"
-      );
-      const campaigns = JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_CAMPAIGNS") || "[]");
-      const users = JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_USERS") || "[]");
+      const participations = getDemoParticipations();
+      const campaigns = getDemoCampaigns();
+      const users = getDemoUsers();
 
       // Join participations with campaigns and users
       allParticipationsData = participations.map((p) => {
@@ -224,7 +234,7 @@ async function preloadRoleLog() {
     const localUser = localStorage.getItem("user");
     const isDemoMode = localUser && currentUser.id === "demo-admin-001";
     if (isDemoMode) {
-      window._roleLogCache = JSON.parse(localStorage.getItem("CLEAN_QUARTER_ROLE_LOG") || "[]");
+      window._roleLogCache = getDemoRoleLog();
     } else {
       // Real mode: fetch from Supabase
       const { data, error } = await supabase
@@ -302,7 +312,7 @@ async function loadAndRenderUsers() {
     const localUser = localStorage.getItem("user");
     const isDemoMode = localUser && currentUser.id === "demo-admin-001";
     if (isDemoMode) {
-      users = JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_USERS") || "[]");
+      users = getDemoUsers();
       // Mark superadmins (demo: first admin is superadmin)
       if (users.length) {
         const superadmins = users.filter((u) => u.role === "admin" && u.is_superadmin);
@@ -497,7 +507,7 @@ window.makeAdmin = async function (userId, username) {
 
     if (isDemoMode) {
       // Demo mode
-      const users = JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_USERS") || "[]");
+      const users = getDemoUsers();
       const userIndex = users.findIndex((u) => u.id === userId);
 
       if (userIndex === -1) {
@@ -505,18 +515,17 @@ window.makeAdmin = async function (userId, username) {
       }
 
       users[userIndex].role = "admin";
-      localStorage.setItem("CLEAN_QUARTER_DEMO_USERS", JSON.stringify(users));
+      saveDemoUsers(users);
 
       // Log role change
-      const roleLog = JSON.parse(localStorage.getItem("CLEAN_QUARTER_ROLE_LOG") || "[]");
+      const roleLog = getDemoRoleLog();
       roleLog.push({
         id: "role_" + Date.now(),
         user_id: userId,
         reason: `Made admin by ${currentUser.username || currentUser.email}`,
         created_at: new Date().toISOString(),
       });
-      localStorage.setItem("CLEAN_QUARTER_ROLE_LOG", JSON.stringify(roleLog));
-      window._roleLogCache = roleLog;
+      saveDemoRoleLog(roleLog);
     } else {
       // Real mode: atomic role change via SECURITY DEFINER RPC
       const { data: result, error: rpcError } = await supabase.rpc("set_user_role", {
@@ -585,7 +594,7 @@ window.removeAdmin = async function (userId, username) {
 
     if (isDemoMode) {
       // Demo mode
-      const users = JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_USERS") || "[]");
+      const users = getDemoUsers();
       const userIndex = users.findIndex((u) => u.id === userId);
 
       if (userIndex === -1) {
@@ -593,18 +602,17 @@ window.removeAdmin = async function (userId, username) {
       }
 
       users[userIndex].role = "user";
-      localStorage.setItem("CLEAN_QUARTER_DEMO_USERS", JSON.stringify(users));
+      saveDemoUsers(users);
 
       // Log role change
-      const roleLog = JSON.parse(localStorage.getItem("CLEAN_QUARTER_ROLE_LOG") || "[]");
+      const roleLog = getDemoRoleLog();
       roleLog.push({
         id: "role_" + Date.now(),
         user_id: userId,
         reason: `Removed from admin by ${currentUser.username || currentUser.email}`,
         created_at: new Date().toISOString(),
       });
-      localStorage.setItem("CLEAN_QUARTER_ROLE_LOG", JSON.stringify(roleLog));
-      window._roleLogCache = roleLog;
+      saveDemoRoleLog(roleLog);
     } else {
       // Real mode: atomic role change via SECURITY DEFINER RPC
       const { data: result, error: rpcError } = await supabase.rpc("set_user_role", {
@@ -785,24 +793,12 @@ async function handleApprove(participationId, username) {
     if (isDemoMode) {
       try {
         // DEMO MODE: Update localStorage
-        const participations = JSON.parse(
-          localStorage.getItem("CLEAN_QUARTER_DEMO_PARTICIPATIONS") || "[]"
-        );
-        const transactions = JSON.parse(
-          localStorage.getItem("CLEAN_QUARTER_DEMO_TRANSACTIONS") || "[]"
-        );
-        const users = JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_USERS") || "[]");
-
-        // Update participation status
-        const pIndex = participations.findIndex((p) => p.id === participationId);
-        if (pIndex !== -1) {
-          participations[pIndex].status = "approved";
-          localStorage.setItem("CLEAN_QUARTER_DEMO_PARTICIPATIONS", JSON.stringify(participations));
-        }
+        updateDemoParticipation(participationId, { status: "approved" });
 
         // Find the user who submitted the participation
         const participantId = participation.user_id;
-        let participant = users.find((u) => u.id === participantId);
+        const demoUsers = getDemoUsers();
+        let participant = demoUsers.find((u) => u.id === participantId);
         if (!participant) {
           // fallback: if no users array, try currentUser (for legacy demo)
           participant = currentUser;
@@ -810,21 +806,20 @@ async function handleApprove(participationId, username) {
         if (!participant) {
           throw new Error("Demo Mode: Participant not found");
         }
-        participant.points_balance = (participant.points_balance || 0) + POINTS_AWARDED;
 
-        // Update users array or currentUser in localStorage
-        if (users.length > 0) {
-          const uIndex = users.findIndex((u) => u.id === participantId);
-          if (uIndex !== -1) {
-            users[uIndex] = participant;
-            localStorage.setItem("CLEAN_QUARTER_DEMO_USERS", JSON.stringify(users));
-          }
+        // Update points balance
+        const newBalance = (participant.points_balance || 0) + POINTS_AWARDED;
+        if (demoUsers.length > 0) {
+          updateDemoUser(participantId, { points_balance: newBalance });
         } else {
-          localStorage.setItem("user", JSON.stringify(participant));
+          localStorage.setItem(
+            "user",
+            JSON.stringify({ ...participant, points_balance: newBalance })
+          );
         }
 
         // Add transaction record
-        const newTransaction = {
+        addDemoTransaction({
           id: "demo_trans_" + Date.now(),
           user_id: participantId,
           amount: POINTS_AWARDED,
@@ -832,9 +827,7 @@ async function handleApprove(participationId, username) {
           reason: `Cleanup proof approved - ${participation.campaigns?.title || "Campaign"}`,
           participation_id: participationId,
           created_at: new Date().toISOString(),
-        };
-        transactions.push(newTransaction);
-        localStorage.setItem("CLEAN_QUARTER_DEMO_TRANSACTIONS", JSON.stringify(transactions));
+        });
 
         Swal.close();
 
@@ -926,17 +919,10 @@ async function handleReject(participationId, username) {
 
     if (isDemoMode) {
       // DEMO MODE: Update localStorage
-      const participations = JSON.parse(
-        localStorage.getItem("CLEAN_QUARTER_DEMO_PARTICIPATIONS") || "[]"
-      );
-
-      // Update participation status
-      const pIndex = participations.findIndex((p) => p.id === participationId);
-      if (pIndex !== -1) {
-        participations[pIndex].status = "rejected";
-        participations[pIndex].rejection_reason = rejectionReason;
-        localStorage.setItem("CLEAN_QUARTER_DEMO_PARTICIPATIONS", JSON.stringify(participations));
-      }
+      updateDemoParticipation(participationId, {
+        status: "rejected",
+        rejection_reason: rejectionReason,
+      });
 
       Swal.close();
 

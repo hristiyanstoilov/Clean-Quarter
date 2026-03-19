@@ -53,6 +53,9 @@ const DEMO_CAMPAIGNS_KEY = "CLEAN_QUARTER_DEMO_CAMPAIGNS";
 const DEMO_PARTICIPATIONS_KEY = "CLEAN_QUARTER_DEMO_PARTICIPATIONS";
 const DEMO_REWARDS_KEY = "CLEAN_QUARTER_DEMO_REWARDS";
 const DEMO_TRANSACTIONS_KEY = "CLEAN_QUARTER_DEMO_TRANSACTIONS";
+const DEMO_USERS_KEY = "CLEAN_QUARTER_DEMO_USERS";
+const DEMO_COMMENTS_KEY = "CLEAN_QUARTER_DEMO_COMMENTS";
+const DEMO_ROLE_LOG_KEY = "CLEAN_QUARTER_ROLE_LOG";
 
 /**
  * Initialize demo mode with sample data
@@ -437,6 +440,118 @@ export function getDemoTransactions() {
   return transactions ? JSON.parse(transactions) : [];
 }
 
+// ---- Write helpers: campaigns ----
+
+export function saveDemoCampaigns(campaigns) {
+  localStorage.setItem(DEMO_CAMPAIGNS_KEY, JSON.stringify(campaigns));
+}
+
+export function addDemoCampaign(campaign) {
+  const campaigns = getDemoCampaigns();
+  campaigns.push(campaign);
+  saveDemoCampaigns(campaigns);
+}
+
+export function updateDemoCampaign(id, updates) {
+  const campaigns = getDemoCampaigns();
+  const idx = campaigns.findIndex((c) => c.id === id);
+  if (idx !== -1) {
+    campaigns[idx] = { ...campaigns[idx], ...updates };
+    saveDemoCampaigns(campaigns);
+  }
+}
+
+// ---- Write helpers: participations ----
+
+export function saveDemoParticipations(participations) {
+  localStorage.setItem(DEMO_PARTICIPATIONS_KEY, JSON.stringify(participations));
+}
+
+export function addDemoParticipation(participation) {
+  const parts = getDemoParticipations();
+  parts.push(participation);
+  saveDemoParticipations(parts);
+}
+
+export function updateDemoParticipation(id, updates) {
+  const parts = getDemoParticipations();
+  const idx = parts.findIndex((p) => p.id === id);
+  if (idx !== -1) {
+    parts[idx] = { ...parts[idx], ...updates };
+    saveDemoParticipations(parts);
+  }
+}
+
+// ---- Write helpers: rewards ----
+
+export function saveDemoRewards(rewards) {
+  localStorage.setItem(DEMO_REWARDS_KEY, JSON.stringify(rewards));
+}
+
+// ---- Write helpers: transactions ----
+
+export function saveDemoTransactions(transactions) {
+  localStorage.setItem(DEMO_TRANSACTIONS_KEY, JSON.stringify(transactions));
+}
+
+export function addDemoTransaction(transaction) {
+  const txs = getDemoTransactions();
+  txs.push(transaction);
+  saveDemoTransactions(txs);
+}
+
+// ---- Users ----
+
+export function getDemoUsers() {
+  return JSON.parse(localStorage.getItem(DEMO_USERS_KEY) || "[]");
+}
+
+export function saveDemoUsers(users) {
+  localStorage.setItem(DEMO_USERS_KEY, JSON.stringify(users));
+}
+
+export function updateDemoUser(id, updates) {
+  const users = getDemoUsers();
+  const idx = users.findIndex((u) => u.id === id);
+  if (idx !== -1) {
+    users[idx] = { ...users[idx], ...updates };
+    saveDemoUsers(users);
+  }
+}
+
+// ---- Comments ----
+
+export function getDemoComments(campaignId) {
+  const all = JSON.parse(localStorage.getItem(DEMO_COMMENTS_KEY) || "[]");
+  return all.filter((c) => c.campaign_id === campaignId && !c.deleted_at);
+}
+
+export function addDemoComment(comment) {
+  const all = JSON.parse(localStorage.getItem(DEMO_COMMENTS_KEY) || "[]");
+  all.push(comment);
+  localStorage.setItem(DEMO_COMMENTS_KEY, JSON.stringify(all));
+}
+
+export function softDeleteDemoComment(commentId) {
+  const all = JSON.parse(localStorage.getItem(DEMO_COMMENTS_KEY) || "[]");
+  const idx = all.findIndex((c) => c.id === commentId);
+  if (idx !== -1) {
+    all[idx].deleted_at = new Date().toISOString();
+    localStorage.setItem(DEMO_COMMENTS_KEY, JSON.stringify(all));
+  }
+}
+
+// ---- Role log ----
+
+export function getDemoRoleLog() {
+  return JSON.parse(localStorage.getItem(DEMO_ROLE_LOG_KEY) || "[]");
+}
+
+export function saveDemoRoleLog(log) {
+  localStorage.setItem(DEMO_ROLE_LOG_KEY, JSON.stringify(log));
+  window._roleLogCache = log;
+}
+
 /**
  * Clear demo mode
  */
@@ -447,4 +562,7 @@ export function clearDemoMode() {
   localStorage.removeItem(DEMO_PARTICIPATIONS_KEY);
   localStorage.removeItem(DEMO_REWARDS_KEY);
   localStorage.removeItem(DEMO_TRANSACTIONS_KEY);
+  localStorage.removeItem(DEMO_USERS_KEY);
+  localStorage.removeItem(DEMO_COMMENTS_KEY);
+  localStorage.removeItem(DEMO_ROLE_LOG_KEY);
 }

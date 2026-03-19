@@ -4,6 +4,7 @@ import { uploadCampaignPhoto } from "../services/storage.js";
 import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
 import { showSuccessToast, initSwalFallback } from "../utils/helpers.js";
 import supabase from "../services/supabase.js";
+import { addDemoCampaign, addDemoParticipation } from "../utils/demoMode.js";
 
 // Global variables
 let map = null;
@@ -349,9 +350,6 @@ async function handleFormSubmit(e) {
 
     if (isDemoMode) {
       // DEMO MODE: Create campaign in localStorage
-      const demoCampaigns = JSON.parse(
-        localStorage.getItem("CLEAN_QUARTER_DEMO_CAMPAIGNS") || "[]"
-      );
       const newCampaignId = "demo_" + Date.now();
 
       // Create demo photo URL (SVG data URL)
@@ -383,14 +381,10 @@ async function handleFormSubmit(e) {
         participation_count: 0,
       };
 
-      demoCampaigns.push(newCampaign);
-      localStorage.setItem("CLEAN_QUARTER_DEMO_CAMPAIGNS", JSON.stringify(demoCampaigns));
+      addDemoCampaign(newCampaign);
 
       // Auto-join creator as first participant (demo mode)
-      const demoParts = JSON.parse(
-        localStorage.getItem("CLEAN_QUARTER_DEMO_PARTICIPATIONS") || "[]"
-      );
-      demoParts.push({
+      addDemoParticipation({
         id: `part-${Date.now()}`,
         campaign_id: newCampaignId,
         user_id: currentUser.id,
@@ -399,7 +393,6 @@ async function handleFormSubmit(e) {
         points_earned: 0,
         created_at: new Date().toISOString(),
       });
-      localStorage.setItem("CLEAN_QUARTER_DEMO_PARTICIPATIONS", JSON.stringify(demoParts));
 
       await showSuccessToast("Кампанията е създадена успешно!");
 
