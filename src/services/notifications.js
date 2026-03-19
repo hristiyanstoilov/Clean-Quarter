@@ -230,5 +230,8 @@ export async function initNotificationBell(userId) {
   }
 
   // Realtime: re-fetch when a new notification arrives
-  subscribeToNotifications(userId, () => loadAndRender());
+  const channel = subscribeToNotifications(userId, () => loadAndRender());
+
+  // Clean up the Realtime channel when the page unloads to avoid connection leaks
+  window.addEventListener("beforeunload", () => channel.unsubscribe(), { once: true });
 }
