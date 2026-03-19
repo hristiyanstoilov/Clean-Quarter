@@ -13,19 +13,19 @@ describe('services/validation.js', () => {
   it('should validate required rule', () => {
       const { validateField } = require('../src/services/validation.js');
       expect(validateField('', ["required"])).toBe("Полето е задължително");
-      expect(validateField('ok', ["required"])).toBe(true);
+      expect(validateField('ok', ["required"])).toBe(null);
     });
 
     it('should validate email rule', () => {
       const { validateField } = require('../src/services/validation.js');
       expect(validateField('not-an-email', ["email"])).toBe("Невалиден имейл формат");
-      expect(validateField('test@example.com', ["email"])).toBe(true);
+      expect(validateField('test@example.com', ["email"])).toBe(null);
     });
 
     it('should validate number rule', () => {
       const { validateField } = require('../src/services/validation.js');
       expect(validateField('abc', ["number"])).toBe("Трябва да е число");
-      expect(validateField('123', ["number"])).toBe(true);
+      expect(validateField('123', ["number"])).toBe(null);
     });
 
     it('should validate password rule', () => {
@@ -34,19 +34,19 @@ describe('services/validation.js', () => {
       expect(validateField('alllowercase1', ["password"])).toMatch(/главна буква/);
       expect(validateField('ALLUPPERCASE1', ["password"])).toMatch(/малка буква/);
       expect(validateField('NoNumber', ["password"])).toMatch(/число/);
-      expect(validateField('Valid123A', ["password"])).toBe(true);
+      expect(validateField('Valid123A', ["password"])).toBe(null);
     });
 
     it('should validate url rule', () => {
       const { validateField } = require('../src/services/validation.js');
       expect(validateField('not-a-url', ["url"])).toBe("Invalid URL format");
-      expect(validateField('https://example.com', ["url"])).toBe(true);
+      expect(validateField('https://example.com', ["url"])).toBe(null);
     });
 
     it('should validate phone rule', () => {
       const { validateField } = require('../src/services/validation.js');
       expect(validateField('123', ["phone"])).toBe("Invalid phone format");
-      expect(validateField('+359888123456', ["phone"])).toBe(true);
+      expect(validateField('+359888123456', ["phone"])).toBe(null);
     });
 
     it('should return error for missing schema', () => {
