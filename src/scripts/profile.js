@@ -3,6 +3,7 @@ import { uploadAvatar } from "../services/storage.js";
 import { initI18n, applyLanguage, setLanguage } from "../utils/i18n.js";
 import { escapeHTML, showSuccessToast, initSwalFallback } from "../utils/helpers.js";
 import { rules } from "../services/validation.js";
+import { isDemoUser } from "../utils/demoMode.js";
 // Global variables
 let currentUser = null;
 let userProfile = null;
@@ -145,7 +146,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // Notification bell (skip demo users)
-    if (storedUser?.id && storedUser.id !== "demo-admin-001") {
+    if (storedUser?.id && !isDemoUser(storedUser)) {
       import("../services/notifications.js").then(({ initNotificationBell }) => {
         initNotificationBell(storedUser.id);
       });
@@ -238,7 +239,7 @@ async function loadProfileData() {
     let profile;
 
     // Check if in demo mode
-    if (currentUser.id === "demo-admin-001") {
+    if (isDemoUser(currentUser)) {
       profile = currentUser;
     } else {
       // Fetch user profile from Supabase
@@ -327,7 +328,7 @@ async function loadTransactions() {
     let transactions = [];
 
     // Check if in demo mode
-    if (currentUser.id === "demo-admin-001") {
+    if (isDemoUser(currentUser)) {
       transactions = JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_TRANSACTIONS") || "[]");
     } else {
       const { data, error } = await supabase
@@ -416,7 +417,7 @@ async function loadTransactions() {
 async function loadParticipations() {
   try {
     // Demo mode — no real participations in DB
-    if (currentUser.id === "demo-admin-001") {
+    if (isDemoUser(currentUser)) {
       const demoParts = JSON.parse(
         localStorage.getItem("CLEAN_QUARTER_DEMO_PARTICIPATIONS") || "[]"
       );
@@ -625,7 +626,7 @@ async function handleSaveProfile(e) {
     // Check if demo mode
     const localUser = JSON.parse(localStorage.getItem("user") || "{}");
 
-    if (localUser.id === "demo-admin-001") {
+    if (isDemoUser(localUser)) {
       // Demo mode - update localStorage (password change not supported in demo)
       localUser.username = newUsername;
       localUser.neighborhood = newNeighborhood;

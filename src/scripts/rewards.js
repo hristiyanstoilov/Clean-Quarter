@@ -1,6 +1,7 @@
 import supabase from "../services/supabase.js";
 import { initI18n, applyLanguage, setLanguage } from "../utils/i18n.js";
 import { escapeHTML, showSuccessToast, initSwalFallback } from "../utils/helpers.js";
+import { isDemoUser } from "../utils/demoMode.js";
 
 // Global variables
 let currentUser = null;
@@ -32,7 +33,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // Notification bell (skip demo users)
-    if (storedUser?.id && storedUser.id !== "demo-admin-001") {
+    if (storedUser?.id && !isDemoUser(storedUser)) {
       import("../services/notifications.js").then(({ initNotificationBell }) => {
         initNotificationBell(storedUser.id);
       });
@@ -80,7 +81,7 @@ async function checkAuth() {
 async function loadRewardsData() {
   try {
     // Check if demo mode
-    if (currentUser && currentUser.id === "demo-admin-001") {
+    if (isDemoUser(currentUser)) {
       // Demo mode - use localStorage
       userProfile = currentUser;
       rewards = JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_REWARDS") || "[]");
@@ -293,7 +294,7 @@ async function handleBuy(rewardId, rewardTitle, rewardCost) {
     // Deduct points from user
     const newPointsBalance = (userProfile.points_balance || 0) - rewardCost;
 
-    const isDemo = currentUser && currentUser.id === "demo-admin-001";
+    const isDemo = isDemoUser(currentUser);
 
     if (isDemo) {
       // Demo mode: update localStorage instead of Supabase

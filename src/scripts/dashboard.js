@@ -12,6 +12,7 @@ import {
   isEmpty,
   escapeHTML,
 } from "../utils/helpers.js";
+import { isDemoUser } from "../utils/demoMode.js";
 
 // Pagination state
 const PAGE_SIZE = 9;
@@ -50,7 +51,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // Notification bell (skip demo users)
-    if (user?.id && user.id !== "demo-admin-001") {
+    if (user?.id && !isDemoUser(user)) {
       import("../services/notifications.js").then(({ initNotificationBell }) => {
         initNotificationBell(user.id);
       });
@@ -191,7 +192,7 @@ async function loadWeatherWidget(user) {
 
   let weather;
 
-  if (user?.id === "demo-admin-001") {
+  if (isDemoUser(user)) {
     weather = { temperature: 22, condition: "clear", icon: "☀️", isGoodWeather: true };
   } else {
     weather = await fetchWeather();
@@ -262,7 +263,7 @@ async function loadCampaignsPage(append = false) {
     let campaigns = [];
     const user = JSON.parse(localStorage.getItem("user"));
 
-    if (user && user.id === "demo-admin-001") {
+    if (isDemoUser(user)) {
       // Demo mode — load all once, then slice
       if (!append) {
         allDemoCampaigns = JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_CAMPAIGNS") || "[]");

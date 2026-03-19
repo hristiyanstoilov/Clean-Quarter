@@ -198,8 +198,8 @@ describe("Notification bell — page JS integration", () => {
       expect(js).toContain("notifications.js");
     });
 
-    it(`${name}: skips demo users (id !== "demo-admin-001")`, () => {
-      expect(js).toContain("demo-admin-001");
+    it(`${name}: skips demo users via isDemoUser()`, () => {
+      expect(js).toContain("isDemoUser");
     });
   });
 });

@@ -1,6 +1,7 @@
 import supabase from "../services/supabase.js";
 import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
 import { escapeHTML, showSuccessToast, showInfoToast, initSwalFallback } from "../utils/helpers.js";
+import { isDemoUser } from "../utils/demoMode.js";
 
 // Global variables
 let currentUser = null;
@@ -32,7 +33,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     await checkAuth();
 
     // Notification bell (skip demo users)
-    if (currentUser?.id && currentUser.id !== "demo-admin-001") {
+    if (currentUser?.id && !isDemoUser(currentUser)) {
       import("../services/notifications.js").then(({ initNotificationBell }) => {
         initNotificationBell(currentUser.id);
       });
@@ -107,7 +108,7 @@ async function loadAdminData() {
 
     // Check if we're in demo mode
     const localUser = localStorage.getItem("user");
-    const isDemoMode = localUser && currentUser.id === "demo-admin-001";
+    const isDemoMode = localUser && isDemoUser(currentUser);
 
     let allParticipationsData = [];
 
@@ -222,7 +223,7 @@ async function loadAdminData() {
 async function preloadRoleLog() {
   try {
     const localUser = localStorage.getItem("user");
-    const isDemoMode = localUser && currentUser.id === "demo-admin-001";
+    const isDemoMode = localUser && isDemoUser(currentUser);
     if (isDemoMode) {
       window._roleLogCache = JSON.parse(localStorage.getItem("CLEAN_QUARTER_ROLE_LOG") || "[]");
     } else {
@@ -300,7 +301,7 @@ async function loadAndRenderUsers() {
     let users = [];
     // Demo mode
     const localUser = localStorage.getItem("user");
-    const isDemoMode = localUser && currentUser.id === "demo-admin-001";
+    const isDemoMode = localUser && isDemoUser(currentUser);
     if (isDemoMode) {
       users = JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_USERS") || "[]");
       // Mark superadmins (demo: first admin is superadmin)
@@ -493,7 +494,7 @@ window.makeAdmin = async function (userId, username) {
     });
 
     const localUser = localStorage.getItem("user");
-    const isDemoMode = localUser && currentUser.id === "demo-admin-001";
+    const isDemoMode = localUser && isDemoUser(currentUser);
 
     if (isDemoMode) {
       // Demo mode
@@ -581,7 +582,7 @@ window.removeAdmin = async function (userId, username) {
     });
 
     const localUser = localStorage.getItem("user");
-    const isDemoMode = localUser && currentUser.id === "demo-admin-001";
+    const isDemoMode = localUser && isDemoUser(currentUser);
 
     if (isDemoMode) {
       // Demo mode
@@ -779,7 +780,7 @@ async function handleApprove(participationId, username) {
 
     // Check if we're in demo mode
     const localUser = localStorage.getItem("user");
-    const isDemoMode = localUser && currentUser.id === "demo-admin-001";
+    const isDemoMode = localUser && isDemoUser(currentUser);
     const POINTS_AWARDED = 20;
 
     if (isDemoMode) {
@@ -922,7 +923,7 @@ async function handleReject(participationId, username) {
 
     // Check if we're in demo mode
     const localUser = localStorage.getItem("user");
-    const isDemoMode = localUser && currentUser.id === "demo-admin-001";
+    const isDemoMode = localUser && isDemoUser(currentUser);
 
     if (isDemoMode) {
       // DEMO MODE: Update localStorage
@@ -996,7 +997,7 @@ async function loadReports() {
   const container = document.getElementById("reportsTableContainer");
   if (!container) return;
 
-  if (currentUser?.id === "demo-admin-001") {
+  if (isDemoUser(currentUser)) {
     container.innerHTML = `<p class="text-muted" data-i18n="admin.noReports">${lang === "en" ? "No pending reports" : "Няма нови доклади"}</p>`;
     return;
   }
