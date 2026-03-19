@@ -132,6 +132,10 @@ auth.users  (managed by Supabase Auth)
 │ neighborhood    TEXT           │
 │ status          TEXT           │ ← active | completed | cancelled
 │ before_photo_url TEXT          │
+│ scheduled_date  DATE NOT NULL  │
+│ start_time      TIME NOT NULL  │
+│ end_time        TIME           │
+│ category        TEXT           │
 │ created_by      UUID FK→profiles│
 │ disposal_point_id UUID FK      │
 │ deleted_at      TSTZ           │
@@ -149,6 +153,7 @@ auth.users  (managed by Supabase Auth)
 │ status          TEXT           │ ← pending | approved | rejected
 │ after_photo_url TEXT           │
 │ points_earned   INT            │
+│ rejection_reason TEXT          │
 │ deleted_at      TSTZ           │
 │ created_at      TSTZ           │
 └──────────────┬─────────────────┘
@@ -169,6 +174,11 @@ auth.users  (managed by Supabase Auth)
 └────────────────────────────────┘      └─────────────────────┘
 
 Additional tables: comments · notifications · reports
+
+DB constraints:
+- `campaigns.end_time > start_time` (CHECK)
+- `participations` unique per (user_id, campaign_id)
+- Login rate limiting via `check_login_rate_limit` RPC
 ```
 
 ### Relationships
@@ -309,24 +319,30 @@ Enforced in `src/services/validation.js` and checked live in forms.
 │   │   ├── create-campaign.html    # Create new cleanup campaign
 │   │   ├── profile.html            # User profile, history, settings
 │   │   ├── admin.html              # Admin panel
-│   │   └── rewards.html            # Rewards shop
+│   │   ├── rewards.html            # Rewards shop
+│   │   ├── forgot-password.html    # Request password reset email
+│   │   └── reset-password.html     # Set new password (via email link)
 │   │
 │   ├── scripts/                    # Page-specific JS controllers
-│   │   ├── dashboard.js
+│   │   ├── dashboard.js            # Map + campaigns + weather + leaderboard
 │   │   ├── campaign-detail.js
 │   │   ├── create-campaign.js
 │   │   ├── profile.js
 │   │   ├── admin.js
-│   │   └── rewards.js
+│   │   ├── rewards.js
+│   │   └── auth-helpers.js         # Forgot password, terms modal
 │   │
 │   ├── services/                   # Business logic & API calls
 │   │   ├── supabase.js             # Supabase client + all DB operations
-│   │   ├── auth.js                 # Login, register, logout, session
-│   │   ├── map.js                  # Leaflet map initialisation & markers
+│   │   ├── auth.js                 # Login, register, logout, session (+ server-side rate limiting)
+│   │   ├── map.js                  # Leaflet map initialisation, markers & clustering
 │   │   ├── notifications.js        # Notification bell — fetch, render, realtime
 │   │   ├── points.js               # Points calculation logic
 │   │   ├── storage.js              # Photo upload to Supabase Storage
 │   │   ├── validation.js           # Form validation (password, fields)
+│   │   ├── weather.js              # Open-Meteo weather widget (current + hourly forecast)
+│   │   ├── compressor.js           # Client-side image compression before upload
+│   │   ├── geolocation.js          # Browser geolocation helper
 │   │   ├── errorHandler.js         # Centralised error handling
 │   │   ├── logger.js               # Dev/prod logging
 │   │   └── pwa.js                  # PWA service worker registration
@@ -343,6 +359,8 @@ Enforced in `src/services/validation.js` and checked live in forms.
 │   ├── components/                 # Reusable UI helpers
 │   │   ├── passwordToggle.js       # Show/hide password button
 │   │   ├── passwordStrength.js     # Live password strength meter
+│   │   ├── emptyState.js           # Reusable empty-state UI component
+│   │   ├── mobileNav.js            # Mobile bottom navigation bar
 │   │   └── navbar.html             # Shared navigation bar
 │   │
 │   ├── i18n/
@@ -359,7 +377,7 @@ Enforced in `src/services/validation.js` and checked live in forms.
 │       └── rewards.css
 │
 ├── supabase/
-│   ├── migrations/                 # 43 timestamped SQL migration files
+│   ├── migrations/                 # 45 timestamped SQL migration files
 │   │                               # (mirror of what is applied in Supabase)
 │   ├── schema.sql                  # Full schema snapshot (reference only)
 │   └── seed.sql                    # Development seed data
@@ -388,12 +406,15 @@ Enforced in `src/services/validation.js` and checked live in forms.
 | Page | Route | Who can access | Description |
 |------|-------|----------------|-------------|
 | Landing | `/` | Everyone | Login and register |
-| Dashboard | `/dashboard` | Authenticated | Interactive map + campaign list with filters |
-| Create Campaign | `/create-campaign` | Authenticated | New cleanup with map picker and before-photo |
-| Campaign Detail | `/campaign-detail?id=...` | Authenticated | View details, join, upload after-photo, comments |
-| Profile | `/profile` | Authenticated | Point balance, history, avatar, language toggle |
-| Admin Panel | `/admin` | Admin only | Approve/reject proofs, manage users & disposal points |
+| Dashboard | `/dashboard` | Authenticated | Interactive map + campaign list + weather widget + neighborhood leaderboard |
+| Create Campaign | `/create-campaign` | Authenticated | New cleanup with map picker, before-photo, date/time, and category |
+| Campaign Detail | `/campaign/:id` | Authenticated | View details, join, upload after-photo, comments |
+| Profile | `/profile` | Authenticated | Point balance, history, avatar, language toggle, password change |
+| Admin Panel | `/admin` | Admin only | Approve/reject proofs (with required reason), manage users & disposal points, paginated tables |
 | Rewards | `/rewards` | Authenticated | Browse and redeem rewards with points |
+| Forgot Password | `/forgot-password` | Everyone | Request password reset email |
+| Reset Password | `/reset-password` | Everyone | Set new password via email link |
+| Privacy Policy | `/privacy` | Everyone | Privacy policy and terms of use |
 | Demo Mode | N/A (localStorage) | Everyone | Full platform simulation — no account or internet required |
 
 ### Global UI features (present on all pages)
@@ -402,6 +423,8 @@ Enforced in `src/services/validation.js` and checked live in forms.
 |---------|-------------|
 | Notification bell 🔔 | Real-time badge in navbar — shows unread count, dropdown with last 20 notifications (approval, points, campaign updates), mark-as-read per item or all at once. Populated automatically by DB triggers. Hidden for demo users. |
 | Language selector | Switch between Bulgarian and English; preference persisted in localStorage |
+| Mobile navigation | Bottom navigation bar on small screens |
+| Weather widget | Current weather shown above the map on dashboard (Open-Meteo API) |
 
 ---
 
@@ -425,7 +448,7 @@ SUPABASE_ADMIN_EMAIL=admin@example.com
 SUPABASE_ADMIN_PASSWORD=password
 ```
 
-Current coverage: **449 tests · 44 test files** (28 RLS tests skipped without `.env.test`)
+Current coverage: **530 tests · 42 test files** (1 real-DB integration test skipped without `.env.test`)
 
 ### E2E tests (Cypress)
 

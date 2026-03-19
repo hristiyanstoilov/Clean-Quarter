@@ -64,9 +64,10 @@ git push origin feature/your-feature-name
 - Accessibility (ARIA labels)
 
 ### Testing
-- Unit tests за utils/services (Vitest)
+- Unit + integration tests за utils/services (Vitest) — 530 теста, всички трябва да минават
 - E2E tests за критични флоуве (Cypress)
 - Demo mode compatibility
+- Нови features изискват тестове преди merge
 
 ## 🧪 Running Tests
 
