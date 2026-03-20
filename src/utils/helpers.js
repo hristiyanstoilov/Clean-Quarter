@@ -1,6 +1,7 @@
 import logger from "../services/logger.js";
 import { isBrowser, hasLocalStorage, hasNavigator } from "./env.js";
 import { DEMO_USER_ID } from "./demoMode.js";
+import { rules } from "../services/validation.js";
 
 // Session TTL: 8 hours. Stale localStorage entries are cleared on read.
 const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
@@ -549,4 +550,32 @@ export function truncateText(text, maxLength = 50) {
 export function formatValue(value, symbol = "⭐") {
   // Always use en-US for thousands separator for test consistency
   return `${value.toLocaleString("en-US")} ${symbol}`;
+}
+
+/**
+ * Wire live password strength checklist to an input element.
+ * Toggles text-success / text-danger on the four checklist items as the user types.
+ *
+ * @param {HTMLInputElement} inputEl - The password input element to observe
+ * @param {{ length: string, uppercase: string, lowercase: string, digit: string }} ids
+ *   Object mapping rule names to the DOM element IDs of the checklist indicators
+ */
+export function applyPasswordChecklist(inputEl, { length, uppercase, lowercase, digit }) {
+  if (!inputEl) return;
+
+  function setClass(id, passes) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.toggle("text-success", passes);
+    el.classList.toggle("text-danger", !passes);
+  }
+
+  inputEl.addEventListener("input", (e) => {
+    const value = e.target.value;
+    // rules.* return null on pass, error string on fail — negate for "passes" boolean
+    setClass(length, !rules.minLength8(value));
+    setClass(uppercase, !rules.hasUppercase(value));
+    setClass(lowercase, !rules.hasLowercase(value));
+    setClass(digit, !rules.hasDigit(value));
+  });
 }

@@ -12,7 +12,9 @@ import {
   isEmpty,
   escapeHTML,
 } from "../utils/helpers.js";
-import { isDemoUser, getDemoCampaigns } from "../utils/demoMode.js";
+import { isDemoUser, getDemoCampaigns, getDemoRsvps } from "../utils/demoMode.js";
+import { getRsvpCountsForCampaigns } from "../services/events.js";
+import { CLEANUP_POINTS } from "../services/points.js";
 
 // Pagination state
 const PAGE_SIZE = 9;
@@ -131,8 +133,10 @@ function localizeNeighborhood(raw, lang) {
 
 /**
  * Build HTML for a single campaign card
+ * @param {Object} campaign
+ * @param {number} rsvpCount - number of people who plan to attend
  */
-function buildCampaignCard(campaign) {
+function buildCampaignCard(campaign, rsvpCount = 0) {
   const currentLang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
 
   let titleObj = campaign.title;
@@ -181,6 +185,7 @@ function buildCampaignCard(campaign) {
           <p class="card-text text-muted mb-1"><small>📍 ${escapeHTML(neighborhood)}</small></p>
           ${scheduledLabel ? `<p class="card-text text-muted mb-1"><small>📅 ${escapeHTML(scheduledLabel)}</small></p>` : ""}
           ${creator ? `<p class="card-text text-muted mb-2"><small>👤 ${escapeHTML(creator)}</small></p>` : ""}
+          ${rsvpCount > 0 ? `<p class="card-text text-muted mb-2"><small>🙋 ${currentLang === "en" ? (rsvpCount === 1 ? "1 person planning to attend" : `${rsvpCount} people planning to attend`) : rsvpCount === 1 ? "1 планира да дойде" : `${rsvpCount} планират да дойдат`}</small></p>` : ""}
           <a href="/campaign/${campaign.id}" class="btn btn-primary w-100">
             ${t("dashboard.viewCampaign") || "Преглед"}
           </a>
@@ -327,8 +332,19 @@ async function loadCampaignsPage(append = false) {
       return;
     }
 
+    // Fetch RSVP counts for all loaded campaigns
+    let rsvpCounts = {};
+    if (isDemoUser(user)) {
+      const allRsvps = getDemoRsvps();
+      allRsvps.forEach((r) => {
+        rsvpCounts[r.campaign_id] = (rsvpCounts[r.campaign_id] || 0) + 1;
+      });
+    } else if (campaigns.length) {
+      rsvpCounts = await getRsvpCountsForCampaigns(campaigns.map((c) => c.id));
+    }
+
     const campaignsContainer = document.getElementById(campaignsContainerId);
-    const html = campaigns.map(buildCampaignCard).join("");
+    const html = campaigns.map((c) => buildCampaignCard(c, rsvpCounts[c.id] || 0)).join("");
 
     if (append) {
       campaignsContainer.insertAdjacentHTML("beforeend", html);
@@ -428,7 +444,7 @@ async function loadLeaderboard(currentUser) {
       demoCampaigns.forEach((c) => {
         const n = c.neighborhood || "studentski_grad";
         if (!grouped[n]) grouped[n] = { neighborhood: n, total_points: 0, participant_count: 0 };
-        grouped[n].total_points += 20;
+        grouped[n].total_points += CLEANUP_POINTS;
         grouped[n].participant_count += 1;
       });
       rows = Object.values(grouped).sort((a, b) => b.total_points - a.total_points);

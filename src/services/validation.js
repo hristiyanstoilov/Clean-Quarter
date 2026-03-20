@@ -61,6 +61,13 @@ const rules = {
     };
   },
 
+  // Password strength — direct validators (not curried)
+  hasUppercase: (value) => (/[A-Z]/.test(value) ? null : "Паролата трябва да съдържа главна буква"),
+  hasLowercase: (value) => (/[a-z]/.test(value) ? null : "Паролата трябва да съдържа малка буква"),
+  hasDigit: (value) => (/[0-9]/.test(value) ? null : "Паролата трябва да съдържа число"),
+  minLength8: (value) =>
+    value && value.length >= 8 ? null : "Паролата трябва да е поне 8 символа",
+
   // Specific validations
   password: (value) => {
     if (!value) return "Изисква се парола";

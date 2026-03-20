@@ -3,7 +3,12 @@ import { uploadAvatar } from "../services/storage.js";
 import { compressImage } from "../services/compressor.js";
 import { getAvatarUrl } from "../services/avatars.js";
 import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
-import { escapeHTML, showSuccessToast, initSwalFallback } from "../utils/helpers.js";
+import {
+  escapeHTML,
+  showSuccessToast,
+  initSwalFallback,
+  applyPasswordChecklist,
+} from "../utils/helpers.js";
 import { rules } from "../services/validation.js";
 import {
   isDemoUser,
@@ -168,47 +173,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     await loadProfileData();
 
     // Live password validation
-    const pwLength = document.getElementById("edit-pw-length");
-    const pwUppercase = document.getElementById("edit-pw-uppercase");
-    const pwLowercase = document.getElementById("edit-pw-lowercase");
-    const pwDigit = document.getElementById("edit-pw-digit");
-    if (passwordInput) {
-      passwordInput.addEventListener("input", (e) => {
-        const value = e.target.value;
-        // Length
-        if (value.length >= 8) {
-          pwLength.classList.remove("text-danger");
-          pwLength.classList.add("text-success");
-        } else {
-          pwLength.classList.remove("text-success");
-          pwLength.classList.add("text-danger");
-        }
-        // Uppercase
-        if (/[A-Z]/.test(value)) {
-          pwUppercase.classList.remove("text-danger");
-          pwUppercase.classList.add("text-success");
-        } else {
-          pwUppercase.classList.remove("text-success");
-          pwUppercase.classList.add("text-danger");
-        }
-        // Lowercase
-        if (/[a-z]/.test(value)) {
-          pwLowercase.classList.remove("text-danger");
-          pwLowercase.classList.add("text-success");
-        } else {
-          pwLowercase.classList.remove("text-success");
-          pwLowercase.classList.add("text-danger");
-        }
-        // Digit
-        if (/[0-9]/.test(value)) {
-          pwDigit.classList.remove("text-danger");
-          pwDigit.classList.add("text-success");
-        } else {
-          pwDigit.classList.remove("text-success");
-          pwDigit.classList.add("text-danger");
-        }
-      });
-    }
+    applyPasswordChecklist(passwordInput, {
+      length: "edit-pw-length",
+      uppercase: "edit-pw-uppercase",
+      lowercase: "edit-pw-lowercase",
+      digit: "edit-pw-digit",
+    });
   } catch (error) {
     // silently ignore
   }

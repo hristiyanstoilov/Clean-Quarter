@@ -1,54 +1,13 @@
 // Live password validation and strength checking
+import { applyPasswordChecklist } from "../utils/helpers.js";
 
 document.addEventListener("DOMContentLoaded", function () {
-  // Live password checklist for registration
-  const passwordInput = document.getElementById("registerPassword");
-  const pwLength = document.getElementById("pw-length");
-  const pwUppercase = document.getElementById("pw-uppercase");
-  const pwLowercase = document.getElementById("pw-lowercase");
-  const pwDigit = document.getElementById("pw-digit");
-
-  if (passwordInput) {
-    passwordInput.addEventListener("input", function (e) {
-      const value = e.target.value;
-
-      // Length
-      if (value.length >= 8) {
-        pwLength.classList.remove("text-danger");
-        pwLength.classList.add("text-success");
-      } else {
-        pwLength.classList.remove("text-success");
-        pwLength.classList.add("text-danger");
-      }
-
-      // Uppercase
-      if (/[A-Z]/.test(value)) {
-        pwUppercase.classList.remove("text-danger");
-        pwUppercase.classList.add("text-success");
-      } else {
-        pwUppercase.classList.remove("text-success");
-        pwUppercase.classList.add("text-danger");
-      }
-
-      // Lowercase
-      if (/[a-z]/.test(value)) {
-        pwLowercase.classList.remove("text-danger");
-        pwLowercase.classList.add("text-success");
-      } else {
-        pwLowercase.classList.remove("text-success");
-        pwLowercase.classList.add("text-danger");
-      }
-
-      // Digit
-      if (/[0-9]/.test(value)) {
-        pwDigit.classList.remove("text-danger");
-        pwDigit.classList.add("text-success");
-      } else {
-        pwDigit.classList.remove("text-success");
-        pwDigit.classList.add("text-danger");
-      }
-    });
-  }
+  applyPasswordChecklist(document.getElementById("registerPassword"), {
+    length: "pw-length",
+    uppercase: "pw-uppercase",
+    lowercase: "pw-lowercase",
+    digit: "pw-digit",
+  });
 });
 
 // Close modal when clicking outside
@@ -106,7 +65,5 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-// Request notification permission (for push notifications)
-if ("Notification" in window && Notification.permission === "default") {
-  Notification.requestPermission();
-}
+// Push notification permission is requested via the toggle in profile.js (handlePushToggle)
+// — never request automatically on page load (browsers block permission prompts without user gesture)

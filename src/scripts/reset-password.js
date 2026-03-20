@@ -67,7 +67,7 @@ async function handleResetPassword(e) {
 
   // Strength validation (reuse existing rules)
   const strengthErrors = [
-    rules.minLength(newPassword),
+    rules.minLength8(newPassword),
     rules.hasUppercase(newPassword),
     rules.hasLowercase(newPassword),
     rules.hasDigit(newPassword),

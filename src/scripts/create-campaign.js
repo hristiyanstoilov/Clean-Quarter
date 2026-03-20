@@ -98,10 +98,13 @@ async function checkAuth() {
 /**
  * Initialize the map
  */
+function onMapResize() {
+  if (map) map.invalidateSize();
+}
+
 function initMap() {
-  window.addEventListener("resize", () => {
-    if (map) map.invalidateSize();
-  });
+  window.addEventListener("resize", onMapResize);
+  window.addEventListener("beforeunload", () => window.removeEventListener("resize", onMapResize));
   map = initializeMap();
   // Fix Leaflet rendering bug: ensure map fills container
   setTimeout(() => {

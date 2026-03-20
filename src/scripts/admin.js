@@ -3,6 +3,7 @@ import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
 import { escapeHTML, showSuccessToast, showInfoToast, initSwalFallback } from "../utils/helpers.js";
 import { exportUsersCsv, exportParticipationsCsv } from "../services/csvExport.js";
 import { sendPushToUser } from "../services/pushNotifications.js";
+import { CLEANUP_POINTS } from "../services/points.js";
 import {
   isDemoUser,
   getDemoParticipations,
@@ -800,7 +801,7 @@ async function handleApprove(participationId, username) {
     // Show confirmation
     const result = await Swal.fire({
       title: t("admin.approveSubmissionTitle"),
-      text: t("admin.awardPoints", { points: 20, username }),
+      text: t("admin.awardPoints", { points: CLEANUP_POINTS, username }),
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#28a745",
@@ -825,7 +826,7 @@ async function handleApprove(participationId, username) {
     // Check if we're in demo mode
     const localUser = localStorage.getItem("user");
     const isDemoMode = localUser && isDemoUser(currentUser);
-    const POINTS_AWARDED = 20;
+    const POINTS_AWARDED = CLEANUP_POINTS;
 
     if (isDemoMode) {
       try {
