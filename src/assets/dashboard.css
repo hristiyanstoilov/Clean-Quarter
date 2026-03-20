@@ -118,3 +118,39 @@ body {
     gap: 2rem;
   }
 }
+
+/* Category filter bar */
+.category-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0 1.25rem;
+}
+
+.btn-category {
+  padding: 0.35rem 0.9rem;
+  border-radius: 2rem;
+  border: 2px solid #28a745;
+  background: transparent;
+  color: #28a745;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.btn-category:hover {
+  background: #28a74520;
+}
+
+.btn-category.active {
+  background: #28a745;
+  color: #fff;
+}
+
+.btn-category:focus-visible {
+  outline: 2px solid #28a745;
+  outline-offset: 2px;
+}

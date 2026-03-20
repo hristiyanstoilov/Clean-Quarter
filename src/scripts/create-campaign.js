@@ -323,6 +323,7 @@ async function handleFormSubmit(e) {
     const scheduledDate = document.getElementById("campaignDate").value;
     const startTime = document.getElementById("campaignStartTime").value;
     const endTime = document.getElementById("campaignEndTime").value || null;
+    const category = document.getElementById("campaignCategory").value || null;
 
     // Basic validation
     if (
@@ -373,6 +374,7 @@ async function handleFormSubmit(e) {
         created_by: currentUser.id,
         creator_username: currentUser.username || "admin_demo",
         neighborhood: nbhBg,
+        category: category,
         status: "active",
         scheduled_date: scheduledDate,
         start_time: startTime,
@@ -423,6 +425,7 @@ async function handleFormSubmit(e) {
             before_photo_url: beforePhotoUrl,
             created_by: user.id,
             neighborhood: nbhBg,
+            category: category,
             status: "active",
             scheduled_date: scheduledDate,
             start_time: startTime,

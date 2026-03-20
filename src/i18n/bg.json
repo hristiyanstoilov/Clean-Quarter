@@ -196,7 +196,15 @@
     "noDate": "Час неуточнен",
     "pastDateError": "Датата не може да е в миналото",
     "scheduledLabel": "Кога",
-    "dateTimePlaceholder": "Изберете дата и час"
+    "dateTimePlaceholder": "Изберете дата и час",
+    "categoryLabel": "Категория",
+    "categoryAll": "Всички",
+    "categoryPark": "Парк",
+    "categoryStreet": "Улица",
+    "categoryWater": "Воден обект",
+    "categoryOther": "Друго",
+    "categoryNone": "Без категория",
+    "categoryPlaceholder": "-- Изберете категория --"
   },
   "rewards": {
     "title": "Награди",

@@ -196,7 +196,15 @@
     "noDate": "Time TBD",
     "pastDateError": "Date cannot be in the past",
     "scheduledLabel": "When",
-    "dateTimePlaceholder": "Select date and time"
+    "dateTimePlaceholder": "Select date and time",
+    "categoryLabel": "Category",
+    "categoryAll": "All",
+    "categoryPark": "Park",
+    "categoryStreet": "Street",
+    "categoryWater": "Water",
+    "categoryOther": "Other",
+    "categoryNone": "No category",
+    "categoryPlaceholder": "-- Select category --"
   },
   "rewards": {
     "title": "Rewards",
