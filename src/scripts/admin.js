@@ -749,13 +749,13 @@ function renderPendingTable() {
         <span class="text-muted small">${showing}</span>
         <div class="d-flex gap-2">
           <button class="btn btn-sm btn-outline-secondary" id="pendingPrevBtn"
-            onclick="pendingCurrentPage--; renderPendingTable()"
+            onclick="pendingPrevPage()"
             ${pendingCurrentPage <= 1 ? "disabled" : ""}>
             ← <span data-i18n="admin.prev">Предишна</span>
           </button>
           <span class="btn btn-sm btn-light disabled">${pendingCurrentPage} / ${totalPages}</span>
           <button class="btn btn-sm btn-outline-secondary" id="pendingNextBtn"
-            onclick="pendingCurrentPage++; renderPendingTable()"
+            onclick="pendingNextPage()"
             ${pendingCurrentPage >= totalPages ? "disabled" : ""}>
             <span data-i18n="admin.next">Следваща</span> →
           </button>
@@ -1153,6 +1153,14 @@ window.showPhotoModal = showPhotoModal;
 window.closePhotoModal = closePhotoModal;
 window.handleResolveReport = handleResolveReport;
 window.renderPendingTable = renderPendingTable;
+window.pendingPrevPage = function () {
+  pendingCurrentPage--;
+  renderPendingTable();
+};
+window.pendingNextPage = function () {
+  pendingCurrentPage++;
+  renderPendingTable();
+};
 Object.defineProperty(window, "pendingCurrentPage", {
   get: () => pendingCurrentPage,
   set: (v) => {
