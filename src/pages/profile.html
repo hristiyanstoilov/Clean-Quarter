@@ -316,6 +316,28 @@
           </form>
         </div>
 
+        <!-- Push Notifications Section -->
+        <div class="section" id="pushNotificationsSection">
+          <h2 data-i18n="push.sectionTitle">🔔 Известия</h2>
+          <p class="text-muted small" id="pushStatusText" data-i18n="push.statusDefault">—</p>
+          <button
+            id="pushToggleBtn"
+            class="btn btn-outline-success btn-sm"
+            onclick="handlePushToggle()"
+            style="display: none"
+          >
+            <span id="pushToggleBtnText" data-i18n="push.enableBtn">Активирай известия</span>
+          </button>
+          <p
+            class="text-muted small mt-2"
+            id="pushDeniedHint"
+            style="display: none"
+            data-i18n="push.deniedHint"
+          >
+            Браузърът е блокирал известията. Разреши ги от настройките на браузъра.
+          </p>
+        </div>
+
         <!-- Point Transactions Section -->
         <div class="section">
           <h2 data-i18n="profile.transactionHistory">💳 Transaction History</h2>

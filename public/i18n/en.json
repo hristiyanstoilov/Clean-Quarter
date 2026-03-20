@@ -326,7 +326,20 @@
     "submitted": "Submitted",
     "beforePhoto": "Before Photo",
     "afterPhoto": "After Photo",
-    "noPhoto": "N/A"
+    "noPhoto": "N/A",
+    "exportUsersCsv": "⬇️ Export Users CSV",
+    "exportParticipationsCsv": "⬇️ Export Participations CSV",
+    "exportEmpty": "No data to export",
+    "exportFilterAll": "All",
+    "exportNeighborhoodLabel": "Neighborhood:",
+    "exportStatusLabel": "Status:",
+    "exportFromLabel": "From:",
+    "exportToLabel": "To:",
+    "statusPending": "Pending",
+    "pushApprovedTitle": "✅ Participation Approved!",
+    "pushApprovedBody": "Your proof for \"{{title}}\" was approved. You earned points!",
+    "pushRejectedTitle": "❌ Participation Rejected",
+    "pushRejectedBody": "Your proof for \"{{title}}\" was rejected. Reason: {{reason}}"
   },
   "common": {
     "loading": "Loading...",

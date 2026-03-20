@@ -2,6 +2,7 @@ import L from "leaflet";
 import supabase from "../services/supabase.js";
 import { initializeMap, createMarkerIcon } from "../services/map.js";
 import { uploadCampaignPhoto } from "../services/storage.js";
+import { compressImage } from "../services/compressor.js";
 import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
 import { escapeHTML, showSuccessToast, initSwalFallback } from "../utils/helpers.js";
 import {
@@ -14,7 +15,11 @@ import {
   getDemoComments,
   addDemoComment,
   softDeleteDemoComment,
+  getDemoRsvps,
+  addDemoRsvp,
+  removeDemoRsvp,
 } from "../utils/demoMode.js";
+import { rsvpToCampaign, cancelRsvp, getRsvpCount, getUserRsvp } from "../services/events.js";
 
 // Global variables
 let campaign = null;
@@ -23,6 +28,8 @@ let map = null;
 let userParticipation = null;
 let afterPhotoFile = null;
 let commentsChannel = null;
+let rsvpCount = 0;
+let userHasRsvpd = false;
 
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", async () => {
@@ -186,6 +193,18 @@ async function loadCampaignDetail() {
       userParticipation = userPart;
     }
 
+    // Fetch RSVP data
+    if (isDemoUser(currentUser)) {
+      const rsvps = getDemoRsvps().filter((r) => r.campaign_id === campaignId);
+      rsvpCount = rsvps.length;
+      userHasRsvpd = rsvps.some((r) => r.user_id === currentUser.id);
+    } else {
+      [rsvpCount, userHasRsvpd] = await Promise.all([
+        getRsvpCount(campaignId),
+        getUserRsvp(campaignId, currentUser.id).then((r) => !!r),
+      ]);
+    }
+
     // Display the campaign details
     displayCampaignDetails(campaign, participations || []);
 
@@ -194,6 +213,9 @@ async function loadCampaignDetail() {
 
     // Show participation UI
     showParticipationUI();
+
+    // Show RSVP UI
+    showRsvpUI();
 
     // Load comments
     await loadComments();
@@ -588,7 +610,8 @@ async function handleUploadPhoto() {
       });
     } else {
       // Real mode: upload to Supabase Storage
-      photoUrl = await uploadCampaignPhoto(afterPhotoFile, "after");
+      const compressedAfter = await compressImage(afterPhotoFile, 1200, 0.75);
+      photoUrl = await uploadCampaignPhoto(compressedAfter, "after");
 
       const { error: updateError } = await supabase
         .from("participations")
@@ -1144,9 +1167,6 @@ async function handleReport() {
   if (!isConfirmed || !formValues) return;
 
   try {
-    const supabaseModule = await import("./supabase.js");
-    const supabase = supabaseModule.default || supabaseModule;
-
     const { error } = await supabase.from("reports").insert({
       reported_by: currentUser.id,
       entity_type: "campaign",
@@ -1194,6 +1214,93 @@ async function handleReport() {
   }
 }
 
+/**
+ * Show or hide the RSVP section based on campaign state and user context.
+ * Only visible for campaigns with a scheduled date, and not shown to the creator.
+ */
+function showRsvpUI() {
+  const section = document.getElementById("rsvpSection");
+  if (!section) return;
+
+  // Always update the stat counter regardless of campaign type or user role
+  document.getElementById("rsvpCount").textContent = rsvpCount;
+
+  // Action section only for scheduled campaigns and non-creators
+  if (!campaign.scheduled_date) return;
+  if (currentUser.id === campaign.created_by) return;
+
+  const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+
+  let countText;
+  if (lang === "en") {
+    countText = rsvpCount === 1 ? "1 person plans to attend" : `${rsvpCount} people plan to attend`;
+  } else {
+    countText =
+      rsvpCount === 1 ? "1 човек планира да дойде" : `${rsvpCount} души планират да дойдат`;
+  }
+  document.getElementById("rsvpCountText").textContent = countText;
+  document.getElementById("rsvpBtn").style.display = userHasRsvpd ? "none" : "inline-block";
+  document.getElementById("cancelRsvpBtn").style.display = userHasRsvpd ? "inline-block" : "none";
+  section.style.display = "block";
+}
+
+/**
+ * Handle RSVP to the current campaign
+ */
+async function handleRsvp() {
+  const btn = document.getElementById("rsvpBtn");
+  try {
+    btn.disabled = true;
+    const campaignId = getCampaignIdFromUrl();
+    if (isDemoUser(currentUser)) {
+      addDemoRsvp({
+        id: `rsvp-${Date.now()}`,
+        campaign_id: campaignId,
+        user_id: currentUser.id,
+        created_at: new Date().toISOString(),
+      });
+    } else {
+      await rsvpToCampaign(campaignId, currentUser.id);
+    }
+    rsvpCount++;
+    userHasRsvpd = true;
+    showRsvpUI();
+    const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+    await showSuccessToast(
+      lang === "en" ? "You're in! See you at the cleanup." : "Записан! Ще те видим на почистването."
+    );
+  } catch (error) {
+    await Swal.fire({ icon: "error", title: "Грешка", text: error.message });
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/**
+ * Handle cancelling RSVP to the current campaign
+ */
+async function handleCancelRsvp() {
+  const btn = document.getElementById("cancelRsvpBtn");
+  try {
+    btn.disabled = true;
+    const campaignId = getCampaignIdFromUrl();
+    if (isDemoUser(currentUser)) {
+      removeDemoRsvp(campaignId, currentUser.id);
+    } else {
+      await cancelRsvp(campaignId, currentUser.id);
+    }
+    rsvpCount = Math.max(0, rsvpCount - 1);
+    userHasRsvpd = false;
+    showRsvpUI();
+    const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+    await showSuccessToast(lang === "en" ? "RSVP cancelled." : "Отписан от събитието.");
+  } catch (error) {
+    await Swal.fire({ icon: "error", title: "Грешка", text: error.message });
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 // Expose functions to window for onclick handlers
 window.handleLogout = handleLogout;
 window.handleDelete = handleDelete;
@@ -1203,3 +1310,5 @@ window.toggleEditCampaign = toggleEditCampaign;
 window.handleAddComment = handleAddComment;
 window.handleDeleteComment = handleDeleteComment;
 window.handleReport = handleReport;
+window.handleRsvp = handleRsvp;
+window.handleCancelRsvp = handleCancelRsvp;

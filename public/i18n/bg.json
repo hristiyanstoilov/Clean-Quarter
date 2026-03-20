@@ -326,7 +326,20 @@
     "submitted": "Изпратено",
     "beforePhoto": "Снимка преди",
     "afterPhoto": "Снимка след",
-    "noPhoto": "Няма снимка"
+    "noPhoto": "Няма снимка",
+    "exportUsersCsv": "⬇️ Експорт потребители CSV",
+    "exportParticipationsCsv": "⬇️ Експорт участия CSV",
+    "exportEmpty": "Няма данни за експорт",
+    "exportFilterAll": "Всички",
+    "exportNeighborhoodLabel": "Квартал:",
+    "exportStatusLabel": "Статус:",
+    "exportFromLabel": "От:",
+    "exportToLabel": "До:",
+    "statusPending": "Чакащи",
+    "pushApprovedTitle": "✅ Участието е одобрено!",
+    "pushApprovedBody": "Proof-ът ти за '{{title}}' беше одобрен. Спечели точки!",
+    "pushRejectedTitle": "❌ Участието е отхвърлено",
+    "pushRejectedBody": "Proof-ът ти за '{{title}}' беше отхвърлен. Причина: {{reason}}"
   },
   "common": {
     "loading": "Зареждане...",

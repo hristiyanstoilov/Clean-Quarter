@@ -292,6 +292,10 @@
               <div class="stat-label" data-i18n="campaign.pending">Pending</div>
               <div class="stat-value" id="pendingCount">0</div>
             </div>
+            <div class="stat-item">
+              <div class="stat-label" data-i18n="campaign.rsvpCount">Ще дойдат</div>
+              <div class="stat-value" id="rsvpCount">0</div>
+            </div>
           </div>
         </div>
 
@@ -306,6 +310,29 @@
             </p>
           </div>
           <div id="map"></div>
+        </div>
+
+        <!-- RSVP Section (shown when campaign has a scheduled date) -->
+        <div class="details-section" id="rsvpSection" style="display: none">
+          <h3 data-i18n="campaign.rsvpTitle">🙋 Ще участваш ли?</h3>
+          <p id="rsvpCountText" class="text-muted mb-3">0 души планират да дойдат</p>
+          <button
+            class="btn btn-success me-2"
+            id="rsvpBtn"
+            onclick="handleRsvp()"
+            data-i18n="campaign.rsvpButton"
+          >
+            ✅ Ще участвам
+          </button>
+          <button
+            class="btn btn-outline-secondary"
+            id="cancelRsvpBtn"
+            onclick="handleCancelRsvp()"
+            style="display: none"
+            data-i18n="campaign.cancelRsvpButton"
+          >
+            ❌ Отказвам
+          </button>
         </div>
 
         <!-- Join Campaign Section -->

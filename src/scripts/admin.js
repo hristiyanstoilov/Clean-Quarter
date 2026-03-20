@@ -1,6 +1,8 @@
 import supabase from "../services/supabase.js";
 import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
 import { escapeHTML, showSuccessToast, showInfoToast, initSwalFallback } from "../utils/helpers.js";
+import { exportUsersCsv, exportParticipationsCsv } from "../services/csvExport.js";
+import { sendPushToUser } from "../services/pushNotifications.js";
 import {
   isDemoUser,
   getDemoParticipations,
@@ -18,6 +20,7 @@ import {
 // Global variables
 let currentUser = null;
 let pendingParticipations = [];
+let allParticipationsData = [];
 let pendingCurrentPage = 1;
 const PENDING_PAGE_SIZE = 10;
 
@@ -124,7 +127,7 @@ async function loadAdminData() {
     const localUser = localStorage.getItem("user");
     const isDemoMode = localUser && isDemoUser(currentUser);
 
-    let allParticipationsData = [];
+    allParticipationsData = [];
 
     if (isDemoMode) {
       // DEMO MODE: Load from localStorage
@@ -891,6 +894,16 @@ async function handleApprove(participationId, username) {
       Swal.close();
 
       await showSuccessToast(t("admin.approvedTitle"));
+
+      // Send push notification to the user (non-blocking)
+      sendPushToUser({
+        userId: participation.user_id,
+        title: t("admin.pushApprovedTitle"),
+        body: t("admin.pushApprovedBody", {
+          title: participation.campaigns?.title || t("campaign.title"),
+        }),
+        url: `/campaign/${participation.campaign_id}`,
+      });
     }
 
     // Reload admin data
@@ -983,6 +996,17 @@ async function handleReject(participationId, username) {
       Swal.close();
 
       await showInfoToast(t("admin.rejectedTitle"));
+
+      // Send push notification to the user (non-blocking)
+      sendPushToUser({
+        userId: participation.user_id,
+        title: t("admin.pushRejectedTitle"),
+        body: t("admin.pushRejectedBody", {
+          title: participation.campaigns?.title || t("campaign.title"),
+          reason: rejectionReason,
+        }),
+        url: `/campaign/${participation.campaign_id}`,
+      });
     }
 
     // Reload admin data
@@ -1167,3 +1191,30 @@ Object.defineProperty(window, "pendingCurrentPage", {
     pendingCurrentPage = v;
   },
 });
+
+window.exportUsersCsvHandler = function () {
+  const neighborhood = document.getElementById("exportUsersNeighborhoodFilter")?.value || "";
+  let users = neighborhood
+    ? _allUsersCache.filter((u) => u.neighborhood === neighborhood)
+    : _allUsersCache;
+  if (!users.length) {
+    showInfoToast(t("admin.exportEmpty") || "No data to export");
+    return;
+  }
+  exportUsersCsv(users);
+};
+
+window.exportParticipationsCsvHandler = function () {
+  const status = document.getElementById("exportParticipationsStatusFilter")?.value || "";
+  const from = document.getElementById("exportParticipationsFrom")?.value || "";
+  const to = document.getElementById("exportParticipationsTo")?.value || "";
+  let data = allParticipationsData;
+  if (status) data = data.filter((p) => p.status === status);
+  if (from) data = data.filter((p) => p.created_at && p.created_at >= from);
+  if (to) data = data.filter((p) => p.created_at && p.created_at <= to + "T23:59:59");
+  if (!data.length) {
+    showInfoToast(t("admin.exportEmpty") || "No data to export");
+    return;
+  }
+  exportParticipationsCsv(data);
+};

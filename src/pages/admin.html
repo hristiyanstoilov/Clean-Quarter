@@ -123,7 +123,16 @@
           aria-labelledby="userManagementTitle"
         >
           <h2 id="userManagementTitle" data-i18n="admin.userManagement">👥 User Management</h2>
-          <div style="margin-bottom: 1rem; max-width: 350px">
+          <div
+            style="
+              margin-bottom: 1rem;
+              display: flex;
+              gap: 0.5rem;
+              align-items: center;
+              flex-wrap: wrap;
+              max-width: 700px;
+            "
+          >
             <input
               id="userSearchInput"
               class="form-control form-control-sm"
@@ -131,7 +140,40 @@
               data-i18n-placeholder="admin.searchUsers"
               placeholder="Search users..."
               oninput="window.filterUserTable()"
+              style="max-width: 280px"
             />
+            <label
+              for="exportUsersNeighborhoodFilter"
+              class="form-label mb-0 text-nowrap small"
+              data-i18n="admin.exportNeighborhoodLabel"
+              >Neighborhood:</label
+            >
+            <select
+              id="exportUsersNeighborhoodFilter"
+              class="form-select form-select-sm"
+              style="max-width: 180px"
+            >
+              <option value="" data-i18n="admin.exportFilterAll">All</option>
+              <option value="Darvenitsa" data-i18n="neighborhoods.darvenitsa">Darvenitsa</option>
+              <option value="Malinova Dolina" data-i18n="neighborhoods.malinovaDolina">
+                Malinova Dolina
+              </option>
+              <option value="Musagenitsa" data-i18n="neighborhoods.musagenitsa">Musagenitsa</option>
+              <option value="Studentski Grad" data-i18n="neighborhoods.studentskiGrad">
+                Studentski Grad
+              </option>
+              <option value="Vitosha (VEC)" data-i18n="neighborhoods.vitoshaVec">
+                Vitosha (VEC)
+              </option>
+            </select>
+            <button
+              type="button"
+              class="btn btn-outline-success btn-sm"
+              onclick="window.exportUsersCsvHandler()"
+              data-i18n="admin.exportUsersCsv"
+            >
+              ⬇️ Export Users CSV
+            </button>
           </div>
           <div id="userTableContainer" aria-live="polite" aria-label="User table results">
             <!-- User table will be inserted here -->
@@ -162,6 +204,65 @@
         </div>
 
         <!-- Statistics Cards -->
+        <div
+          style="
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+          "
+        >
+          <label
+            for="exportParticipationsStatusFilter"
+            class="form-label mb-0 text-nowrap small"
+            data-i18n="admin.exportStatusLabel"
+            >Status:</label
+          >
+          <select
+            id="exportParticipationsStatusFilter"
+            class="form-select form-select-sm"
+            style="max-width: 140px"
+          >
+            <option value="" data-i18n="admin.exportFilterAll">All</option>
+            <option value="approved" data-i18n="admin.approved">Approved</option>
+            <option value="rejected" data-i18n="admin.rejected">Rejected</option>
+            <option value="pending" data-i18n="admin.statusPending">Pending</option>
+          </select>
+          <label
+            for="exportParticipationsFrom"
+            class="form-label mb-0 text-nowrap small"
+            data-i18n="admin.exportFromLabel"
+            >From:</label
+          >
+          <input
+            type="date"
+            id="exportParticipationsFrom"
+            class="form-control form-control-sm"
+            style="max-width: 150px"
+          />
+          <label
+            for="exportParticipationsTo"
+            class="form-label mb-0 text-nowrap small"
+            data-i18n="admin.exportToLabel"
+            >To:</label
+          >
+          <input
+            type="date"
+            id="exportParticipationsTo"
+            class="form-control form-control-sm"
+            style="max-width: 150px"
+          />
+          <button
+            type="button"
+            class="btn btn-outline-success btn-sm"
+            onclick="window.exportParticipationsCsvHandler()"
+            data-i18n="admin.exportParticipationsCsv"
+          >
+            ⬇️ Export Participations CSV
+          </button>
+        </div>
         <div class="stats-cards">
           <div class="stat-card">
             <div class="stat-value" id="totalPendingCount">0</div>

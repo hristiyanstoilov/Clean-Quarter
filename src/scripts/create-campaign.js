@@ -1,6 +1,7 @@
 import L from "leaflet";
 import { initializeMap, createMarkerIcon } from "../services/map.js";
 import { uploadCampaignPhoto } from "../services/storage.js";
+import { compressImage } from "../services/compressor.js";
 import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
 import { showSuccessToast, initSwalFallback } from "../utils/helpers.js";
 import supabase from "../services/supabase.js";
@@ -409,7 +410,8 @@ async function handleFormSubmit(e) {
         throw new Error("User not authenticated");
       }
 
-      const beforePhotoUrl = await uploadCampaignPhoto(beforePhotoFile, "before");
+      const compressedBefore = await compressImage(beforePhotoFile, 1200, 0.75);
+      const beforePhotoUrl = await uploadCampaignPhoto(compressedBefore, "before");
 
       Swal.close();
 

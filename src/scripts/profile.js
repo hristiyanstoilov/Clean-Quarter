@@ -1,6 +1,8 @@
 import supabase from "../services/supabase.js";
 import { uploadAvatar } from "../services/storage.js";
-import { initI18n, applyLanguage, setLanguage } from "../utils/i18n.js";
+import { compressImage } from "../services/compressor.js";
+import { getAvatarUrl } from "../services/avatars.js";
+import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
 import { escapeHTML, showSuccessToast, initSwalFallback } from "../utils/helpers.js";
 import { rules } from "../services/validation.js";
 import {
@@ -9,6 +11,11 @@ import {
   getDemoParticipations,
   getDemoCampaigns,
 } from "../utils/demoMode.js";
+import {
+  getPushStatus,
+  subscribeToPush,
+  unsubscribeFromPush,
+} from "../services/pushNotifications.js";
 // Global variables
 let currentUser = null;
 let userProfile = null;
@@ -263,7 +270,7 @@ async function loadProfileData() {
     userProfile = profile;
 
     // Display avatar
-    displayAvatar(userProfile.avatar_url);
+    displayAvatar(getAvatarUrl(userProfile));
 
     // Display profile info
     document.getElementById("userEmail").textContent = currentUser.email || currentUser.username;
@@ -285,6 +292,9 @@ async function loadProfileData() {
     // Show content
     document.getElementById("loadingState").style.display = "none";
     document.getElementById("profileContent").style.display = "block";
+
+    // Init push notifications UI (non-blocking)
+    initPushUI();
   } catch (error) {
     await Swal.fire({
       icon: "error",
@@ -564,15 +574,14 @@ function toggleEditMode() {
 
     // Show current avatar in preview
     const preview = document.getElementById("avatarPreview");
-    if (userProfile?.avatar_url) {
-      const img = document.createElement("img");
-      img.src = userProfile.avatar_url;
-      img.alt = "Avatar";
-      preview.textContent = "";
-      preview.appendChild(img);
-    } else {
+    const img = document.createElement("img");
+    img.src = getAvatarUrl(userProfile);
+    img.alt = "Avatar";
+    img.onerror = () => {
       preview.textContent = "👤";
-    }
+    };
+    preview.textContent = "";
+    preview.appendChild(img);
     avatarFile = null;
     const fileInput = document.getElementById("editAvatarFile");
     if (fileInput) fileInput.value = "";
@@ -647,7 +656,8 @@ async function handleSaveProfile(e) {
       // Real mode - upload avatar if selected
       let newAvatarUrl = userProfile?.avatar_url || null;
       if (avatarFile) {
-        newAvatarUrl = await uploadAvatar(avatarFile, currentUser.id);
+        const compressedAvatar = await compressImage(avatarFile, 512, 0.85);
+        newAvatarUrl = await uploadAvatar(compressedAvatar, currentUser.id);
       }
 
       // Update Supabase profile
@@ -678,7 +688,7 @@ async function handleSaveProfile(e) {
       document.getElementById("userEmail").textContent = newUsername;
       document.getElementById("neighborhoodDisplay").textContent = newNeighborhood;
       document.getElementById("neighborhoodValue").textContent = newNeighborhood;
-      displayAvatar(newAvatarUrl);
+      displayAvatar(getAvatarUrl(userProfile));
 
       Swal.close();
       await showSuccessToast("Профилът е обновен успешно!");
@@ -700,15 +710,18 @@ async function handleSaveProfile(e) {
 function displayAvatar(avatarUrl) {
   const avatarEl = document.getElementById("avatarDisplay");
   if (!avatarEl) return;
-  if (avatarUrl) {
-    const img = document.createElement("img");
-    img.src = avatarUrl;
-    img.alt = "Profile avatar";
-    avatarEl.textContent = "";
-    avatarEl.appendChild(img);
-  } else {
+  if (!avatarUrl) {
     avatarEl.textContent = "👤";
+    return;
   }
+  const img = document.createElement("img");
+  img.src = avatarUrl;
+  img.alt = "Profile avatar";
+  img.onerror = () => {
+    avatarEl.textContent = "👤";
+  };
+  avatarEl.textContent = "";
+  avatarEl.appendChild(img);
 }
 
 // Add event listener to edit form
@@ -734,6 +747,95 @@ if (avatarFileInput) {
   });
 }
 
+/**
+ * Initialise the push notifications UI section.
+ * Reads current permission + subscription state and renders appropriate button/text.
+ */
+async function initPushUI() {
+  const section = document.getElementById("pushNotificationsSection");
+  if (!section) return;
+
+  // Hide section for demo users — they have no real auth
+  if (isDemoUser(currentUser)) {
+    section.style.display = "none";
+    return;
+  }
+
+  const { permission, subscribed } = await getPushStatus();
+
+  const statusEl = document.getElementById("pushStatusText");
+  const btn = document.getElementById("pushToggleBtn");
+  const btnText = document.getElementById("pushToggleBtnText");
+  const deniedHint = document.getElementById("pushDeniedHint");
+
+  if (permission === "unsupported") {
+    if (statusEl) statusEl.textContent = t("push.unsupported") || "Браузърът не поддържа известия.";
+    return;
+  }
+
+  if (permission === "denied") {
+    if (statusEl) statusEl.textContent = t("push.denied") || "Известията са блокирани.";
+    if (deniedHint) deniedHint.style.display = "block";
+    return;
+  }
+
+  if (subscribed) {
+    if (statusEl) statusEl.textContent = t("push.enabled") || "Push известията са активни ✅";
+    if (btn) {
+      btn.style.display = "inline-block";
+      btn.className = "btn btn-outline-danger btn-sm";
+      if (btnText) btnText.setAttribute("data-i18n", "push.disableBtn");
+      if (btnText) btnText.textContent = t("push.disableBtn") || "Деактивирай известия";
+    }
+  } else {
+    if (statusEl) statusEl.textContent = t("push.disabled") || "Push известията са изключени.";
+    if (btn) {
+      btn.style.display = "inline-block";
+      btn.className = "btn btn-outline-success btn-sm";
+      if (btnText) btnText.setAttribute("data-i18n", "push.enableBtn");
+      if (btnText) btnText.textContent = t("push.enableBtn") || "Активирай известия";
+    }
+  }
+}
+
+/**
+ * Toggle push subscription on button click (called from onclick in HTML).
+ */
+async function handlePushToggle() {
+  const { subscribed } = await getPushStatus();
+
+  if (subscribed) {
+    const result = await unsubscribeFromPush(currentUser.id);
+    if (!result.success) {
+      Swal.fire({
+        icon: "error",
+        title: t("common.error"),
+        text: t("push.error") || "Грешка при деактивиране.",
+      });
+      return;
+    }
+    showSuccessToast(t("push.disabledSuccess") || "Известията са деактивирани.");
+  } else {
+    const result = await subscribeToPush(currentUser.id);
+    if (!result.success) {
+      if (result.error === "denied") {
+        document.getElementById("pushDeniedHint").style.display = "block";
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: t("common.error"),
+          text: t("push.error") || "Грешка при активиране.",
+        });
+      }
+      return;
+    }
+    showSuccessToast(t("push.enabledSuccess") || "Известията са активирани! ✅");
+  }
+
+  initPushUI();
+}
+
 // Expose functions to window for onclick handlers
 window.handleLogout = handleLogout;
 window.toggleEditMode = toggleEditMode;
+window.handlePushToggle = handlePushToggle;
