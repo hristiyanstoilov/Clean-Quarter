@@ -320,6 +320,28 @@ superadmin → admin + cannot be demoted (DB-enforced flag)
 
 ---
 
+### Journey 7: Forgot Password / Password Reset
+
+```
+1. Landing page → Click "Забравена парола / Forgot password"
+2. SweetAlert2 dialog prompts for email address
+3. supabase.auth.resetPasswordForEmail() sends reset email
+4. User clicks link in email → redirected to /profile#type=recovery&access_token=...
+5. profile.js detects type=recovery in URL hash
+6. Hash cleared from URL immediately (prevents re-trigger on refresh)
+7. SweetAlert2 modal prompts for new password (validated: 8+, uppercase, lowercase, digit)
+8. supabase.auth.updateUser({ password }) updates the password
+9. signOut() → redirect to / → user logs in with new password
+```
+
+**Failure states handled:**
+- Empty password → blocked by preConfirm validator before submission
+- Weak password → inline validation message in the modal
+- Supabase error → error dialog shown, user can retry
+- Re-visiting /profile after reset → hash is cleared, modal does not re-trigger
+
+---
+
 ## 5. Feature Breakdown
 
 ### Feature 1: Campaign Management
@@ -705,15 +727,15 @@ superadmin → admin + immutable (cannot be demoted)
 
 ### Missing Governance Layers
 
-| Gap | Impact | Recommendation |
-|-----|--------|----------------|
-| Points per campaign not configurable | Cannot reward harder/larger cleanups more | Add `points_value` column to `campaigns` table |
-| No reward fulfillment tracking | No way to verify rewards were actually delivered | Add `fulfilled_at`, `fulfilled_by` to `point_transactions` |
-| No campaign categories/types | No segmentation for reporting or discovery | Add `category` enum to `campaigns` |
-| No rate limiting on campaign creation | Spam campaigns are technically possible | Add client-side + server-side rate limit |
-| No moderation queue for new campaigns | All campaigns go public immediately | Add `status='pending'` for first-time creators |
-| Rejection reason optional | Unfair rejections with no explanation | Make `rejection_reason` required on reject action |
-| No reward quantity enforcement | `quantity_available` column exists but not decremented on redemption | Wire redemption to decrement quantity |
+| Gap | Impact | Recommendation | Status |
+|-----|--------|----------------|:------:|
+| Points per campaign not configurable | Cannot reward harder/larger cleanups more | Add `points_value` column to `campaigns` table | Open |
+| No reward fulfillment tracking | No way to verify rewards were actually delivered | Add `fulfilled_at`, `fulfilled_by` to `point_transactions` | Open |
+| No campaign categories/types | No segmentation for reporting or discovery | Add `category` enum to `campaigns` | Open |
+| No rate limiting on campaign creation | Spam campaigns are technically possible | Add client-side + server-side rate limit | Open |
+| No moderation queue for new campaigns | All campaigns go public immediately | Add `status='pending'` for first-time creators | Open |
+| ~~Rejection reason optional~~ | ~~Unfair rejections with no explanation~~ | ~~Make `rejection_reason` required on reject action~~ | ✅ Resolved — `inputValidator` in UI + DB CHECK constraint |
+| ~~No reward quantity enforcement~~ | ~~`quantity_available` column exists but not decremented on redemption~~ | ~~Wire redemption to decrement quantity~~ | ✅ Resolved — `purchase_reward()` RPC decrements atomically via `FOR UPDATE` |
 
 ---
 
@@ -748,15 +770,15 @@ superadmin → admin + immutable (cannot be demoted)
 
 ### Missing Compliance Elements
 
-| Gap | Relevance |
-|-----|-----------|
-| No GDPR data export | Required under EU law — users can request all their data |
-| No right-to-erasure | `deleted_at` exists but photos remain in Supabase Storage after soft delete |
-| No privacy policy page | Referenced in registration checkbox but `/privacy` route does not exist |
-| No cookie consent banner | Required if analytics or tracking is added |
-| No versioned Terms of Service | Registration checkbox present but no ToS document or version tracking |
-| No data retention policy | Old campaigns, transactions, and notifications are never purged |
-| No audit log for admin actions | Role change log exists; photo approvals/rejections are not independently logged |
+| Gap | Relevance | Status |
+|-----|-----------|:------:|
+| No GDPR data export | Required under EU law — users can request all their data | Open |
+| No right-to-erasure | `deleted_at` exists but photos remain in Supabase Storage after soft delete | Open |
+| ~~No privacy policy page~~ | ~~Referenced in registration checkbox but `/privacy` route does not exist~~ | ✅ Resolved — `/privacy` page created, BG/EN, linked from registration |
+| No cookie consent banner | Required if analytics or tracking is added | Open |
+| No versioned Terms of Service | Registration checkbox present but no ToS document or version tracking | Open |
+| No data retention policy | Old campaigns, transactions, and notifications are never purged | Open |
+| No audit log for admin actions | Role change log exists; photo approvals/rejections are not independently logged | Open |
 
 ---
 

@@ -37,6 +37,11 @@
   to = "/src/pages/admin.html"
   status = 200
 
+[[redirects]]
+  from = "/privacy"
+  to = "/src/pages/privacy.html"
+  status = 200
+
 # Catch-all — serves login page for unknown routes
 [[redirects]]
   from = "/*"
