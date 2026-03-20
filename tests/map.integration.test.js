@@ -1,4 +1,6 @@
 // vi.mock is hoisted automatically — runs before any imports
+vi.mock('leaflet.markercluster', () => ({}));
+
 vi.mock('leaflet', () => ({
   default: {
     map: vi.fn(() => ({
@@ -14,6 +16,9 @@ vi.mock('leaflet', () => ({
     })),
     icon: vi.fn(() => ({})),
     divIcon: vi.fn(() => ({})),
+    markerClusterGroup: vi.fn(() => ({
+      addLayer: vi.fn(),
+    })),
   },
 }));
 
@@ -87,6 +92,42 @@ describe('map.js integration', () => {
 
     expect(L.marker).toHaveBeenCalled();
     expect(L.divIcon).toHaveBeenCalled();
+  });
+
+  it('campaign markers are added to a cluster group, not directly to the map', async () => {
+    const eqMock = vi.fn().mockResolvedValue({
+      data: [{ location_lat: 42.65, location_lng: 23.37 }],
+      error: null,
+    });
+    vi.spyOn(supabaseModule.default, 'from').mockReturnValue({
+      select: vi.fn(() => ({ eq: eqMock })),
+    });
+
+    const clusterAddLayer = vi.fn();
+    L.markerClusterGroup.mockReturnValue({ addLayer: clusterAddLayer });
+
+    const fakeMap = { addLayer: vi.fn() };
+    await mapModule.loadCampaignMarkers(fakeMap);
+
+    // cluster group must be created
+    expect(L.markerClusterGroup).toHaveBeenCalledTimes(1);
+    // marker added to cluster, not directly to map
+    expect(clusterAddLayer).toHaveBeenCalled();
+    // cluster group itself added to map
+    expect(fakeMap.addLayer).toHaveBeenCalledTimes(1);
+  });
+
+  it('L.markerClusterGroup is called once even when campaigns array is empty', async () => {
+    const eqMock = vi.fn().mockResolvedValue({ data: [], error: null });
+    vi.spyOn(supabaseModule.default, 'from').mockReturnValue({
+      select: vi.fn(() => ({ eq: eqMock })),
+    });
+
+    const fakeMap = { addLayer: vi.fn() };
+    await mapModule.loadCampaignMarkers(fakeMap);
+
+    expect(L.markerClusterGroup).toHaveBeenCalledTimes(1);
+    expect(fakeMap.addLayer).toHaveBeenCalledTimes(1);
   });
 
   it('handles supabase error when loading campaign markers', async () => {

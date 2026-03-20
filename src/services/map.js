@@ -1,6 +1,9 @@
 // Supabase will be dynamically imported inside functions to allow mocking in tests
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet.markercluster";
+import "leaflet.markercluster/dist/MarkerCluster.css";
+import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import { isEmpty } from "../utils/helpers.js";
 import { hasLocalStorage } from "../utils/env.js";
 import logger from "./logger.js";
@@ -58,47 +61,57 @@ export function initializeMap() {
 }
 
 /**
- * Create a marker with icon and popup
+ * Create a marker with icon and popup, added to a layer (map or cluster group)
  * @private
- * @param {Object} map - Leaflet map instance
+ * @param {Object} layer - Leaflet map or cluster group to add marker to
  * @param {number} lat - Latitude
  * @param {number} lng - Longitude
  * @param {string} iconType - Type of icon ('campaign' or 'disposal')
  * @param {string} popupContent - HTML content for popup
  */
-function createMarker(map, lat, lng, iconType, popupContent) {
+function createMarker(layer, lat, lng, iconType, popupContent) {
   const color = MARKER_TYPE_COLORS[iconType] || "red";
   const marker = L.marker([lat, lng], {
     icon: createMarkerIcon(color),
-  }).addTo(map);
-
+  });
   marker.bindPopup(popupContent);
+  layer.addLayer ? layer.addLayer(marker) : marker.addTo(layer);
   return marker;
 }
 
 /**
- * Fetch active campaigns and display them as RED markers
+ * Fetch active campaigns and display them as clustered RED markers.
+ * Campaign markers are grouped via L.markerClusterGroup so the map
+ * stays readable at any zoom level regardless of campaign count.
  * @param {Object} map - Leaflet map instance
  */
 export async function loadCampaignMarkers(map) {
   try {
+    const clusterGroup = L.markerClusterGroup();
+
     // Check if in demo mode
     const user = hasLocalStorage() ? JSON.parse(localStorage.getItem("user") || "{}") : {};
     if (isDemoUser(user)) {
       // Load demo campaigns from localStorage
       const campaigns = hasLocalStorage() ? getDemoCampaigns() : [];
 
-      if (isEmpty(campaigns)) return;
-
-      campaigns.forEach((campaign) => {
-        const popupContent = `
-          <strong>${campaign.title}</strong><br>
-          Status: ${campaign.status}<br>
-          <small>ID: ${campaign.id}</small>
-        `;
-
-        createMarker(map, campaign.location_lat, campaign.location_lng, "campaign", popupContent);
-      });
+      if (!isEmpty(campaigns)) {
+        campaigns.forEach((campaign) => {
+          const popupContent = `
+            <strong>${campaign.title}</strong><br>
+            Status: ${campaign.status}<br>
+            <small>ID: ${campaign.id}</small>
+          `;
+          createMarker(
+            clusterGroup,
+            campaign.location_lat,
+            campaign.location_lng,
+            "campaign",
+            popupContent
+          );
+        });
+      }
+      map.addLayer(clusterGroup);
       return;
     }
 
@@ -112,17 +125,24 @@ export async function loadCampaignMarkers(map) {
 
     if (error) throw error;
 
-    if (isEmpty(campaigns)) return;
+    if (!isEmpty(campaigns)) {
+      campaigns.forEach((campaign) => {
+        const popupContent = `
+          <strong>${campaign.title}</strong><br>
+          Status: ${campaign.status}<br>
+          <small>ID: ${campaign.id}</small>
+        `;
+        createMarker(
+          clusterGroup,
+          campaign.location_lat,
+          campaign.location_lng,
+          "campaign",
+          popupContent
+        );
+      });
+    }
 
-    campaigns.forEach((campaign) => {
-      const popupContent = `
-        <strong>${campaign.title}</strong><br>
-        Status: ${campaign.status}<br>
-        <small>ID: ${campaign.id}</small>
-      `;
-
-      createMarker(map, campaign.location_lat, campaign.location_lng, "campaign", popupContent);
-    });
+    map.addLayer(clusterGroup);
   } catch (error) {
     logger.error("Error loading campaign markers:", error);
   }
