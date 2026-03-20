@@ -1,6 +1,7 @@
 import supabase from "../services/supabase.js";
 import { initI18n, applyLanguage, setLanguage } from "../utils/i18n.js";
 import { escapeHTML, showSuccessToast, initSwalFallback } from "../utils/helpers.js";
+import { getDemoRewards, saveDemoRewards, addDemoTransaction } from "../utils/demoMode.js";
 
 // Global variables
 let currentUser = null;
@@ -83,7 +84,7 @@ async function loadRewardsData() {
     if (currentUser && currentUser.id === "demo-admin-001") {
       // Demo mode - use localStorage
       userProfile = currentUser;
-      rewards = JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_REWARDS") || "[]");
+      rewards = getDemoRewards();
     } else {
       // Real mode - fetch from Supabase
       const { data: profile, error: profileError } = await supabase
@@ -305,14 +306,11 @@ async function handleBuy(rewardId, rewardTitle, rewardCost) {
       const reward = rewards.find((r) => r.id === rewardId);
       if (reward && reward.quantity_available !== null) {
         reward.quantity_available -= 1;
-        localStorage.setItem("CLEAN_QUARTER_DEMO_REWARDS", JSON.stringify(rewards));
+        saveDemoRewards(rewards);
       }
 
       // Add demo transaction to localStorage
-      const transactions = JSON.parse(
-        localStorage.getItem("CLEAN_QUARTER_DEMO_TRANSACTIONS") || "[]"
-      );
-      transactions.push({
+      addDemoTransaction({
         id: `trans-${Date.now()}`,
         user_id: currentUser.id,
         amount: -rewardCost,
@@ -321,7 +319,6 @@ async function handleBuy(rewardId, rewardTitle, rewardCost) {
         reward_id: rewardId,
         created_at: new Date().toISOString(),
       });
-      localStorage.setItem("CLEAN_QUARTER_DEMO_TRANSACTIONS", JSON.stringify(transactions));
     } else {
       // Atomic purchase via SECURITY DEFINER RPC:
       // validates points, deducts balance, decrements stock, inserts transaction.

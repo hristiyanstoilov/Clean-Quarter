@@ -4,6 +4,16 @@ import { initializeMap, createMarkerIcon } from "../services/map.js";
 import { uploadCampaignPhoto } from "../services/storage.js";
 import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
 import { escapeHTML, showSuccessToast, initSwalFallback } from "../utils/helpers.js";
+import {
+  getDemoCampaignById,
+  getDemoParticipations,
+  addDemoParticipation,
+  updateDemoParticipation,
+  updateDemoCampaign,
+  getDemoComments,
+  addDemoComment,
+  softDeleteDemoComment,
+} from "../utils/demoMode.js";
 
 // Global variables
 let campaign = null;
@@ -119,17 +129,14 @@ async function loadCampaignDetail() {
 
     if (currentUser && currentUser.id === "demo-admin-001") {
       // Load demo campaign from localStorage
-      const allCampaigns = JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_CAMPAIGNS") || "[]");
-      campaignData = allCampaigns.find((c) => c.id === campaignId);
+      campaignData = getDemoCampaignById(campaignId);
 
       if (!campaignData) {
         throw new Error("Campaign not found in demo data");
       }
 
       // Load demo participations
-      participations = JSON.parse(
-        localStorage.getItem("CLEAN_QUARTER_DEMO_PARTICIPATIONS") || "[]"
-      ).filter((p) => p.campaign_id === campaignId);
+      participations = getDemoParticipations().filter((p) => p.campaign_id === campaignId);
 
       userPart = participations.find((p) => p.user_id === currentUser.id) || null;
     } else {
@@ -451,9 +458,6 @@ async function handleJoin() {
 
     if (isDemo) {
       // Demo mode: save participation to localStorage
-      const demoParts = JSON.parse(
-        localStorage.getItem("CLEAN_QUARTER_DEMO_PARTICIPATIONS") || "[]"
-      );
       const newPart = {
         id: `part-${Date.now()}`,
         campaign_id: campaignId,
@@ -463,8 +467,7 @@ async function handleJoin() {
         points_earned: 0,
         created_at: new Date().toISOString(),
       };
-      demoParts.push(newPart);
-      localStorage.setItem("CLEAN_QUARTER_DEMO_PARTICIPATIONS", JSON.stringify(demoParts));
+      addDemoParticipation(newPart);
       userParticipation = newPart;
     } else {
       // Real mode: use Supabase
@@ -562,15 +565,10 @@ async function handleUploadPhoto() {
       });
 
       // Update participation in localStorage
-      const demoParts = JSON.parse(
-        localStorage.getItem("CLEAN_QUARTER_DEMO_PARTICIPATIONS") || "[]"
-      );
-      const idx = demoParts.findIndex((p) => p.id === userParticipation.id);
-      if (idx !== -1) {
-        demoParts[idx].after_photo_url = photoUrl;
-        demoParts[idx].status = "pending";
-        localStorage.setItem("CLEAN_QUARTER_DEMO_PARTICIPATIONS", JSON.stringify(demoParts));
-      }
+      updateDemoParticipation(userParticipation.id, {
+        after_photo_url: photoUrl,
+        status: "pending",
+      });
     } else {
       // Real mode: upload to Supabase Storage
       photoUrl = await uploadCampaignPhoto(afterPhotoFile, "after");
@@ -823,43 +821,37 @@ async function handleSaveCampaign(e) {
 
     if (localUser.id && localUser.id.startsWith("demo-")) {
       // Demo mode - update localStorage
-      const demoCampaigns = JSON.parse(
-        localStorage.getItem("CLEAN_QUARTER_DEMO_CAMPAIGNS") || "[]"
-      );
-      const campaignIndex = demoCampaigns.findIndex((c) => c.id === campaignId);
+      const updates = {
+        title: newTitle,
+        description: newDescription,
+        neighborhood: newNeighborhood,
+        status: newStatus,
+        scheduled_date: newScheduledDate || null,
+        start_time: newStartTime || null,
+        end_time: newEndTime,
+        updated_at: new Date().toISOString(),
+      };
+      updateDemoCampaign(campaignId, updates);
 
-      if (campaignIndex !== -1) {
-        demoCampaigns[campaignIndex] = {
-          ...demoCampaigns[campaignIndex],
-          title: newTitle,
-          description: newDescription,
-          neighborhood: newNeighborhood,
-          status: newStatus,
-          scheduled_date: newScheduledDate || null,
-          start_time: newStartTime || null,
-          end_time: newEndTime,
-          updated_at: new Date().toISOString(),
-        };
-
-        localStorage.setItem("CLEAN_QUARTER_DEMO_CAMPAIGNS", JSON.stringify(demoCampaigns));
-
-        // Preserve creator join data when updating campaign state
-        campaign = { ...demoCampaigns[campaignIndex], creator: campaign.creator };
-
-        // Update UI (consistent with displayCampaignDetails)
-        document.getElementById("campaignTitle").textContent = newTitle;
-        document.getElementById("campaignDescription").textContent = newDescription;
-        document.getElementById("campaignNeighborhood").textContent = newNeighborhood;
-
-        const statusBadge = document.getElementById("statusBadge");
-        statusBadge.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
-        statusBadge.className = `badge-status badge-${newStatus}`;
-
-        Swal.close();
-        await showSuccessToast("Campaign updated successfully!");
-
-        toggleEditCampaign();
+      // Preserve creator join data when updating campaign state
+      const updatedCampaign = getDemoCampaignById(campaignId);
+      if (updatedCampaign) {
+        campaign = { ...updatedCampaign, creator: campaign.creator };
       }
+
+      // Update UI (consistent with displayCampaignDetails)
+      document.getElementById("campaignTitle").textContent = newTitle;
+      document.getElementById("campaignDescription").textContent = newDescription;
+      document.getElementById("campaignNeighborhood").textContent = newNeighborhood;
+
+      const statusBadge = document.getElementById("statusBadge");
+      statusBadge.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+      statusBadge.className = `badge-status badge-${newStatus}`;
+
+      Swal.close();
+      await showSuccessToast("Campaign updated successfully!");
+
+      toggleEditCampaign();
     } else {
       // Real mode - update Supabase
       const { data, error } = await supabase
@@ -920,8 +912,7 @@ async function loadComments() {
   let comments = [];
 
   if (isDemo) {
-    const all = JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_COMMENTS") || "[]");
-    comments = all.filter((c) => c.campaign_id === campaignId && !c.deleted_at);
+    comments = getDemoComments(campaignId);
   } else {
     const { data, error } = await supabase
       .from("comments")
@@ -1028,8 +1019,7 @@ async function handleAddComment() {
 
   try {
     if (isDemo) {
-      const all = JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_COMMENTS") || "[]");
-      all.push({
+      addDemoComment({
         id: "demo_comment_" + Date.now(),
         campaign_id: campaignId,
         user_id: currentUser.id,
@@ -1038,7 +1028,6 @@ async function handleAddComment() {
         created_at: new Date().toISOString(),
         deleted_at: null,
       });
-      localStorage.setItem("CLEAN_QUARTER_DEMO_COMMENTS", JSON.stringify(all));
     } else {
       const {
         data: { user },
@@ -1075,12 +1064,7 @@ async function handleDeleteComment(commentId) {
   const isDemo = currentUser && currentUser.id === "demo-admin-001";
 
   if (isDemo) {
-    const all = JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_COMMENTS") || "[]");
-    const idx = all.findIndex((c) => c.id === commentId);
-    if (idx !== -1) {
-      all[idx].deleted_at = new Date().toISOString();
-      localStorage.setItem("CLEAN_QUARTER_DEMO_COMMENTS", JSON.stringify(all));
-    }
+    softDeleteDemoComment(commentId);
   } else {
     const { error } = await supabase
       .from("comments")

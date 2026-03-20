@@ -144,7 +144,7 @@ export function validateField(value, fieldRules = []) {
     }
     if (error) return error;
   }
-  return true;
+  return null;
 }
 
 /**

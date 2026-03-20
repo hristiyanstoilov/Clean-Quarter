@@ -12,6 +12,7 @@ import {
   isEmpty,
   escapeHTML,
 } from "../utils/helpers.js";
+import { getDemoCampaigns } from "../utils/demoMode.js";
 
 // Pagination state
 const PAGE_SIZE = 9;
@@ -265,7 +266,7 @@ async function loadCampaignsPage(append = false) {
     if (user && user.id === "demo-admin-001") {
       // Demo mode — load all once, then slice
       if (!append) {
-        allDemoCampaigns = JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_CAMPAIGNS") || "[]");
+        allDemoCampaigns = getDemoCampaigns();
         totalCount = allDemoCampaigns.length;
       }
       campaigns = allDemoCampaigns.slice(currentOffset, currentOffset + PAGE_SIZE);

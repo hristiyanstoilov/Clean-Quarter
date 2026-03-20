@@ -67,6 +67,11 @@ describe("Notifications service — Supabase queries", () => {
   it("subscribeToNotifications filters by user_id", () => {
     expect(svcSrc).toContain("user_id=eq.");
   });
+
+  it("unsubscribes the channel on page unload to prevent connection leaks", () => {
+    expect(svcSrc).toContain("beforeunload");
+    expect(svcSrc).toContain("channel.unsubscribe()");
+  });
 });
 
 describe("Notifications service — badge logic", () => {

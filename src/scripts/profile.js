@@ -3,6 +3,7 @@ import { uploadAvatar } from "../services/storage.js";
 import { initI18n, applyLanguage, setLanguage } from "../utils/i18n.js";
 import { escapeHTML, showSuccessToast, initSwalFallback } from "../utils/helpers.js";
 import { rules } from "../services/validation.js";
+import { getDemoTransactions, getDemoParticipations, getDemoCampaigns } from "../utils/demoMode.js";
 // Global variables
 let currentUser = null;
 let userProfile = null;
@@ -328,7 +329,7 @@ async function loadTransactions() {
 
     // Check if in demo mode
     if (currentUser.id === "demo-admin-001") {
-      transactions = JSON.parse(localStorage.getItem("CLEAN_QUARTER_DEMO_TRANSACTIONS") || "[]");
+      transactions = getDemoTransactions();
     } else {
       const { data, error } = await supabase
         .from("point_transactions")
@@ -417,12 +418,8 @@ async function loadParticipations() {
   try {
     // Demo mode — no real participations in DB
     if (currentUser.id === "demo-admin-001") {
-      const demoParts = JSON.parse(
-        localStorage.getItem("CLEAN_QUARTER_DEMO_PARTICIPATIONS") || "[]"
-      );
-      const demoCampaigns = JSON.parse(
-        localStorage.getItem("CLEAN_QUARTER_DEMO_CAMPAIGNS") || "[]"
-      );
+      const demoParts = getDemoParticipations();
+      const demoCampaigns = getDemoCampaigns();
       // Enrich with campaign data
       const enriched = demoParts.map((p) => ({
         ...p,

@@ -9,7 +9,7 @@ describe('validation.js integration', () => {
     const result = validation.validateField('', ['required']);
     expect(result).toBe('Полето е задължително');
     const ok = validation.validateField('test', ['required']);
-    expect(ok).toBe(true);
+    expect(ok).toBe(null);
   });
 
   it('validates a form with schema', () => {

@@ -1,4 +1,4 @@
-import { getI18n } from "../utils/i18n.js";
+import { t } from "../utils/i18n.js";
 
 // Logger reference (loaded lazily)
 let logger = null;
@@ -71,8 +71,6 @@ function getActivePage() {
  * Create the mobile navigation HTML structure
  */
 function createMobileNav() {
-  const i18n = getI18n();
-
   const navItems = [
     { id: "nav-home", key: "dashboard", href: "./dashboard.html", icon: "🏠" },
     { id: "nav-create", key: "createCampaign", href: "./create-campaign.html", icon: "➕" },
@@ -88,7 +86,7 @@ function createMobileNav() {
         ${navItems
           .map((item) => {
             const isActive = activePage === item.key;
-            const label = i18n.nav[item.key];
+            const label = t("nav." + item.key);
             return `
             <a 
               href="${item.href}" 

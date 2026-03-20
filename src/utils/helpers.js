@@ -1,6 +1,11 @@
 import logger from "../services/logger.js";
 import { isBrowser, hasLocalStorage, hasNavigator } from "./env.js";
 
+// Session TTL: 8 hours. Stale localStorage entries are cleared on read.
+const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
+// Demo users have no Supabase session — exempt from TTL expiry.
+const DEMO_USER_ID = "demo-admin-001";
+
 /**
  * Escape HTML special characters to prevent XSS
  * @param {string} text - Raw text to escape
@@ -50,7 +55,16 @@ export function getCurrentUser() {
   try {
     if (hasLocalStorage()) {
       const userJSON = localStorage.getItem("user");
-      return userJSON ? JSON.parse(userJSON) : null;
+      if (!userJSON) return null;
+      const user = JSON.parse(userJSON);
+      // Demo users have no Supabase session — never expire them.
+      if (user?.id === DEMO_USER_ID) return user;
+      // If saved_at is present and the session is stale, clear and force re-login.
+      if (user?.saved_at && Date.now() - user.saved_at > SESSION_TTL_MS) {
+        localStorage.removeItem("user");
+        return null;
+      }
+      return user;
     }
     return null;
   } catch (error) {
@@ -74,6 +88,7 @@ export function saveUser(user) {
         username: user.user_metadata?.username || user.username,
         role: user.role || user.user_metadata?.role,
         neighborhood: user.user_metadata?.neighborhood || user.neighborhood,
+        saved_at: Date.now(),
       };
       localStorage.setItem("user", JSON.stringify(safeUser));
     }
