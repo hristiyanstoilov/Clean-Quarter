@@ -1,3 +1,16 @@
+/** Единствено място където живее demo user ID-то */
+export const DEMO_USER_ID = "demo-admin-001";
+
+/**
+ * Проверява дали даден user обект е demo потребителят.
+ * Използвай навсякъде вместо `user.id === "demo-admin-001"`.
+ * @param {object|null|undefined} user
+ * @returns {boolean}
+ */
+export function isDemoUser(user) {
+  return user?.id === DEMO_USER_ID;
+}
+
 /**
  * Set demo mode state
  * @param {boolean} value
@@ -62,7 +75,7 @@ const DEMO_ROLE_LOG_KEY = "CLEAN_QUARTER_ROLE_LOG";
  */
 export function initDemoMode() {
   const demoUser = {
-    id: "demo-admin-001",
+    id: DEMO_USER_ID,
     email: "admin@demo.com",
     username: "admin_demo",
     role: "admin",
@@ -82,7 +95,7 @@ export function initDemoMode() {
       status: "active",
       before_photo_url:
         "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%234CAF50%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22white%22 font-size=%2220%22%3EBefore Photo 📷%3C/text%3E%3C/svg%3E",
-      created_by: "demo-admin-001",
+      created_by: DEMO_USER_ID,
       neighborhood: "Studentski Grad",
       scheduled_date: "2026-03-22",
       start_time: "10:00",
@@ -99,7 +112,7 @@ export function initDemoMode() {
       status: "active",
       before_photo_url:
         "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%234CAF50%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22white%22 font-size=%2220%22%3EBefore Photo 📷%3C/text%3E%3C/svg%3E",
-      created_by: "demo-admin-001",
+      created_by: DEMO_USER_ID,
       neighborhood: "Darvenitsa",
       scheduled_date: "2026-03-29",
       start_time: "09:00",
@@ -116,7 +129,7 @@ export function initDemoMode() {
       status: "completed",
       before_photo_url:
         "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%234CAF50%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22white%22 font-size=%2220%22%3EBefore Photo 📷%3C/text%3E%3C/svg%3E",
-      created_by: "demo-admin-001",
+      created_by: DEMO_USER_ID,
       neighborhood: "Malinova Dolina",
       scheduled_date: "2026-03-20",
       start_time: "10:00",
@@ -133,7 +146,7 @@ export function initDemoMode() {
       status: "active",
       before_photo_url:
         "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%234CAF50%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22white%22 font-size=%2220%22%3EBefore Photo 📷%3C/text%3E%3C/svg%3E",
-      created_by: "demo-admin-001",
+      created_by: DEMO_USER_ID,
       neighborhood: "Vitosha (VEC)",
       scheduled_date: "2026-04-05",
       start_time: "11:00",
@@ -150,7 +163,7 @@ export function initDemoMode() {
       status: "active",
       before_photo_url:
         "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%234CAF50%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22white%22 font-size=%2220%22%3EBefore Photo 📷%3C/text%3E%3C/svg%3E",
-      created_by: "demo-admin-001",
+      created_by: DEMO_USER_ID,
       neighborhood: "Musagenitsa",
       scheduled_date: "2026-04-12",
       start_time: "10:00",
@@ -302,7 +315,7 @@ export function initDemoMode() {
   const demoTransactions = [
     {
       id: "trans-001",
-      user_id: "demo-admin-001",
+      user_id: DEMO_USER_ID,
       amount: 150,
       type: "earned",
       description: 'Почистване на парк "Студентски"',
@@ -311,7 +324,7 @@ export function initDemoMode() {
     },
     {
       id: "trans-002",
-      user_id: "demo-admin-001",
+      user_id: DEMO_USER_ID,
       amount: 300,
       type: "spent",
       description: "Използване на награда: Обяд",
@@ -320,7 +333,7 @@ export function initDemoMode() {
     },
     {
       id: "trans-003",
-      user_id: "demo-admin-001",
+      user_id: DEMO_USER_ID,
       amount: 200,
       type: "earned",
       description: 'Почистване на улица "Царица Йоанна"',
@@ -329,7 +342,7 @@ export function initDemoMode() {
     },
     {
       id: "trans-004",
-      user_id: "demo-admin-001",
+      user_id: DEMO_USER_ID,
       amount: 500,
       type: "earned",
       description: "Почистване на зелена площ",
@@ -338,7 +351,7 @@ export function initDemoMode() {
     },
     {
       id: "trans-005",
-      user_id: "demo-admin-001",
+      user_id: DEMO_USER_ID,
       amount: 100,
       type: "spent",
       description: "Използване на награда: Книга",

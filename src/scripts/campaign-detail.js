@@ -5,6 +5,7 @@ import { uploadCampaignPhoto } from "../services/storage.js";
 import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
 import { escapeHTML, showSuccessToast, initSwalFallback } from "../utils/helpers.js";
 import {
+  isDemoUser,
   getDemoCampaignById,
   getDemoParticipations,
   addDemoParticipation,
@@ -48,7 +49,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // Notification bell (skip demo users)
-    if (storedUser?.id && storedUser.id !== "demo-admin-001") {
+    if (storedUser?.id && !isDemoUser(storedUser)) {
       import("../services/notifications.js").then(({ initNotificationBell }) => {
         initNotificationBell(storedUser.id);
       });
@@ -127,7 +128,7 @@ async function loadCampaignDetail() {
     let userPart = null;
     let userPartError = null;
 
-    if (currentUser && currentUser.id === "demo-admin-001") {
+    if (isDemoUser(currentUser)) {
       // Load demo campaign from localStorage
       campaignData = getDemoCampaignById(campaignId);
 
@@ -395,7 +396,7 @@ async function checkDeleteEligibility(_campaignId, participations) {
   }
 
   // Show report button for logged-in non-creators (not in demo mode)
-  const isDemo = currentUser.id === "demo-admin-001";
+  const isDemo = isDemoUser(currentUser);
   if (!isCreator && !isDemo) {
     document.getElementById("reportBtn").style.display = "inline-block";
   }
@@ -454,7 +455,7 @@ async function handleJoin() {
 
     const campaignId = getCampaignIdFromUrl();
 
-    const isDemo = currentUser && currentUser.id === "demo-admin-001";
+    const isDemo = isDemoUser(currentUser);
 
     if (isDemo) {
       // Demo mode: save participation to localStorage
@@ -553,7 +554,7 @@ async function handleUploadPhoto() {
       },
     });
 
-    const isDemo = currentUser && currentUser.id === "demo-admin-001";
+    const isDemo = isDemoUser(currentUser);
     let photoUrl;
 
     if (isDemo) {
@@ -908,7 +909,7 @@ async function loadComments() {
   const campaignId = getCampaignIdFromUrl();
   if (!campaignId) return;
 
-  const isDemo = currentUser && currentUser.id === "demo-admin-001";
+  const isDemo = isDemoUser(currentUser);
   let comments = [];
 
   if (isDemo) {
@@ -927,7 +928,7 @@ async function loadComments() {
   renderComments(comments);
 
   // Setup Realtime subscription for live comment updates (real mode only, once)
-  const isRealMode = !(currentUser && currentUser.id === "demo-admin-001");
+  const isRealMode = !isDemoUser(currentUser);
   if (isRealMode && !commentsChannel) {
     commentsChannel = supabase
       .channel(`comments-${campaignId}`)
@@ -1008,7 +1009,7 @@ async function handleAddComment() {
   if (!text) return;
 
   const campaignId = getCampaignIdFromUrl();
-  const isDemo = currentUser && currentUser.id === "demo-admin-001";
+  const isDemo = isDemoUser(currentUser);
   const username =
     currentUser?.username ||
     currentUser?.user_metadata?.username ||
@@ -1061,7 +1062,7 @@ async function handleAddComment() {
  * Handle deleting a comment (soft delete)
  */
 async function handleDeleteComment(commentId) {
-  const isDemo = currentUser && currentUser.id === "demo-admin-001";
+  const isDemo = isDemoUser(currentUser);
 
   if (isDemo) {
     softDeleteDemoComment(commentId);

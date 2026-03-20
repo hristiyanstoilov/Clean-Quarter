@@ -4,7 +4,7 @@ import { uploadCampaignPhoto } from "../services/storage.js";
 import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
 import { showSuccessToast, initSwalFallback } from "../utils/helpers.js";
 import supabase from "../services/supabase.js";
-import { addDemoCampaign, addDemoParticipation } from "../utils/demoMode.js";
+import { isDemoUser, addDemoCampaign, addDemoParticipation } from "../utils/demoMode.js";
 
 // Global variables
 let map = null;
@@ -39,7 +39,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
 
     // Notification bell (skip demo users)
-    if (user?.id && user.id !== "demo-admin-001") {
+    if (user?.id && !isDemoUser(user)) {
       import("../services/notifications.js").then(({ initNotificationBell }) => {
         initNotificationBell(user.id);
       });
@@ -346,7 +346,7 @@ async function handleFormSubmit(e) {
 
     // Check if we're in demo mode
     const localUser = localStorage.getItem("user");
-    const isDemoMode = localUser && currentUser.id === "demo-admin-001";
+    const isDemoMode = localUser && isDemoUser(currentUser);
 
     if (isDemoMode) {
       // DEMO MODE: Create campaign in localStorage

@@ -4,7 +4,7 @@ import "leaflet/dist/leaflet.css";
 import { isEmpty } from "../utils/helpers.js";
 import { hasLocalStorage } from "../utils/env.js";
 import logger from "./logger.js";
-import { getDemoCampaigns } from "../utils/demoMode.js";
+import { isDemoUser, getDemoCampaigns } from "../utils/demoMode.js";
 
 // Studentski Grad center coordinates
 const STUDENTSKI_GRAD_CENTER = {
@@ -84,7 +84,7 @@ export async function loadCampaignMarkers(map) {
   try {
     // Check if in demo mode
     const user = hasLocalStorage() ? JSON.parse(localStorage.getItem("user") || "{}") : {};
-    if (user && user.id === "demo-admin-001") {
+    if (isDemoUser(user)) {
       // Load demo campaigns from localStorage
       const campaigns = hasLocalStorage() ? getDemoCampaigns() : [];
 
@@ -136,7 +136,7 @@ export async function loadDisposalPointMarkers(map) {
   try {
     // Check if in demo mode - skip disposal points for demo
     const user = hasLocalStorage() ? JSON.parse(localStorage.getItem("user") || "{}") : {};
-    if (user && user.id === "demo-admin-001") {
+    if (isDemoUser(user)) {
       logger.info("📝 Demo mode: skipping disposal points");
       return;
     }
