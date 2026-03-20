@@ -155,3 +155,27 @@ describe("Admin pagination — showingOf interpolation", () => {
     expect(interpolate(tpl, 21, 25, 25)).toContain("25");
   });
 });
+
+// ─── named window functions ────────────────────────────────────────────────────
+
+describe("Admin pagination — named window functions", () => {
+  const adminSrc = readFileSync("src/scripts/admin.js", "utf-8");
+
+  it("exposes pendingPrevPage as a window function", () => {
+    expect(adminSrc).toContain("window.pendingPrevPage");
+  });
+
+  it("exposes pendingNextPage as a window function", () => {
+    expect(adminSrc).toContain("window.pendingNextPage");
+  });
+
+  it("onclick uses pendingPrevPage() not inline logic", () => {
+    expect(adminSrc).toContain('onclick="pendingPrevPage()"');
+    expect(adminSrc).not.toContain("pendingCurrentPage--; renderPendingTable()");
+  });
+
+  it("onclick uses pendingNextPage() not inline logic", () => {
+    expect(adminSrc).toContain('onclick="pendingNextPage()"');
+    expect(adminSrc).not.toContain("pendingCurrentPage++; renderPendingTable()");
+  });
+});
