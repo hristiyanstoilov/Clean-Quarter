@@ -206,6 +206,13 @@
     "categoryNone": "Без категория",
     "categoryPlaceholder": "-- Изберете категория --"
   },
+  "leaderboard": {
+    "title": "🏆 Класация на кварталите",
+    "points": "точки",
+    "participants": "участника",
+    "yourNeighborhood": "твоят квартал",
+    "noData": "Все още няма данни"
+  },
   "rewards": {
     "title": "Награди",
     "cost": "Цена",

@@ -80,6 +80,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     await loadCampaignsPage(false);
 
+    // Leaderboard — non-blocking, runs in parallel
+    loadLeaderboard(user);
+
     // Load More button
     document
       .getElementById("loadMoreBtn")
@@ -401,6 +404,91 @@ window.showAllCampaigns = async function () {
   document.getElementById("showAllBtn").style.display = "none";
   await loadCampaignsPage(false);
 };
+
+const MEDAL = ["🥇", "🥈", "🥉"];
+
+/**
+ * Load neighborhood leaderboard — groups profiles by neighborhood,
+ * sums points and counts participants, renders top 5.
+ * @param {Object|null} currentUser - logged-in user from localStorage
+ */
+async function loadLeaderboard(currentUser) {
+  const container = document.getElementById("leaderboardContainer");
+  if (!container) return;
+
+  const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+
+  try {
+    let rows;
+
+    // Demo mode — build leaderboard from localStorage campaigns
+    if (isDemoUser(currentUser)) {
+      const demoCampaigns = getDemoCampaigns();
+      const grouped = {};
+      demoCampaigns.forEach((c) => {
+        const n = c.neighborhood || "studentski_grad";
+        if (!grouped[n]) grouped[n] = { neighborhood: n, total_points: 0, participant_count: 0 };
+        grouped[n].total_points += 20;
+        grouped[n].participant_count += 1;
+      });
+      rows = Object.values(grouped).sort((a, b) => b.total_points - a.total_points);
+    } else {
+      // Use DB view for server-side aggregation — avoids fetching all profiles client-side
+      const { data, error } = await supabase
+        .from("neighborhood_leaderboard")
+        .select("neighborhood, total_points, participant_count");
+
+      if (error) throw error;
+
+      rows = (data || []).sort((a, b) => b.total_points - a.total_points);
+    }
+
+    if (!rows.length) {
+      container.innerHTML = `<p class="text-muted">${t("leaderboard.noData") || (lang === "en" ? "No data yet" : "Все още няма данни")}</p>`;
+      return;
+    }
+
+    const userNeighborhood = currentUser?.neighborhood || null;
+    const pointsLabel = t("leaderboard.points") || (lang === "en" ? "points" : "точки");
+    const participantsLabel =
+      t("leaderboard.participants") || (lang === "en" ? "participants" : "участника");
+    const yourLabel =
+      t("leaderboard.yourNeighborhood") || (lang === "en" ? "your neighborhood" : "твоят квартал");
+
+    const cards = rows.slice(0, 5).map((row, i) => {
+      const medal = MEDAL[i] || `${i + 1}.`;
+      const i18nKey = NEIGHBORHOOD_I18N[row.neighborhood];
+      const name = i18nKey ? t(i18nKey) || row.neighborhood : row.neighborhood;
+      const isYours = row.neighborhood === userNeighborhood;
+      const maxPoints = rows[0].total_points || 1;
+      const pct = Math.round((row.total_points / maxPoints) * 100);
+
+      return `
+        <div class="leaderboard-card${isYours ? " leaderboard-card--yours" : ""}">
+          <div class="leaderboard-rank">${medal}</div>
+          <div class="leaderboard-info">
+            <div class="leaderboard-name">
+              ${escapeHTML(name)}
+              ${isYours ? `<span class="leaderboard-badge">${yourLabel}</span>` : ""}
+            </div>
+            <div class="leaderboard-bar-wrap">
+              <div class="leaderboard-bar" style="width:${pct}%"></div>
+            </div>
+            <div class="leaderboard-stats">
+              <strong>${row.total_points}</strong> ${pointsLabel}
+              &nbsp;·&nbsp;
+              ${row.participant_count} ${participantsLabel}
+            </div>
+          </div>
+        </div>`;
+    });
+
+    container.innerHTML = cards.join("");
+  } catch (err) {
+    // Leaderboard is non-critical — fail silently
+    console.warn("[leaderboard] failed to load:", err.message);
+  }
+}
 
 /**
  * Filter campaigns by category

@@ -568,3 +568,101 @@ button:disabled,
     right: -60px;
   }
 }
+
+/* ============================================================
+   Neighborhood Leaderboard
+   ============================================================ */
+
+.leaderboard-section {
+  padding: 2rem 0 1rem;
+  background: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+}
+
+.leaderboard-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--text-primary, #212529);
+}
+
+.leaderboard-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-width: 600px;
+}
+
+.leaderboard-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  transition: box-shadow 0.2s;
+}
+
+.leaderboard-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.leaderboard-card--yours {
+  border-color: var(--primary-color, #28a745);
+  background: #f0fff4;
+}
+
+.leaderboard-rank {
+  font-size: 1.4rem;
+  min-width: 2rem;
+  text-align: center;
+}
+
+.leaderboard-info {
+  flex: 1;
+}
+
+.leaderboard-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.leaderboard-badge {
+  font-size: 0.7rem;
+  background: var(--primary-color, #28a745);
+  color: white;
+  border-radius: 20px;
+  padding: 1px 8px;
+  font-weight: 500;
+}
+
+.leaderboard-bar-wrap {
+  background: #e9ecef;
+  border-radius: 4px;
+  height: 6px;
+  margin: 0.3rem 0;
+  overflow: hidden;
+}
+
+.leaderboard-bar {
+  height: 100%;
+  background: var(--primary-color, #28a745);
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+
+.leaderboard-stats {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+@media (max-width: 576px) {
+  .leaderboard-grid {
+    max-width: 100%;
+  }
+}
