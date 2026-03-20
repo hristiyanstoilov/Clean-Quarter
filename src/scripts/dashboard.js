@@ -422,10 +422,8 @@ async function loadLeaderboard(currentUser) {
     let rows;
 
     // Demo mode — build leaderboard from localStorage campaigns
-    if (currentUser?.id === "demo-admin-001") {
-      const demoCampaigns = JSON.parse(
-        localStorage.getItem("CLEAN_QUARTER_DEMO_CAMPAIGNS") || "[]"
-      );
+    if (isDemoUser(currentUser)) {
+      const demoCampaigns = getDemoCampaigns();
       const map = {};
       demoCampaigns.forEach((c) => {
         const n = c.neighborhood || "studentski_grad";
