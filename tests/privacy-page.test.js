@@ -56,4 +56,8 @@ describe("Privacy page — registration link", () => {
   it("privacy link opens in new tab", () => {
     expect(indexHtml).toContain('href="/privacy" target="_blank"');
   });
+
+  it("privacy link has rel=\"noopener noreferrer\" for security", () => {
+    expect(indexHtml).toContain('rel="noopener noreferrer"');
+  });
 });
