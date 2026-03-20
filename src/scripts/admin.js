@@ -18,6 +18,8 @@ import {
 // Global variables
 let currentUser = null;
 let pendingParticipations = [];
+let pendingCurrentPage = 1;
+const PENDING_PAGE_SIZE = 10;
 
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", async () => {
@@ -186,6 +188,7 @@ async function loadAdminData() {
 
     // Filter pending participations
     pendingParticipations = allParticipationsData.filter((p) => p.status === "pending");
+    pendingCurrentPage = 1;
 
     // Calculate statistics
     const totalApproved = allParticipationsData.filter((p) => p.status === "approved").length;
@@ -658,6 +661,11 @@ function renderPendingTable() {
     return;
   }
 
+  const totalPages = Math.ceil(pendingParticipations.length / PENDING_PAGE_SIZE);
+  if (pendingCurrentPage > totalPages) pendingCurrentPage = totalPages;
+  const start = (pendingCurrentPage - 1) * PENDING_PAGE_SIZE;
+  const pageItems = pendingParticipations.slice(start, start + PENDING_PAGE_SIZE);
+
   let tableHTML = `
   <div class="table-responsive">
       <table class="table table-hover" role="table" aria-label="Pending participations">
@@ -675,7 +683,7 @@ function renderPendingTable() {
 `;
   const currentLang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
 
-  pendingParticipations.forEach((participation) => {
+  pageItems.forEach((participation) => {
     const username = participation.profiles?.username || "Unknown User";
 
     // Parse campaign title if it's a JSON object
@@ -730,6 +738,31 @@ function renderPendingTable() {
               </table>
           </div>
       `;
+
+  if (totalPages > 1) {
+    const showing = t("admin.showingOf")
+      .replace("{from}", start + 1)
+      .replace("{to}", Math.min(start + PENDING_PAGE_SIZE, pendingParticipations.length))
+      .replace("{total}", pendingParticipations.length);
+    tableHTML += `
+      <div class="d-flex justify-content-between align-items-center mt-3 px-1">
+        <span class="text-muted small">${showing}</span>
+        <div class="d-flex gap-2">
+          <button class="btn btn-sm btn-outline-secondary" id="pendingPrevBtn"
+            onclick="pendingPrevPage()"
+            ${pendingCurrentPage <= 1 ? "disabled" : ""}>
+            ← <span data-i18n="admin.prev">Предишна</span>
+          </button>
+          <span class="btn btn-sm btn-light disabled">${pendingCurrentPage} / ${totalPages}</span>
+          <button class="btn btn-sm btn-outline-secondary" id="pendingNextBtn"
+            onclick="pendingNextPage()"
+            ${pendingCurrentPage >= totalPages ? "disabled" : ""}>
+            <span data-i18n="admin.next">Следваща</span> →
+          </button>
+        </div>
+      </div>
+    `;
+  }
 
   container.innerHTML = tableHTML;
   applyLanguage(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg");
@@ -1119,3 +1152,18 @@ window.handleReject = handleReject;
 window.showPhotoModal = showPhotoModal;
 window.closePhotoModal = closePhotoModal;
 window.handleResolveReport = handleResolveReport;
+window.renderPendingTable = renderPendingTable;
+window.pendingPrevPage = function () {
+  pendingCurrentPage--;
+  renderPendingTable();
+};
+window.pendingNextPage = function () {
+  pendingCurrentPage++;
+  renderPendingTable();
+};
+Object.defineProperty(window, "pendingCurrentPage", {
+  get: () => pendingCurrentPage,
+  set: (v) => {
+    pendingCurrentPage = v;
+  },
+});
