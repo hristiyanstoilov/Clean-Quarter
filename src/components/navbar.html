@@ -117,7 +117,8 @@
     }
 
     // Setup notification bell (skip for demo users — no real DB access)
-    if (user.id && user.id !== "demo-admin-001") {
+    const { isDemoUser } = await import("../../utils/demoMode.js");
+    if (user.id && !isDemoUser(user)) {
       await initNotifications(user.id);
     }
 

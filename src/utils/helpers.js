@@ -1,10 +1,9 @@
 import logger from "../services/logger.js";
 import { isBrowser, hasLocalStorage, hasNavigator } from "./env.js";
+import { DEMO_USER_ID } from "./demoMode.js";
 
 // Session TTL: 8 hours. Stale localStorage entries are cleared on read.
 const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
-// Demo users have no Supabase session — exempt from TTL expiry.
-const DEMO_USER_ID = "demo-admin-001";
 
 /**
  * Escape HTML special characters to prevent XSS

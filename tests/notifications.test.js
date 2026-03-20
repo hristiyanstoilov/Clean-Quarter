@@ -220,7 +220,8 @@ describe("Notification bell — navbar.html component", () => {
   });
 
   it("skips demo users", () => {
-    expect(navbarSrc).toContain("demo-admin-001");
+    expect(navbarSrc).toContain("isDemoUser");
+    expect(navbarSrc).toContain("demoMode.js");
   });
 
   it("has bell HTML elements", () => {
