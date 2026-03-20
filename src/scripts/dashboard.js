@@ -424,31 +424,23 @@ async function loadLeaderboard(currentUser) {
     // Demo mode — build leaderboard from localStorage campaigns
     if (isDemoUser(currentUser)) {
       const demoCampaigns = getDemoCampaigns();
-      const map = {};
+      const grouped = {};
       demoCampaigns.forEach((c) => {
         const n = c.neighborhood || "studentski_grad";
-        if (!map[n]) map[n] = { neighborhood: n, total_points: 0, participant_count: 0 };
-        map[n].total_points += 20;
-        map[n].participant_count += 1;
+        if (!grouped[n]) grouped[n] = { neighborhood: n, total_points: 0, participant_count: 0 };
+        grouped[n].total_points += 20;
+        grouped[n].participant_count += 1;
       });
-      rows = Object.values(map).sort((a, b) => b.total_points - a.total_points);
+      rows = Object.values(grouped).sort((a, b) => b.total_points - a.total_points);
     } else {
+      // Use DB view for server-side aggregation — avoids fetching all profiles client-side
       const { data, error } = await supabase
-        .from("profiles")
-        .select("neighborhood, points_balance")
-        .not("neighborhood", "is", null);
+        .from("neighborhood_leaderboard")
+        .select("neighborhood, total_points, participant_count");
 
       if (error) throw error;
 
-      // Group client-side by neighborhood
-      const map = {};
-      (data || []).forEach(({ neighborhood, points_balance }) => {
-        if (!map[neighborhood])
-          map[neighborhood] = { neighborhood, total_points: 0, participant_count: 0 };
-        map[neighborhood].total_points += points_balance || 0;
-        map[neighborhood].participant_count += 1;
-      });
-      rows = Object.values(map).sort((a, b) => b.total_points - a.total_points);
+      rows = (data || []).sort((a, b) => b.total_points - a.total_points);
     }
 
     if (!rows.length) {
