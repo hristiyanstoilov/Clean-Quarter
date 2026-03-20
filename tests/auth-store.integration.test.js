@@ -27,6 +27,7 @@ vi.mock('../src/services/supabase.js', () => {
         insert: vi.fn(async () => ({ error: null })),
         upsert: vi.fn(async () => ({ error: null })),
       })),
+      rpc: vi.fn(async () => ({ data: { allowed: true, remaining: 5 }, error: null })),
     },
   };
 });

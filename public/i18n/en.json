@@ -26,6 +26,7 @@
     "neighborhood": "Neighborhood",
     "demoMode": "🎮 Demo Mode (Admin)",
     "forgotPassword": "Forgot Password?",
+    "tooManyAttempts": "Too many login attempts. Please try again in 15 minutes.",
     "rememberMe": "Remember me",
     "emailPlaceholder": "your@email.com",
     "passwordPlaceholder": "Enter password",
