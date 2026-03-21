@@ -69,6 +69,7 @@ const DEMO_TRANSACTIONS_KEY = "CLEAN_QUARTER_DEMO_TRANSACTIONS";
 const DEMO_USERS_KEY = "CLEAN_QUARTER_DEMO_USERS";
 const DEMO_COMMENTS_KEY = "CLEAN_QUARTER_DEMO_COMMENTS";
 const DEMO_ROLE_LOG_KEY = "CLEAN_QUARTER_ROLE_LOG";
+const DEMO_RSVPS_KEY = "CLEAN_QUARTER_DEMO_RSVPS";
 
 /**
  * Initialize demo mode with sample data
@@ -360,6 +361,27 @@ export function initDemoMode() {
     },
   ];
 
+  const demoRsvps = [
+    {
+      id: "rsvp-001",
+      campaign_id: "campaign-001",
+      user_id: "user-demo-001",
+      created_at: new Date("2024-01-09").toISOString(),
+    },
+    {
+      id: "rsvp-002",
+      campaign_id: "campaign-001",
+      user_id: "user-demo-002",
+      created_at: new Date("2024-01-10").toISOString(),
+    },
+    {
+      id: "rsvp-003",
+      campaign_id: "campaign-004",
+      user_id: "user-demo-001",
+      created_at: new Date("2024-01-15").toISOString(),
+    },
+  ];
+
   // Save to localStorage
   localStorage.setItem(DEMO_MODE_KEY, "true");
   localStorage.setItem(DEMO_USER_KEY, JSON.stringify(demoUser));
@@ -367,6 +389,7 @@ export function initDemoMode() {
   localStorage.setItem(DEMO_PARTICIPATIONS_KEY, JSON.stringify(demoParticipations));
   localStorage.setItem(DEMO_REWARDS_KEY, JSON.stringify(demoRewards));
   localStorage.setItem(DEMO_TRANSACTIONS_KEY, JSON.stringify(demoTransactions));
+  localStorage.setItem(DEMO_RSVPS_KEY, JSON.stringify(demoRsvps));
 }
 
 /**
@@ -554,6 +577,30 @@ export function softDeleteDemoComment(commentId) {
   }
 }
 
+// ---- RSVPs ----
+
+export function getDemoRsvps() {
+  return JSON.parse(localStorage.getItem(DEMO_RSVPS_KEY) || "[]");
+}
+
+export function addDemoRsvp(rsvp) {
+  const rsvps = getDemoRsvps();
+  const exists = rsvps.find(
+    (r) => r.campaign_id === rsvp.campaign_id && r.user_id === rsvp.user_id
+  );
+  if (!exists) {
+    rsvps.push(rsvp);
+    localStorage.setItem(DEMO_RSVPS_KEY, JSON.stringify(rsvps));
+  }
+}
+
+export function removeDemoRsvp(campaignId, userId) {
+  const rsvps = getDemoRsvps().filter(
+    (r) => !(r.campaign_id === campaignId && r.user_id === userId)
+  );
+  localStorage.setItem(DEMO_RSVPS_KEY, JSON.stringify(rsvps));
+}
+
 // ---- Role log ----
 
 export function getDemoRoleLog() {
@@ -578,4 +625,5 @@ export function clearDemoMode() {
   localStorage.removeItem(DEMO_USERS_KEY);
   localStorage.removeItem(DEMO_COMMENTS_KEY);
   localStorage.removeItem(DEMO_ROLE_LOG_KEY);
+  localStorage.removeItem(DEMO_RSVPS_KEY);
 }
