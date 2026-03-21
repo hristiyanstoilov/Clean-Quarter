@@ -1,5 +1,5 @@
 import supabase from "../services/supabase.js";
-import { initI18n, applyLanguage, setLanguage } from "../utils/i18n.js";
+import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
 import { escapeHTML, showSuccessToast, initSwalFallback } from "../utils/helpers.js";
 import {
   isDemoUser,
@@ -358,7 +358,7 @@ async function handleBuy(rewardId, rewardTitle, rewardCost) {
   } catch (error) {
     await Swal.fire({
       icon: "error",
-      title: (localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en" ? "Error" : "Грешка",
+      title: t("common.error"),
       text:
         error.message ||
         ((localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en"

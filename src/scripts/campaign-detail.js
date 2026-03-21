@@ -629,7 +629,7 @@ async function handleUploadPhoto() {
   } catch (error) {
     await Swal.fire({
       icon: "error",
-      title: "Error",
+      title: t("common.error"),
       text: error.message || "Failed to upload photo. Please try again.",
     });
 
@@ -709,7 +709,7 @@ async function handleDelete() {
   } catch (error) {
     await Swal.fire({
       icon: "error",
-      title: "Error",
+      title: t("common.error"),
       text: error.message || "Failed to delete campaign. Please try again.",
     });
   }
@@ -813,7 +813,7 @@ async function handleSaveCampaign(e) {
   if (!newTitle || !newDescription) {
     await Swal.fire({
       icon: "error",
-      title: "Error",
+      title: t("common.error"),
       text: "Title and description are required!",
     });
     return;
@@ -822,7 +822,7 @@ async function handleSaveCampaign(e) {
   if (newScheduledDate && newScheduledDate < new Date().toISOString().split("T")[0]) {
     await Swal.fire({
       icon: "error",
-      title: "Error",
+      title: t("common.error"),
       text: t("campaign.pastDateError") || "Date cannot be in the past",
     });
     return;
@@ -917,7 +917,7 @@ async function handleSaveCampaign(e) {
   } catch (error) {
     await Swal.fire({
       icon: "error",
-      title: "Error",
+      title: t("common.error"),
       text: error.message || "Error saving changes",
     });
   }
@@ -1069,7 +1069,7 @@ async function handleAddComment() {
       ]);
 
       if (error) {
-        await Swal.fire({ icon: "error", title: "Error", text: error.message });
+        await Swal.fire({ icon: "error", title: t("common.error"), text: error.message });
         return;
       }
     }
@@ -1097,7 +1097,7 @@ async function handleDeleteComment(commentId) {
       .eq("id", commentId);
 
     if (error) {
-      await Swal.fire({ icon: "error", title: "Error", text: error.message });
+      await Swal.fire({ icon: "error", title: t("common.error"), text: error.message });
       return;
     }
   }

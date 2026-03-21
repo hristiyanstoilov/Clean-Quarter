@@ -465,7 +465,7 @@ async function handleFormSubmit(e) {
   } catch (error) {
     await Swal.fire({
       icon: "error",
-      title: (localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en" ? "Error" : "Грешка",
+      title: t("common.error"),
       text:
         error.message ||
         ((localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en"

@@ -268,7 +268,7 @@ async function loadProfileData() {
   } catch (error) {
     await Swal.fire({
       icon: "error",
-      title: "Error",
+      title: t("common.error"),
       text: error.message || "Failed to load profile. Please try again.",
     });
 
