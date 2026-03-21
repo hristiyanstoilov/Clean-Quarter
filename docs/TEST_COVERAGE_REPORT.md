@@ -1,6 +1,6 @@
 # QA Test Coverage Report
 **Clean Quarter Application**
-**Report Date:** 2026-03-19
+**Report Date:** 2026-03-21
 **Testing Framework:** Vitest (unit + integration) · Cypress (E2E)
 
 ---
@@ -9,12 +9,12 @@
 
 | Metric | Value |
 |--------|-------|
-| Unit + Integration Tests | **530 passing** |
-| Test Files | **42** |
-| Real-DB Integration | 1 test (requires `.env.test`) |
+| Unit + Integration Tests | **859 passing** (860 total) |
+| Test Files | **56** |
+| Real-DB Integration | 2 tests (require `.env.test`) |
 | E2E Test Files | 4 Cypress spec files |
-| Test Execution Time | ~10s |
-| Passing Rate | **100%** |
+| Test Execution Time | ~8s |
+| Passing Rate | **99.9%** (1 real-DB test fails without live credentials) |
 
 ---
 
@@ -73,8 +73,9 @@
 ### Storage & DB
 | File | Tests | Coverage |
 |------|-------|----------|
-| `tests/storage.integration.test.js` | 6 | uploadCampaignPhoto, deleteCampaignPhoto, error handling |
+| `tests/storage.integration.test.js` | 8 | uploadCampaignPhoto, deleteCampaignPhoto, error handling, URL handling |
 | `tests/supabase.real.integration.test.js` | 1 | real DB ping (skipped without `.env.test`) |
+| `tests/rls-policy.test.js` | — | RLS policy integration (requires `.env.test`) |
 | `tests/supabase.crud.integration.test.js` | — | CRUD operations (requires `.env.test`) |
 | `tests/supabase.extra.integration.test.js` | — | extra queries (requires `.env.test`) |
 
@@ -82,6 +83,17 @@
 | File | Tests | Coverage |
 |------|-------|----------|
 | `src/services/__tests__/points.test.js` | 3 | earn, spend, invalid type |
+
+### Avatar & CSV Export
+| File | Tests | Coverage |
+|------|-------|----------|
+| `tests/avatars.test.js` | — | avatar generation, color assignment, initials |
+| `tests/csvExport.test.js` | — | CSV serialization, encoding, column mapping |
+
+### Stats Page
+| File | Tests | Coverage |
+|------|-------|----------|
+| `tests/stats.test.js` | — | public stats RPC, category/neighborhood breakdown |
 
 ---
 
@@ -96,16 +108,20 @@
 | Join Campaign → Upload proof → Admin approves | ✅ Covered (E2E) |
 | Admin rejects with required reason | ✅ Covered |
 | Earn Points → Redeem Reward | ✅ Covered |
+| RSVP to event / Cancel RSVP | ✅ Covered |
 | Map — markers and clustering | ✅ Covered |
 | Notifications — real-time + mark-as-read | ✅ Covered |
 | Language switching (BG ↔ EN) | ✅ Covered |
+| Public stats page (anon access) | ✅ Covered |
+| Avatar generation | ✅ Covered |
+| CSV export (admin) | ✅ Covered |
 
 ---
 
 ## Running Tests
 
 ```bash
-# All tests (530)
+# All tests (860)
 npm test
 
 # Single file
@@ -144,4 +160,4 @@ SUPABASE_ADMIN_PASSWORD=password
 
 ---
 
-**Status:** PRODUCTION READY — all 530 tests passing, all critical paths covered.
+**Status:** PRODUCTION READY — 859/860 tests passing. 1 real-DB RLS integration test requires `.env.test` credentials; all unit and mock-based tests pass cleanly.
