@@ -11,6 +11,7 @@ import {
   handleError,
   isEmpty,
   escapeHTML,
+  formatScheduledDate,
 } from "../utils/helpers.js";
 import { isDemoUser, getDemoCampaigns, getDemoRsvps } from "../utils/demoMode.js";
 import { getRsvpCountsForCampaigns } from "../services/events.js";
@@ -156,19 +157,7 @@ function buildCampaignCard(campaign, rsvpCount = 0) {
     localizeNeighborhood(campaign.neighborhood, currentLang) || "Студентски град";
 
   // Build scheduled date/time label
-  let scheduledLabel = "";
-  if (campaign.scheduled_date && campaign.start_time) {
-    const [yr, mo, dy] = campaign.scheduled_date.split("-");
-    const locale = currentLang === "bg" ? "bg-BG" : "en-US";
-    const dateFmt = new Date(+yr, +mo - 1, +dy).toLocaleDateString(locale, {
-      day: "numeric",
-      month: "short",
-    });
-    const startFmt = campaign.start_time.slice(0, 5);
-    scheduledLabel = campaign.end_time
-      ? `${dateFmt} · ${startFmt} – ${campaign.end_time.slice(0, 5)}`
-      : `${dateFmt} · ${startFmt}`;
-  }
+  const scheduledLabel = formatScheduledDate(campaign, currentLang, "short");
 
   const creator = campaign.creator?.username || campaign.creator_username || "";
 

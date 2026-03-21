@@ -4,7 +4,13 @@ import { initializeMap, createMarkerIcon } from "../services/map.js";
 import { uploadCampaignPhoto } from "../services/storage.js";
 import { compressImage } from "../services/compressor.js";
 import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
-import { escapeHTML, showSuccessToast, initSwalFallback } from "../utils/helpers.js";
+import {
+  escapeHTML,
+  showSuccessToast,
+  showInfoToast,
+  initSwalFallback,
+  formatScheduledDate,
+} from "../utils/helpers.js";
 import {
   isDemoUser,
   getDemoCampaignById,
@@ -311,24 +317,8 @@ function displayCampaignDetails(campaignData, participations) {
   // Scheduled date + time range
   const scheduledEl = document.getElementById("campaignScheduled");
   if (scheduledEl) {
-    if (campaignData.scheduled_date && campaignData.start_time) {
-      const dateLocale2 = lang === "bg" ? "bg-BG" : "en-US";
-      const [yr, mo, dy] = campaignData.scheduled_date.split("-");
-      const scheduledFormatted = new Date(+yr, +mo - 1, +dy).toLocaleDateString(dateLocale2, {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-      const startFmt = campaignData.start_time.slice(0, 5);
-      if (campaignData.end_time) {
-        const endFmt = campaignData.end_time.slice(0, 5);
-        scheduledEl.textContent = `${scheduledFormatted} · ${t("campaign.timeRange").replace("{start}", startFmt).replace("{end}", endFmt)}`;
-      } else {
-        scheduledEl.textContent = `${scheduledFormatted} · ${startFmt}`;
-      }
-    } else {
-      scheduledEl.textContent = t("campaign.noDate") || "Time TBD";
-    }
+    const formatted = formatScheduledDate(campaignData, lang, "long");
+    scheduledEl.textContent = formatted || t("campaign.noDate") || "Time TBD";
   }
 
   // Created date
@@ -388,20 +378,9 @@ function initializeDetailMap(lat, lng) {
     /* plain string */
   }
 
-  let popupTime = "";
-  if (campaign.scheduled_date && campaign.start_time) {
-    const [yr, mo, dy] = campaign.scheduled_date.split("-");
-    const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
-    const locale = lang === "bg" ? "bg-BG" : "en-US";
-    const dateFmt = new Date(+yr, +mo - 1, +dy).toLocaleDateString(locale, {
-      day: "numeric",
-      month: "short",
-    });
-    const startFmt = campaign.start_time.slice(0, 5);
-    popupTime = campaign.end_time
-      ? `<br><small>📅 ${dateFmt} · ${startFmt} – ${campaign.end_time.slice(0, 5)}</small>`
-      : `<br><small>📅 ${dateFmt} · ${startFmt}</small>`;
-  }
+  const popupLang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+  const popupDateStr = formatScheduledDate(campaign, popupLang, "short");
+  const popupTime = popupDateStr ? `<br><small>📅 ${popupDateStr}</small>` : "";
 
   // Add marker for campaign location
   L.marker([lat, lng], {
@@ -529,16 +508,22 @@ async function handleJoin() {
     }
 
     // Show success message
-    await showSuccessToast("Joined! Upload your after photo to submit proof.");
+    await showSuccessToast(t("campaign.joined"));
 
     // Update UI
     showParticipationUI();
   } catch (error) {
-    await Swal.fire({
-      icon: "error",
-      title: "Error",
-      text: error.message || "Failed to join campaign. Please try again.",
-    });
+    const isAlreadyJoined =
+      error.message?.includes("duplicate") || error.message?.includes("unique");
+    if (isAlreadyJoined) {
+      await showInfoToast(t("campaign.alreadyJoined"));
+    } else {
+      await Swal.fire({
+        icon: "error",
+        title: t("common.error"),
+        text: error.message || t("common.error"),
+      });
+    }
 
     joinBtn.disabled = false;
   }
@@ -633,7 +618,7 @@ async function handleUploadPhoto() {
     userParticipation.status = "pending";
 
     // Show success
-    await showSuccessToast("Proof submitted for admin approval!");
+    await showSuccessToast(t("campaign.proofSubmitted"));
 
     // Show status message
     showSubmissionStatus("pending");
@@ -717,7 +702,7 @@ async function handleDelete() {
     }
 
     // Success notification
-    await showSuccessToast("Campaign deleted successfully.");
+    await showSuccessToast(t("campaign.deleteSuccess"));
 
     // Redirect to dashboard
     window.location.href = "/dashboard";
@@ -889,7 +874,7 @@ async function handleSaveCampaign(e) {
       statusBadge.className = `badge-status badge-${newStatus}`;
 
       Swal.close();
-      await showSuccessToast("Campaign updated successfully!");
+      await showSuccessToast(t("campaign.updateSuccess"));
 
       toggleEditCampaign();
     } else {
@@ -925,7 +910,7 @@ async function handleSaveCampaign(e) {
       statusBadge.className = `badge-status badge-${newStatus}`;
 
       Swal.close();
-      await showSuccessToast("Campaign updated successfully!");
+      await showSuccessToast(t("campaign.updateSuccess"));
 
       toggleEditCampaign();
     }

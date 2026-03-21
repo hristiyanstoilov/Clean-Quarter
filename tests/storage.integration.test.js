@@ -73,7 +73,7 @@ describe('storage.js integration', () => {
     await expect(uploadCampaignPhoto(file, 'folder')).rejects.toThrow('Upload failed');
   });
 
-  it('returns publicUrl even if getPublicUrl returns no data', async () => {
+  it('throws if getPublicUrl returns no publicUrl', async () => {
     vi.resetModules();
     class MockURL {
       constructor(url) { this.href = url; }
@@ -92,8 +92,7 @@ describe('storage.js integration', () => {
     }));
     const { uploadCampaignPhoto } = await import('../src/services/storage.js');
     const file = new Blob(['test'], { type: 'image/png', name: 'file.png' });
-    const url = await uploadCampaignPhoto(file, 'folder');
-    expect(url).toBeUndefined();
+    await expect(uploadCampaignPhoto(file, 'folder')).rejects.toThrow('Upload succeeded but URL is missing');
   });
 
   it('throws if Supabase delete fails', async () => {

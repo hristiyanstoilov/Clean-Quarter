@@ -34,7 +34,7 @@ export async function uploadCampaignPhoto(file, folderName = "photos") {
     if (error) throw new Error(`Upload failed: ${error.message}`);
     // Get public URL
     const { data: publicUrlData } = supabase.storage.from("campaign-photos").getPublicUrl(filePath);
-    if (!publicUrlData || !publicUrlData.publicUrl) return undefined;
+    if (!publicUrlData?.publicUrl) throw new Error("Upload succeeded but URL is missing");
     return publicUrlData.publicUrl;
   } catch (error) {
     await handleError("uploadCampaignPhoto", error, "Failed to upload photo. Please try again.");
@@ -84,7 +84,7 @@ export async function uploadAvatar(file, userId) {
     });
     if (error) throw new Error(`Upload failed: ${error.message}`);
     const { data: publicUrlData } = supabase.storage.from("avatars").getPublicUrl(fileName);
-    if (!publicUrlData || !publicUrlData.publicUrl) return undefined;
+    if (!publicUrlData?.publicUrl) throw new Error("Upload succeeded but URL is missing");
     return publicUrlData.publicUrl;
   } catch (error) {
     await handleError("uploadAvatar", error, "Failed to upload avatar. Please try again.");

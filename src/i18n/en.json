@@ -222,7 +222,12 @@
     "categoryWater": "Water",
     "categoryOther": "Other",
     "categoryNone": "No category",
-    "categoryPlaceholder": "-- Select category --"
+    "categoryPlaceholder": "-- Select category --",
+    "joined": "Joined! Upload your after photo to submit proof.",
+    "proofSubmitted": "Proof submitted for admin approval!",
+    "updateSuccess": "Campaign updated successfully!",
+    "deleteSuccess": "Campaign deleted successfully.",
+    "alreadyJoined": "You have already joined this campaign."
   },
   "stats": {
     "pageTitle": "Community Impact — Clean Quarter",
@@ -397,6 +402,7 @@
     "cancel": "Cancel",
     "delete": "Delete",
     "username": "Username",
-    "submit": "Submit"
+    "submit": "Submit",
+    "uploadFailed": "Upload failed. Please try again."
   }
 }

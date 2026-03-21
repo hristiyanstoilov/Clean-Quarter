@@ -1,4 +1,4 @@
-import { capitalize, applyPasswordChecklist } from "../src/utils/helpers.js";
+import { capitalize, applyPasswordChecklist, formatScheduledDate } from "../src/utils/helpers.js";
 
 describe("helpers.js — capitalize", () => {
   it("capitalizes first letter", () => {
@@ -184,5 +184,67 @@ describe("applyPasswordChecklist", () => {
     ["length", "uppercase", "lowercase", "digit"].forEach((key) => {
       expect(env.indicators[key].classList.has("text-success")).toBe(true);
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// formatScheduledDate
+// ---------------------------------------------------------------------------
+
+describe("formatScheduledDate", () => {
+  const campaign = {
+    scheduled_date: "2026-03-15",
+    start_time: "10:00:00",
+    end_time: "12:00:00",
+  };
+
+  it("returns empty string when scheduled_date is missing", () => {
+    expect(formatScheduledDate({ start_time: "10:00" }, "bg")).toBe("");
+  });
+
+  it("returns empty string when start_time is missing", () => {
+    expect(formatScheduledDate({ scheduled_date: "2026-03-15" }, "bg")).toBe("");
+  });
+
+  it("returns empty string for null/undefined campaign", () => {
+    expect(formatScheduledDate(null, "bg")).toBe("");
+    expect(formatScheduledDate(undefined, "bg")).toBe("");
+  });
+
+  it("short format includes sliced start_time HH:MM", () => {
+    const result = formatScheduledDate(campaign, "en", "short");
+    expect(result).toContain("10:00");
+  });
+
+  it("short format includes end_time when present", () => {
+    const result = formatScheduledDate(campaign, "en", "short");
+    expect(result).toContain("12:00");
+    expect(result).toContain("–");
+  });
+
+  it("short format omits end_time separator when end_time absent", () => {
+    const c = { scheduled_date: "2026-03-15", start_time: "10:00:00" };
+    const result = formatScheduledDate(c, "en", "short");
+    expect(result).toContain("10:00");
+    expect(result).not.toContain("–");
+  });
+
+  it("long format includes year", () => {
+    const result = formatScheduledDate(campaign, "en", "long");
+    expect(result).toContain("2026");
+  });
+
+  it("defaults to short format when format argument is omitted", () => {
+    const short = formatScheduledDate(campaign, "en", "short");
+    const defaultFmt = formatScheduledDate(campaign, "en");
+    expect(defaultFmt).toBe(short);
+  });
+
+  it("bg locale produces different output than en locale", () => {
+    const en = formatScheduledDate(campaign, "en", "short");
+    const bg = formatScheduledDate(campaign, "bg", "short");
+    // Both contain times but locale formatting differs
+    expect(en).toContain("10:00");
+    expect(bg).toContain("10:00");
   });
 });

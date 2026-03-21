@@ -553,6 +553,30 @@ export function formatValue(value, symbol = "⭐") {
 }
 
 /**
+ * Format a campaign's scheduled date and time into a human-readable string.
+ *
+ * @param {{ scheduled_date: string, start_time: string, end_time?: string }} campaign
+ * @param {string} lang - Language code ('bg' | 'en')
+ * @param {'short'|'long'} format - 'short' = "1 мар", 'long' = "1 март 2026"
+ * @returns {string} e.g. "1 мар · 10:00 – 12:00" or "" if no date/time
+ */
+export function formatScheduledDate(campaign, lang, format = "short") {
+  if (!campaign?.scheduled_date || !campaign?.start_time) return "";
+  const [yr, mo, dy] = campaign.scheduled_date.split("-");
+  const locale = lang === "bg" ? "bg-BG" : "en-US";
+  const opts =
+    format === "long"
+      ? { year: "numeric", month: "long", day: "numeric" }
+      : { day: "numeric", month: "short" };
+  const dateFmt = new Date(+yr, +mo - 1, +dy).toLocaleDateString(locale, opts);
+  const startFmt = campaign.start_time.slice(0, 5);
+  if (campaign.end_time) {
+    return `${dateFmt} · ${startFmt} – ${campaign.end_time.slice(0, 5)}`;
+  }
+  return `${dateFmt} · ${startFmt}`;
+}
+
+/**
  * Wire live password strength checklist to an input element.
  * Toggles text-success / text-danger on the four checklist items as the user types.
  *
