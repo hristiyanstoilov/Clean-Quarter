@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="bg">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title data-i18n="stats.pageTitle">Community Impact — Clean Quarter</title>
+    <meta
+      name="description"
+      content="Clean Quarter community impact statistics — cleanups organized, volunteers, points earned."
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <link rel="stylesheet" href="../assets/style.css" />
+
+    <style>
+      body {
+        background: #f8f9fa;
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+      }
+
+      .stats-hero {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        padding: 3rem 2rem 2rem;
+        text-align: center;
+      }
+      .stats-hero h1 {
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+      }
+      .stats-hero p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin: 0;
+      }
+
+      .stat-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        padding: 2rem 1.5rem;
+        text-align: center;
+        height: 100%;
+        transition: transform 0.2s;
+      }
+      .stat-card:hover {
+        transform: translateY(-4px);
+      }
+      .stat-icon {
+        font-size: 2.2rem;
+        margin-bottom: 0.75rem;
+      }
+      .stat-value {
+        font-size: 2.8rem;
+        font-weight: 800;
+        color: #28a745;
+        line-height: 1;
+      }
+      .stat-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-top: 0.5rem;
+        font-weight: 500;
+      }
+
+      .section-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        padding: 2rem;
+        margin-bottom: 2rem;
+      }
+      .section-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .leaderboard-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .leaderboard-row:last-child {
+        border-bottom: none;
+      }
+      .leaderboard-rank {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+      }
+      .rank-1 {
+        background: #ffd700;
+        color: #7a5900;
+      }
+      .rank-2 {
+        background: #c0c0c0;
+        color: #555;
+      }
+      .rank-3 {
+        background: #cd7f32;
+        color: #fff;
+      }
+      .rank-other {
+        background: #e9ecef;
+        color: #495057;
+      }
+      .leaderboard-name {
+        flex: 1;
+        font-weight: 600;
+        color: #2d3748;
+      }
+      .leaderboard-points {
+        color: #28a745;
+        font-weight: 700;
+        font-size: 0.95rem;
+      }
+      .leaderboard-participants {
+        color: #6c757d;
+        font-size: 0.8rem;
+      }
+
+      .category-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin: 0.25rem;
+      }
+      .cat-park {
+        background: #e8f5e9;
+        color: #2e7d32;
+      }
+      .cat-street {
+        background: #e3f2fd;
+        color: #1565c0;
+      }
+      .cat-water {
+        background: #e0f7fa;
+        color: #00695c;
+      }
+      .cat-other {
+        background: #f3e5f5;
+        color: #6a1b9a;
+      }
+
+      .cta-section {
+        background: linear-gradient(135deg, #dc3545 0%, #ff6b6b 100%);
+        color: white;
+        border-radius: 16px;
+        padding: 2.5rem 2rem;
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+      .cta-section h2 {
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+      }
+      .cta-section p {
+        opacity: 0.9;
+        margin-bottom: 1.5rem;
+      }
+
+      .stats-nav {
+        background: rgba(0, 0, 0, 0.15);
+        padding: 0.75rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+      .stats-nav a {
+        color: white;
+        text-decoration: none;
+        font-size: 0.9rem;
+        opacity: 0.9;
+      }
+      .stats-nav a:hover {
+        opacity: 1;
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Hero Header -->
+    <div class="stats-hero">
+      <div class="stats-nav">
+        <a href="/dashboard" data-i18n="nav.dashboard">🏠 Home</a>
+        <a href="/" data-i18n="stats.loginRegister">Login / Register</a>
+      </div>
+      <div style="padding-top: 1.5rem">
+        <h1 data-i18n="stats.title">🌿 Community Impact</h1>
+        <p data-i18n="stats.subtitle">Clean Quarter in numbers</p>
+      </div>
+    </div>
+
+    <div class="container py-4">
+      <!-- Loading -->
+      <div id="loadingState" class="text-center py-5">
+        <div class="spinner-border text-success" role="status"></div>
+        <p class="mt-2 text-muted" data-i18n="stats.loading">Loading stats...</p>
+      </div>
+
+      <!-- Stats Content -->
+      <div id="statsContent" style="display: none">
+        <!-- 4 stat cards -->
+        <div class="row g-3 mb-4" id="statCards">
+          <div class="col-6 col-md-3">
+            <div class="stat-card">
+              <div class="stat-icon">🧹</div>
+              <div class="stat-value" id="statCampaigns">—</div>
+              <div class="stat-label" data-i18n="stats.totalCampaigns">Campaigns Organized</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card">
+              <div class="stat-icon">🙋</div>
+              <div class="stat-value" id="statVolunteers">—</div>
+              <div class="stat-label" data-i18n="stats.totalVolunteers">Volunteers</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card">
+              <div class="stat-icon">✅</div>
+              <div class="stat-value" id="statCleanups">—</div>
+              <div class="stat-label" data-i18n="stats.totalCleanups">Cleanups Completed</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card">
+              <div class="stat-icon">⭐</div>
+              <div class="stat-value" id="statPoints">—</div>
+              <div class="stat-label" data-i18n="stats.totalPoints">Points Earned</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Neighborhood rankings + Category breakdown side by side on md+ -->
+        <div class="row g-3 mb-4">
+          <div class="col-md-7">
+            <div class="section-card h-100">
+              <div class="section-title">
+                🏆 <span data-i18n="stats.neighborhoodRankings">Neighborhood Rankings</span>
+              </div>
+              <div id="neighborhoodList">
+                <p class="text-muted" data-i18n="leaderboard.noData">No data yet</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-5">
+            <div class="section-card h-100">
+              <div class="section-title">
+                📂 <span data-i18n="stats.categoryBreakdown">By Category</span>
+              </div>
+              <div id="categoryList">
+                <p class="text-muted" data-i18n="leaderboard.noData">No data yet</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="cta-section">
+          <h2 data-i18n="stats.ctaTitle">Ready to make a difference?</h2>
+          <p data-i18n="stats.ctaSubtitle">Join thousands of volunteers keeping Sofia clean.</p>
+          <a href="/" class="btn btn-light btn-lg fw-bold" data-i18n="stats.joinCta"
+            >Join the Movement →</a
+          >
+        </div>
+      </div>
+
+      <!-- Error state -->
+      <div id="errorState" style="display: none" class="text-center py-5">
+        <p class="text-danger" data-i18n="common.error">
+          Error loading stats. Please try again later.
+        </p>
+      </div>
+    </div>
+
+    <script type="module" src="../scripts/stats.js"></script>
+  </body>
+</html>
