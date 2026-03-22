@@ -1,6 +1,6 @@
 -- Clean Quarter (Чист Квартал) Database Schema
 -- Full schema snapshot matching production Supabase DB
--- Last synced: 2026-03-21 (migration 20260321075814_fix_rls_auth_uid_initplan)
+-- Last synced: 2026-03-21 (migration 20260321152844_notify_participation_rejected)
 -- Seed data is in supabase/seed.sql
 
 -- ============================================================
@@ -260,24 +260,20 @@ CREATE POLICY "Anyone can view active campaigns" ON campaigns
 CREATE POLICY "Authenticated users can create campaigns" ON campaigns
   FOR INSERT WITH CHECK ((SELECT auth.uid()) IS NOT NULL);
 
-CREATE POLICY "Users can update own campaigns" ON campaigns
-  FOR UPDATE USING (created_by = (SELECT auth.uid()));
-
-CREATE POLICY "Admins can update any campaign" ON campaigns
+CREATE POLICY "campaigns_update" ON campaigns
   FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = (SELECT auth.uid()) AND role = 'admin')
+    created_by = (SELECT auth.uid())
+    OR public.current_user_is_admin()
   );
 
-CREATE POLICY "Users can delete own campaigns without external participants" ON campaigns
+CREATE POLICY "campaigns_delete" ON campaigns
   FOR DELETE TO authenticated
   USING (
-    (created_by = (SELECT auth.uid()))
-    AND (NOT campaign_has_external_participants(id, (SELECT auth.uid())))
-  );
-
-CREATE POLICY "Admins can delete any campaign" ON campaigns
-  FOR DELETE USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = (SELECT auth.uid()) AND role = 'admin')
+    (
+      created_by = (SELECT auth.uid())
+      AND NOT public.campaign_has_external_participants(id, (SELECT auth.uid()))
+    )
+    OR public.current_user_is_admin()
   );
 
 -- ── comments ──────────────────────────────────────────────
@@ -374,30 +370,23 @@ CREATE POLICY "Authenticated users can view participations" ON participations
 CREATE POLICY "Users can create participations" ON participations
   FOR INSERT WITH CHECK (user_id = (SELECT auth.uid()));
 
-CREATE POLICY "Users can update own participations" ON participations
-  FOR UPDATE USING (user_id = (SELECT auth.uid()));
-
-CREATE POLICY "Admins can update any participation" ON participations
+CREATE POLICY "participations_update" ON participations
   FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = (SELECT auth.uid()) AND role = 'admin')
+    user_id = (SELECT auth.uid())
+    OR public.current_user_is_admin()
   );
 
 -- ── point_transactions ─────────────────────────────────────
 CREATE POLICY "Admins can insert transactions" ON point_transactions
   FOR INSERT TO authenticated
-  WITH CHECK (
-    EXISTS (SELECT 1 FROM profiles WHERE id = (SELECT auth.uid()) AND role = 'admin')
-  );
+  WITH CHECK (public.current_user_is_admin());
 
-CREATE POLICY "Admins can view all transactions" ON point_transactions
+CREATE POLICY "point_transactions_select" ON point_transactions
   FOR SELECT TO authenticated
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = (SELECT auth.uid()) AND role = 'admin')
+    user_id = (SELECT auth.uid())
+    OR public.current_user_is_admin()
   );
-
-CREATE POLICY "Users can view own transactions" ON point_transactions
-  FOR SELECT TO authenticated
-  USING (user_id = (SELECT auth.uid()));
 
 -- ── profiles ───────────────────────────────────────────────
 CREATE POLICY "Authenticated users can view profiles" ON profiles
@@ -408,12 +397,10 @@ CREATE POLICY "Users can insert own profile" ON profiles
   FOR INSERT TO authenticated
   WITH CHECK (id = (SELECT auth.uid()));
 
-CREATE POLICY "Users can update own profile" ON profiles
-  FOR UPDATE USING (id = (SELECT auth.uid()));
-
-CREATE POLICY "Superadmins can update any profile role" ON profiles
+CREATE POLICY "profiles_update" ON profiles
   FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM profiles p WHERE p.id = (SELECT auth.uid()) AND p.is_superadmin = true)
+    id = (SELECT auth.uid())
+    OR public.current_user_is_superadmin()
   );
 
 -- ── push_subscriptions ─────────────────────────────────────
@@ -433,20 +420,15 @@ CREATE POLICY "push_subscriptions_delete_own" ON push_subscriptions
 CREATE POLICY "Authenticated users can create reports" ON reports
   FOR INSERT WITH CHECK ((SELECT auth.uid()) IS NOT NULL);
 
-CREATE POLICY "Admins can view all reports" ON reports
+CREATE POLICY "reports_select" ON reports
   FOR SELECT TO authenticated
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = (SELECT auth.uid()) AND role = 'admin')
+    reported_by = (SELECT auth.uid())
+    OR public.current_user_is_admin()
   );
-
-CREATE POLICY "Users can view own reports" ON reports
-  FOR SELECT TO authenticated
-  USING (reported_by = (SELECT auth.uid()));
 
 CREATE POLICY "Admins can update reports" ON reports
-  FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = (SELECT auth.uid()) AND role = 'admin')
-  );
+  FOR UPDATE USING (public.current_user_is_admin());
 
 -- ── rewards ────────────────────────────────────────────────
 CREATE POLICY "Anyone see rewards" ON rewards
@@ -549,6 +531,27 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
+-- ── Check if current user is admin ────────────────────────────────
+-- SECURITY DEFINER avoids RLS recursion when called from policies.
+CREATE OR REPLACE FUNCTION public.current_user_is_admin()
+RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = ''
+AS $$
+  SELECT COALESCE(
+    (SELECT role = 'admin' FROM public.profiles WHERE id = auth.uid()),
+    false
+  );
+$$;
+
+-- ── Check if current user is superadmin (avoids RLS recursion) ────
+CREATE OR REPLACE FUNCTION public.current_user_is_superadmin()
+RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = ''
+AS $$
+  SELECT COALESCE(
+    (SELECT is_superadmin FROM public.profiles WHERE id = auth.uid()),
+    false
+  );
+$$;
+
 -- ── Enforce profile role protection ───────────────────────
 CREATE OR REPLACE FUNCTION public.enforce_profile_role_protection()
 RETURNS TRIGGER LANGUAGE plpgsql
@@ -646,7 +649,7 @@ BEGIN
       VALUES (
         v_participant_id,
         'campaign_update',
-        'Campaign "' || v_campaign_title || '" has been completed!',
+        json_build_object('key', 'notification.campaignCompleted', 'title', v_campaign_title)::text,
         NEW.id
       );
     END LOOP;
@@ -678,7 +681,7 @@ BEGIN
     VALUES (
       v_campaign_creator,
       'campaign_update',
-      v_user_name || ' joined your campaign "' || v_campaign_title || '"',
+      json_build_object('key', 'notification.campaignJoin', 'username', v_user_name, 'title', v_campaign_title)::text,
       NEW.campaign_id,
       NEW.id
     );
@@ -703,7 +706,7 @@ BEGIN
     VALUES (
       NEW.user_id,
       'approval',
-      'Your participation has been approved! You earned ' || NEW.points_earned || ' points.',
+      json_build_object('key', 'notification.participationApproved', 'points', NEW.points_earned)::text,
       NEW.id
     );
   END IF;
@@ -765,7 +768,7 @@ BEGIN
     VALUES (
       v_campaign_creator,
       'campaign_update',
-      v_commenter_name || ' commented on your campaign "' || v_campaign_title || '"',
+      json_build_object('key', 'notification.newComment', 'username', v_commenter_name, 'title', v_campaign_title)::text,
       NEW.campaign_id::uuid
     );
   END IF;
@@ -790,7 +793,7 @@ BEGIN
     VALUES (
       NEW.user_id,
       'points',
-      'You earned ' || NEW.amount || ' points!',
+      json_build_object('key', 'notification.pointsEarned', 'points', NEW.amount)::text,
       NEW.participation_id
     );
   END IF;
@@ -814,7 +817,7 @@ BEGIN
     VALUES (
       NEW.reported_by,
       'moderation',
-      'Your report has been reviewed and resolved.',
+      json_build_object('key', 'notification.reportResolved')::text,
       NEW.id
     );
   END IF;
@@ -825,6 +828,31 @@ $$;
 CREATE TRIGGER trigger_notify_report_resolved
   AFTER UPDATE ON reports
   FOR EACH ROW EXECUTE FUNCTION notify_report_resolved();
+
+-- ── Notify when participation is rejected ─────────────────
+CREATE OR REPLACE FUNCTION public.notify_participation_rejected()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = 'public'
+AS $$
+BEGIN
+  IF NEW.status = 'rejected' AND (OLD.status IS NULL OR OLD.status != 'rejected') THEN
+    INSERT INTO notifications (user_id, type, message, participation_id)
+    VALUES (
+      NEW.user_id,
+      'approval',
+      json_build_object(
+        'key',    'notification.participationRejected',
+        'reason', COALESCE(NEW.rejection_reason, '')
+      )::text,
+      NEW.id
+    );
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER trigger_notify_participation_rejected
+  AFTER UPDATE ON participations
+  FOR EACH ROW EXECUTE FUNCTION notify_participation_rejected();
 
 -- ── Prevent duplicate reports within 24 hours ─────────────
 CREATE OR REPLACE FUNCTION public.check_duplicate_report()
