@@ -18,6 +18,15 @@
     "markAllRead": "Mark all as read",
     "empty": "No notifications"
   },
+  "notification": {
+    "campaignCompleted": "Campaign \"{{title}}\" has been completed!",
+    "campaignJoin": "{{username}} joined your campaign \"{{title}}\"",
+    "participationApproved": "Your participation has been approved! You earned {{points}} points.",
+    "newComment": "{{username}} commented on your campaign \"{{title}}\"",
+    "pointsEarned": "You earned {{points}} points!",
+    "reportResolved": "Your report has been reviewed and resolved.",
+    "participationRejected": "Your participation was rejected. Reason: {{reason}}"
+  },
   "auth": {
     "login": "Login",
     "register": "Register",
@@ -57,7 +66,8 @@
     "requiredFields": "Required fields:",
     "acceptTermsLabel": "I have read and accept the",
     "termsLink": "Terms and Privacy Policy",
-    "ageConfirmation": "I confirm that I am 16 years or older. I understand that participation in cleanup is voluntary and at my own risk, and the Organizer is not liable for accidents."
+    "ageConfirmation": "I confirm that I am 16 years or older. I understand that participation in cleanup is voluntary and at my own risk, and the Organizer is not liable for accidents.",
+    "passwordBreached": "This password has appeared in data breaches. Please choose a different password."
   },
   "neighborhoods": {
     "vitoshaVec": "Vitosha (VEC)",

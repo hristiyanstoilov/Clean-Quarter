@@ -253,3 +253,148 @@ describe("Notification bell — i18n keys present in all 4 files", () => {
     });
   });
 });
+
+// ─── Notification i18n keys ───────────────────────────────────────────────────
+
+describe("Notification i18n — notification.* keys in all 4 files", () => {
+  const i18nFiles = [
+    { lang: "BG (src)", path: "src/i18n/bg.json" },
+    { lang: "EN (src)", path: "src/i18n/en.json" },
+    { lang: "BG (public)", path: "public/i18n/bg.json" },
+    { lang: "EN (public)", path: "public/i18n/en.json" },
+  ];
+
+  const notifKeys = [
+    "campaignCompleted",
+    "campaignJoin",
+    "participationApproved",
+    "participationRejected",
+    "newComment",
+    "pointsEarned",
+    "reportResolved",
+  ];
+
+  i18nFiles.forEach(({ lang, path }) => {
+    const src = readFileSync(resolve(ROOT, path), "utf-8");
+    it(`${lang}: has "notification" section`, () => {
+      expect(src).toContain('"notification"');
+    });
+    notifKeys.forEach((key) => {
+      it(`${lang}: has "notification.${key}"`, () => {
+        expect(src).toContain(`"${key}"`);
+      });
+    });
+  });
+});
+
+// ─── Notification trigger JSON format ────────────────────────────────────────
+
+describe("Notification triggers — use json_build_object (i18n format)", () => {
+  const migrationSrc = readFileSync(
+    resolve(ROOT, "supabase/migrations/20260321132000_notification_i18n.sql"),
+    "utf-8"
+  );
+  const schemaSrc = readFileSync(resolve(ROOT, "supabase/schema.sql"), "utf-8");
+
+  const triggerKeys = [
+    "notification.campaignCompleted",
+    "notification.campaignJoin",
+    "notification.participationApproved",
+    "notification.newComment",
+    "notification.pointsEarned",
+    "notification.reportResolved",
+  ];
+
+  it("migration uses json_build_object for all triggers", () => {
+    expect(migrationSrc).toContain("json_build_object");
+    const count = (migrationSrc.match(/json_build_object/g) || []).length;
+    expect(count).toBeGreaterThanOrEqual(6);
+  });
+
+  triggerKeys.forEach((key) => {
+    it(`migration stores key "${key}"`, () => {
+      expect(migrationSrc).toContain(`'${key}'`);
+    });
+    it(`schema.sql stores key "${key}"`, () => {
+      expect(schemaSrc).toContain(`'${key}'`);
+    });
+  });
+
+  it("migration does not use hardcoded English notification strings", () => {
+    expect(migrationSrc).not.toContain("has been completed!");
+    expect(migrationSrc).not.toContain("joined your campaign");
+    expect(migrationSrc).not.toContain("You earned");
+    expect(migrationSrc).not.toContain("has been approved");
+    expect(migrationSrc).not.toContain("commented on your campaign");
+  });
+
+  it("resolveMessage helper is present in notifications service", () => {
+    expect(svcSrc).toContain("resolveMessage");
+    expect(svcSrc).toContain("JSON.parse");
+    expect(svcSrc).toContain("data.key");
+  });
+
+  it("notifications service imports i18n t() function", () => {
+    expect(svcSrc).toContain('from "../utils/i18n.js"');
+    expect(svcSrc).toContain("i18nT");
+  });
+
+  it("renderNotifications uses resolveMessage for message display", () => {
+    expect(svcSrc).toContain("resolveMessage(n.message)");
+  });
+
+  it("emptyMsg uses i18n t() instead of hardcoded strings", () => {
+    expect(svcSrc).toContain('i18nT("notifications.empty")');
+    expect(svcSrc).not.toContain('"No notifications"');
+    expect(svcSrc).not.toContain('"Няма известия"');
+  });
+});
+
+// ─── Rejection notification ───────────────────────────────────────────────────
+
+describe("Rejection notification — trigger and icon", () => {
+  const migrationSrc = readFileSync(
+    resolve(ROOT, "supabase/migrations/20260321152844_notify_participation_rejected.sql"),
+    "utf-8"
+  );
+  const schemaSrc = readFileSync(resolve(ROOT, "supabase/schema.sql"), "utf-8");
+
+  it("migration creates notify_participation_rejected function", () => {
+    expect(migrationSrc).toContain("notify_participation_rejected");
+    expect(migrationSrc).toContain("SECURITY DEFINER");
+  });
+
+  it("migration fires on status = 'rejected'", () => {
+    expect(migrationSrc).toContain("'rejected'");
+    expect(migrationSrc).toContain("OLD.status != 'rejected'");
+  });
+
+  it("migration stores participationRejected i18n key", () => {
+    expect(migrationSrc).toContain("'notification.participationRejected'");
+  });
+
+  it("migration includes rejection_reason in JSON payload", () => {
+    expect(migrationSrc).toContain("rejection_reason");
+    expect(migrationSrc).toContain("COALESCE");
+  });
+
+  it("migration creates the trigger on participations table", () => {
+    expect(migrationSrc).toContain("trigger_notify_participation_rejected");
+    expect(migrationSrc).toContain("AFTER UPDATE ON participations");
+  });
+
+  it("schema.sql includes notify_participation_rejected function", () => {
+    expect(schemaSrc).toContain("notify_participation_rejected");
+    expect(schemaSrc).toContain("trigger_notify_participation_rejected");
+  });
+
+  it("iconForNotification detects rejection via JSON key", () => {
+    expect(svcSrc).toContain("notification.participationRejected");
+    expect(svcSrc).toContain("TYPE_ICON.rejected");
+  });
+
+  it("iconForNotification still has legacy plain-text fallback", () => {
+    expect(svcSrc).toContain('"отхвърл"');
+    expect(svcSrc).toContain('"rejected"');
+  });
+});

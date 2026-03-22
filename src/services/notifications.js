@@ -9,6 +9,7 @@
  */
 
 import supabase from "./supabase.js";
+import { t as i18nT } from "../utils/i18n.js";
 
 /**
  * Fetch the latest 20 notifications for a user.
@@ -67,6 +68,23 @@ export function subscribeToNotifications(userId, callback) {
     .subscribe();
 }
 
+// ─── Message resolver ─────────────────────────────────────────────────────────
+
+/**
+ * Resolve a notification message for display.
+ * New messages are stored as JSON {"key":"notification.X","param1":"..."}
+ * and translated via i18n. Old plain-text messages are returned as-is.
+ * @param {string} message
+ * @returns {string}
+ */
+function resolveMessage(message) {
+  try {
+    const data = JSON.parse(message);
+    if (data && data.key) return i18nT(data.key, data);
+  } catch {}
+  return message;
+}
+
 // ─── Icon helpers ─────────────────────────────────────────────────────────────
 
 const TYPE_ICON = {
@@ -77,6 +95,12 @@ const TYPE_ICON = {
 };
 
 function iconForNotification(type, message) {
+  // Structured JSON messages: check the i18n key for rejection
+  try {
+    const data = JSON.parse(message);
+    if (data?.key === "notification.participationRejected") return TYPE_ICON.rejected;
+  } catch {}
+  // Legacy plain-text fallback
   if (type === "approval" && message && message.toLowerCase().includes("отхвърл")) {
     return TYPE_ICON.rejected;
   }
@@ -110,7 +134,7 @@ function timeAgo(dateStr, lang) {
  */
 export function renderNotifications(notifications, lang, onItemClick) {
   const list = document.getElementById("notificationList");
-  const emptyMsg = lang === "en" ? "No notifications" : "Няма известия";
+  const emptyMsg = i18nT("notifications.empty");
   if (!list) return;
 
   if (!notifications.length) {
@@ -123,11 +147,12 @@ export function renderNotifications(notifications, lang, onItemClick) {
       const icon = iconForNotification(n.type, n.message);
       const time = timeAgo(n.created_at, lang);
       const unreadClass = n.is_read ? "" : " notification-item--unread";
+      const msg = resolveMessage(n.message);
       return `
         <div class="notification-item${unreadClass}" data-id="${n.id}" data-campaign="${n.campaign_id || ""}">
           <span class="notification-icon">${icon}</span>
           <div class="notification-body">
-            <p class="notification-msg">${n.message}</p>
+            <p class="notification-msg">${msg}</p>
             <span class="notification-time">${time}</span>
           </div>
           ${!n.is_read ? '<span class="notification-dot"></span>' : ""}

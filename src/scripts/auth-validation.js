@@ -1,5 +1,7 @@
 // Live password validation and strength checking
 import { applyPasswordChecklist } from "../utils/helpers.js";
+import { isPasswordPwned } from "../utils/hibp.js";
+import { t } from "../utils/i18n.js";
 
 document.addEventListener("DOMContentLoaded", function () {
   applyPasswordChecklist(document.getElementById("registerPassword"), {
@@ -22,7 +24,18 @@ document.addEventListener("click", function (event) {
 document.addEventListener("DOMContentLoaded", function () {
   const registerForm = document.getElementById("registerForm");
   if (registerForm) {
-    registerForm.addEventListener("submit", function (e) {
+    let hibpCleared = false;
+
+    // Reset HIBP clearance whenever the password changes — ensures every new
+    // password value is checked, even if a previous value already passed.
+    const passwordInput = document.getElementById("registerPassword");
+    if (passwordInput) {
+      passwordInput.addEventListener("input", () => {
+        hibpCleared = false;
+      });
+    }
+
+    registerForm.addEventListener("submit", async function (e) {
       const acceptTerms = document.getElementById("acceptTerms");
       const acceptRisk = document.getElementById("acceptRisk");
 
@@ -46,6 +59,23 @@ document.addEventListener("DOMContentLoaded", function () {
           confirmButtonColor: "#28a745",
         });
         return;
+      }
+
+      // HIBP breach check — skip if already cleared (second submit after check)
+      if (!hibpCleared) {
+        e.preventDefault();
+        const pwned = passwordInput ? await isPasswordPwned(passwordInput.value) : false;
+        if (pwned) {
+          Swal.fire({
+            title: "Грешка",
+            text: t("auth.passwordBreached"),
+            icon: "warning",
+            confirmButtonColor: "#28a745",
+          });
+          return;
+        }
+        hibpCleared = true;
+        registerForm.requestSubmit();
       }
     });
   }
