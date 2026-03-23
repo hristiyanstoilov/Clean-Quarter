@@ -137,6 +137,66 @@ describe("Netlify _headers — CSP directives", () => {
   it("CSP has default-src 'self'", () => {
     expect(cspLine).toContain("default-src 'self'");
   });
+
+  it("admin.html does not load scripts or styles from unpkg.com (not in CSP)", () => {
+    const adminHtml = readFileSync(resolve(ROOT, "src/pages/admin.html"), "utf-8");
+    expect(adminHtml).not.toContain("unpkg.com");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// campaign-detail.js — i18n completeness
+// ---------------------------------------------------------------------------
+
+describe("campaign-detail.js — no hardcoded EN status strings", () => {
+  const cdSrc = readFileSync(resolve(ROOT, "src/scripts/campaign-detail.js"), "utf-8");
+
+  it("showSubmissionStatus uses t() for joined status (not hardcoded EN)", () => {
+    expect(cdSrc).not.toContain('"Upload your after photo to submit proof."');
+    expect(cdSrc).toContain('t("campaign.joined")');
+  });
+
+  it("showSubmissionStatus uses t() for pending status (not hardcoded EN)", () => {
+    expect(cdSrc).not.toContain('"Waiting for admin approval..."');
+    expect(cdSrc).toContain('t("campaign.proofSubmitted")');
+  });
+
+  it("showSubmissionStatus uses t() for approved status (not hardcoded EN)", () => {
+    expect(cdSrc).not.toContain('"Your proof has been approved! Points awarded."');
+    expect(cdSrc).toContain('t("campaign.proofApproved")');
+  });
+
+  it("handleDelete Swal uses t() for title and confirm button (not hardcoded EN)", () => {
+    expect(cdSrc).not.toContain('"Delete Campaign?"');
+    expect(cdSrc).not.toContain('"Yes, Delete It"');
+    expect(cdSrc).toContain('t("campaign.deleteTitle")');
+    expect(cdSrc).toContain('t("campaign.deleteConfirm")');
+  });
+
+  it("renderComments hoists localStorage.getItem outside .map() loop", () => {
+    const mapIndex = cdSrc.indexOf("list.innerHTML = comments");
+    const langIndex = cdSrc.indexOf('localStorage.getItem("CLEAN_QUARTER_LANGUAGE")');
+    // langIndex must appear BEFORE mapIndex (hoisted above .map())
+    expect(langIndex).toBeGreaterThan(0);
+    expect(langIndex).toBeLessThan(mapIndex);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// dashboard.js — no inline event handlers
+// ---------------------------------------------------------------------------
+
+describe("dashboard.js — inline event handler hygiene", () => {
+  const dashSrc = readFileSync(resolve(ROOT, "src/scripts/dashboard.js"), "utf-8");
+
+  it("does not use inline onerror= attributes (uses wireImageFallbacks instead)", () => {
+    expect(dashSrc).not.toContain("onerror=");
+  });
+
+  it("defines wireImageFallbacks helper for post-render error wiring", () => {
+    expect(dashSrc).toContain("wireImageFallbacks");
+    expect(dashSrc).toContain("js-campaign-img");
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -156,5 +216,117 @@ describe("Netlify _headers — static asset caching", () => {
     const maxAge = parseInt(maxAgeMatch[1], 10);
     // 1 year = 31536000 seconds
     expect(maxAge).toBeGreaterThanOrEqual(31536000);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// campaign-detail.js — upload & edit Swal i18n
+// ---------------------------------------------------------------------------
+
+describe("campaign-detail.js — upload and edit Swal i18n", () => {
+  const cdSrc = readFileSync(resolve(ROOT, "src/scripts/campaign-detail.js"), "utf-8");
+
+  it("upload Swal uses t() for title (not hardcoded EN)", () => {
+    expect(cdSrc).not.toContain('"Uploading photo..."');
+    expect(cdSrc).toContain('t("campaign.uploadingPhoto")');
+  });
+
+  it("edit validation Swal uses t() for text (not hardcoded EN)", () => {
+    expect(cdSrc).not.toContain('"Title and description are required!"');
+    expect(cdSrc).toContain('t("campaign.editRequiredFields")');
+  });
+
+  it("edit save Swal uses t() for title (not hardcoded EN)", () => {
+    expect(cdSrc).not.toContain('"Saving..."');
+    expect(cdSrc).toContain('t("campaign.saving")');
+  });
+
+  it('edit save Swal uses t("common.loading") for text (not hardcoded EN)', () => {
+    expect(cdSrc).not.toContain('"Please wait"');
+    expect(cdSrc).toContain('t("common.loading")');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// rewards.js — no inline localStorage reads in Swal dialogs
+// ---------------------------------------------------------------------------
+
+describe("rewards.js — Swal dialogs use t() not inline localStorage", () => {
+  const rewardsSrc = readFileSync(resolve(ROOT, "src/scripts/rewards.js"), "utf-8");
+
+  it("handleBuy does not read localStorage inline inside Swal", () => {
+    // All localStorage reads inside handleBuy should be gone
+    expect(rewardsSrc).not.toContain(
+      '(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en"'
+    );
+  });
+
+  it('handleBuy uses t("rewards.confirmPurchaseTitle") for confirmation title', () => {
+    expect(rewardsSrc).toContain('t("rewards.confirmPurchaseTitle")');
+  });
+
+  it('handleBuy uses t("rewards.insufficientPointsTitle") for error title', () => {
+    expect(rewardsSrc).toContain('t("rewards.insufficientPointsTitle")');
+  });
+
+  it('renderRewards uses t() for empty-state strings (not inline ternaries)', () => {
+    expect(rewardsSrc).toContain('t("rewards.noRewardsTitle")');
+    expect(rewardsSrc).toContain('t("rewards.noRewardsText")');
+  });
+
+  it('renderRewards uses t() for button labels', () => {
+    expect(rewardsSrc).toContain('t("rewards.outOfStock")');
+    expect(rewardsSrc).toContain('t("rewards.buyBtn")');
+    expect(rewardsSrc).toContain('t("rewards.notEnoughPoints")');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// create-campaign.js — Swal error i18n
+// ---------------------------------------------------------------------------
+
+describe("create-campaign.js — Swal error uses t() not inline localStorage", () => {
+  const ccSrc = readFileSync(resolve(ROOT, "src/scripts/create-campaign.js"), "utf-8");
+
+  it("catch Swal text uses t() (not inline localStorage ternary)", () => {
+    expect(ccSrc).not.toContain(
+      '(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en"'
+    );
+    expect(ccSrc).toContain('t("createCampaign.createError")');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// admin.js — no unsafe inline onclick with user data
+// ---------------------------------------------------------------------------
+
+describe("admin.js — user data passed via data-* not inline onclick", () => {
+  const adminSrc = readFileSync(resolve(ROOT, "src/scripts/admin.js"), "utf-8");
+
+  it("handleApprove is not called via inline onclick= attribute", () => {
+    expect(adminSrc).not.toContain('onclick="handleApprove(');
+  });
+
+  it("handleReject is not called via inline onclick= attribute", () => {
+    expect(adminSrc).not.toContain('onclick="handleReject(');
+  });
+
+  it("removeAdmin is not called via inline onclick= attribute", () => {
+    expect(adminSrc).not.toContain('onclick="window.removeAdmin(');
+  });
+
+  it("makeAdmin is not called via inline onclick= attribute", () => {
+    expect(adminSrc).not.toContain('onclick="window.makeAdmin(');
+  });
+
+  it("photo thumbnails use data-photo-url (not inline onclick)", () => {
+    expect(adminSrc).toContain("js-photo-modal");
+    expect(adminSrc).toContain("data-photo-url");
+    expect(adminSrc).not.toContain("onclick=\"showPhotoModal(");
+  });
+
+  it("user action buttons use data-action (not inline onclick)", () => {
+    expect(adminSrc).toContain("js-user-action");
+    expect(adminSrc).toContain('data-action=');
   });
 });

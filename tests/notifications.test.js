@@ -72,6 +72,11 @@ describe("Notifications service — Supabase queries", () => {
     expect(svcSrc).toContain("beforeunload");
     expect(svcSrc).toContain("channel.unsubscribe()");
   });
+
+  it("notification click navigates to /campaign/:id route, not /campaign-detail", () => {
+    expect(svcSrc).toContain("/campaign/${notif.campaign_id}");
+    expect(svcSrc).not.toContain("/campaign-detail?id=");
+  });
 });
 
 describe("Notifications service — badge logic", () => {
