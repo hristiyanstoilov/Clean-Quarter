@@ -118,11 +118,28 @@ supabase.rpc('check_login_rate_limit', { p_email: email })
 // Record login attempt (fire-and-forget)
 supabase.rpc('record_login_attempt', { p_email: email })
 
-// Approve participation (admin)
+// Approve participation (admin) — awards points atomically
 supabase.rpc('approve_participation', { participation_id, points })
+
+// Reject participation (admin) — reason is required
+supabase.rpc('reject_participation', { participation_id, reason })
 
 // Set user role (admin)
 supabase.rpc('set_user_role', { target_user_id, new_role })
+
+// Redeem reward (atomic: validates points, deducts balance, decrements stock, logs transaction)
+supabase.rpc('purchase_reward', { p_reward_id: rewardId })
+// Returns: { success: boolean, error?: string }
+
+// Public stats — no auth required (SECURITY DEFINER, bypasses RLS safely)
+supabase.rpc('get_public_stats')
+// Returns: { total_campaigns, total_volunteers, total_cleanups, total_points }
+
+supabase.rpc('get_public_category_stats')
+// Returns: [{ category, campaign_count }]
+
+supabase.rpc('get_public_neighborhood_stats')
+// Returns: [{ neighborhood, total_points, participant_count }]
 ```
 
 ---
@@ -155,5 +172,44 @@ supabase.from('notifications').update({ read: true }).eq('id', notificationId)
 supabase.from('notifications').update({ read: true }).eq('user_id', userId).eq('read', false)
 
 // Realtime subscription
-supabase.channel('notifications').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` }, handler).subscribe()
+supabase.channel(`notifications-user-${userId}`).on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` }, handler).subscribe()
+// Note: store the returned channel and call channel.unsubscribe() on page unload
+```
+
+---
+
+## Event RSVPs
+
+```js
+// RSVP to an event
+supabase.from('event_rsvps').insert({ event_id, user_id })
+
+// Cancel RSVP
+supabase.from('event_rsvps').delete().eq('event_id', eventId).eq('user_id', userId)
+
+// Check if user has RSVPed
+supabase.from('event_rsvps').select('id').eq('event_id', eventId).eq('user_id', userId).single()
+
+// Count RSVPs for an event
+supabase.from('event_rsvps').select('id', { count: 'exact' }).eq('event_id', eventId)
+```
+
+---
+
+## Abuse Reports
+
+```js
+// Submit a report
+supabase.from('reports').insert({
+  reporter_id,       // UUID of reporting user
+  campaign_id,       // UUID (optional — report target)
+  reason,            // 'spam' | 'inappropriate' | 'harassment' | 'fake' | 'other'
+  description,       // TEXT (optional)
+})
+
+// Admin: list pending reports
+supabase.from('reports').select('*, reporter:profiles!reporter_id(username), campaign:campaigns(title)').eq('status', 'pending').order('created_at', { ascending: false })
+
+// Admin: resolve or dismiss
+supabase.from('reports').update({ status: 'resolved' | 'dismissed' }).eq('id', reportId)
 ```
