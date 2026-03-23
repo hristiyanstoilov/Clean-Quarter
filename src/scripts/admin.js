@@ -1079,7 +1079,7 @@ async function loadReports() {
   if (!container) return;
 
   if (isDemoUser(currentUser)) {
-    container.innerHTML = `<p class="text-muted" data-i18n="admin.noReports">${lang === "en" ? "No pending reports" : "Няма нови доклади"}</p>`;
+    container.innerHTML = `<p class="text-muted" data-i18n="admin.noReports">${t("admin.noReports")}</p>`;
     return;
   }
 
@@ -1095,7 +1095,7 @@ async function loadReports() {
     if (error) throw error;
 
     if (!reports || reports.length === 0) {
-      container.innerHTML = `<p class="text-muted" data-i18n="admin.noReports">${lang === "en" ? "No pending reports" : "Няма нови доклади"}</p>`;
+      container.innerHTML = `<p class="text-muted" data-i18n="admin.noReports">${t("admin.noReports")}</p>`;
       return;
     }
 
@@ -1111,11 +1111,11 @@ async function loadReports() {
         });
         const reporter = r.reporter?.username || "—";
         const reasonMap = {
-          spam: lang === "en" ? "Spam" : "Спам",
-          inappropriate: lang === "en" ? "Inappropriate" : "Неподходящо",
-          harassment: lang === "en" ? "Harassment" : "Тормоз",
-          fake: lang === "en" ? "Fake" : "Фалшиво",
-          other: lang === "en" ? "Other" : "Друго",
+          spam: t("campaign.reportReasonSpam"),
+          inappropriate: t("campaign.reportReasonInappropriate"),
+          harassment: t("campaign.reportReasonHarassment"),
+          fake: t("campaign.reportReasonFake"),
+          other: t("campaign.reportReasonOther"),
         };
         const reason = reasonMap[r.reason] || r.reason;
 
@@ -1127,14 +1127,14 @@ async function loadReports() {
             <td>${r.description ? escapeHTML(r.description) : "—"}</td>
             <td>
               <button class="btn btn-sm btn-success me-1"
-                onclick="handleResolveReport('${r.id}', 'resolved')"
+                data-report-id="${r.id}" data-action="resolved"
                 data-i18n="admin.resolveReport">
-                ${lang === "en" ? "Resolve" : "Реши"}
+                ${t("admin.resolveReport")}
               </button>
               <button class="btn btn-sm btn-secondary"
-                onclick="handleResolveReport('${r.id}', 'dismissed')"
+                data-report-id="${r.id}" data-action="dismissed"
                 data-i18n="admin.dismissReport">
-                ${lang === "en" ? "Dismiss" : "Отхвърли"}
+                ${t("admin.dismissReport")}
               </button>
             </td>
           </tr>`;
@@ -1146,16 +1146,25 @@ async function loadReports() {
         <table class="table table-sm table-bordered">
           <thead>
             <tr>
-              <th data-i18n="admin.reportDate">${lang === "en" ? "Date" : "Дата"}</th>
-              <th data-i18n="admin.reportedBy">${lang === "en" ? "Reported by" : "Докладвано от"}</th>
-              <th data-i18n="admin.reportReason">${lang === "en" ? "Reason" : "Причина"}</th>
-              <th data-i18n="admin.reportDescription">${lang === "en" ? "Description" : "Описание"}</th>
-              <th data-i18n="admin.actions">${lang === "en" ? "Actions" : "Действия"}</th>
+              <th data-i18n="admin.reportDate">${t("admin.reportDate")}</th>
+              <th data-i18n="admin.reportedBy">${t("admin.reportedBy")}</th>
+              <th data-i18n="admin.reportReason">${t("admin.reportReason")}</th>
+              <th data-i18n="admin.reportDescription">${t("admin.reportDescription")}</th>
+              <th data-i18n="admin.actions">${t("admin.actions")}</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
         </table>
       </div>`;
+
+    container.addEventListener(
+      "click",
+      (e) => {
+        const btn = e.target.closest("[data-report-id]");
+        if (btn) handleResolveReport(btn.dataset.reportId, btn.dataset.action);
+      },
+      { once: true }
+    );
   } catch (e) {
     logger.error("Error loading reports:", e);
   }
@@ -1183,14 +1192,7 @@ async function handleResolveReport(reportId, newStatus) {
     return;
   }
 
-  const msg =
-    newStatus === "resolved"
-      ? lang === "en"
-        ? "Report resolved."
-        : "Докладът е разрешен."
-      : lang === "en"
-        ? "Report dismissed."
-        : "Докладът е отхвърлен.";
+  const msg = newStatus === "resolved" ? t("admin.reportResolved") : t("admin.reportDismissed");
 
   await Swal.fire({
     icon: "success",

@@ -71,6 +71,7 @@ import { initPasswordStrengthMeter } from "./components/passwordStrength.js";
 import passwordToggle from "./components/passwordToggle.js";
 import { initializePWA } from "./services/pwa.js";
 import { setupGlobalErrorHandling } from "./services/errorHandler.js";
+import { t } from "./utils/i18n.js";
 // Lazy-load non-critical modules for performance
 let initI18n, setLanguage, applyLanguage;
 
@@ -125,7 +126,7 @@ async function handleLogin(e) {
   } catch (error) {
     await Swal.fire({
       icon: "error",
-      title: "Login Error",
+      title: t("auth.loginErrorTitle"),
       text: error.message,
     });
   }
@@ -143,8 +144,8 @@ async function handleRegister(e) {
   if (!email || !password || !passwordConfirm || !neighborhood) {
     await Swal.fire({
       icon: "error",
-      title: "Грешка",
-      text: "Всички полета са задължителни!",
+      title: t("common.error"),
+      text: t("auth.allFieldsRequired"),
     });
     return;
   }
@@ -152,15 +153,15 @@ async function handleRegister(e) {
   if (password !== passwordConfirm) {
     await Swal.fire({
       icon: "error",
-      title: "Грешка",
-      text: "Паролите не съвпадат!",
+      title: t("common.error"),
+      text: t("auth.passwordMismatch"),
     });
     return;
   }
 
   const passwordError = rules.password(password);
   if (passwordError) {
-    await Swal.fire({ icon: "error", title: "Слаба парола", text: passwordError });
+    await Swal.fire({ icon: "error", title: t("auth.weakPasswordTitle"), text: passwordError });
     return;
   }
 
@@ -182,8 +183,8 @@ async function handleRegister(e) {
   } catch (error) {
     await Swal.fire({
       icon: "error",
-      title: "Регистрацията неуспешна",
-      text: error.message || "Възникна грешка.",
+      title: t("auth.registerErrorTitle"),
+      text: error.message,
     });
   }
 }

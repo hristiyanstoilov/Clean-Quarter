@@ -42,8 +42,8 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!acceptTerms.checked) {
         e.preventDefault();
         Swal.fire({
-          title: "Грешка",
-          text: "Трябва да приемеш Общите условия и Политиката за поверителност",
+          title: t("common.error"),
+          text: t("auth.acceptTermsRequired"),
           icon: "error",
           confirmButtonColor: "#28a745",
         });
@@ -53,8 +53,8 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!acceptRisk.checked) {
         e.preventDefault();
         Swal.fire({
-          title: "Грешка",
-          text: "Трябва да потвърдиш, че разбираш рисковете и условията на участие",
+          title: t("common.error"),
+          text: t("auth.acceptRiskRequired"),
           icon: "error",
           confirmButtonColor: "#28a745",
         });
