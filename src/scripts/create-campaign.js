@@ -6,6 +6,7 @@ import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
 import { showSuccessToast, initSwalFallback } from "../utils/helpers.js";
 import supabase from "../services/supabase.js";
 import { isDemoUser, addDemoCampaign, addDemoParticipation } from "../utils/demoMode.js";
+import { initNetworkStatusBanner } from "../utils/networkStatus.js";
 
 // Global variables
 let map = null;
@@ -17,6 +18,7 @@ let currentUser = null;
  * Initialize the page on load
  */
 window.addEventListener("DOMContentLoaded", async () => {
+  initNetworkStatusBanner();
   initSwalFallback();
   try {
     // Initialize i18n first (realTime = false)
@@ -52,7 +54,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     setTimeout(() => {
       try {
         initMap();
-      } catch (mapError) {
+      } catch {
         const mapEl = document.getElementById("map");
         if (mapEl) {
           mapEl.style.cssText =
@@ -61,7 +63,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         }
       }
     }, 300);
-  } catch (error) {
+  } catch {
     // silently ignore
   }
 });
@@ -76,7 +78,7 @@ async function checkAuth() {
     try {
       currentUser = JSON.parse(localUser);
       return;
-    } catch (e) {
+    } catch {
       // silently ignore
     }
   }
@@ -466,11 +468,7 @@ async function handleFormSubmit(e) {
     await Swal.fire({
       icon: "error",
       title: t("common.error"),
-      text:
-        error.message ||
-        ((localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg") === "en"
-          ? "Failed to create campaign. Please try again."
-          : "Неуспешно създаване. Опитай отново."),
+      text: error.message || t("createCampaign.createError"),
     });
   } finally {
     // Re-enable submit button and hide spinner
@@ -492,7 +490,7 @@ async function handleLogout() {
     } else {
       throw error;
     }
-  } catch (error) {
+  } catch {
     // silently ignore
   }
 }

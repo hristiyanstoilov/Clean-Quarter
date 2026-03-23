@@ -18,13 +18,11 @@ let enableRealTimeSwitch = true; // Set to false to disable real-time switching
 export async function initI18n(realTime = true) {
   enableRealTimeSwitch = realTime;
   try {
-    // Load Bulgarian translations (from public/i18n/ for production compatibility)
-    const bgResponse = await fetch("/i18n/bg.json");
-    const bgData = await bgResponse.json();
-
-    // Load English translations
-    const enResponse = await fetch("/i18n/en.json");
-    const enData = await enResponse.json();
+    // Load both translation files in parallel
+    const [bgData, enData] = await Promise.all([
+      fetch("/i18n/bg.json").then((r) => r.json()),
+      fetch("/i18n/en.json").then((r) => r.json()),
+    ]);
 
     translations = {
       bg: bgData,

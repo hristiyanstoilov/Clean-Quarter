@@ -666,3 +666,25 @@ button:disabled,
     max-width: 100%;
   }
 }
+
+/* ===== Network Status Banner ===== */
+.network-banner {
+  position: sticky;
+  top: 0;
+  z-index: 1060;
+  width: 100%;
+  padding: 0.45rem 1rem;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: background 0.3s ease;
+}
+.network-banner--offline {
+  background: #dc3545;
+  color: #fff;
+}
+.network-banner--online {
+  background: #28a745;
+  color: #fff;
+}

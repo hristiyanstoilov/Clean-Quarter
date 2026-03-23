@@ -17,12 +17,13 @@ import { t as i18nT } from "../utils/i18n.js";
  * @returns {Promise<Array>}
  */
 export async function fetchNotifications(userId) {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("notifications")
     .select("id, message, type, is_read, campaign_id, created_at")
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(20);
+  if (error) throw error;
   return data || [];
 }
 
@@ -201,7 +202,11 @@ export async function initNotificationBell(userId) {
   let _notifications = [];
 
   async function loadAndRender() {
-    _notifications = await fetchNotifications(userId);
+    try {
+      _notifications = await fetchNotifications(userId);
+    } catch {
+      return; // DB error — bell stays empty, non-critical
+    }
     const unread = _notifications.filter((n) => !n.is_read).length;
     updateBadge(unread);
     renderNotifications(_notifications, lang, async (notif) => {
@@ -217,7 +222,7 @@ export async function initNotificationBell(userId) {
       }
       if (notif.campaign_id) {
         closeDropdown();
-        window.location.href = `/campaign-detail?id=${notif.campaign_id}`;
+        window.location.href = `/campaign/${notif.campaign_id}`;
       }
     });
   }

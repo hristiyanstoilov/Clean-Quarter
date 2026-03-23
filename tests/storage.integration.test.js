@@ -21,6 +21,11 @@ vi.mock('../src/services/supabase.js', () => ({
     }
   }
 }));
+// Mock handleError so Swal is never invoked — tests focus on throw behaviour only
+vi.mock('../src/utils/helpers.js', async (importOriginal) => {
+  const actual = await importOriginal();
+  return { ...actual, handleError: vi.fn(async () => {}) };
+});
 // Robust global Swal mock for all tests in this file
 global.Swal = {
   fire: vi.fn(async () => ({ isConfirmed: true }))

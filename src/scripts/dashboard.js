@@ -16,6 +16,7 @@ import {
 import { isDemoUser, getDemoCampaigns, getDemoRsvps } from "../utils/demoMode.js";
 import { getRsvpCountsForCampaigns } from "../services/events.js";
 import { CLEANUP_POINTS } from "../services/points.js";
+import { initNetworkStatusBanner } from "../utils/networkStatus.js";
 
 // Pagination state
 const PAGE_SIZE = 9;
@@ -32,6 +33,7 @@ let currentCategoryFilter = null;
 
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", async () => {
+  initNetworkStatusBanner();
   try {
     // Initialize i18n first (realTime = false)
     await initI18n(false);
@@ -76,9 +78,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Leaflet is bundled via npm — always available
     const map = initializeMap();
-    setTimeout(() => {
+    const ro = new ResizeObserver(() => {
       map.invalidateSize();
-    }, 300);
+      ro.disconnect();
+    });
+    ro.observe(map.getContainer());
     await loadMapData(map);
 
     await loadCampaignsPage(false);
@@ -123,7 +127,7 @@ function localizeNeighborhood(raw, lang) {
   try {
     const parsed = JSON.parse(raw);
     if (typeof parsed === "object") return parsed[lang] || parsed.bg || parsed.en || raw;
-  } catch (e) {
+  } catch {
     /* plain string */
   }
   // Plain string key — look up i18n
@@ -137,14 +141,12 @@ function localizeNeighborhood(raw, lang) {
  * @param {Object} campaign
  * @param {number} rsvpCount - number of people who plan to attend
  */
-function buildCampaignCard(campaign, rsvpCount = 0) {
-  const currentLang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
-
+function buildCampaignCard(campaign, rsvpCount = 0, currentLang = "bg") {
   let titleObj = campaign.title;
   if (typeof titleObj === "string") {
     try {
       titleObj = JSON.parse(titleObj);
-    } catch (e) {
+    } catch {
       /* use as-is */
     }
   }
@@ -166,7 +168,7 @@ function buildCampaignCard(campaign, rsvpCount = 0) {
       <div class="card campaign-card">
         ${
           campaign.before_photo_url
-            ? `<img src="${campaign.before_photo_url}" class="card-img-top" alt="${escapeHTML(title)}" onerror="this.outerHTML='<div class=\\'card-img-top bg-secondary\\' style=\\'height:200px;display:flex;align-items:center;justify-content:center;\\'><span class=\\'text-white\\'>Няма снимка</span></div>'">`
+            ? `<img src="${campaign.before_photo_url}" class="card-img-top js-campaign-img" loading="lazy" alt="${escapeHTML(title)}">`
             : '<div class="card-img-top bg-secondary" style="height:200px;display:flex;align-items:center;justify-content:center;"><span class="text-white">Няма снимка</span></div>'
         }
         <div class="card-body d-flex flex-column">
@@ -181,6 +183,23 @@ function buildCampaignCard(campaign, rsvpCount = 0) {
         </div>
       </div>
     </div>`;
+}
+
+const IMG_FALLBACK_HTML =
+  '<div class="card-img-top bg-secondary" style="height:200px;display:flex;align-items:center;justify-content:center;">' +
+  '<span class="text-white">Няма снимка</span></div>';
+
+function wireImageFallbacks(container) {
+  container.querySelectorAll("img.js-campaign-img").forEach((img) => {
+    img.addEventListener(
+      "error",
+      function onImgError() {
+        img.style.display = "none";
+        img.insertAdjacentHTML("afterend", IMG_FALLBACK_HTML);
+      },
+      { once: true }
+    );
+  });
 }
 
 /**
@@ -333,13 +352,17 @@ async function loadCampaignsPage(append = false) {
     }
 
     const campaignsContainer = document.getElementById(campaignsContainerId);
-    const html = campaigns.map((c) => buildCampaignCard(c, rsvpCounts[c.id] || 0)).join("");
+    const currentLang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+    const html = campaigns
+      .map((c) => buildCampaignCard(c, rsvpCounts[c.id] || 0, currentLang))
+      .join("");
 
     if (append) {
       campaignsContainer.insertAdjacentHTML("beforeend", html);
     } else {
       campaignsContainer.innerHTML = html;
     }
+    wireImageFallbacks(campaignsContainer);
 
     updateLoadMoreUI();
   } catch (error) {
@@ -378,7 +401,7 @@ async function loadAdminBanner() {
       pendingEl.textContent = count ?? 0;
       banner.style.display = "block";
     }
-  } catch (e) {
+  } catch {
     // не показваме банера при грешка
   }
 }

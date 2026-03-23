@@ -22,6 +22,7 @@ describe('store.js integration', () => {
       clear() { this.store = {}; }
     };
     store.set('persistKey', 'persistValue');
-    expect(global.localStorage.getItem('persistKey')).toBe('persistValue');
+    // store.set() JSON.stringify()s values so raw localStorage contains the serialized form
+    expect(JSON.parse(global.localStorage.getItem('persistKey'))).toBe('persistValue');
   });
 });

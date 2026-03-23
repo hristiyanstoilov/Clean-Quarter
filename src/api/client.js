@@ -1,5 +1,5 @@
 // Named export for testability
-export async function apiFetch(url, options) {
+export async function apiFetch(_url, _options) {
   return { ok: true };
 }
 /**

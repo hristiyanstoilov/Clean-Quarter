@@ -16,7 +16,7 @@ export class Store {
     // Persist to localStorage if available (for test)
     if (typeof localStorage !== "undefined") {
       try {
-        localStorage.setItem(key, value);
+        localStorage.setItem(key, JSON.stringify(value));
       } catch {}
     }
   }
@@ -198,7 +198,7 @@ export class Store {
     this.listeners.forEach((listener) => {
       try {
         listener(this.getState());
-      } catch (error) {
+      } catch {
         // silently ignore
       }
     });
@@ -209,7 +209,7 @@ export class Store {
         this.listeners.forEach((listener) => {
           try {
             listener(this.getState());
-          } catch (error) {
+          } catch {
             // silently ignore
           }
         });

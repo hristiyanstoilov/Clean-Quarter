@@ -14,12 +14,20 @@
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <!-- Leaflet CSS (for admin heatmap) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Leaflet JS -->
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet.heat plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+
     <link rel="stylesheet" href="../assets/style.css" />
 
     <!-- Admin Panel Styles -->
     <link rel="stylesheet" href="../assets/admin.css" />
   </head>
   <body>
+    <div id="networkStatusBanner" role="alert" aria-live="polite" style="display: none"></div>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark" aria-label="Admin navigation">
       <div class="container-fluid">
@@ -293,6 +301,64 @@
           <h2 data-i18n="admin.reports">🚩 Reports</h2>
           <div id="reportsTableContainer">
             <!-- Reports table will be inserted here -->
+          </div>
+        </div>
+
+        <!-- Heatmap Section -->
+        <div
+          class="pending-section"
+          id="heatmapSection"
+          role="region"
+          aria-labelledby="heatmapTitle"
+        >
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 1rem;
+              flex-wrap: wrap;
+              gap: 0.5rem;
+            "
+          >
+            <h2 id="heatmapTitle" style="margin: 0" data-i18n="admin.heatmapTitle">
+              🔥 Pollution Heatmap
+            </h2>
+            <button
+              class="btn btn-outline-success btn-sm"
+              id="heatmapToggleBtn"
+              onclick="toggleHeatmap(this)"
+              aria-expanded="false"
+              aria-controls="heatmapContainer"
+              data-i18n="admin.heatmapShow"
+            >
+              Show Heatmap
+            </button>
+          </div>
+          <div id="heatmapContainer" style="display: none">
+            <div
+              id="adminHeatmap"
+              style="height: 380px; border-radius: 12px; border: 1px solid #dee2e6"
+            ></div>
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-top: 0.5rem;
+              "
+            >
+              <p style="margin: 0; font-size: 0.8rem; color: #6c757d" data-i18n="admin.heatmapHint">
+                Darker red = more cleanups organized in that area.
+              </p>
+              <button
+                class="btn btn-outline-secondary btn-sm"
+                onclick="refreshHeatmap()"
+                data-i18n="admin.heatmapRefresh"
+              >
+                🔄 Refresh
+              </button>
+            </div>
           </div>
         </div>
       </div>
