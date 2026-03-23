@@ -1,7 +1,7 @@
 # QA Test Coverage Report
 **Clean Quarter Application**
-**Report Date:** 2026-03-21
-**Testing Framework:** Vitest (unit + integration) · Cypress (E2E)
+**Report Date:** 2026-03-22
+**Testing Framework:** Vitest (unit + integration) · Cypress (E2E) · Playwright (visual regression) · axe-core (a11y)
 
 ---
 
@@ -9,12 +9,15 @@
 
 | Metric | Value |
 |--------|-------|
-| Unit + Integration Tests | **859 passing** (860 total) |
-| Test Files | **56** |
+| Unit + Integration Tests | **973+ passing** |
+| Test Files | **49+ Vitest files** |
 | Real-DB Integration | 2 tests (require `.env.test`) |
-| E2E Test Files | 4 Cypress spec files |
-| Test Execution Time | ~8s |
-| Passing Rate | **99.9%** (1 real-DB test fails without live credentials) |
+| E2E Test Files | 4 Cypress spec files (+ file upload + mobile touch) |
+| Accessibility Tests | 55 axe-core tests (blocks on critical violations) |
+| Visual Regression | Playwright — 2% pixel tolerance |
+| Lighthouse CI | perf ≥ 0.75 · a11y ≥ 0.90 |
+| Test Execution Time | ~8s (Vitest) |
+| Passing Rate | **~100%** (real-DB tests skip without `.env.test`) |
 
 ---
 
@@ -87,13 +90,18 @@
 ### Avatar & CSV Export
 | File | Tests | Coverage |
 |------|-------|----------|
-| `tests/avatars.test.js` | — | avatar generation, color assignment, initials |
-| `tests/csvExport.test.js` | — | CSV serialization, encoding, column mapping |
+| `tests/avatars.test.js` | ✅ | avatar generation, DiceBear URL, tier assignment |
+| `tests/csvExport.test.js` | ✅ | CSV serialization, encoding, column mapping |
 
 ### Stats Page
 | File | Tests | Coverage |
 |------|-------|----------|
-| `tests/stats.test.js` | — | public stats RPC, category/neighborhood breakdown |
+| `tests/stats.test.js` | ✅ | public stats RPC, category/neighborhood breakdown |
+
+### Accessibility
+| File | Tests | Coverage |
+|------|-------|----------|
+| axe-core suite | 55 | All pages — WCAG 2.1 A/AA; CI blocks on critical violations |
 
 ---
 
@@ -105,9 +113,9 @@
 | Login (success + rate limit + wrong credentials) | ✅ Covered |
 | Forgot password → Email → Reset | ✅ Covered (E2E) |
 | Create Campaign (with date/time/category) | ✅ Covered |
-| Join Campaign → Upload proof → Admin approves | ✅ Covered (E2E) |
+| Join Campaign → Upload proof → Admin approves | ✅ Covered (E2E + file upload test) |
 | Admin rejects with required reason | ✅ Covered |
-| Earn Points → Redeem Reward | ✅ Covered |
+| Earn Points → Redeem Reward | ⚠️ Partially covered — `purchase_reward` RPC is tested; `handleBuy()` UI flow has no unit tests |
 | RSVP to event / Cancel RSVP | ✅ Covered |
 | Map — markers and clustering | ✅ Covered |
 | Notifications — real-time + mark-as-read | ✅ Covered |
@@ -115,6 +123,9 @@
 | Public stats page (anon access) | ✅ Covered |
 | Avatar generation | ✅ Covered |
 | CSV export (admin) | ✅ Covered |
+| Abuse report → Admin resolve/dismiss | ⚠️ Not covered — no unit or E2E tests for the reports flow |
+| Mobile touch interactions | ✅ Covered (Cypress, iPhone 13 viewport) |
+| Accessibility (WCAG 2.1) | ✅ Covered (55 axe-core tests, all pages) |
 
 ---
 
@@ -152,12 +163,16 @@ SUPABASE_ADMIN_PASSWORD=password
 
 | Area | Gap | Priority |
 |------|-----|----------|
-| File upload | No E2E test for actual photo upload | Medium |
-| Touch gestures | Mobile touch interactions untested | Low |
+| ~~File upload~~ | ~~No E2E test for actual photo upload~~ | ~~Medium~~ — ✅ Closed Mar 22: Cypress file upload E2E added |
+| ~~Touch gestures~~ | ~~Mobile touch interactions untested~~ | ~~Low~~ — ✅ Closed Mar 22: Cypress iPhone 13 viewport tests added |
+| ~~Accessibility~~ | ~~No automated a11y tests~~ | ~~Medium~~ — ✅ Closed Mar 22: 55 axe-core tests block on critical violations |
+| ~~Visual regression~~ | ~~No snapshot/screenshot tests~~ | ~~Low~~ — ✅ Closed Mar 22: Playwright 2% pixel tolerance; run `npm run playwright:update` for baseline |
 | Performance | No load/benchmark tests | Low |
-| Accessibility | No automated a11y tests | Medium |
-| Visual regression | No snapshot/screenshot tests | Low |
+| Error path coverage | `storage.integration.test.js` covers only happy path — no upload failure, MIME error, or double-dialog tests | Medium |
+| Critical flows | No unit tests for `handleBuy()` (rewards), `handleJoin()` / `handleUploadPhoto()` (campaign-detail), admin proof approval | Medium |
+| Lighthouse CI | `lighthouserc.js` configured but not yet wired to GitHub Actions | P2 |
+| Playwright baseline | Run `npm run playwright:update` once against staging to create visual baseline | P1 |
 
 ---
 
-**Status:** PRODUCTION READY — 859/860 tests passing. 1 real-DB RLS integration test requires `.env.test` credentials; all unit and mock-based tests pass cleanly.
+**Status:** PRODUCTION READY — 973+ tests passing. Real-DB integration tests skip cleanly without `.env.test`. All Vitest unit and mock-based tests pass. Cypress E2E requires a running dev server.

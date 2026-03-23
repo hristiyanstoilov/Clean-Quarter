@@ -85,19 +85,28 @@ A Sofia where every neighborhood has an active cleanup community, where particip
 
 ---
 
-### Business Model (Inferred)
+### Business Model
 
-The codebase does not implement payment processing. The inferred model has two tiers:
+**Current state (Phase 1 — grant/public-funded):**
+- Platform is free for all residents. Rewards are sponsor-donated. No payment processing. No revenue.
 
-**Phase 1 (current — grant/public-funded):**
-- Platform is free for all residents
-- Rewards are sponsor-funded (local businesses)
-- No revenue logic in code
+**Revised model — 9 revenue pillars (full strategy in [ROADMAP.md § Business Model](../ROADMAP.md) · implementation plan with code estimates and BD steps in [docs/BUSINESS_MODEL.md](BUSINESS_MODEL.md)):**
 
-**Phase 2 (inferred expansion):**
-- B2B: Municipality/district subscriptions for analytics and compliance reporting
-- B2B2C: Local business reward sponsorships (digital vouchers already structured as `rewards.image_url`, `rewards.category`)
-- White-label licensing to other Bulgarian cities
+| Pillar | Timeline | Products | Est. ARR |
+|--------|----------|----------|----------|
+| **B2C Freemium** | Q3 2026 | "Clean Quarter Pro" (5 лв/month) — early reward access, Pro badge, private campaigns, impact export | ~1,250–12,500 лв |
+| **B2B Sponsorships** | Q2 2026 | "Adopt a Spot" (500–2,000 лв/year), Co-branded Challenges (10,000–20,000 лв/event), Reward Pool Sponsorship (5,000 лв/quarter), Corporate Volunteer Day (300–1,000 лв/event) | ~18,500 лв/year |
+| **B2B2G Institutional SaaS** | Q4 2026 | School certificates (200 лв/year), Corporate ESG (150–500 лв/year), NGO Grant Reports (300 лв/report), Municipal SLA (20,000–40,000 лв/year/district), Verified Organizer (50–100 лв/year) | ~30,000–150,000+ лв ARR |
+| **Data & Reports** | 2027 | "Clean City Index" annual report, API access tier (50–200 лв/month), Neighborhood Civic Score widget for real estate, anonymized dataset licensing | ~12,000–30,000 лв/year |
+| **Community Finance** | 2027 | "Pledge Drive" crowdfunding (10% fee on fulfilled pledges), "Green Wallet" points→NGO donations (5–8% platform fee) | ~5,000–15,000 лв/year |
+| **Physical Products** | 2027 | Monthly "Volunteer Box" (20 лв/month subscription), "Cleanup Starter Kit" (25 лв one-time) | ~4,000–8,000 лв/month at scale |
+| **Micro-credentialing** | 2027 | LinkedIn verifiable credentials (10–20 лв each), physical "Impact Certificate" (15–20 лв) | ~5,000–20,000 лв/year |
+| **Untapped B2B** | 2027 | HOA/building management (200 лв/year), Property Developer Vitality Reports (1,000–3,000 лв), Employer benefit bulk (40 лв/employee/year), Insurance micro-discount API | ~10,000–30,000 лв/year |
+| **Civic OS** | 2028 | Non-cleanup civic campaign tool (100–500 лв/campaign), Voluntourism partnership (3,000–5,000 лв/year), GaaS licensing (500–1,000 лв/month/tenant) | ~20,000–50,000 лв/year |
+
+**Design principle:** Core civic participation (join campaign, earn points, redeem rewards) is **free forever**. All paid features monetize analytics, status, compliance reporting, brand visibility, or physical goods — never participation itself.
+
+**Revenue trajectory:** 0 лв (2026 Q1) → ~30,000 лв (2026 Q4) → ~120,000 лв ARR (2027) → ~250,000+ лв ARR (2028 with municipal contracts + Civic OS).
 
 ---
 
@@ -415,9 +424,10 @@ superadmin → admin + cannot be demoted (DB-enforced flag)
 - OpenStreetMap tiles (no API key required, zero cost)
 - SVG divIcons (no external image dependencies)
 - Default center: Studentski Grad (42.6977°N, 23.3219°E)
-- No marker clustering — all markers render simultaneously
+- Leaflet.markercluster — campaign markers group at low zoom, expand at street level
+- Pollution heatmap overlay (Leaflet.heat) available as admin toggle
 
-**Scalability note:** With 100+ campaigns, marker overlap becomes a UX problem. No clustering library is implemented — identified as a gap in Section 9.
+**Scalability note:** Marker clustering (shipped Mar 17) resolves the overlap problem at 100+ campaigns. Geographic queries still use lat/lng floats — PostGIS would be needed for radius-based filtering at scale.
 
 ---
 
@@ -483,12 +493,14 @@ superadmin → admin + cannot be demoted (DB-enforced flag)
 **Business value:** Increases engagement via home screen placement; reduces barrier to repeat use.
 
 **Technical implementation:**
-- Service worker at `/public/service-worker.js`
-- Install prompt banner shown after 3-second delay on first visit
+- Service worker at `/service-worker.js` (Vite copies `public/service-worker.js` → `dist/service-worker.js`)
+- SW registered as side-effect of `auth-validation.js`; install prompt + notification init in `pwa.js` (currently unwired — tech debt)
+- Push notification infrastructure: `pushNotifications.js` service + Web Push API
 - `cacheData()` / `getCachedData()` API for manual offline storage
-- Browser push notification permission requested on initialization
 
-**Dependencies:** Service Worker API, Browser Notifications API, Vite build output
+**Known issues:** `pwa.js` registers wrong SW path; `initializePWA()` never called. Both logged in Bug Backlog.
+
+**Dependencies:** Service Worker API, Web Push API, Browser Notifications API, Vite build output
 
 ---
 
@@ -628,13 +640,13 @@ superadmin → admin + immutable (cannot be demoted)
 | Mechanism | Implementation | Notes |
 |-----------|---------------|-------|
 | SQL injection | Impossible — Supabase client uses parameterized queries exclusively | — |
-| XSS | `escapeHTML()` utility for all user content rendered in HTML | — |
+| XSS | `escapeHTML()` utility for user content rendered in HTML | Known gaps: `map.js` Leaflet popups and `renderComments()` interpolate user content without escaping — tracked in Bug Backlog |
 | CSRF | Not applicable — REST API with JWT, no cookie-based sessions | — |
 | Auth bypass | RLS enforced at DB level — JS bypass has zero effect on data | — |
 | Privilege escalation | `is_superadmin` flag prevents top admin demotion | — |
 | File upload abuse | Type validation (JPEG/PNG/WebP) + 5MB size limit | Client-side only |
 | Report spam | DB trigger blocks duplicate reports within 24h per entity/user | — |
-| Login brute force | 5 attempts / 15 min per email | **Client-side only — bypassable via direct API call** |
+| Login brute force | 5 attempts / 15 min per email — enforced via `check_login_rate_limit` RPC (server-side, Mar 17) | UI shows generic error; countdown to lockout expiry not surfaced to user |
 
 ---
 
@@ -657,9 +669,9 @@ superadmin → admin + immutable (cannot be demoted)
 |---------|---------------|
 | Code organization | Service-oriented — UI (HTML), controllers (scripts/), business logic (services/), utilities (utils/) |
 | Linting | ESLint + Prettier enforced via Husky pre-commit hooks |
-| Test coverage | 449 tests across 44 files — unit, integration, RLS policies, E2E |
-| i18n | All user-facing strings externalized to JSON translation files |
-| DB versioning | 43 sequential SQL migrations — never edited after applied |
+| Test coverage | 973+ tests across 49+ files — unit, integration, RLS policies, E2E (Cypress), a11y (axe-core), visual regression (Playwright) |
+| i18n | All user-facing strings externalized to JSON translation files (known gaps in profile.js, admin.js loadReports, main.js — see Bug Backlog) |
+| DB versioning | 61 sequential SQL migrations — never edited after applied |
 | Build tooling | Vite with `rollup-plugin-visualizer` for bundle size analysis |
 
 ---
@@ -698,11 +710,12 @@ superadmin → admin + immutable (cannot be demoted)
 |-----------|-----------------|--------|
 | Fixed 20 points per approval | Hardcoded in `admin.js` and RPC | Cannot reward harder campaigns more |
 | Fixed 5 neighborhoods | Hardcoded array in multiple files | Adding a neighborhood requires code change |
-| Manual Netlify deployment | No CI/CD auto-deploy configured | Every release requires manual drag-and-drop |
-| Client-side login rate limiting | `auth.js` — not server-enforced | Bypassable via direct Supabase API call |
-| No image optimization | Raw uploads, no resize or compression | Large files slow page loads |
+| ~~Manual Netlify deployment~~ | ~~No CI/CD auto-deploy configured~~ | ✅ Resolved — GitHub → Netlify auto-deploy on push to `main` |
+| ~~Client-side login rate limiting~~ | ~~`auth.js` — not server-enforced~~ | ✅ Resolved — server-side DB-level rate limiting via RPC (shipped Mar 17) |
+| ~~No image optimization~~ | ~~Raw uploads, no resize or compression~~ | ✅ Resolved — client-side canvas compression before upload (shipped Mar 20) |
 | Single language per session | Language switch triggers full page reload | Minor UX friction on toggle |
-| No email notifications | Only in-app via notification bell | Users miss approvals without platform visit |
+| No email notifications (current) | Only in-app notification bell — weekly digest email and win-back re-engagement flow are planned (v1.3) | Users miss approvals without platform visit |
+| ~~No campaign categories~~ | ~~All cleanups treated as equivalent~~ | ✅ Resolved — categories + filter UI (shipped Mar 18) |
 
 ---
 
@@ -713,7 +726,7 @@ superadmin → admin + immutable (cannot be demoted)
 | No custom server | Eliminates backend infrastructure, deployment complexity, and maintenance overhead |
 | Vanilla JS (no framework) | Reduces bundle size, build complexity, and learning curve for contributors |
 | lat/lng floats instead of PostGIS | Avoids PostGIS extension setup; sufficient for visual map display at current scale |
-| No campaign categories | Reduces DB schema complexity; all cleanups treated as equivalent in current scope |
+| ~~No campaign categories~~ | Shipped Mar 18 — park / street / playground / etc. with filter UI |
 | Single before photo per campaign | Simpler upload flow; sufficient for proof-of-need at MVP stage |
 | Single after photo per participant | Simpler approval flow; one photo = one approval decision |
 | No search | Campaign discovery via map + neighborhood filter sufficient at current data volume |
@@ -731,11 +744,21 @@ superadmin → admin + immutable (cannot be demoted)
 |-----|--------|----------------|:------:|
 | Points per campaign not configurable | Cannot reward harder/larger cleanups more | Add `points_value` column to `campaigns` table | Open |
 | No reward fulfillment tracking | No way to verify rewards were actually delivered | Add `fulfilled_at`, `fulfilled_by` to `point_transactions` | Open |
-| No campaign categories/types | No segmentation for reporting or discovery | Add `category` enum to `campaigns` | Open |
+| ~~No campaign categories/types~~ | ~~No segmentation for reporting or discovery~~ | ~~Add `category` enum to `campaigns`~~ | ✅ Resolved Mar 18 — categories + filter UI |
 | No rate limiting on campaign creation | Spam campaigns are technically possible | Add client-side + server-side rate limit | Open |
 | No moderation queue for new campaigns | All campaigns go public immediately | Add `status='pending'` for first-time creators | Open |
+| `admin_adjustment` point type unused | Admins have no recovery path for balance errors (double-approvals, cancelled campaigns) | Build "Adjust Points" UI in admin panel using the existing `point_transactions.type='admin_adjustment'` schema value | Open |
+| Push notifications limited to approval/rejection | RSVP confirmations, new neighborhood campaigns, 1h-before reminders, and comment alerts all fire no notification | Extend `pushNotifications.js` + DB triggers to cover all 4 additional event types | Open |
+| `notifications_enabled` field never enforced | Profile toggle exists and is saved but no notification path reads it — users cannot opt out | Read `notifications_enabled` before inserting `notifications` rows and before sending push | Open |
+| Notification bell capped at 20 items | Active users silently lose older notifications; `notification_id` FKs to campaigns/participations never used for deeplinks | Build `/notifications` history page with unlimited scroll and entity deeplinks | Open |
+| Heatmap i18n keys exist but feature is a stub | `heatmapTitle/Show/Hide/Hint` keys are translated but no Leaflet.heat visualization exists | Implement using Leaflet.heat weighted by approved participation count per campaign coordinate | Open |
+| Pollution heatmap missing | Admin i18n has heatmap strings but no rendering code | Implement Leaflet.heat visualization on admin map | Open |
 | ~~Rejection reason optional~~ | ~~Unfair rejections with no explanation~~ | ~~Make `rejection_reason` required on reject action~~ | ✅ Resolved — `inputValidator` in UI + DB CHECK constraint |
 | ~~No reward quantity enforcement~~ | ~~`quantity_available` column exists but not decremented on redemption~~ | ~~Wire redemption to decrement quantity~~ | ✅ Resolved — `purchase_reward()` RPC decrements atomically via `FOR UPDATE` |
+| ~~No server-side login rate limiting~~ | ~~Client-side only — bypassable~~ | ~~DB-level rate limit via RPC~~ | ✅ Resolved Mar 17 |
+| ~~No marker clustering~~ | ~~UX breaks at 100+ campaigns~~ | ~~Leaflet.markercluster~~ | ✅ Resolved Mar 17 |
+| ~~No admin pagination~~ | ~~Degrades at 100+ pending items~~ | ~~Paginate pending table~~ | ✅ Resolved Mar 17 |
+| ~~No neighborhood leaderboard~~ | ~~No per-neighborhood social proof~~ | ~~DB view + dashboard widget~~ | ✅ Resolved Mar 17 |
 
 ---
 
@@ -784,53 +807,73 @@ superadmin → admin + immutable (cannot be demoted)
 
 ## 10. Suggested Product Roadmap
 
-### Short-term (1–3 months) — Operational Stability
-
-| Priority | Item | Rationale |
-|:--------:|------|-----------|
-| P0 | Automated Netlify deploy (CI/CD) | Manual deploys block rapid iteration |
-| P0 | Server-side login rate limiting | Current client-side only is bypassable via direct API call |
-| P1 | Configurable points per campaign | Core product rigidity — all cleanups currently treated as equal |
-| P1 | Admin panel pagination | Degrades significantly at 100+ pending items |
-| P1 | Map marker clustering | UX breaks at 100+ active campaigns |
-| P1 | Email notifications on approval | Users miss approvals without visiting the platform |
-| P1 | Make rejection reason required | Fairness — users deserve an explanation when rejected |
-| P2 | Basic analytics (Plausible / PostHog) | Currently flying blind — no funnel or retention data |
-| P2 | Error tracking (Sentry free tier) | Production errors are invisible |
+> **Living roadmap:** The full engineering backlog — bugs, tech debt, and product backlog with detailed rationale — is maintained in [`ROADMAP.md`](../ROADMAP.md) at the project root. This section summarizes themes and resolved items only.
 
 ---
 
-### Mid-term (3–9 months) — Growth Infrastructure
+### Short-term — v1.1 Resolved
 
-| Priority | Item | Rationale |
-|:--------:|------|-----------|
-| P1 | Add neighborhoods via admin UI | Remove hardcoded list — expand without code changes |
-| P1 | Campaign categories (park / street / water / other) | Segmentation for reporting and filtered discovery |
-| P1 | Reward fulfillment tracking | Close the loop with sponsors — verify delivery |
-| P1 | Reward quantity enforcement | `quantity_available` column exists but is not wired |
-| P1 | GDPR compliance (data export + erasure) | Legal requirement under EU law |
-| P2 | Campaign text search | Discovery beyond map + neighborhood filter |
-| P2 | Neighborhood leaderboard | Drives inter-neighborhood competition and social proof |
-| P2 | Multi-photo evidence upload | Richer proof, harder to game the system |
-| P2 | Privacy policy page | Referenced in registration but `/privacy` route missing |
-| P3 | Mobile app shell (Capacitor) | PWA → App Store distribution |
-| P3 | Sponsor self-serve reward portal | Scale reward supply without manual ops |
-
----
-
-### Long-term (9–24 months) — Platform Expansion
-
-| Priority | Item | Rationale |
-|:--------:|------|-----------|
-| P1 | Multi-city support | Remove Sofia-only constraint — architecture supports it today |
-| P1 | Municipality API integration | Official data feeds, compliance reporting for districts |
-| P1 | Business sponsor dashboard | Revenue enabler — sponsors manage their own rewards |
-| P2 | Environmental impact metrics | Estimated kg waste removed — measurable ESG reporting |
-| P2 | Campaign scheduling + calendar | Coordinate recurring cleanups and seasonal events |
-| P2 | Team / group participation | Corporate social responsibility use case |
-| P3 | Open API for third-party integrations | Platform ecosystem play |
-| P3 | Carbon credit tokenization | Long-term monetization via sustainability markets |
+| Item | Status |
+|------|:------:|
+| Automated Netlify deploy (CI/CD) | ✅ GitHub → Netlify auto-deploy |
+| Server-side login rate limiting | ✅ Mar 17 — DB-level RPC |
+| Admin panel pagination | ✅ Mar 17 |
+| Map marker clustering + heatmap | ✅ Mar 17 — Leaflet.markercluster |
+| Campaign categories (park / street / water / other) | ✅ Mar 18 — categories + filter UI |
+| Make rejection reason required | ✅ `inputValidator` + DB CHECK constraint |
+| Reward quantity enforcement | ✅ `purchase_reward()` RPC — atomic decrement |
+| Neighborhood leaderboard | ✅ Mar 17 — DB view + dashboard widget |
+| Privacy policy page | ✅ Mar 14 — `/privacy`, BG/EN |
+| Public stats page (no auth required) | ✅ Mar 20 — `/stats` with 3 RPC-backed charts |
+| Event RSVPs infrastructure | ✅ Mar 20 — `event_rsvps` table + `events.js` service |
 
 ---
 
-*Document complete. All 10 sections reflect features and decisions derived directly from the codebase. No speculative features included.*
+### Next — v1.2 (UX Sprint)
+
+**Theme:** Close the gap between what the DB supports and what the UI exposes.
+
+Key items: Group Events page, dashboard search & filter, before/after comparison slider, weather forecasts on campaign cards and detail page, interactive onboarding, campaign capacity + urgency signal, category badges on cards, rank tier progression bar, trending social proof widget, login lockout countdown, skeleton loading, mobile bottom nav.
+
+See [ROADMAP.md § v1.2](../ROADMAP.md) for the full breakdown.
+
+---
+
+### Growth — v1.3 (3–6 months)
+
+**Theme:** Retention mechanics, admin efficiency, and first B2B revenue.
+
+Key items: Recurring campaigns, streak mechanics, achievement badges, shareable impact card, personal impact dashboard, waste weight estimation, seasonal challenges, batch approval, campaign announcements, organizer analytics, notification center, individual user leaderboard, push notification expansion, campaign countdown + iCal export, admin point adjustments, disposal point → campaign linkage, weekly digest email, campaign completion flow, campaign "Boost" (Stripe), school/university service hours.
+
+Revenue unlocked: Campaign Boost (5 лв/48h), school institution subscriptions (200 лв/year).
+
+---
+
+### Platform — v2.0 (6–18 months)
+
+**Theme:** Multi-city expansion, B2B partnerships, institutional integrations.
+
+Key items: Multi-city support, anonymous illegal dumping map, corporate team cleanup + ESG report, school/university service certificates, hazardous waste flagging, heatmap full implementation, volunteer transport coordination, photo AI validation, Econt/Speedy delivery integration, Sofia open data sync, Ukrainian/Turkish i18n, admin user activity dashboard, report auto-escalation.
+
+Revenue unlocked: Corporate ESG subscription (150–500 лв/year), municipality API contracts, white-label licensing.
+
+---
+
+### Open Governance Gaps (unscheduled)
+
+| Gap | Status |
+|-----|:------:|
+| Configurable points per campaign | Open |
+| Reward fulfillment tracking | Open — planned v1.3 |
+| GDPR data export + erasure | Open — planned v1.3 |
+| Campaign creation rate limiting | Open |
+| New campaign moderation queue | Open |
+| `admin_adjustment` point correction UI | Open — planned v1.3 |
+| Analytics (Plausible / PostHog) | Open — planned v1.3 |
+| Error tracking (Sentry) | Open |
+| No cookie consent banner | Open — required before analytics |
+| Versioned Terms of Service | Open |
+
+---
+
+*Last revised: 2026-03-22. Business Model section completely revised — replaced inferred 2-tier model with a formal 4-pillar monetization strategy (B2C Freemium, B2B Sponsorships, B2B2G Institutional SaaS, Data & Reports) with revenue estimates per pillar. Sections 7–10 also updated: XSS/login brute-force NFR rows corrected; Section 9 governance gaps augmented; Section 10 roadmap replaced with v1.1 resolved inventory + v1.2/v1.3/v2.0 theme summaries pointing to living ROADMAP.md. All 10 sections reflect current codebase state.*

@@ -156,8 +156,8 @@ Requirements:
 
 ### Service Worker not working
 - Check browser console for errors
-- Verify /public/service-worker.js path
-- Unregister and re-register in DevTools
+- Correct SW path in production is `/service-worker.js` (NOT `/public/service-worker.js` — the `/public/` prefix does not exist after Vite builds to `dist/`)
+- Unregister and re-register in DevTools → Application → Service Workers
 
 ### Notifications not showing
 - Check browser permissions
@@ -176,13 +176,20 @@ Requirements:
 - [PWABuilder](https://www.pwabuilder.com/)
 - [Service Worker API](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API)
 
-## 📝 Next Steps
+## 📝 Known Issues & Next Steps
 
-1. Generate production-quality icons
-2. Add push notification backend
-3. Implement background sync for offline actions
-4. Add periodic cache updates
-5. Monitor usage analytics
+### Known Issues (see ROADMAP.md Bug Backlog)
+- `src/services/pwa.js` registers the wrong SW path (`/public/service-worker.js`) — fix to `/service-worker.js`
+- `initializePWA()` is exported but never called by any page script — install banner and notification permission request are dead code
+- `src/scripts/auth-validation.js` also registers the SW (correct path `/service-worker.js`) as a module side-effect — two competing registrations exist; one silently fails. SW registration should live in one place only.
+- Install banner strings are hardcoded English — need `t()` i18n
+
+### Next Steps
+1. Generate production-quality icons (replace placeholders in `/public/images/`)
+2. Wire `initializePWA()` into the main page scripts (currently unused)
+3. Fix SW path in `pwa.js` — change to `/service-worker.js`
+4. Implement background sync for offline form submissions
+5. Monitor cache size in production — aim for < 5MB total
 
 ---
 

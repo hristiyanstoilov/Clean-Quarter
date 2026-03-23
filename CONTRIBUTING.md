@@ -64,22 +64,30 @@ git push origin feature/your-feature-name
 - Accessibility (ARIA labels)
 
 ### Testing
-- Unit + integration tests за utils/services (Vitest) — 530 теста, всички трябва да минават
-- E2E tests за критични флоуве (Cypress)
+- Unit + integration tests за utils/services (Vitest) — 973+ теста, всички трябва да минават
+- E2E tests за критични флоуве (Cypress — включително file upload и mobile touch)
+- Accessibility tests (axe-core — 55 теста, блокира на critical violations)
+- Visual regression (Playwright — 2% pixel tolerance)
 - Demo mode compatibility
 - Нови features изискват тестове преди merge
 
 ## 🧪 Running Tests
 
 ```bash
-# Unit tests
-npx vitest run
+# Lint (трябва да е 0 warnings преди всичко)
+npm run lint
+
+# Unit + integration tests
+npm test
 
 # E2E tests (headless)
 npm run test:e2e:headless
 
 # E2E tests (interactive)
 npm run test:e2e
+
+# Visual regression baseline update (само след intentional UI промени)
+npm run playwright:update
 ```
 
 ## 🐛 Reporting Issues
