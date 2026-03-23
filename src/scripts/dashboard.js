@@ -486,7 +486,7 @@ async function loadLeaderboard(currentUser) {
     const cards = rows.slice(0, 5).map((row, i) => {
       const medal = MEDAL[i] || `${i + 1}.`;
       const i18nKey = NEIGHBORHOOD_I18N[row.neighborhood];
-      const name = i18nKey ? t(i18nKey) || row.neighborhood : row.neighborhood;
+      const name = i18nKey ? t(`neighborhoods.${i18nKey}`) || row.neighborhood : row.neighborhood;
       const isYours = row.neighborhood === userNeighborhood;
       const maxPoints = rows[0].total_points || 1;
       const pct = Math.round((row.total_points / maxPoints) * 100);

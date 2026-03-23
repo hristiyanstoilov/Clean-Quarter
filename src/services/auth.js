@@ -1,6 +1,6 @@
 import supabase from "./supabase.js";
 import logger from "./logger.js";
-import { showSuccess, showError } from "../utils/helpers.js";
+import { showSuccess } from "../utils/helpers.js";
 import { rules } from "./validation.js";
 
 /**
@@ -74,7 +74,6 @@ export async function register(email, password, options = {}) {
     return authData.user;
   } catch (error) {
     logger.error("❌ Register error:", error);
-    await showError("Registration Error", error);
     throw error;
   }
 }
@@ -131,7 +130,6 @@ export async function login(email, password) {
     );
     return data.user;
   } catch (error) {
-    await showError("Login Error", error);
     throw error;
   }
 }
@@ -153,7 +151,6 @@ export async function logout() {
       1500
     );
   } catch (error) {
-    await showError("Logout Error", error);
     throw error;
   }
 }

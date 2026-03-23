@@ -14,7 +14,7 @@ export async function initializePWA() {
   // Register Service Worker
   if (hasNavigator() && "serviceWorker" in navigator) {
     try {
-      const registration = await navigator.serviceWorker.register("/public/service-worker.js");
+      const registration = await navigator.serviceWorker.register("/service-worker.js");
       logger.info("✅ Service Worker registered:", registration);
     } catch (error) {
       logger.warn("❌ Service Worker registration failed:", error);
