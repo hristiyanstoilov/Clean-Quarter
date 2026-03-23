@@ -130,7 +130,8 @@
     "photoHint": "JPEG, PNG or WebP, max 5MB",
     "mapTitle": "📍 Select Location on Map",
     "mapHint": "Click on the map to set the cleanup location coordinates",
-    "selectedLocation": "Selected Location:"
+    "selectedLocation": "Selected Location:",
+    "createError": "Failed to create campaign. Please try again."
   },
   "campaign": {
     "title": "Campaign Details",
@@ -218,9 +219,17 @@
     "categoryPlaceholder": "-- Select category --",
     "joined": "Joined! Upload your after photo to submit proof.",
     "proofSubmitted": "Proof submitted for admin approval!",
+    "proofApproved": "Your proof has been approved! Points awarded.",
+    "deleteTitle": "Delete Campaign?",
+    "deleteText": "Are you sure? This action cannot be undone.",
+    "deleteConfirm": "Yes, Delete It",
+    "deleteCancel": "Cancel",
     "updateSuccess": "Campaign updated successfully!",
     "deleteSuccess": "Campaign deleted successfully.",
-    "alreadyJoined": "You have already joined this campaign."
+    "alreadyJoined": "You have already joined this campaign.",
+    "uploadingPhoto": "Uploading photo...",
+    "editRequiredFields": "Title and description are required!",
+    "saving": "Saving..."
   },
   "leaderboard": {
     "title": "🏆 Neighborhood Rankings",
@@ -236,7 +245,19 @@
     "buy": "Buy",
     "yourPoints": "Your Points",
     "noRewards": "No rewards",
-    "purchased": "Purchased"
+    "purchased": "Purchased",
+    "confirmPurchaseTitle": "Confirm Purchase?",
+    "confirmBuy": "Yes, Buy It!",
+    "insufficientPointsTitle": "Insufficient Points",
+    "insufficientPointsText": "You need {{n}} more points to buy this reward.",
+    "processingTitle": "Processing...",
+    "purchaseError": "Failed to purchase reward. Please try again.",
+    "noRewardsTitle": "No Rewards Available",
+    "noRewardsText": "Rewards will be added soon. Come back later!",
+    "outOfStock": "Out of Stock",
+    "buyBtn": "✓ Buy",
+    "notEnoughPoints": "✗ Not Enough Points",
+    "left": "left"
   },
   "admin": {
     "title": "Admin Panel",
@@ -355,7 +376,13 @@
     "pushApprovedTitle": "✅ Participation Approved!",
     "pushApprovedBody": "Your proof for \"{{title}}\" was approved. You earned points!",
     "pushRejectedTitle": "❌ Participation Rejected",
-    "pushRejectedBody": "Your proof for \"{{title}}\" was rejected. Reason: {{reason}}"
+    "pushRejectedBody": "Your proof for \"{{title}}\" was rejected. Reason: {{reason}}",
+    "heatmapTitle": "🔥 Pollution Heatmap",
+    "heatmapShow": "Show Heatmap",
+    "heatmapHide": "Hide Heatmap",
+    "heatmapHint": "Darker red = more cleanups organized in that area.",
+    "heatmapNoData": "No campaign locations found.",
+    "heatmapRefresh": "🔄 Refresh"
   },
   "common": {
     "loading": "Loading...",

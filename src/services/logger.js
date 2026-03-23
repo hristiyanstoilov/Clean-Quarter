@@ -3,7 +3,7 @@
  * Centralized logging with different levels
  */
 
-import { isBrowser, hasLocalStorage, hasNavigator } from "../utils/env.js";
+import { hasLocalStorage } from "../utils/env.js";
 
 const LOG_LEVELS = {
   DEBUG: 0,

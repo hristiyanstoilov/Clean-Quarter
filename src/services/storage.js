@@ -23,11 +23,9 @@ export async function uploadCampaignPhoto(file, folderName = "photos") {
     if (file.size > MAX_FILE_SIZE) {
       throw new Error("File too large. Maximum size: 5MB");
     }
-    // Generate unique filename with timestamp and sanitized name
-    const timestamp = Date.now();
-    const randomString = Math.random().toString(36).substring(2, 8);
+    // Generate unique filename with cryptographic UUID and sanitized name
     const safeName = (file.name || "photo").replace(/[^a-zA-Z0-9._-]/g, "_").substring(0, 50);
-    const fileName = `${timestamp}-${randomString}-${safeName}`;
+    const fileName = `${crypto.randomUUID()}-${safeName}`;
     const filePath = `${folderName}/${fileName}`;
     // Upload file to Supabase Storage
     const { error } = await supabase.storage.from("campaign-photos").upload(filePath, file);

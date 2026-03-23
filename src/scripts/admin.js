@@ -2,6 +2,7 @@ import supabase from "../services/supabase.js";
 import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
 import { escapeHTML, showSuccessToast, showInfoToast, initSwalFallback } from "../utils/helpers.js";
 import { exportUsersCsv, exportParticipationsCsv } from "../services/csvExport.js";
+import { initNetworkStatusBanner } from "../utils/networkStatus.js";
 import { sendPushToUser } from "../services/pushNotifications.js";
 import { CLEANUP_POINTS } from "../services/points.js";
 import {
@@ -12,7 +13,6 @@ import {
   saveDemoUsers,
   updateDemoUser,
   updateDemoParticipation,
-  getDemoTransactions,
   addDemoTransaction,
   getDemoRoleLog,
   saveDemoRoleLog,
@@ -25,8 +25,14 @@ let allParticipationsData = [];
 let pendingCurrentPage = 1;
 const PENDING_PAGE_SIZE = 10;
 
+// Heatmap state
+let heatmapMap = null;
+let heatLayer = null;
+let heatmapPoints = null; // cached per session — coordinates don't change after campaign creation
+
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", async () => {
+  initNetworkStatusBanner();
   // Ensure Swal is available even if CDN fails to load
   initSwalFallback();
   try {
@@ -58,7 +64,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     await loadAdminData();
-  } catch (error) {
+  } catch {
     // silently ignore
   }
 });
@@ -81,7 +87,7 @@ async function checkAuth() {
         document.getElementById("accessDenied").style.display = "block";
         return;
       }
-    } catch (e) {
+    } catch {
       // silently ignore
     }
   }
@@ -253,7 +259,7 @@ async function preloadRoleLog() {
       if (error) throw new Error(error.message);
       window._roleLogCache = data || [];
     }
-  } catch (err) {
+  } catch {
     window._roleLogCache = [];
   }
 }
@@ -419,7 +425,7 @@ window.filterUserTable = function () {
       try {
         const nbhObj = JSON.parse(neighborhood);
         neighborhood = nbhObj[currentLang] || nbhObj.bg || nbhObj.en || "-";
-      } catch (e) {
+      } catch {
         // Keep as-is if parsing fails
       }
     }
@@ -438,12 +444,12 @@ window.filterUserTable = function () {
 
     if (isAdmin && !isSelf) {
       // Show Remove Admin button
-      const escapedId = user.id.replace(/'/g, "\\'");
-      const escapedName = (user.username || user.email).replace(/'/g, "\\'");
       html += `
         <button
-          class='btn btn-warning btn-sm'
-          onclick="window.removeAdmin('${escapedId}', '${escapedName}')"
+          class='btn btn-warning btn-sm js-user-action'
+          data-action='removeAdmin'
+          data-user-id='${escapeHTML(user.id)}'
+          data-user-name='${escapeHTML(user.username || user.email)}'
           aria-label='Remove admin privileges from ${escapeHTML(user.username || user.email)}'
         >
           ⬇️ <span data-i18n='admin.removeAdmin'>Премахни админ</span>
@@ -451,12 +457,12 @@ window.filterUserTable = function () {
       `;
     } else if (!isAdmin) {
       // Show Make Admin button
-      const escapedId = user.id.replace(/'/g, "\\'");
-      const escapedName = (user.username || user.email).replace(/'/g, "\\'");
       html += `
         <button
-          class='btn btn-success btn-sm'
-          onclick="window.makeAdmin('${escapedId}', '${escapedName}')"
+          class='btn btn-success btn-sm js-user-action'
+          data-action='makeAdmin'
+          data-user-id='${escapeHTML(user.id)}'
+          data-user-name='${escapeHTML(user.username || user.email)}'
           aria-label='Grant admin privileges to ${escapeHTML(user.username || user.email)}'
         >
           ⬆️ <span data-i18n='admin.makeAdmin'>Направи админ</span>
@@ -483,6 +489,14 @@ window.filterUserTable = function () {
 
   container.innerHTML = html;
   applyLanguage(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg");
+
+  container.querySelectorAll(".js-user-action").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const { action, userId, userName } = btn.dataset;
+      if (action === "removeAdmin") window.removeAdmin(userId, userName);
+      if (action === "makeAdmin") window.makeAdmin(userId, userName);
+    });
+  });
 };
 
 /**
@@ -696,7 +710,7 @@ function renderPendingTable() {
       try {
         const titleObj = JSON.parse(campaignTitle);
         campaignTitle = titleObj[currentLang] || titleObj.bg || titleObj.en || "Unknown Campaign";
-      } catch (e) {
+      } catch {
         // Keep as-is if parsing fails
       }
     } else if (typeof campaignTitle === "object") {
@@ -717,18 +731,22 @@ function renderPendingTable() {
                   <td><strong>${escapeHTML(username)}</strong></td>
                   <td>${escapeHTML(campaignTitle)}</td>
                   <td>
-                      ${beforePhoto ? `<img src="${beforePhoto}" class="photo-thumbnail" alt="${t("campaign.beforePhoto")}" onclick="showPhotoModal('${beforePhoto}')">` : `<span data-i18n="admin.noPhoto">${t("admin.noPhoto")}</span>`}
+                      ${beforePhoto ? `<img src="${escapeHTML(beforePhoto)}" class="photo-thumbnail js-photo-modal" data-photo-url="${escapeHTML(beforePhoto)}" alt="${t("campaign.beforePhoto")}" style="cursor:pointer">` : `<span data-i18n="admin.noPhoto">${t("admin.noPhoto")}</span>`}
                   </td>
                   <td>
-                      ${afterPhoto ? `<img src="${afterPhoto}" class="photo-thumbnail" alt="${t("campaign.afterPhoto")}" onclick="showPhotoModal('${afterPhoto}')">` : `<span data-i18n="admin.noPhoto">${t("admin.noPhoto")}</span>`}
+                      ${afterPhoto ? `<img src="${escapeHTML(afterPhoto)}" class="photo-thumbnail js-photo-modal" data-photo-url="${escapeHTML(afterPhoto)}" alt="${t("campaign.afterPhoto")}" style="cursor:pointer">` : `<span data-i18n="admin.noPhoto">${t("admin.noPhoto")}</span>`}
                   </td>
                   <td>${submittedDate}</td>
                   <td>
                       <div class="action-buttons">
-                          <button class="btn-approve" onclick="handleApprove('${participation.id}', '${username}')">
+                          <button class="btn-approve js-approve-btn"
+                            data-participation-id="${escapeHTML(participation.id)}"
+                            data-username="${escapeHTML(username)}">
                             ✅ <span data-i18n="admin.approve">Approve</span>
                           </button>
-                          <button class="btn-reject" onclick="handleReject('${participation.id}', '${username}')">
+                          <button class="btn-reject js-reject-btn"
+                            data-participation-id="${escapeHTML(participation.id)}"
+                            data-username="${escapeHTML(username)}">
                             ❌ <span data-i18n="admin.reject">Reject</span>
                           </button>
                       </div>
@@ -770,6 +788,20 @@ function renderPendingTable() {
 
   container.innerHTML = tableHTML;
   applyLanguage(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg");
+
+  container.querySelectorAll(".js-approve-btn").forEach((btn) => {
+    btn.addEventListener("click", () =>
+      handleApprove(btn.dataset.participationId, btn.dataset.username)
+    );
+  });
+  container.querySelectorAll(".js-reject-btn").forEach((btn) => {
+    btn.addEventListener("click", () =>
+      handleReject(btn.dataset.participationId, btn.dataset.username)
+    );
+  });
+  container.querySelectorAll(".js-photo-modal").forEach((img) => {
+    img.addEventListener("click", () => showPhotoModal(img.dataset.photoUrl));
+  });
 }
 
 /**
@@ -921,7 +953,7 @@ async function handleApprove(participationId, username) {
 /**
  * Handle reject action
  */
-async function handleReject(participationId, username) {
+async function handleReject(participationId, _username) {
   try {
     // Find the participation record
     const participation = pendingParticipations.find((p) => p.id === participationId);
@@ -1033,7 +1065,7 @@ async function handleLogout() {
     } else {
       throw error;
     }
-  } catch (error) {
+  } catch {
     // silently ignore
   }
 }
@@ -1218,4 +1250,77 @@ window.exportParticipationsCsvHandler = function () {
     return;
   }
   exportParticipationsCsv(data);
+};
+
+/**
+ * Toggle the pollution heatmap on/off
+ */
+window.toggleHeatmap = async function (btn) {
+  const container = document.getElementById("heatmapContainer");
+  const isVisible = container.style.display === "block";
+
+  if (isVisible) {
+    container.style.display = "none";
+    btn.textContent = t("admin.heatmapShow") || "Show Heatmap";
+    btn.setAttribute("aria-expanded", "false");
+    return;
+  }
+
+  container.style.display = "block";
+  btn.textContent = t("admin.heatmapHide") || "Hide Heatmap";
+  btn.setAttribute("aria-expanded", "true");
+
+  // Initialize map once
+  if (!heatmapMap) {
+    heatmapMap = L.map("adminHeatmap").setView([42.6977, 23.3219], 13);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+      maxZoom: 19,
+    }).addTo(heatmapMap);
+  }
+  // Force re-render after display:block
+  setTimeout(() => heatmapMap.invalidateSize(), 50);
+
+  // Fetch coordinates — cached for the session, re-fetched only on manual refresh
+  if (!heatmapPoints) {
+    const localUser = localStorage.getItem("user");
+    const isDemoMode = localUser && isDemoUser(currentUser);
+
+    if (isDemoMode) {
+      heatmapPoints = getDemoCampaigns()
+        .filter((c) => c.location_lat && c.location_lng)
+        .map((c) => [c.location_lat, c.location_lng, 1.0]);
+    } else {
+      const { data } = await supabase
+        .from("campaigns")
+        .select("location_lat, location_lng")
+        .not("location_lat", "is", null)
+        .not("location_lng", "is", null);
+      heatmapPoints = (data || []).map((c) => [c.location_lat, c.location_lng, 1.0]);
+    }
+  }
+  const points = heatmapPoints;
+
+  if (!points.length) {
+    document.getElementById("adminHeatmap").innerHTML =
+      `<p style="padding:1rem;color:#6c757d;">${t("admin.heatmapNoData") || "No campaign locations found."}</p>`;
+    return;
+  }
+
+  if (heatLayer) heatmapMap.removeLayer(heatLayer);
+  heatLayer = L.heatLayer(points, {
+    radius: 35,
+    blur: 20,
+    maxZoom: 17,
+    gradient: { 0.3: "#3388ff", 0.5: "#28a745", 0.75: "#ffc107", 1.0: "#dc3545" },
+  }).addTo(heatmapMap);
+};
+
+/**
+ * Clear heatmap cache and re-render with fresh data
+ */
+window.refreshHeatmap = async function () {
+  heatmapPoints = null;
+  const toggleBtn = document.getElementById("heatmapToggleBtn");
+  if (toggleBtn) await window.toggleHeatmap(toggleBtn);
 };

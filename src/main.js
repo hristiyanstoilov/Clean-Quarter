@@ -70,7 +70,7 @@ import supabase from "./services/supabase.js";
 import { initPasswordStrengthMeter } from "./components/passwordStrength.js";
 import passwordToggle from "./components/passwordToggle.js";
 // Lazy-load non-critical modules for performance
-let initializePWA, initI18n, setLanguage, applyLanguage;
+let initI18n, setLanguage, applyLanguage;
 
 // Initialize auth forms
 function initAuthForms() {
@@ -225,7 +225,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     // Init forms
     initAuthForms();
-  } catch (error) {
+  } catch {
     initAuthForms();
   }
 });

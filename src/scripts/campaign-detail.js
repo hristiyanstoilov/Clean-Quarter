@@ -26,6 +26,7 @@ import {
   removeDemoRsvp,
 } from "../utils/demoMode.js";
 import { rsvpToCampaign, cancelRsvp, getRsvpCount, getUserRsvp } from "../services/events.js";
+import { initNetworkStatusBanner } from "../utils/networkStatus.js";
 
 // Global variables
 let campaign = null;
@@ -39,6 +40,7 @@ let userHasRsvpd = false;
 
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", async () => {
+  initNetworkStatusBanner();
   initSwalFallback();
   try {
     // Initialize i18n (realTime = false)
@@ -86,7 +88,7 @@ async function checkAuth() {
     try {
       currentUser = JSON.parse(storedUser);
       return;
-    } catch (e) {
+    } catch {
       // silently ignore
     }
   }
@@ -253,7 +255,7 @@ function displayCampaignDetails(campaignData, participations) {
   if (typeof title === "string") {
     try {
       title = JSON.parse(title);
-    } catch (e) {
+    } catch {
       // If parsing fails, use as-is
     }
   }
@@ -278,7 +280,7 @@ function displayCampaignDetails(campaignData, participations) {
   if (typeof desc === "string") {
     try {
       desc = JSON.parse(desc);
-    } catch (e) {
+    } catch {
       // If parsing fails, use as-is
     }
   }
@@ -291,7 +293,7 @@ function displayCampaignDetails(campaignData, participations) {
   if (typeof nbh === "string") {
     try {
       nbh = JSON.parse(nbh);
-    } catch (e) {
+    } catch {
       // If parsing fails, use as-is
     }
   }
@@ -352,7 +354,7 @@ function displayCampaignDetails(campaignData, participations) {
   // Initialize map with campaign location — isolated so map failure never crashes the page
   try {
     initializeDetailMap(campaignData.location_lat, campaignData.location_lng);
-  } catch (mapErr) {
+  } catch {
     const mapEl = document.getElementById("map");
     if (mapEl) {
       mapEl.style.cssText =
@@ -374,7 +376,7 @@ function initializeDetailMap(lat, lng) {
     const parsed = JSON.parse(popupTitle);
     const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
     if (typeof parsed === "object") popupTitle = parsed[lang] || parsed.bg || popupTitle;
-  } catch (_) {
+  } catch {
     /* plain string */
   }
 
@@ -570,7 +572,7 @@ async function handleUploadPhoto() {
 
     // Show loading state (no await — fire-and-close pattern to avoid deadlock)
     Swal.fire({
-      title: "Uploading photo...",
+      title: t("campaign.uploadingPhoto"),
       allowOutsideClick: false,
       didOpen: () => {
         Swal.showLoading();
@@ -646,13 +648,13 @@ function showSubmissionStatus(status, rejectionReason) {
 
   if (status === "joined") {
     statusDiv.className = "status-message status-pending";
-    statusDiv.textContent = "📝 Upload your after photo to submit proof.";
+    statusDiv.textContent = `📝 ${t("campaign.joined")}`;
   } else if (status === "pending") {
     statusDiv.className = "status-message status-pending";
-    statusDiv.textContent = "⏳ Waiting for admin approval...";
+    statusDiv.textContent = `⏳ ${t("campaign.proofSubmitted")}`;
   } else if (status === "approved") {
     statusDiv.className = "status-message status-approved";
-    statusDiv.textContent = "✅ Your proof has been approved! Points awarded.";
+    statusDiv.textContent = `✅ ${t("campaign.proofApproved")}`;
   } else if (status === "rejected") {
     statusDiv.className = "status-message status-rejected";
     const reasonText = rejectionReason
@@ -667,14 +669,14 @@ function showSubmissionStatus(status, rejectionReason) {
  */
 async function handleDelete() {
   const result = await Swal.fire({
-    title: "Delete Campaign?",
-    text: "Are you sure you want to delete this campaign? This action cannot be undone.",
+    title: t("campaign.deleteTitle"),
+    text: t("campaign.deleteText"),
     icon: "warning",
     showCancelButton: true,
     confirmButtonColor: "#dc3545",
     cancelButtonColor: "#6c757d",
-    confirmButtonText: "Yes, Delete It",
-    cancelButtonText: "Cancel",
+    confirmButtonText: t("campaign.deleteConfirm"),
+    cancelButtonText: t("campaign.deleteCancel"),
   });
 
   if (!result.isConfirmed) {
@@ -764,7 +766,7 @@ function extractDisplayValue(value) {
       const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
       return parsed[lang] || parsed.bg || parsed.en || Object.values(parsed)[0] || "";
     }
-  } catch (_) {
+  } catch {
     // Not JSON — use as-is
   }
   return value;
@@ -814,7 +816,7 @@ async function handleSaveCampaign(e) {
     await Swal.fire({
       icon: "error",
       title: t("common.error"),
-      text: "Title and description are required!",
+      text: t("campaign.editRequiredFields"),
     });
     return;
   }
@@ -831,8 +833,8 @@ async function handleSaveCampaign(e) {
   try {
     // Show loading
     Swal.fire({
-      title: "Saving...",
-      text: "Please wait",
+      title: t("campaign.saving"),
+      text: t("common.loading"),
       allowOutsideClick: false,
       didOpen: () => {
         Swal.showLoading();
@@ -995,13 +997,13 @@ function renderComments(comments) {
   const isAdmin =
     currentUser && (currentUser.role === "admin" || currentUser.role === "superadmin");
 
+  const commentLang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+  const commentLocale = commentLang === "bg" ? "bg-BG" : "en-US";
   list.innerHTML = comments
     .map((c) => {
       const isOwn =
         currentUser && (currentUser.id === c.user_id || currentUser.id?.toString() === c.user_id);
       const canDelete = isOwn || isAdmin;
-      const commentLang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
-      const commentLocale = commentLang === "bg" ? "bg-BG" : "en-US";
       const date = new Date(c.created_at).toLocaleString(commentLocale, {
         day: "2-digit",
         month: "2-digit",

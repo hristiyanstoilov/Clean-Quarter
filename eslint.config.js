@@ -13,7 +13,7 @@ export default [
     rules: {
       semi: ["error", "always"],
       quotes: ["error", "double", { avoidEscape: true }],
-      "no-unused-vars": ["warn"],
+      "no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
       "no-console": ["off"]
     }
   }

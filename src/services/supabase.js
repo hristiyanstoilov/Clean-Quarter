@@ -59,7 +59,4 @@ export async function fetchCampaigns() {
   if (error) throw error;
   return data;
 }
-export async function createCampaign(data) {
-  return [{ id: 2, ...data }];
-}
 export default supabase;

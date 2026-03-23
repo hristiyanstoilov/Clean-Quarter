@@ -21,6 +21,7 @@ import {
   subscribeToPush,
   unsubscribeFromPush,
 } from "../services/pushNotifications.js";
+import { initNetworkStatusBanner } from "../utils/networkStatus.js";
 // Global variables
 let currentUser = null;
 let userProfile = null;
@@ -97,6 +98,7 @@ async function handlePasswordRecovery() {
 
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", async () => {
+  initNetworkStatusBanner();
   initSwalFallback();
 
   // Handle password recovery before anything else — exits early if recovery link detected
@@ -179,7 +181,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       lowercase: "edit-pw-lowercase",
       digit: "edit-pw-digit",
     });
-  } catch (error) {
+  } catch {
     // silently ignore
   }
 });
@@ -194,7 +196,7 @@ async function checkAuth() {
     try {
       currentUser = JSON.parse(localUser);
       return;
-    } catch (e) {
+    } catch {
       // silently ignore
     }
   }
@@ -387,7 +389,7 @@ async function loadTransactions() {
           `;
 
     document.getElementById("transactionsContainer").innerHTML = html;
-  } catch (error) {
+  } catch {
     document.getElementById("transactionsContainer").innerHTML = `
               <div class="empty-state" style="color: #dc3545;">
                   <p>Грешка при зареждане на транзакциите</p>
@@ -455,7 +457,7 @@ async function loadParticipations() {
     }
 
     renderParticipations(participations);
-  } catch (error) {
+  } catch {
     document.getElementById("participationsContainer").innerHTML = `
               <div class="empty-state" style="color: #dc3545;">
                   <p>Грешка при зареждане на участията</p>
@@ -521,7 +523,7 @@ async function handleLogout() {
     } else {
       throw error;
     }
-  } catch (error) {
+  } catch {
     // silently ignore
   }
 }
@@ -531,7 +533,6 @@ async function handleLogout() {
  */
 function toggleEditMode() {
   const editSection = document.getElementById("editProfileSection");
-  const accountSection = document.querySelector(".section");
 
   if (editSection.style.display === "none") {
     // Show edit form

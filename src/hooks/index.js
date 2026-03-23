@@ -22,7 +22,7 @@ import { validateField } from "../services/validation.js";
  * @param {Array} dependencies - Dependency array
  * @returns {Object} { data, loading, error, execute, reset }
  */
-export function useAsync(asyncFn, dependencies = []) {
+export function useAsync(asyncFn, _dependencies = []) {
   const state = {
     data: null,
     loading: false,

@@ -130,7 +130,8 @@
     "photoHint": "JPEG, PNG или WebP, макс. 5MB",
     "mapTitle": "📍 Избери локация на картата",
     "mapHint": "Кликни на картата за да зададеш координатите на почистването",
-    "selectedLocation": "Избрана локация:"
+    "selectedLocation": "Избрана локация:",
+    "createError": "Неуспешно създаване на кампания. Опитай отново."
   },
   "campaign": {
     "title": "Детали на кампанията",
@@ -218,9 +219,17 @@
     "categoryPlaceholder": "-- Изберете категория --",
     "joined": "Присъединен! Качи снимка след почистването за доказателство.",
     "proofSubmitted": "Доказателството е изпратено за одобрение от администратор!",
+    "proofApproved": "Доказателството ти е одобрено! Точките са зачислени.",
+    "deleteTitle": "Изтриване на кампания?",
+    "deleteText": "Сигурен ли си? Това действие е необратимо.",
+    "deleteConfirm": "Да, изтрий",
+    "deleteCancel": "Отказ",
     "updateSuccess": "Кампанията е обновена успешно!",
     "deleteSuccess": "Кампанията е изтрита успешно.",
-    "alreadyJoined": "Вече участваш в тази кампания."
+    "alreadyJoined": "Вече участваш в тази кампания.",
+    "uploadingPhoto": "Качване на снимка...",
+    "editRequiredFields": "Заглавие и описание са задължителни!",
+    "saving": "Запазване..."
   },
   "leaderboard": {
     "title": "🏆 Класация на кварталите",
@@ -236,7 +245,19 @@
     "buy": "Купи",
     "yourPoints": "Твоите точки",
     "noRewards": "Няма награди",
-    "purchased": "Закупено"
+    "purchased": "Закупено",
+    "confirmPurchaseTitle": "Потвърди покупката?",
+    "confirmBuy": "Да, купи!",
+    "insufficientPointsTitle": "Недостатъчно точки",
+    "insufficientPointsText": "Нужни ти са още {{n}} точки за тази награда.",
+    "processingTitle": "Обработване...",
+    "purchaseError": "Неуспешна покупка. Опитай отново.",
+    "noRewardsTitle": "Няма налични награди",
+    "noRewardsText": "Скоро ще бъдат добавени награди. Върни се по-късно!",
+    "outOfStock": "Изчерпан",
+    "buyBtn": "✓ Купи",
+    "notEnoughPoints": "✗ Недостатъчно точки",
+    "left": "налични"
   },
   "admin": {
     "title": "Админ панел",
@@ -355,7 +376,13 @@
     "pushApprovedTitle": "✅ Участието е одобрено!",
     "pushApprovedBody": "Proof-ът ти за '{{title}}' беше одобрен. Спечели точки!",
     "pushRejectedTitle": "❌ Участието е отхвърлено",
-    "pushRejectedBody": "Proof-ът ти за '{{title}}' беше отхвърлен. Причина: {{reason}}"
+    "pushRejectedBody": "Proof-ът ти за '{{title}}' беше отхвърлен. Причина: {{reason}}",
+    "heatmapTitle": "🔥 Карта на замърсяването",
+    "heatmapShow": "Покажи карта",
+    "heatmapHide": "Скрий карта",
+    "heatmapHint": "По-тъмно червено = повече почиствания в района.",
+    "heatmapNoData": "Няма намерени локации на кампании.",
+    "heatmapRefresh": "🔄 Обнови"
   },
   "common": {
     "loading": "Зареждане...",

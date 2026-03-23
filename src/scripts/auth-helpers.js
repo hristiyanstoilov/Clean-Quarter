@@ -6,7 +6,7 @@ import supabase from "../services/supabase.js";
  */
 export async function handleForgotPassword(e) {
   e.preventDefault();
-  const result = await Swal.fire({
+  await Swal.fire({
     title: "Забравена парола",
     html:
       "<p>Въведи своя имейл адрес и ще изпратим линк за възстановяване.</p>" +
@@ -51,32 +51,6 @@ export async function handleForgotPassword(e) {
       }
     }
   });
-}
-
-/**
- * Update terms modal content based on current language
- */
-function updateTermsLanguage() {
-  const currentLang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
-  const bgContent = document.getElementById("termsContentBg");
-  const enContent = document.getElementById("termsContentEn");
-  const title = document.getElementById("termsModalTitle");
-  const closeBtn = document.getElementById("termsCloseBtn");
-  const acceptBtn = document.getElementById("termsAcceptBtn");
-
-  if (currentLang === "en") {
-    bgContent.style.display = "none";
-    enContent.style.display = "block";
-    title.innerHTML = "📋 Terms & Conditions and Privacy Policy";
-    closeBtn.innerHTML = "✕ Close";
-    acceptBtn.innerHTML = "✓ Accept";
-  } else {
-    bgContent.style.display = "block";
-    enContent.style.display = "none";
-    title.innerHTML = "📋 Условия за използване и Поверителност";
-    closeBtn.innerHTML = "✕ Затвори";
-    acceptBtn.innerHTML = "✓ Приемам";
-  }
 }
 
 /**

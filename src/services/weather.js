@@ -31,7 +31,7 @@ const CONDITION_META = {
 /**
  * Fetch current weather for Sofia from Open-Meteo (no API key required).
  * Results are cached in sessionStorage for 1 hour.
- * @returns {{ temperature: number, condition: string, icon: string, isGoodWeather: boolean } | null}
+ * @returns {Promise<{ temperature: number, condition: string, icon: string, isGoodWeather: boolean } | null>}
  */
 export async function fetchWeather() {
   // Return cached result if still fresh
