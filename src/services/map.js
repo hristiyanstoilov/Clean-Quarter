@@ -4,7 +4,7 @@ import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
-import { isEmpty } from "../utils/helpers.js";
+import { isEmpty, escapeHTML } from "../utils/helpers.js";
 import { hasLocalStorage } from "../utils/env.js";
 import logger from "./logger.js";
 import { isDemoUser, getDemoCampaigns } from "../utils/demoMode.js";
@@ -98,9 +98,9 @@ export async function loadCampaignMarkers(map) {
       if (!isEmpty(campaigns)) {
         campaigns.forEach((campaign) => {
           const popupContent = `
-            <strong>${campaign.title}</strong><br>
-            Status: ${campaign.status}<br>
-            <small>ID: ${campaign.id}</small>
+            <strong>${escapeHTML(campaign.title)}</strong><br>
+            Status: ${escapeHTML(campaign.status)}<br>
+            <small>ID: ${escapeHTML(campaign.id)}</small>
           `;
           createMarker(
             clusterGroup,
@@ -128,9 +128,9 @@ export async function loadCampaignMarkers(map) {
     if (!isEmpty(campaigns)) {
       campaigns.forEach((campaign) => {
         const popupContent = `
-          <strong>${campaign.title}</strong><br>
-          Status: ${campaign.status}<br>
-          <small>ID: ${campaign.id}</small>
+          <strong>${escapeHTML(campaign.title)}</strong><br>
+          Status: ${escapeHTML(campaign.status)}<br>
+          <small>ID: ${escapeHTML(campaign.id)}</small>
         `;
         createMarker(
           clusterGroup,
@@ -174,9 +174,9 @@ export async function loadDisposalPointMarkers(map) {
 
     disposalPoints.forEach((point) => {
       const popupContent = `
-        <strong>${point.name}</strong><br>
-        ${point.description ? `${point.description}<br>` : ""}
-        <small>ID: ${point.id}</small>
+        <strong>${escapeHTML(point.name)}</strong><br>
+        ${point.description ? `${escapeHTML(point.description)}<br>` : ""}
+        <small>ID: ${escapeHTML(point.id)}</small>
       `;
 
       createMarker(map, point.latitude, point.longitude, "disposal", popupContent);

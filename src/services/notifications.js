@@ -10,6 +10,7 @@
 
 import supabase from "./supabase.js";
 import { t as i18nT } from "../utils/i18n.js";
+import { escapeHTML } from "../utils/helpers.js";
 
 /**
  * Fetch the latest 20 notifications for a user.
@@ -153,7 +154,7 @@ export function renderNotifications(notifications, lang, onItemClick) {
         <div class="notification-item${unreadClass}" data-id="${n.id}" data-campaign="${n.campaign_id || ""}">
           <span class="notification-icon">${icon}</span>
           <div class="notification-body">
-            <p class="notification-msg">${msg}</p>
+            <p class="notification-msg">${escapeHTML(msg)}</p>
             <span class="notification-time">${time}</span>
           </div>
           ${!n.is_read ? '<span class="notification-dot"></span>' : ""}
