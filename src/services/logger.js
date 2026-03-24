@@ -17,8 +17,8 @@ class Logger {
   constructor() {
     this.logs = [];
     this.maxLogs = 1000;
-    this.level = LOG_LEVELS.DEBUG;
-    this.isDevelopment = true;
+    this.level = import.meta.env?.DEV ? LOG_LEVELS.DEBUG : LOG_LEVELS.INFO;
+    this.isDevelopment = !!import.meta.env?.DEV;
     this.listeners = new Set();
   }
 
