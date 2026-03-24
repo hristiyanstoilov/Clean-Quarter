@@ -96,16 +96,16 @@ document.addEventListener("DOMContentLoaded", async () => {
  * Check if user is authenticated and has admin role
  */
 async function checkAuth() {
-  // Check for demo mode user first
+  // Handle demo mode users only — real users must be verified via Supabase
   const localUser = localStorage.getItem("user");
   if (localUser) {
     try {
-      currentUser = JSON.parse(localUser);
-      // Check if demo user is admin
-      if (currentUser.role === "admin") {
-        return; // Demo admin, allow access
-      } else {
-        // Demo user but not admin
+      const parsed = JSON.parse(localUser);
+      if (parsed?.id?.startsWith("demo-")) {
+        currentUser = parsed;
+        if (currentUser.role === "admin") {
+          return; // Demo admin, allow access
+        }
         document.getElementById("loadingState").style.display = "none";
         document.getElementById("accessDenied").style.display = "block";
         return;
