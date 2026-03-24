@@ -58,13 +58,13 @@ class ErrorHandler {
   setupDefaultStrategies() {
     // Network errors
     this.registerStrategy(ERROR_TYPES.NETWORK, (error) => {
-      store.notify("Network connection failed. Please check your internet.", "error");
+      store.addNotification("Network connection failed. Please check your internet.", "error");
       logger.error("Network error", error);
     });
 
     // Auth errors
     this.registerStrategy(ERROR_TYPES.AUTH, (error) => {
-      store.notify("Authentication failed. Please login again.", "error");
+      store.addNotification("Authentication failed. Please login again.", "error");
       logger.warn("Auth error", error);
       // Redirect to login
       window.location.href = "/";
@@ -72,38 +72,38 @@ class ErrorHandler {
 
     // Validation errors
     this.registerStrategy(ERROR_TYPES.VALIDATION, (error) => {
-      store.notify(`Validation error: ${error.message}`, "error");
+      store.addNotification(`Validation error: ${error.message}`, "error");
       logger.info("Validation error", error.details);
     });
 
     // API errors
     this.registerStrategy(ERROR_TYPES.API, (error) => {
       const message = error.details?.message || "API request failed";
-      store.notify(message, "error");
+      store.addNotification(message, "error");
       logger.error("API error", error);
     });
 
     // Permission errors
     this.registerStrategy(ERROR_TYPES.PERMISSION, (error) => {
-      store.notify("You do not have permission to perform this action.", "error");
+      store.addNotification("You do not have permission to perform this action.", "error");
       logger.warn("Permission denied", error);
     });
 
     // Not found errors
     this.registerStrategy(ERROR_TYPES.NOT_FOUND, (error) => {
-      store.notify("Resource not found.", "error");
+      store.addNotification("Resource not found.", "error");
       logger.info("Resource not found", error.details);
     });
 
     // Server errors
     this.registerStrategy(ERROR_TYPES.SERVER, (error) => {
-      store.notify("Server error. Please try again later.", "error");
+      store.addNotification("Server error. Please try again later.", "error");
       logger.error("Server error", error);
     });
 
     // Unknown errors
     this.registerStrategy(ERROR_TYPES.UNKNOWN, (error) => {
-      store.notify("An unexpected error occurred.", "error");
+      store.addNotification("An unexpected error occurred.", "error");
       logger.fatal("Unknown error", error);
     });
   }

@@ -523,6 +523,12 @@
     "error": "Error managing notifications.",
     "deniedHint": "The browser has blocked notifications. Allow them in your browser settings."
   },
+  "pwa": {
+    "installTitle": "Install the app",
+    "installBody": "Get instant access to Clean Quarter",
+    "installBtn": "Install",
+    "laterBtn": "Later"
+  },
   "common": {
     "loading": "Loading...",
     "error": "Error",

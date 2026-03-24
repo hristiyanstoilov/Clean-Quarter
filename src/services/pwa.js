@@ -1,5 +1,6 @@
 import logger from "./logger.js";
 import { isBrowser, hasLocalStorage, hasNavigator } from "../utils/env.js";
+import { t } from "../utils/i18n.js";
 /**
  * PWA Service - Handles Progressive Web App functionality
  */
@@ -101,8 +102,8 @@ function createInstallBanner() {
             flex-wrap: wrap;
         ">
             <div style="flex: 1; min-width: 200px;">
-                <div style="font-weight: bold; margin-bottom: 0.25rem;">📱 Install App</div>
-                <div style="font-size: 0.85rem; opacity: 0.9;">Get instant access to Clean Quarter</div>
+                <div style="font-weight: bold; margin-bottom: 0.25rem;">📱 ${t("pwa.installTitle")}</div>
+                <div style="font-size: 0.85rem; opacity: 0.9;">${t("pwa.installBody")}</div>
             </div>
             <div style="display: flex; gap: 0.5rem;">
                 <button class="install-btn" style="
@@ -115,7 +116,7 @@ function createInstallBanner() {
                     font-weight: bold;
                     font-size: 0.875rem;
                 ">
-                    ✓ Install
+                    ✓ ${t("pwa.installBtn")}
                 </button>
                 <button class="close-btn" style="
                     background: rgba(255,255,255,0.2);
@@ -127,7 +128,7 @@ function createInstallBanner() {
                     font-weight: bold;
                     font-size: 0.875rem;
                 ">
-                    ✕ Later
+                    ✕ ${t("pwa.laterBtn")}
                 </button>
             </div>
         </div>
@@ -141,8 +142,8 @@ function createInstallBanner() {
 export function sendNotification(title, options = {}) {
   if (isBrowser() && "Notification" in window && Notification.permission === "granted") {
     new Notification(title, {
-      icon: "/public/icon-192x192.png",
-      badge: "/public/icon-192x192.png",
+      icon: "/images/icon-192x192.png",
+      badge: "/images/icon-192x192.png",
       ...options,
     });
   }

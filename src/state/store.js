@@ -173,7 +173,7 @@ export class Store {
    * Notify all listeners of state change
    */
   notify() {
-    logger.info("📢 State updated:", this.state);
+    logger.debug("📢 State updated:", this.state);
     this.listeners.forEach((listener) => {
       try {
         listener(this.getState());

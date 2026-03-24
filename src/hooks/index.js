@@ -169,7 +169,7 @@ export function useForm(initialValues = {}, schema = {}, onSubmit = null) {
       state.errors = newErrors;
 
       if (Object.keys(newErrors).length > 0) {
-        store.notify("Please fix errors before submitting", "error");
+        store.addNotification("Please fix errors before submitting", "error");
         return false;
       }
 
@@ -178,7 +178,7 @@ export function useForm(initialValues = {}, schema = {}, onSubmit = null) {
         if (onSubmit) {
           await onSubmit(state.values);
         }
-        store.notify("Form submitted successfully", "success");
+        store.addNotification("Form submitted successfully", "success");
         return true;
       } catch (error) {
         store.addError(error.message || "Form submission failed", "useForm");

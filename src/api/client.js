@@ -1,7 +1,3 @@
-// Named export for testability
-export async function apiFetch(_url, _options) {
-  return { ok: true };
-}
 /**
  * Centralized API Client
  * Handles all HTTP requests with interceptors, retry logic, and error handling
