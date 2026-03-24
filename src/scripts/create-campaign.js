@@ -8,6 +8,7 @@ import supabase from "../services/supabase.js";
 import { isDemoUser, addDemoCampaign, addDemoParticipation } from "../utils/demoMode.js";
 import { initNetworkStatusBanner } from "../utils/networkStatus.js";
 import { initBottomNav } from "../hooks/index.js";
+import { isWithinSofia } from "../utils/constants.js";
 
 // Global variables
 let map = null;
@@ -133,6 +134,14 @@ function initMap() {
   // Add click event to map to select coordinates
   map.on("click", (e) => {
     const { lat, lng } = e.latlng;
+
+    if (!isWithinSofia(lat, lng)) {
+      const msg = t("campaign.outsideSofia") || "❌ Локацията трябва да е в границите на София";
+      const tempMarker = L.marker([lat, lng]).addTo(map).bindPopup(msg).openPopup();
+      setTimeout(() => map.removeLayer(tempMarker), 2500);
+      return;
+    }
+
     selectedCoordinates = { lat, lng };
     document.getElementById("latitude").textContent = lat.toFixed(6);
     document.getElementById("longitude").textContent = lng.toFixed(6);
@@ -347,6 +356,13 @@ async function handleFormSubmit(e) {
       !startTime
     ) {
       throw new Error("Моля попълнете всички полета и изберете локация на картата");
+    }
+
+    // Geographic validation — coordinates must be within Sofia
+    if (!isWithinSofia(lat, lng)) {
+      throw new Error(
+        t("campaign.locationOutsideSofia") || "Изберете локация в границите на София"
+      );
     }
 
     // Date validation — cannot be in the past

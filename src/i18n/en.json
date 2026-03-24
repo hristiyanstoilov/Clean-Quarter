@@ -308,6 +308,8 @@
     "timeRange": "{start} – {end}",
     "noDate": "Time TBD",
     "pastDateError": "Date cannot be in the past",
+    "outsideSofia": "❌ Location must be within Sofia",
+    "locationOutsideSofia": "Please select a location within Sofia",
     "scheduledLabel": "When",
     "dateTimePlaceholder": "Select date and time",
     "categoryLabel": "Category",

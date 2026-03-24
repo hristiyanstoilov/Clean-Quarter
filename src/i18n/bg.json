@@ -308,6 +308,8 @@
     "timeRange": "{start} – {end}",
     "noDate": "Час неуточнен",
     "pastDateError": "Датата не може да е в миналото",
+    "outsideSofia": "❌ Локацията трябва да е в границите на София",
+    "locationOutsideSofia": "Изберете локация в границите на София",
     "scheduledLabel": "Кога",
     "dateTimePlaceholder": "Изберете дата и час",
     "categoryLabel": "Категория",
