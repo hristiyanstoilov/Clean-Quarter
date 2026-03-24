@@ -2,13 +2,7 @@
  * Campaign filtering utilities
  */
 
-export const NEIGHBORHOODS = [
-  "Studentski Grad",
-  "Darvenitsa",
-  "Musagenitsa",
-  "Kv. Vitosha (VEC)",
-  "Malinova Dolina",
-];
+export { NEIGHBORHOODS } from "./constants.js";
 
 export const STATUSES = ["active", "completed", "cancelled"];
 
@@ -23,10 +17,14 @@ export function filterCampaigns(campaigns, filters = {}) {
     filtered = filtered.filter((c) => c.status === filters.status);
   }
 
+  if (filters.category) {
+    filtered = filtered.filter((c) => c.category === filters.category);
+  }
+
   if (filters.searchTerm) {
     const term = filters.searchTerm.toLowerCase();
     filtered = filtered.filter(
-      (c) => c.title.toLowerCase().includes(term) || c.description?.toLowerCase().includes(term)
+      (c) => c.title?.toLowerCase().includes(term) || c.description?.toLowerCase().includes(term)
     );
   }
 

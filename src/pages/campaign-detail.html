@@ -46,6 +46,9 @@
               >
             </li>
             <li class="nav-item">
+              <a class="nav-link" href="/events" data-i18n="nav.events">Събития</a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link" href="/rewards" data-i18n="nav.rewards">Награди</a>
             </li>
             <li class="nav-item">
@@ -99,7 +102,7 @@
               </select>
             </li>
             <li class="nav-item">
-              <a href="#" class="nav-link" onclick="handleLogout()" data-i18n="nav.logout">Изход</a>
+              <a href="#" class="nav-link" id="logoutBtn" data-i18n="nav.logout">Изход</a>
             </li>
           </ul>
         </div>
@@ -117,10 +120,39 @@
 
       <!-- Campaign Detail Content (hidden until loaded) -->
       <div id="campaignContent" style="display: none">
-        <!-- Before Photo -->
-        <div class="photo-section">
-          <div class="photo-label" data-i18n="campaign.beforePhoto">📸 Before Photo</div>
-          <img id="beforePhoto" class="before-photo" src="" alt="Before photo" />
+        <!-- Before / After Photo (slider shown when approved after photo exists) -->
+        <div class="photo-section" id="photoSection">
+          <!-- Slider mode: before + after -->
+          <div class="comparison-wrap" id="comparisonWrap" style="display: none">
+            <div class="comparison-labels">
+              <span class="comparison-label-text" data-i18n="campaign.beforePhoto">📸 Преди</span>
+              <span
+                class="comparison-label-text comparison-label-text--right"
+                data-i18n="campaign.afterPhoto"
+                >✅ След</span
+              >
+            </div>
+            <div class="comparison-container" id="comparisonContainer">
+              <img id="beforePhoto" class="comparison-img" src="" alt="Before photo" />
+              <div class="comparison-after-clip" id="afterClip">
+                <img
+                  id="afterPhotoSlider"
+                  class="comparison-img comparison-img--after"
+                  src=""
+                  alt="After photo"
+                />
+              </div>
+              <div class="comparison-divider" id="comparisonDivider">
+                <div class="comparison-handle" aria-label="Drag to compare">⟺</div>
+              </div>
+            </div>
+            <p class="comparison-hint" data-i18n="campaign.dragToCompare">Плъзни за сравнение</p>
+          </div>
+          <!-- Fallback: only before photo -->
+          <div id="beforeOnlyWrap">
+            <div class="photo-label" data-i18n="campaign.beforePhoto">📸 Before Photo</div>
+            <img id="beforePhotoOnly" class="before-photo" src="" alt="Before photo" />
+          </div>
         </div>
 
         <!-- Campaign Details -->
@@ -131,7 +163,6 @@
               class="btn btn-outline-success btn-sm"
               id="editCampaignBtn"
               style="display: none"
-              onclick="toggleEditCampaign()"
               data-i18n="campaign.editCampaign"
             >
               ✏️ Edit Campaign
@@ -267,7 +298,7 @@
               <button
                 type="button"
                 class="btn btn-secondary"
-                onclick="toggleEditCampaign()"
+                id="cancelEditBtn"
                 data-i18n="campaign.cancelEdit"
               >
                 ❌ Cancel
@@ -318,23 +349,27 @@
         <div class="details-section" id="rsvpSection" style="display: none">
           <h3 data-i18n="campaign.rsvpTitle">🙋 Ще участваш ли?</h3>
           <p id="rsvpCountText" class="text-muted mb-3">0 души планират да дойдат</p>
-          <button
-            class="btn btn-success me-2"
-            id="rsvpBtn"
-            onclick="handleRsvp()"
-            data-i18n="campaign.rsvpButton"
-          >
-            ✅ Ще участвам
-          </button>
-          <button
-            class="btn btn-outline-secondary"
-            id="cancelRsvpBtn"
-            onclick="handleCancelRsvp()"
-            style="display: none"
-            data-i18n="campaign.cancelRsvpButton"
-          >
-            ❌ Отказвам
-          </button>
+          <div class="d-flex flex-wrap gap-2 align-items-center">
+            <button class="btn btn-success" id="rsvpBtn" data-i18n="campaign.rsvpButton">
+              ✅ Ще участвам
+            </button>
+            <button
+              class="btn btn-outline-secondary"
+              id="cancelRsvpBtn"
+              style="display: none"
+              data-i18n="campaign.cancelRsvpButton"
+            >
+              ❌ Отказвам
+            </button>
+            <button
+              class="btn btn-outline-primary btn-sm"
+              id="addToCalendarBtn"
+              style="display: none"
+              data-i18n="campaign.addToCalendar"
+            >
+              📅 Добави в календара
+            </button>
+          </div>
         </div>
 
         <!-- Join Campaign Section -->
@@ -343,12 +378,7 @@
           <p data-i18n="campaign.joinDescription">
             Click the button below to join this cleanup campaign and help make a difference!
           </p>
-          <button
-            class="btn-join"
-            id="joinBtn"
-            onclick="handleJoin()"
-            data-i18n="campaign.joinButton"
-          >
+          <button class="btn-join" id="joinBtn" data-i18n="campaign.joinButton">
             Join Campaign
           </button>
         </div>
@@ -384,13 +414,7 @@
             </div>
           </form>
 
-          <button
-            class="btn-upload"
-            id="uploadBtn"
-            onclick="handleUploadPhoto()"
-            disabled
-            data-i18n="campaign.submitProof"
-          >
+          <button class="btn-upload" id="uploadBtn" disabled data-i18n="campaign.submitProof">
             ✅ Submit Proof
           </button>
 
@@ -412,12 +436,7 @@
                 data-i18n-placeholder="campaign.commentPlaceholder"
                 placeholder="Write your comment..."
               ></textarea>
-              <button
-                class="btn btn-success"
-                id="postCommentBtn"
-                onclick="handleAddComment()"
-                data-i18n="campaign.postComment"
-              >
+              <button class="btn btn-success" id="postCommentBtn" data-i18n="campaign.postComment">
                 Post
               </button>
             </div>
@@ -448,7 +467,6 @@
             class="btn-report"
             id="reportBtn"
             style="display: none"
-            onclick="handleReport()"
             data-i18n="campaign.reportCampaign"
           >
             🚩 Report
@@ -457,7 +475,6 @@
             class="btn-delete"
             id="deleteBtn"
             style="display: none"
-            onclick="handleDelete()"
             data-i18n="campaign.deleteCampaign"
           >
             🗑️ Delete Campaign
@@ -486,5 +503,29 @@
 
     <!-- Main Script -->
     <script type="module" src="../scripts/campaign-detail.js"></script>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="bottom-nav" id="bottomNav" aria-label="Mobile navigation">
+      <a class="bottom-nav__link" href="/dashboard">
+        <span class="bottom-nav__icon">🏠</span>
+        <span data-i18n="nav.dashboard">Начало</span>
+      </a>
+      <a class="bottom-nav__link" href="/create-campaign">
+        <span class="bottom-nav__icon">➕</span>
+        <span data-i18n="nav.createCampaign">Нова кампания</span>
+      </a>
+      <a class="bottom-nav__link" href="/events">
+        <span class="bottom-nav__icon">🗓️</span>
+        <span data-i18n="nav.events">Събития</span>
+      </a>
+      <a class="bottom-nav__link" href="/rewards">
+        <span class="bottom-nav__icon">🏆</span>
+        <span data-i18n="nav.rewards">Награди</span>
+      </a>
+      <a class="bottom-nav__link" href="/profile">
+        <span class="bottom-nav__icon">👤</span>
+        <span data-i18n="nav.profile">Профил</span>
+      </a>
+    </nav>
   </body>
 </html>

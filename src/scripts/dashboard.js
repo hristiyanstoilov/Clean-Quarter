@@ -1,4 +1,5 @@
 import { initializeMap, loadMapData } from "../services/map.js";
+import logger from "../services/logger.js";
 import { logout } from "../services/auth.js";
 import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
 import supabase from "../services/supabase.js";
@@ -17,6 +18,8 @@ import { isDemoUser, getDemoCampaigns, getDemoRsvps } from "../utils/demoMode.js
 import { getRsvpCountsForCampaigns } from "../services/events.js";
 import { CLEANUP_POINTS } from "../services/points.js";
 import { initNetworkStatusBanner } from "../utils/networkStatus.js";
+import { initBottomNav } from "../hooks/index.js";
+import { filterCampaigns } from "../utils/campaign-filters.js";
 
 // Pagination state
 const PAGE_SIZE = 9;
@@ -31,9 +34,13 @@ let currentNeighborhoodFilter = null;
 // Category filter state — null means "all"
 let currentCategoryFilter = null;
 
+// Search term state — empty string means "all"
+let currentSearchTerm = "";
+
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", async () => {
   initNetworkStatusBanner();
+  initBottomNav();
   try {
     // Initialize i18n first (realTime = false)
     await initI18n(false);
@@ -85,15 +92,70 @@ document.addEventListener("DOMContentLoaded", async () => {
     ro.observe(map.getContainer());
     await loadMapData(map);
 
+    // Auto-complete any campaigns whose scheduled_date has passed (fire-and-forget)
+    if (!isDemoUser(user)) {
+      supabase
+        .rpc("auto_complete_campaigns")
+        .then()
+        .catch((err) => logger.warn("auto_complete_campaigns RPC failed:", err));
+    }
+
     await loadCampaignsPage(false);
 
-    // Leaderboard — non-blocking, runs in parallel
+    // Leaderboard — non-blocking, loads both tabs in parallel
     loadLeaderboard(user);
+    loadUserLeaderboard(user);
+
+    // Leaderboard tabs
+    document.getElementById("lbNeighborhoodTab")?.addEventListener("click", () => {
+      document.getElementById("leaderboardContainer").style.display = "";
+      document.getElementById("userLeaderboardContainer").style.display = "none";
+      document.getElementById("leaderboardTitle").setAttribute("data-i18n", "leaderboard.title");
+      document.getElementById("leaderboardTitle").textContent = t("leaderboard.title");
+      document.getElementById("lbNeighborhoodTab").classList.add("lb-tab--active");
+      document.getElementById("lbNeighborhoodTab").setAttribute("aria-selected", "true");
+      document.getElementById("lbUsersTab").classList.remove("lb-tab--active");
+      document.getElementById("lbUsersTab").setAttribute("aria-selected", "false");
+    });
+    document.getElementById("lbUsersTab")?.addEventListener("click", () => {
+      document.getElementById("leaderboardContainer").style.display = "none";
+      document.getElementById("userLeaderboardContainer").style.display = "";
+      document.getElementById("leaderboardTitle").textContent = t("leaderboard.userTitle");
+      document.getElementById("lbUsersTab").classList.add("lb-tab--active");
+      document.getElementById("lbUsersTab").setAttribute("aria-selected", "true");
+      document.getElementById("lbNeighborhoodTab").classList.remove("lb-tab--active");
+      document.getElementById("lbNeighborhoodTab").setAttribute("aria-selected", "false");
+    });
 
     // Load More button
     document
       .getElementById("loadMoreBtn")
       ?.addEventListener("click", () => loadCampaignsPage(true));
+
+    // Show All button (replaces inline onclick)
+    document.getElementById("showAllBtn")?.addEventListener("click", showAllCampaigns);
+
+    // Category filter buttons (event delegation, replaces inline onclick)
+    document.getElementById("categoryFilter")?.addEventListener("click", (e) => {
+      const btn = e.target.closest(".btn-category");
+      if (btn) filterByCategory(btn);
+    });
+
+    // Search input — debounced 300ms
+    let searchDebounce = null;
+    document.getElementById("campaignSearchInput")?.addEventListener("input", (e) => {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(() => {
+        currentSearchTerm = e.target.value.trim();
+        loadCampaignsPage(false);
+      }, 300);
+    });
+
+    // Neighborhood dropdown
+    document.getElementById("neighborhoodSelect")?.addEventListener("change", (e) => {
+      currentNeighborhoodFilter = e.target.value || null;
+      loadCampaignsPage(false);
+    });
   } catch (error) {
     console.error("[dashboard] init error:", error);
     const spinner = document.getElementById("loadingSpinner");
@@ -101,8 +163,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const container = document.getElementById("campaignsContainer");
     if (container) {
       container.style.display = "grid";
-      container.innerHTML =
-        '<div class="col-12"><div class="alert alert-warning">Грешка при зареждане. Опресни страницата.</div></div>';
+      container.innerHTML = `<div class="col-12"><div class="alert alert-warning">${t("dashboard.loadError")}</div></div>`;
     }
   }
 });
@@ -137,6 +198,31 @@ function localizeNeighborhood(raw, lang) {
 }
 
 /**
+ * Build a human-readable countdown label for a campaign's scheduled start.
+ * Returns null if campaign has no date/time or has already started.
+ */
+function buildCountdownLabel(campaign, lang) {
+  if (!campaign.scheduled_date || !campaign.start_time) return null;
+  const timeStr = campaign.start_time.slice(0, 5); // "HH:MM"
+  const startMs = new Date(`${campaign.scheduled_date}T${timeStr}:00`).getTime();
+  const diffMs = startMs - Date.now();
+  if (diffMs <= 0) return null; // already started or past
+
+  const diffMins = diffMs / 60000;
+  if (diffMins < 60) return t("dashboard.countdownSoon");
+
+  const today = new Date();
+  const start = new Date(`${campaign.scheduled_date}T00:00:00`);
+  const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+  const startMid = new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime();
+  const dayDiff = Math.ceil((startMid - todayMid) / 86400000);
+
+  if (dayDiff === 0) return t("dashboard.countdownToday").replace("{{time}}", timeStr);
+  if (dayDiff === 1) return t("dashboard.countdownTomorrow").replace("{{time}}", timeStr);
+  return t("dashboard.countdownDays").replace("{{d}}", dayDiff);
+}
+
+/**
  * Build HTML for a single campaign card
  * @param {Object} campaign
  * @param {number} rsvpCount - number of people who plan to attend
@@ -163,20 +249,36 @@ function buildCampaignCard(campaign, rsvpCount = 0, currentLang = "bg") {
 
   const creator = campaign.creator?.username || campaign.creator_username || "";
 
+  const countdownLabel = buildCountdownLabel(campaign, currentLang);
+
+  const CATEGORY_EMOJI = { park: "🌳", street: "🛣️", water: "💧", other: "📦" };
+  const categoryEmoji = CATEGORY_EMOJI[campaign.category] || null;
+  const categoryLabel = campaign.category
+    ? t(
+        `campaign.category${campaign.category.charAt(0).toUpperCase() + campaign.category.slice(1)}`
+      ) || campaign.category
+    : null;
+  const categoryBadge =
+    categoryEmoji && categoryLabel
+      ? `<span class="campaign-category-badge">${categoryEmoji} ${escapeHTML(categoryLabel)}</span>`
+      : "";
+
   return `
     <div class="campaign-card-wrapper">
       <div class="card campaign-card">
         ${
           campaign.before_photo_url
             ? `<img src="${campaign.before_photo_url}" class="card-img-top js-campaign-img" loading="lazy" alt="${escapeHTML(title)}">`
-            : '<div class="card-img-top bg-secondary" style="height:200px;display:flex;align-items:center;justify-content:center;"><span class="text-white">Няма снимка</span></div>'
+            : `<div class="card-img-top bg-secondary" style="height:200px;display:flex;align-items:center;justify-content:center;"><span class="text-white">${t("dashboard.noPhoto")}</span></div>`
         }
         <div class="card-body d-flex flex-column">
+          ${categoryBadge ? `<div class="mb-2">${categoryBadge}</div>` : ""}
           <h5 class="card-title">${escapeHTML(title)}</h5>
           <p class="card-text text-muted mb-1"><small>📍 ${escapeHTML(neighborhood)}</small></p>
           ${scheduledLabel ? `<p class="card-text text-muted mb-1"><small>📅 ${escapeHTML(scheduledLabel)}</small></p>` : ""}
+          ${countdownLabel ? `<p class="card-text mb-1"><small class="campaign-countdown">⏳ ${escapeHTML(countdownLabel)}</small></p>` : ""}
           ${creator ? `<p class="card-text text-muted mb-2"><small>👤 ${escapeHTML(creator)}</small></p>` : ""}
-          ${rsvpCount > 0 ? `<p class="card-text text-muted mb-2"><small>🙋 ${currentLang === "en" ? (rsvpCount === 1 ? "1 person planning to attend" : `${rsvpCount} people planning to attend`) : rsvpCount === 1 ? "1 планира да дойде" : `${rsvpCount} планират да дойдат`}</small></p>` : ""}
+          ${rsvpCount > 0 ? `<p class="card-text text-muted mb-2"><small>🙋 ${t("dashboard.rsvpCount").replace("{{n}}", rsvpCount)}</small></p>` : ""}
           <a href="/campaign/${campaign.id}" class="btn btn-primary w-100">
             ${t("dashboard.viewCampaign") || "Преглед"}
           </a>
@@ -185,9 +287,8 @@ function buildCampaignCard(campaign, rsvpCount = 0, currentLang = "bg") {
     </div>`;
 }
 
-const IMG_FALLBACK_HTML =
-  '<div class="card-img-top bg-secondary" style="height:200px;display:flex;align-items:center;justify-content:center;">' +
-  '<span class="text-white">Няма снимка</span></div>';
+const getImgFallbackHTML = () =>
+  `<div class="card-img-top bg-secondary" style="height:200px;display:flex;align-items:center;justify-content:center;"><span class="text-white">${t("dashboard.noPhoto")}</span></div>`;
 
 function wireImageFallbacks(container) {
   container.querySelectorAll("img.js-campaign-img").forEach((img) => {
@@ -195,7 +296,7 @@ function wireImageFallbacks(container) {
       "error",
       function onImgError() {
         img.style.display = "none";
-        img.insertAdjacentHTML("afterend", IMG_FALLBACK_HTML);
+        img.insertAdjacentHTML("afterend", getImgFallbackHTML());
       },
       { once: true }
     );
@@ -287,14 +388,11 @@ async function loadCampaignsPage(append = false) {
       // Demo mode — load raw once, filter client-side on each reset
       if (!append) {
         rawDemoCampaigns = getDemoCampaigns();
-        let filtered = rawDemoCampaigns;
-        if (currentNeighborhoodFilter) {
-          filtered = filtered.filter((c) => c.neighborhood === currentNeighborhoodFilter);
-        }
-        if (currentCategoryFilter) {
-          filtered = filtered.filter((c) => c.category === currentCategoryFilter);
-        }
-        allDemoCampaigns = filtered;
+        allDemoCampaigns = filterCampaigns(rawDemoCampaigns, {
+          neighborhood: currentNeighborhoodFilter,
+          category: currentCategoryFilter,
+          searchTerm: currentSearchTerm,
+        });
         totalCount = allDemoCampaigns.length;
       }
       campaigns = allDemoCampaigns.slice(currentOffset, currentOffset + PAGE_SIZE);
@@ -314,6 +412,10 @@ async function loadCampaignsPage(append = false) {
 
       if (currentCategoryFilter) {
         query = query.eq("category", currentCategoryFilter);
+      }
+
+      if (currentSearchTerm) {
+        query = query.ilike("title", `%${currentSearchTerm}%`);
       }
 
       const { data, error, count } = await query
@@ -374,12 +476,8 @@ async function loadCampaignsPage(append = false) {
       "Failed to load campaigns. Please try again later."
     );
     if (!append) {
-      document.getElementById(campaignsContainerId).innerHTML = `
-        <div class="col-12">
-          <div class="alert alert-danger" role="alert">
-            Грешка при зареждане на кампаниите. Опитайте отново по-късно.
-          </div>
-        </div>`;
+      document.getElementById(campaignsContainerId).innerHTML =
+        `<div class="col-12"><div class="alert alert-danger" role="alert">${t("dashboard.campaignsLoadError")}</div></div>`;
     }
   }
 }
@@ -413,25 +511,24 @@ function updateSectionTitle(neighborhood, lang) {
   const title = document.getElementById("campaignsSectionTitle");
   if (!title) return;
   const label = localizeNeighborhood(neighborhood, lang) || neighborhood;
-  title.textContent = lang === "en" ? `Cleanups in ${label}` : `Почистване в ${label}`;
+  title.textContent = t("dashboard.cleanupsIn").replace("{{neighborhood}}", label);
 }
 
 /**
  * Remove neighborhood filter and reload all campaigns
  */
-window.showAllCampaigns = async function () {
-  const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+async function showAllCampaigns() {
   currentNeighborhoodFilter = null;
 
   const title = document.getElementById("campaignsSectionTitle");
   if (title) {
     title.setAttribute("data-i18n", "dashboard.nearYou");
-    title.textContent = lang === "en" ? "Cleanups near you" : "Почистване в близост до вас";
+    title.textContent = t("dashboard.nearYou");
   }
 
   document.getElementById("showAllBtn").style.display = "none";
   await loadCampaignsPage(false);
-};
+}
 
 const MEDAL = ["🥇", "🥈", "🥉"];
 
@@ -519,9 +616,85 @@ async function loadLeaderboard(currentUser) {
 }
 
 /**
+ * Load individual user leaderboard — top 20 users by points_balance.
+ * @param {Object|null} currentUser
+ */
+async function loadUserLeaderboard(currentUser) {
+  const container = document.getElementById("userLeaderboardContainer");
+  if (!container) return;
+
+  const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+  const pointsLabel = t("leaderboard.points") || "точки";
+  const youLabel = t("leaderboard.you") || "ти";
+  const noUsersMsg = t("leaderboard.noUsers") || "Все още няма класирани потребители";
+
+  try {
+    let rows;
+
+    if (isDemoUser(currentUser)) {
+      // Demo: build from demoUsers sorted by points
+      const { getDemoUsers } = await import("../utils/demoMode.js");
+      rows = getDemoUsers()
+        .filter((u) => u.points_balance > 0 && u.username)
+        .sort((a, b) => b.points_balance - a.points_balance)
+        .slice(0, 20)
+        .map((u) => ({
+          id: u.id,
+          username: u.username,
+          neighborhood: u.neighborhood,
+          total_points: u.points_balance,
+        }));
+    } else {
+      const { data, error } = await supabase
+        .from("user_leaderboard")
+        .select("id, username, neighborhood, total_points")
+        .limit(20);
+      if (error) throw error;
+      rows = data || [];
+    }
+
+    if (!rows.length) {
+      container.innerHTML = `<p class="text-muted">${noUsersMsg}</p>`;
+      return;
+    }
+
+    const maxPoints = rows[0].total_points || 1;
+    const cards = rows.map((row, i) => {
+      const medal = MEDAL[i] || `${i + 1}.`;
+      const isYou = row.id === currentUser?.id;
+      const pct = Math.round((row.total_points / maxPoints) * 100);
+      const neighborhood = row.neighborhood
+        ? ` · ${localizeNeighborhood(row.neighborhood, lang)}`
+        : "";
+      return `
+        <div class="leaderboard-card${isYou ? " leaderboard-card--yours" : ""}">
+          <div class="leaderboard-rank">${medal}</div>
+          <div class="leaderboard-info">
+            <div class="leaderboard-name">
+              ${escapeHTML(row.username)}
+              ${isYou ? `<span class="leaderboard-badge">${youLabel}</span>` : ""}
+              <span class="leaderboard-neighborhood">${escapeHTML(neighborhood)}</span>
+            </div>
+            <div class="leaderboard-bar-wrap">
+              <div class="leaderboard-bar" style="width:${pct}%"></div>
+            </div>
+            <div class="leaderboard-stats">
+              <strong>${row.total_points}</strong> ${pointsLabel}
+            </div>
+          </div>
+        </div>`;
+    });
+
+    container.innerHTML = cards.join("");
+  } catch (err) {
+    console.warn("[user-leaderboard] failed to load:", err.message);
+  }
+}
+
+/**
  * Filter campaigns by category
  */
-window.filterByCategory = async function (btn) {
+async function filterByCategory(btn) {
   const category = btn.dataset.category || null;
   currentCategoryFilter = category;
 
@@ -530,7 +703,7 @@ window.filterByCategory = async function (btn) {
   btn.classList.add("active");
 
   await loadCampaignsPage(false);
-};
+}
 
 /**
  * Handle logout

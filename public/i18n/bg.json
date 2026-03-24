@@ -9,9 +9,20 @@
     "profile": "Профил",
     "rewards": "Награди",
     "admin": "Админ",
+    "events": "Събития",
     "communityStats": "Статистика",
     "logout": "Изход",
     "language": "Език"
+  },
+  "events": {
+    "title": "Предстоящи Събития",
+    "myUpcoming": "Моите предстоящи",
+    "allUpcoming": "Всички предстоящи кампании",
+    "noUpcoming": "Нямаш RSVP за предстоящи кампании",
+    "noEvents": "Няма предстоящи кампании",
+    "cancelRsvp": "❌ Откажи участие",
+    "view": "Преглед",
+    "rsvpBadge": "✅ RSVP"
   },
   "notifications": {
     "title": "Известия",
@@ -37,6 +48,8 @@
     "demoMode": "🎮 Demo режим (Админ)",
     "forgotPassword": "Забравена парола?",
     "tooManyAttempts": "Твърде много опити за вход. Опитайте отново след 15 минути.",
+    "rateLimitTitle": "Временно блокиран",
+    "rateLimitText": "Твърде много неуспешни опити. Опитайте отново след {{time}}.",
     "rememberMe": "Запомни ме",
     "emailPlaceholder": "твоят@имейл.com",
     "passwordPlaceholder": "Въведи парола",
@@ -107,6 +120,8 @@
   "dashboard": {
     "title": "Кампании",
     "nearYou": "Почистване в близост до вас",
+    "searchPlaceholder": "Търси кампания...",
+    "filterAllNeighborhoods": "Всички квартали",
     "viewCampaign": "Преглед",
     "noCampaigns": "Няма активни кампании",
     "loading": "Зареждане на кампаниите...",
@@ -115,7 +130,16 @@
     "showAll": "Виж всички квартали",
     "adminBannerLabel": "Администратор:",
     "adminBannerPending": "чакащи одобрения",
-    "adminBannerBtn": "Към Admin панела"
+    "adminBannerBtn": "Към Admin панела",
+    "loadError": "Грешка при зареждане. Опресни страницата.",
+    "noPhoto": "Няма снимка",
+    "rsvpCount": "{{n}} планират да дойдат",
+    "campaignsLoadError": "Грешка при зареждане на кампаниите. Опитайте отново по-късно.",
+    "cleanupsIn": "Почистване в {{neighborhood}}",
+    "countdownToday": "Днес в {{time}}",
+    "countdownTomorrow": "Утре в {{time}}",
+    "countdownDays": "След {{d}} дни",
+    "countdownSoon": "Скоро започва!"
   },
   "profile": {
     "title": "Мой профил",
@@ -151,6 +175,9 @@
     "rankBronze": "Бронз",
     "rankSilver": "Сребро",
     "rankGold": "Злато",
+    "rankProgressToSilver": "Още {{n}} т. до Сребро",
+    "rankProgressToGold": "Още {{n}} т. до Злато",
+    "rankProgressMax": "Максимален ранг!",
     "pointsLabel": "точки",
     "notJoinedYet": "Все още не си се присъединил към кампания",
     "loadParticipationsError": "Грешка при зареждане на участията.",
@@ -162,6 +189,7 @@
     "unknown": "Неизвестен",
     "statusLabel": "Статус:",
     "dateLabel": "Дата:",
+    "pointsEarned": "Точки:",
     "earned": "✓ Спечелени",
     "spent": "✗ Изразходвани",
     "loadTransactionsError": "Грешка при зареждане на транзакциите.",
@@ -189,7 +217,16 @@
     "mapTitle": "📍 Избери локация на картата",
     "mapHint": "Кликни на картата за да зададеш координатите на почистването",
     "selectedLocation": "Избрана локация:",
-    "createError": "Неуспешно създаване на кампания. Опитай отново."
+    "createError": "Неуспешно създаване на кампания. Опитай отново.",
+    "fieldTitle": "Заглавие",
+    "fieldDescription": "Описание",
+    "fieldNeighborhood": "Квартал",
+    "fieldPhoto": "Снимка",
+    "fieldLocation": "Локация на картата",
+    "fieldDate": "Дата на почистването",
+    "fieldStartTime": "Начален час",
+    "fillInPrompt": "Моля попълнете: {{fields}}",
+    "clickToCreate": "Кликни за създаване на кампания"
   },
   "campaign": {
     "title": "Детали на кампанията",
@@ -219,6 +256,8 @@
     "rsvpTitle": "🙋 Ще участваш ли?",
     "rsvpButton": "✅ Ще участвам",
     "cancelRsvpButton": "❌ Отказвам",
+    "addToCalendar": "📅 Добави в календара",
+    "dragToCompare": "Плъзни за сравнение",
     "joinCampaign": "Присъединяване",
     "joinDescription": "Натиснете бутона, за да се присъедините към тази кампания за почистване!",
     "joinButton": "Присъедини се",
@@ -314,7 +353,12 @@
     "points": "точки",
     "participants": "участника",
     "yourNeighborhood": "твоят квартал",
-    "noData": "Все още няма данни"
+    "noData": "Все още няма данни",
+    "tabNeighborhoods": "🏘️ Квартали",
+    "tabUsers": "👥 Доброволци",
+    "userTitle": "🏆 Класация на доброволците",
+    "you": "ти",
+    "noUsers": "Все още няма класирани потребители"
   },
   "rewards": {
     "title": "Награди",
@@ -335,7 +379,8 @@
     "outOfStock": "Изчерпан",
     "buyBtn": "✓ Купи",
     "notEnoughPoints": "✗ Недостатъчно точки",
-    "left": "налични"
+    "left": "налични",
+    "purchaseSuccess": "{{title}} закупено! Баланс: {{balance}} ⭐"
   },
   "admin": {
     "title": "Админ панел",

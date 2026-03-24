@@ -27,6 +27,7 @@ import {
 } from "../utils/demoMode.js";
 import { rsvpToCampaign, cancelRsvp, getRsvpCount, getUserRsvp } from "../services/events.js";
 import { initNetworkStatusBanner } from "../utils/networkStatus.js";
+import { initBottomNav } from "../hooks/index.js";
 
 // Global variables
 let campaign = null;
@@ -41,6 +42,7 @@ let userHasRsvpd = false;
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", async () => {
   initNetworkStatusBanner();
+  initBottomNav();
   initSwalFallback();
   try {
     // Initialize i18n (realTime = false)
@@ -69,6 +71,22 @@ document.addEventListener("DOMContentLoaded", async () => {
         initNotificationBell(storedUser.id);
       });
     }
+
+    // Wire up button event listeners (replaces inline onclick in HTML)
+    document.getElementById("logoutBtn")?.addEventListener("click", (e) => {
+      e.preventDefault();
+      handleLogout();
+    });
+    document.getElementById("editCampaignBtn")?.addEventListener("click", toggleEditCampaign);
+    document.getElementById("cancelEditBtn")?.addEventListener("click", toggleEditCampaign);
+    document.getElementById("rsvpBtn")?.addEventListener("click", handleRsvp);
+    document.getElementById("cancelRsvpBtn")?.addEventListener("click", handleCancelRsvp);
+    document.getElementById("addToCalendarBtn")?.addEventListener("click", downloadIcal);
+    document.getElementById("joinBtn")?.addEventListener("click", handleJoin);
+    document.getElementById("uploadBtn")?.addEventListener("click", handleUploadPhoto);
+    document.getElementById("postCommentBtn")?.addEventListener("click", handleAddComment);
+    document.getElementById("reportBtn")?.addEventListener("click", handleReport);
+    document.getElementById("deleteBtn")?.addEventListener("click", handleDelete);
 
     await checkAuth();
     await loadCampaignDetail();
@@ -216,6 +234,12 @@ async function loadCampaignDetail() {
     // Display the campaign details
     displayCampaignDetails(campaign, participations || []);
 
+    // Before/after slider — find best approved after photo
+    const bestAfterPhoto =
+      (participations || []).filter((p) => p.status === "approved" && p.after_photo_url).at(0)
+        ?.after_photo_url || null;
+    initComparisonSlider(bestAfterPhoto);
+
     // Check delete eligibility and show button if applicable
     await checkDeleteEligibility(campaignId, participations || []);
 
@@ -263,10 +287,19 @@ function displayCampaignDetails(campaignData, participations) {
     title = title[lang] || title.bg || Object.values(title)[0];
   document.getElementById("campaignTitle").textContent = title;
 
-  // Before Photo
-  const photoElement = document.getElementById("beforePhoto");
-  photoElement.src = campaignData.before_photo_url;
-  photoElement.alt = `Before photo for ${title}`;
+  // Before Photo — set on both slider img and fallback img
+  const beforeSrc = campaignData.before_photo_url || "";
+  const beforeAlt = `Before photo for ${title}`;
+  const photoEl = document.getElementById("beforePhoto");
+  const photoOnlyEl = document.getElementById("beforePhotoOnly");
+  if (photoEl) {
+    photoEl.src = beforeSrc;
+    photoEl.alt = beforeAlt;
+  }
+  if (photoOnlyEl) {
+    photoOnlyEl.src = beforeSrc;
+    photoOnlyEl.alt = beforeAlt;
+  }
 
   // Status
   const statusBadge = document.getElementById("statusBadge");
@@ -1017,13 +1050,21 @@ function renderComments(comments) {
           <div class="comment-header d-flex align-items-center gap-2 mb-1">
             <strong class="comment-username">${escapeHTML(c.username || "User")}</strong>
             <span class="comment-date text-muted" style="font-size:0.82rem">${date}</span>
-            ${canDelete ? `<button class="btn btn-sm btn-link text-danger p-0 ms-auto" onclick="handleDeleteComment('${escapeHTML(c.id)}')" title="Delete">🗑️</button>` : ""}
+            ${canDelete ? `<button class="btn btn-sm btn-link text-danger p-0 ms-auto" data-delete-comment="${escapeHTML(c.id)}" title="Delete">🗑️</button>` : ""}
           </div>
           <div class="comment-text">${escapeHTML(c.text)}</div>
         </div>
       `;
     })
     .join("");
+
+  if (!list.dataset.deleteListenerAttached) {
+    list.dataset.deleteListenerAttached = "1";
+    list.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-delete-comment]");
+      if (btn) handleDeleteComment(btn.dataset.deleteComment);
+    });
+  }
 }
 
 /**
@@ -1228,7 +1269,160 @@ function showRsvpUI() {
   document.getElementById("rsvpCountText").textContent = countText;
   document.getElementById("rsvpBtn").style.display = userHasRsvpd ? "none" : "inline-block";
   document.getElementById("cancelRsvpBtn").style.display = userHasRsvpd ? "inline-block" : "none";
+
+  // Show "Add to Calendar" button when campaign has a future scheduled date
+  const calBtn = document.getElementById("addToCalendarBtn");
+  if (calBtn && campaign.scheduled_date && campaign.start_time) {
+    const startMs = new Date(`${campaign.scheduled_date}T${campaign.start_time}`).getTime();
+    calBtn.style.display = startMs > Date.now() ? "inline-block" : "none";
+  }
+
   section.style.display = "block";
+}
+
+/**
+ * Initialize the before/after comparison slider.
+ * If afterPhotoUrl is null, falls back to showing only the before photo.
+ */
+function initComparisonSlider(afterPhotoUrl) {
+  const wrap = document.getElementById("comparisonWrap");
+  const beforeOnlyWrap = document.getElementById("beforeOnlyWrap");
+  if (!afterPhotoUrl || !wrap) {
+    if (beforeOnlyWrap) beforeOnlyWrap.style.display = "block";
+    return;
+  }
+
+  const afterImg = document.getElementById("afterPhotoSlider");
+  if (afterImg) afterImg.src = afterPhotoUrl;
+  wrap.style.display = "block";
+  if (beforeOnlyWrap) beforeOnlyWrap.style.display = "none";
+
+  const container = document.getElementById("comparisonContainer");
+  const afterClip = document.getElementById("afterClip");
+  const divider = document.getElementById("comparisonDivider");
+  if (!container || !afterClip || !divider) return;
+
+  // Start at 50/50 using clip-path reveal from the right half
+  afterClip.style.clipPath = "polygon(50% 0%, 100% 0%, 100% 100%, 50% 100%)";
+  divider.style.left = "50%";
+
+  let dragging = false;
+
+  function setPosition(clientX) {
+    const rect = container.getBoundingClientRect();
+    const pct = Math.min(Math.max((clientX - rect.left) / rect.width, 0.02), 0.98);
+    const left = pct * 100;
+    afterClip.style.clipPath = `polygon(${left}% 0%, 100% 0%, 100% 100%, ${left}% 100%)`;
+    divider.style.left = `${left}%`;
+  }
+
+  divider.addEventListener("mousedown", () => {
+    dragging = true;
+  });
+  window.addEventListener("mouseup", () => {
+    dragging = false;
+  });
+  window.addEventListener("mousemove", (e) => {
+    if (dragging) setPosition(e.clientX);
+  });
+
+  divider.addEventListener(
+    "touchstart",
+    () => {
+      dragging = true;
+    },
+    { passive: true }
+  );
+  window.addEventListener("touchend", () => {
+    dragging = false;
+  });
+  window.addEventListener(
+    "touchmove",
+    (e) => {
+      if (dragging) setPosition(e.touches[0].clientX);
+    },
+    { passive: true }
+  );
+}
+
+/**
+ * Generate and download an iCal (.ics) file for the current campaign.
+ * Builds a valid RFC 5545 VCALENDAR string client-side — no backend call needed.
+ */
+function downloadIcal() {
+  if (!campaign) return;
+
+  const pad = (n) => String(n).padStart(2, "0");
+  // RFC 5545: escape backslash, semicolon, comma, and newlines in text values
+  const icalEscape = (s) =>
+    String(s)
+      .replace(/\\/g, "\\\\")
+      .replace(/;/g, "\\;")
+      .replace(/,/g, "\\,")
+      .replace(/\n/g, "\\n")
+      .replace(/\r/g, "");
+  // Convert a date + time string to iCal local datetime (no timezone suffix = floating)
+  const toIcalDate = (dateStr, timeStr) => {
+    const d = new Date(`${dateStr}T${timeStr || "09:00"}:00`);
+    return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+  };
+  // Fallback end = start + 2 hours, using Date arithmetic (handles midnight wrap correctly)
+  const toIcalDatePlusHours = (dateStr, timeStr, hours) => {
+    const d = new Date(`${dateStr}T${timeStr || "09:00"}:00`);
+    d.setHours(d.getHours() + hours);
+    return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+  };
+
+  const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+  let titleRaw = campaign.title;
+  try {
+    titleRaw = JSON.parse(campaign.title);
+  } catch {}
+  const title =
+    typeof titleRaw === "object"
+      ? titleRaw[lang] || titleRaw.bg || titleRaw.en || "Cleanup"
+      : titleRaw || "Cleanup";
+
+  const dtStart = toIcalDate(campaign.scheduled_date, campaign.start_time);
+  const dtEnd = campaign.end_time
+    ? toIcalDate(campaign.scheduled_date, campaign.end_time)
+    : toIcalDatePlusHours(campaign.scheduled_date, campaign.start_time, 2);
+
+  const loc =
+    campaign.location_lat && campaign.location_lng
+      ? `${campaign.location_lat},${campaign.location_lng}`
+      : campaign.neighborhood || "";
+
+  const uid = `campaign-${campaign.id}@cleanquarter.netlify.app`;
+  const now = new Date();
+  const dtstamp = `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(now.getUTCDate())}T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(now.getUTCSeconds())}Z`;
+
+  const ics = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Clean Quarter//CleanQuarter//BG",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    "BEGIN:VEVENT",
+    `UID:${uid}`,
+    `DTSTAMP:${dtstamp}`,
+    `DTSTART:${dtStart}`,
+    `DTEND:${dtEnd}`,
+    `SUMMARY:${icalEscape(title)}`,
+    loc ? `LOCATION:${icalEscape(loc)}` : "",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ]
+    .filter(Boolean)
+    .join("\r\n");
+
+  const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `cleanup-${campaign.id}.ics`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 /**
@@ -1287,15 +1481,3 @@ async function handleCancelRsvp() {
     btn.disabled = false;
   }
 }
-
-// Expose functions to window for onclick handlers
-window.handleLogout = handleLogout;
-window.handleDelete = handleDelete;
-window.handleJoin = handleJoin;
-window.handleUploadPhoto = handleUploadPhoto;
-window.toggleEditCampaign = toggleEditCampaign;
-window.handleAddComment = handleAddComment;
-window.handleDeleteComment = handleDeleteComment;
-window.handleReport = handleReport;
-window.handleRsvp = handleRsvp;
-window.handleCancelRsvp = handleCancelRsvp;

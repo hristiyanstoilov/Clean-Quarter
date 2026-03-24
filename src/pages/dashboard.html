@@ -43,6 +43,9 @@
               >
             </li>
             <li class="nav-item">
+              <a class="nav-link" href="/events" data-i18n="nav.events">Събития</a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link" href="/rewards" data-i18n="nav.rewards">Награди</a>
             </li>
             <li class="nav-item">
@@ -139,7 +142,6 @@
             <button
               id="showAllBtn"
               class="btn btn-outline-secondary btn-sm"
-              onclick="showAllCampaigns()"
               style="display: none"
               data-i18n="dashboard.showAll"
             >
@@ -147,46 +149,46 @@
             </button>
           </div>
 
+          <!-- Search & Neighborhood Filter -->
+          <div class="search-filter-bar">
+            <input
+              type="search"
+              id="campaignSearchInput"
+              class="search-filter-bar__input"
+              data-i18n-placeholder="dashboard.searchPlaceholder"
+              placeholder="Търси кампания..."
+              aria-label="Търси кампания"
+              autocomplete="off"
+            />
+            <select
+              id="neighborhoodSelect"
+              class="search-filter-bar__select"
+              aria-label="Филтър по квартал"
+            >
+              <option value="" data-i18n="dashboard.filterAllNeighborhoods">Всички квартали</option>
+              <option value="Studentski Grad">Студентски Град</option>
+              <option value="Darvenitsa">Дървеница</option>
+              <option value="Musagenitsa">Мусагеница</option>
+              <option value="Vitosha (VEC)">Витоша (ВЕЦ)</option>
+              <option value="Malinova Dolina">Малинова Долина</option>
+            </select>
+          </div>
+
           <!-- Category Filter -->
           <div class="category-filter" id="categoryFilter">
-            <button
-              class="btn-category active"
-              data-category=""
-              onclick="filterByCategory(this)"
-              data-i18n="campaign.categoryAll"
-            >
+            <button class="btn-category active" data-category="" data-i18n="campaign.categoryAll">
               Всички
             </button>
-            <button
-              class="btn-category"
-              data-category="park"
-              onclick="filterByCategory(this)"
-              data-i18n="campaign.categoryPark"
-            >
+            <button class="btn-category" data-category="park" data-i18n="campaign.categoryPark">
               🌳 Парк
             </button>
-            <button
-              class="btn-category"
-              data-category="street"
-              onclick="filterByCategory(this)"
-              data-i18n="campaign.categoryStreet"
-            >
+            <button class="btn-category" data-category="street" data-i18n="campaign.categoryStreet">
               🛣️ Улица
             </button>
-            <button
-              class="btn-category"
-              data-category="water"
-              onclick="filterByCategory(this)"
-              data-i18n="campaign.categoryWater"
-            >
+            <button class="btn-category" data-category="water" data-i18n="campaign.categoryWater">
               💧 Вода
             </button>
-            <button
-              class="btn-category"
-              data-category="other"
-              onclick="filterByCategory(this)"
-              data-i18n="campaign.categoryOther"
-            >
+            <button class="btn-category" data-category="other" data-i18n="campaign.categoryOther">
               📦 Друго
             </button>
           </div>
@@ -216,11 +218,34 @@
         </div>
       </div>
 
-      <!-- Neighborhood Leaderboard -->
+      <!-- Leaderboard -->
       <div class="leaderboard-section">
         <div class="container-fluid">
-          <h3 class="leaderboard-title" data-i18n="leaderboard.title">🏆 Класация на кварталите</h3>
+          <h3 class="leaderboard-title" id="leaderboardTitle" data-i18n="leaderboard.title">
+            🏆 Класация на кварталите
+          </h3>
+          <div class="leaderboard-tabs" role="tablist">
+            <button
+              class="lb-tab lb-tab--active"
+              id="lbNeighborhoodTab"
+              role="tab"
+              aria-selected="true"
+              data-i18n="leaderboard.tabNeighborhoods"
+            >
+              🏘️ Квартали
+            </button>
+            <button
+              class="lb-tab"
+              id="lbUsersTab"
+              role="tab"
+              aria-selected="false"
+              data-i18n="leaderboard.tabUsers"
+            >
+              👥 Доброволци
+            </button>
+          </div>
           <div id="leaderboardContainer" class="leaderboard-grid"></div>
+          <div id="userLeaderboardContainer" class="leaderboard-grid" style="display: none"></div>
         </div>
       </div>
     </div>
@@ -231,5 +256,29 @@
 
     <!-- Dashboard Script -->
     <script type="module" src="../scripts/dashboard.js"></script>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="bottom-nav" id="bottomNav" aria-label="Mobile navigation">
+      <a class="bottom-nav__link" href="/dashboard">
+        <span class="bottom-nav__icon">🏠</span>
+        <span data-i18n="nav.dashboard">Начало</span>
+      </a>
+      <a class="bottom-nav__link" href="/create-campaign">
+        <span class="bottom-nav__icon">➕</span>
+        <span data-i18n="nav.createCampaign">Нова кампания</span>
+      </a>
+      <a class="bottom-nav__link" href="/events">
+        <span class="bottom-nav__icon">🗓️</span>
+        <span data-i18n="nav.events">Събития</span>
+      </a>
+      <a class="bottom-nav__link" href="/rewards">
+        <span class="bottom-nav__icon">🏆</span>
+        <span data-i18n="nav.rewards">Награди</span>
+      </a>
+      <a class="bottom-nav__link" href="/profile">
+        <span class="bottom-nav__icon">👤</span>
+        <span data-i18n="nav.profile">Профил</span>
+      </a>
+    </nav>
   </body>
 </html>
