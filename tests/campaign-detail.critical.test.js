@@ -114,10 +114,10 @@ vi.mock('leaflet', () => ({ default: { map: vi.fn(), tileLayer: vi.fn(), marker:
 import {
   handleJoin,
   handleUploadPhoto,
-  _setCurrentUser,
-  _setUserParticipation,
-  _getUserParticipation,
+  __testOnly__,
 } from '../src/scripts/campaign-detail.js';
+
+const { setCurrentUser: _setCurrentUser, setUserParticipation: _setUserParticipation, getUserParticipation: _getUserParticipation } = __testOnly__;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

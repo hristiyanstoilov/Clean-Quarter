@@ -136,7 +136,7 @@ function initMap() {
     const { lat, lng } = e.latlng;
 
     if (!isWithinSofia(lat, lng)) {
-      const msg = t("campaign.outsideSofia") || "❌ Локацията трябва да е в границите на София";
+      const msg = t("campaign.outsideSofia");
       const tempMarker = L.marker([lat, lng]).addTo(map).bindPopup(msg).openPopup();
       setTimeout(() => map.removeLayer(tempMarker), 2500);
       return;

@@ -1471,15 +1471,19 @@ async function handleRsvp() {
 /**
  * Handle cancelling RSVP to the current campaign
  */
-// --- Test exports (tree-shaken in production builds) ---
 export { handleJoin, handleUploadPhoto };
-export const _setCurrentUser = (u) => {
-  currentUser = u;
+
+// Test-only helpers — bundler tree-shakes this object because no production
+// code imports it. Named __testOnly__ to make intent explicit.
+export const __testOnly__ = {
+  setCurrentUser: (u) => {
+    currentUser = u;
+  },
+  setUserParticipation: (p) => {
+    userParticipation = p;
+  },
+  getUserParticipation: () => userParticipation,
 };
-export const _setUserParticipation = (p) => {
-  userParticipation = p;
-};
-export const _getUserParticipation = () => userParticipation;
 
 async function handleCancelRsvp() {
   const btn = document.getElementById("cancelRsvpBtn");
