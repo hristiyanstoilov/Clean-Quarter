@@ -371,6 +371,65 @@ Closing the gap between what the DB supports and what the UI exposes.
 
 ---
 
+#### UX Debt & Navigation Architecture (Mar 2026 audit)
+
+Senior UI/UX audit conducted Mar 24, 2026. Findings grouped by severity.
+
+**Navigation Architecture — structural decisions**
+
+The current top navbar treats all destinations with equal visual weight. Recommended restructuring:
+
+| Item | Current | Recommended |
+|------|---------|-------------|
+| "Нова кампания" | Plain nav-link | `btn btn-success` CTA — it's the primary product action, not a page link |
+| "Събития" | Top nav link | Consider removing from top nav; accessible via bottom nav + dashboard; rename to "Моите Събития" for clarity |
+| "Награди" | Plain nav-link | Add live points counter next to icon: `🏆 143 ⭐` — makes the gamification bar always visible |
+| Dashboard/Home | Only via logo click | Add explicit "Начало" link OR make logo visually obvious as home (tooltip, underline on hover) |
+| "Излизане" | Inline with main nav | Move to profile dropdown or add visual separator — it's a destructive action, not a destination |
+
+**Critical UX gaps (must fix before v1.0 declaration)**
+
+| Issue | Severity | Location | Fix effort |
+|-------|----------|----------|-----------|
+| Campaign cards not keyboard accessible — no `tabindex="0"`, no `role`, no Enter handler | Critical | `dashboard.js` DOM injection | Medium |
+| Rewards page has no empty state — blank grid if no rewards exist | Critical | `rewards.html:141` | Low |
+| Notification bell renders for demo users but is non-functional (false affordance) | Critical | `dashboard.js:70` | Low |
+| Required form fields have no visual marker — only HTML5 `required` attribute, no `*` | High | All forms | Low |
+| Create Campaign has no Back button — users can only use browser back or navbar | High | `create-campaign.html` | Low |
+| JS-rendered campaign card images have no `alt` text | High | `dashboard.js` | Low |
+| Form validation uses browser-default messages (not localized, not styled) | High | `create-campaign.html` | Medium |
+
+**Medium priority UX improvements**
+
+| Issue | Location | Fix effort |
+|-------|----------|-----------|
+| Rewards page has no search or filters — feature parity gap vs dashboard | `rewards.html` | Medium |
+| Dashboard campaigns empty state has no CTA ("Няма кампании → ➕ Създай нова") | `dashboard.html` | Low |
+| Campaign detail edit form unclear — save/cancel flow ambiguous | `campaign-detail.html` | Medium |
+| `loading="lazy"` missing on all campaign card images — will hurt at 100+ campaigns | `dashboard.js` | Low |
+| Button styles duplicated across CSS files — `.btn-back`, `.btn-secondary-action` outside `style.css` | Multiple `.css` files | Medium |
+| Event card neighborhood label at `.8rem` may be too small on mobile (style.css:792) | `style.css` | Low |
+| Footer uses hardcoded `#333` instead of CSS variable | `style.css:328` | Low |
+
+**Accessibility gaps (WCAG)**
+
+| Issue | Severity | Fix |
+|-------|----------|-----|
+| Campaign cards not reachable by keyboard (no `tabindex`, no `role="link"`) | High | Add `tabindex="0"` + Enter/Space handler in `dashboard.js` |
+| Comparison slider is mouse-only — keyboard users cannot interact | Medium | Add ArrowLeft/ArrowRight key support in `campaign-detail.js` |
+| Admin photo modal has no focus trap — Escape may not close it | Medium | Trap focus inside modal, close on Escape |
+| Profile page has no `Back to Dashboard` explicit affordance | Low | Add breadcrumb or back link |
+
+**Quick wins (< 1 hour each)**
+
+1. `required::after { content: " *"; color: var(--danger-color); }` in `style.css` — marks all required fields
+2. Empty state for rewards grid — 5 lines of HTML + show/hide in `rewards.js`
+3. Hide notification bell for demo users — 1 `if (isDemoUser())` check in nav init
+4. `loading="lazy"` on all `<img>` in JS-rendered cards — one attribute per template literal
+5. "← Назад към началото" link at top of `create-campaign.html` — 2 lines of HTML
+
+---
+
 ### v1.3 — Growth Infrastructure (3–6 months)
 
 | Feature | Priority | Rationale |
