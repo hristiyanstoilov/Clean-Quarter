@@ -84,20 +84,8 @@
             <p style="margin: 0.5rem 0 0 0; opacity: 0.9">Clean Quarter / Чист Квартал</p>
           </div>
           <div class="d-flex gap-2 align-items-center">
-            <button
-              class="btn btn-outline-light btn-sm lang-btn active"
-              id="btnBg"
-              onclick="showLang('bg')"
-            >
-              БГ
-            </button>
-            <button
-              class="btn btn-outline-light btn-sm lang-btn"
-              id="btnEn"
-              onclick="showLang('en')"
-            >
-              EN
-            </button>
+            <button class="btn btn-outline-light btn-sm lang-btn active" id="btnBg">БГ</button>
+            <button class="btn btn-outline-light btn-sm lang-btn" id="btnEn">EN</button>
             <a href="/" class="btn btn-light btn-sm ms-2">← <span id="backLabel">Назад</span></a>
           </div>
         </div>
@@ -514,21 +502,6 @@
       </div>
     </div>
 
-    <script>
-      function showLang(lang) {
-        document.getElementById("contentBg").style.display = lang === "bg" ? "block" : "none";
-        document.getElementById("contentEn").style.display = lang === "en" ? "block" : "none";
-        document.getElementById("btnBg").classList.toggle("active", lang === "bg");
-        document.getElementById("btnEn").classList.toggle("active", lang === "en");
-        document.getElementById("pageTitle").textContent =
-          lang === "bg"
-            ? "Условия за използване и Поверителност"
-            : "Terms & Conditions and Privacy Policy";
-        document.getElementById("backLabel").textContent = lang === "bg" ? "Назад" : "Back";
-      }
-      // Sync with app language preference
-      const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
-      if (lang === "en") showLang("en");
-    </script>
+    <script src="../scripts/privacy.js"></script>
   </body>
 </html>
