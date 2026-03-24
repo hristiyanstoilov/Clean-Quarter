@@ -371,6 +371,81 @@ Closing the gap between what the DB supports and what the UI exposes.
 
 ---
 
+#### UX Debt & Navigation Architecture (Mar 2026 audit)
+
+Senior UI/UX audit conducted Mar 24, 2026. Findings grouped by severity.
+
+**Navigation Architecture — structural decisions**
+
+The current top navbar treats all destinations with equal visual weight. Recommended restructuring:
+
+| Item | Current | Recommended |
+|------|---------|-------------|
+| "Нова кампания" | Plain nav-link | `btn btn-success` CTA — it's the primary product action, not a page link |
+| "Събития" | Top nav link | Consider removing from top nav; accessible via bottom nav + dashboard; rename to "Моите Събития" for clarity |
+| "Награди" | Plain nav-link | Add live points counter next to icon: `🏆 143 ⭐` — makes the gamification bar always visible |
+| Dashboard/Home | Only via logo click | Add explicit "Начало" link OR make logo visually obvious as home (tooltip, underline on hover) |
+| "Излизане" | Inline with main nav | Move to profile dropdown or add visual separator — it's a destructive action, not a destination |
+
+**Critical UX gaps (must fix before v1.0 declaration)**
+
+| Issue | Severity | Location | Fix effort |
+|-------|----------|----------|-----------|
+| Campaign cards not keyboard accessible — no `tabindex="0"`, no `role`, no Enter handler | Critical | `dashboard.js` DOM injection | Medium |
+| Rewards page has no empty state — blank grid if no rewards exist | Critical | `rewards.html:141` | Low |
+| Notification bell renders for demo users but is non-functional (false affordance) | Critical | `dashboard.js:70` | Low |
+| Required form fields have no visual marker — only HTML5 `required` attribute, no `*` | High | All forms | Low |
+| Create Campaign has no Back button — users can only use browser back or navbar | High | `create-campaign.html` | Low |
+| JS-rendered campaign card images have no `alt` text | High | `dashboard.js` | Low |
+| Form validation uses browser-default messages (not localized, not styled) | High | `create-campaign.html` | Medium |
+
+**Medium priority UX improvements**
+
+| Issue | Location | Fix effort |
+|-------|----------|-----------|
+| Rewards page has no search or filters — feature parity gap vs dashboard | `rewards.html` | Medium |
+| Dashboard campaigns empty state has no CTA ("Няма кампании → ➕ Създай нова") | `dashboard.html` | Low |
+| Campaign detail edit form unclear — save/cancel flow ambiguous | `campaign-detail.html` | Medium |
+| `loading="lazy"` missing on all campaign card images — will hurt at 100+ campaigns | `dashboard.js` | Low |
+| Button styles duplicated across CSS files — `.btn-back`, `.btn-secondary-action` outside `style.css` | Multiple `.css` files | Medium |
+| Event card neighborhood label at `.8rem` may be too small on mobile (style.css:792) | `style.css` | Low |
+| Footer uses hardcoded `#333` instead of CSS variable | `style.css:328` | Low |
+
+**Accessibility gaps (WCAG)**
+
+| Issue | Severity | Fix |
+|-------|----------|-----|
+| Campaign cards not reachable by keyboard (no `tabindex`, no `role="link"`) | High | Add `tabindex="0"` + Enter/Space handler in `dashboard.js` |
+| Comparison slider is mouse-only — keyboard users cannot interact | Medium | Add ArrowLeft/ArrowRight key support in `campaign-detail.js` |
+| Admin photo modal has no focus trap — Escape may not close it | Medium | Trap focus inside modal, close on Escape |
+| Profile page has no `Back to Dashboard` explicit affordance | Low | Add breadcrumb or back link |
+
+**Additional findings from deep scan (Mar 24, 2026)**
+
+| Issue | Severity | Location |
+|-------|----------|----------|
+| `setupGlobalErrorHandling()` exported but never called — unhandled rejections silently swallowed | High | `src/services/errorHandler.js:260` |
+| `initializePWA()` exported but never called — install prompt, push permission request are dead code | High | `src/services/pwa.js:13` |
+| PWA service worker registered at wrong path `/public/service-worker.js` (should be `/service-worker.js`) — SW never activates | High | `src/services/pwa.js:17` |
+| Double error dialog on login/register/logout — `auth.js` shows Swal then throws, caller shows Swal again | High | `src/services/auth.js:77,134,156` + `src/main.js` |
+| Double error dialog on photo upload — same pattern in `storage.js` | Medium | `src/services/storage.js:38,57,88` |
+| XSS in Leaflet popups — `campaign.title` and `disposal_point.name` inserted via template literal without `escapeHTML()` | High | `src/services/map.js:100–104,176–179` |
+| Neighbourhood string mismatch — `"Vitosha (VEC)"` vs `"Kv. Vitosha (VEC)"` across files — leaderboard lookup silently fails | Medium | `dashboard.js:115` vs `campaign-filters.js:9` |
+| `notifications.js` XSS — legacy DB notification messages (containing usernames) inserted as raw innerHTML | Medium | `src/services/notifications.js:155` |
+
+**Quick wins (< 1 hour each)**
+
+1. `required::after { content: " *"; color: var(--danger-color); }` in `style.css` — marks all required fields
+2. Empty state for rewards grid — 5 lines of HTML + show/hide in `rewards.js`
+3. Hide notification bell for demo users — 1 `if (isDemoUser())` check in nav init
+4. `loading="lazy"` on all `<img>` in JS-rendered cards — one attribute per template literal
+5. "← Назад към началото" link at top of `create-campaign.html` — 2 lines of HTML
+6. `aria-disabled="true"` on out-of-stock reward buttons — 1 attribute in `rewards.js`
+7. "Showing top 20" label on leaderboard — 1 line of HTML
+8. `?.addEventListener(...)` null guard in `profile.js:699` — 1 character fix
+
+---
+
 ### v1.3 — Growth Infrastructure (3–6 months)
 
 | Feature | Priority | Rationale |
@@ -455,6 +530,185 @@ Closing the gap between what the DB supports and what the UI exposes.
 
 ---
 
+## 🔍 Multi-Role Audit — Mar 24, 2026
+
+Five deep-dive audits conducted simultaneously: Security Engineer, End User Journey, DevOps/SRE, Performance Engineer, Database Administrator. Findings organized by role and priority for future sprint planning.
+
+---
+
+### 🔐 Security Engineer Findings
+
+**CRITICAL / HIGH — fix before next public release**
+
+| Finding | Severity | Location | Attack Scenario |
+|---------|----------|----------|-----------------|
+| Campaign delete has no `created_by` check in query — relies solely on RLS | CRITICAL | `campaign-detail.js:733` | User crafts delete request for any campaign ID via DevTools |
+| Campaign edit missing `.eq("created_by", currentUser.id)` in update query | HIGH | `campaign-detail.js:917–931` | User modifies any campaign's title/status/dates |
+| `admin.js` trusts `localStorage.user.role` for admin access check | HIGH | `admin.js:100–116` | Open DevTools → set `localStorage.user = '{"role":"admin"}'` → full admin panel access |
+| Participation approval/rejection exposed as global window functions | HIGH | `admin.js:~788` | Non-admin calls `window.approveParticipation(id)` directly from console |
+| Demo mode always creates user with `role: "admin"` | MEDIUM | `demoMode.js:77–87` | Demo admin executes real admin functions if auth checks are client-only |
+| CSP includes `'unsafe-inline'` for both script-src and style-src | MEDIUM | `netlify.toml:82` | Any DOM XSS can inject inline scripts; CSP provides no protection |
+| No SRI hashes on CDN scripts (SweetAlert2, Bootstrap, Leaflet) | LOW | All HTML pages | CDN compromise injects malicious code into all users |
+| Campaign coordinate validation missing — can submit lat/lng outside Bulgaria | MEDIUM | `create-campaign.js:338–350` | Garbage data on map, potential abuse of storage |
+| Session TTL only checked when `getCurrentUser()` called — gaps between checks | MEDIUM | `helpers.js:62–67` | Stale session can persist beyond 8h window |
+
+**POSITIVE:** `escapeHTML()` is correct, Supabase anon key (not service role) used throughout, security headers configured, file upload type/size validated, SECURITY DEFINER functions use `SET search_path = ''`.
+
+---
+
+### 👤 End User Journey Findings
+
+Six complete journeys walked: Registration, Campaign Discovery, Proof Upload, Reward Redemption, Campaign Creation, Mobile UX.
+
+**HIGH friction — causes real drop-off**
+
+| Journey | Drop-off Point | Root Cause |
+|---------|----------------|-----------|
+| Registration → Dashboard | No onboarding after login | User sees full dashboard with no "what now?" guidance |
+| Registration | No username field at signup | User gets UUID as display name; must edit profile separately |
+| Post-RSVP | No reminder that proof upload is needed after attending | User attends cleanup but forgets to return to app |
+| Post-upload | No persistent "under review" status indicator | User doesn't know if submission worked; may resubmit |
+| Campaign creation | Created campaign vanishes after "awaiting approval" toast | No "My Campaigns" section; user thinks creation failed |
+| Campaign creation | Translated English title not previewed | User can't verify their campaign looks correct in EN |
+
+**MEDIUM friction**
+
+| Issue | Page |
+|-------|------|
+| Points balance not visible on dashboard — must navigate to Profile | Dashboard |
+| No address/geocoding search when placing campaign on map | Create Campaign |
+| Map click imprecise on mobile — hard to set exact location | Create Campaign |
+| "Attending" (RSVP) vs "Joining" (participation) — two separate actions confuse new users | Campaign Detail |
+| After approval, no celebration / push to Rewards page | Profile |
+
+**WHAT WORKS WELL:** Campaign cards show enough info to decide (time, location, category, participant count), RSVP button is obvious, file upload communicates accepted types and size, demo mode covers the full journey, language switching accessible at all times.
+
+---
+
+### ⚙️ DevOps / SRE Findings
+
+**CRITICAL — production blind spots**
+
+| Finding | Severity | File | Fix |
+|---------|----------|------|-----|
+| No external error reporting — production errors invisible | CRITICAL | `errorHandler.js:260` | Integrate Sentry (free tier) |
+| SW scope not explicitly set to `"/"` — may not control all pages | CRITICAL | `pwa.js:17` | Add `{ scope: "/" }` to `register()` call |
+| SW cache name `'clean-quarter-v2'` hardcoded — must be bumped manually on every deploy | HIGH | `service-worker.js:6` | Auto-generate from build timestamp |
+| No branch protection on `main` — force-push bypasses all CI checks | HIGH | GitHub settings | Enable required reviews + status checks |
+| No staging environment before production | HIGH | Netlify config | Create `staging` branch + Netlify deploy context |
+| No fallback when Supabase is down — users see blank page | HIGH | `supabase.js` | Circuit breaker + show cached data with warning banner |
+| Offline fallback is plain text `503` response | MEDIUM | `service-worker.js:108` | Create `/offline.html` and serve it from cache |
+| HTML pages have no explicit `Cache-Control: no-cache` header | MEDIUM | `netlify.toml` | Add `Cache-Control: no-cache` for `/*.html` |
+| Vite build has no `manualChunks` — Leaflet + Supabase bundled separately per page | MEDIUM | `vite.config.js:50` | Add `manualChunks: { vendor: ['leaflet','@supabase/supabase-js'] }` |
+| `console.log` / `console.error` not stripped in production build | MEDIUM | Multiple files | Add `drop_console: true` to esbuild/terser config |
+| Lighthouse CI configured but not in CI pipeline | MEDIUM | `.github/workflows/ci.yml` | Add `npm run lhci` step after build |
+| HSTS `preload` directive in header but domain not submitted to preload list | LOW | `netlify.toml:81` | Submit to hstspreload.org |
+
+**POSITIVE:** Supabase anon key correctly managed via env vars, security headers (X-Frame-Options, HSTS, X-Content-Type-Options) all configured, asset caching with `immutable` flag correct for hashed filenames, exponential backoff retry logic exists in `api/client.js`.
+
+---
+
+### ⚡ Performance Engineer Findings
+
+**Core Web Vitals risk: LCP ~2.5–3.5s on Slow 3G (target: <2.5s)**
+
+**CRITICAL — immediate LCP impact**
+
+| Finding | Severity | File | Impact |
+|---------|----------|------|--------|
+| SweetAlert2 loaded synchronously in `<head>` — blocks DOM parsing | CRITICAL | All HTML pages | +200–400ms FCP |
+| Dashboard leaderboard queries start after campaigns load, not in parallel | CRITICAL | `dashboard.js:106–107` | +500–700ms LCP |
+| No shared vendor chunk — Leaflet (149KB) + Supabase (70KB) bundled per page | CRITICAL | `vite.config.js` | +230KB wasted on 2nd page load |
+
+**HIGH — significant at scale**
+
+| Finding | Severity | Fix |
+|---------|----------|-----|
+| Bootstrap CSS CDN in `<head>` — render-blocking | HIGH | Inline critical CSS or use `rel="preload"` |
+| `select("*")` in `campaign-detail.js:205`, `profile.js:243,355`, `rewards.js:117` | HIGH | Select only needed columns |
+| No client-side caching — leaderboards reload on every dashboard visit | HIGH | sessionStorage with 5-min TTL |
+| Before/after photo on campaign-detail not lazy-loaded | HIGH | Add `loading="lazy"` to slider images |
+| Images served at original resolution (3–8MB phone photos) — no Supabase transforms | HIGH | Use `?width=300&height=200&quality=80` transform params |
+| CLS from map/card heights not pre-allocated | HIGH | Add fixed `height: 400px` to `#map`, `aspect-ratio` to cards |
+
+**Quick wins (< 30 min):**
+1. Move `<script src="sweetalert2">` to end of `<body>` with `async`
+2. Wrap `loadLeaderboard()` + `loadUserLeaderboard()` in `Promise.all()`
+3. Add `loading="lazy"` to all `<img>` tags in JS-rendered cards
+4. Replace `select("*")` with specific column lists in 3 files
+
+---
+
+### 🗄️ Database Administrator Findings
+
+**Schema & Integrity — CRITICAL**
+
+| Finding | Severity | Migration / File | Fix |
+|---------|----------|-----------------|-----|
+| `comments.campaign_id` stored as TEXT with no FK to `campaigns(id)` | CRITICAL | `20260208124114` | Add FK with `ON DELETE CASCADE` |
+| `comments.user_id` stored as TEXT with no FK to `profiles(id)` | CRITICAL | `20260206145735:124` | Add FK with `ON DELETE CASCADE` |
+| `participations` SELECT RLS policy uses `USING (true)` — all users see all participations including rejection reasons | CRITICAL | `20260207050230:212` | Restrict to `user_id = auth.uid()` OR admin role |
+| `reports` SELECT may have legacy permissive policy — all users can list all reports | CRITICAL | `20260207050230:236` | Audit + remove legacy policy |
+| `get_public_stats()` queries `type = 'award'` — enum value does not exist (should be `'earned'`) — stats always return 0 | HIGH | `20260321052409:114` | Change to `type = 'earned'` |
+| User hard-delete cascades to participations + point_transactions — permanent history loss | HIGH | `20260206145735:10` | Implement soft-delete on profiles |
+| Campaign hard-delete cascades to participations — points awarded for now-deleted event remain | HIGH | `campaign-detail.js:733` | Soft-delete only; trigger to soft-delete participations |
+
+**Query Patterns — HIGH**
+
+| Finding | Severity | File | Fix |
+|---------|----------|------|-----|
+| Admin panel fetches ALL participations with no `.limit()` — memory explosion at scale | HIGH | `admin.js:193–213` | Server-side pagination: `.range(page*50, page*50+49)` |
+| Comments query has no `.limit()` — popular campaign with 1000+ comments loads all | HIGH | `campaign-detail.js:978` | Add `.limit(100)` |
+| `getRsvpCountsForCampaigns()` fetches all RSVP rows and counts in JS — should use SQL `GROUP BY` | MEDIUM | `services/events.js` | Replace with RPC: `SELECT campaign_id, COUNT(*) GROUP BY campaign_id` |
+
+**Missing Indexes**
+
+| Table | Missing Index | Query Pattern |
+|-------|--------------|---------------|
+| `campaigns` | `(status, scheduled_date)` composite | Dashboard filter + sort |
+| `participations` | `created_at DESC` | Admin panel sort |
+| `point_transactions` | `(type, created_at DESC)` composite | Role change log |
+| `login_attempts` | `(user_email, created_at DESC)` | Rate limit check |
+
+**Cascade / Orphan Risks**
+
+| Finding | Table | Fix |
+|---------|-------|-----|
+| Notifications reference campaign_id/participation_id with no `ON DELETE` specified | `notifications` | Add `ON DELETE CASCADE` or `SET NULL` |
+| Soft-deleted records never purged — table bloat over time | Multiple tables | Scheduled cron to hard-delete after 90 days |
+
+**POSITIVE:** All critical enum fields have CHECK constraints, FK indexes added in `20260321052659`, SECURITY DEFINER functions all use `SET search_path = ''`, Supabase anon key only (no service role exposure), rate limiting enforced server-side via RPC.
+
+---
+
+### 📋 Cross-Role Priority Matrix
+
+| Priority | Finding | Role | Effort |
+|----------|---------|------|--------|
+| 🔴 P0 | RLS `participations` USING(true) — privacy violation | DB | Small (SQL) |
+| 🔴 P0 | `get_public_stats()` always returns 0 points | DB | Tiny (1 word fix) |
+| 🔴 P0 | No external error reporting — blind in production | DevOps | Medium |
+| 🔴 P0 | Campaign delete/edit missing creator check in query | Security | Small |
+| 🔴 P0 | `localStorage` admin role trust in `admin.js` | Security | Medium |
+| 🟠 P1 | SweetAlert2 render-blocking in `<head>` | Perf | Tiny |
+| 🟠 P1 | Dashboard leaderboard not parallelized | Perf | Small |
+| 🟠 P1 | Admin panel unbounded participations query | DB | Small |
+| 🟠 P1 | SW cache version not tied to deployments | DevOps | Small |
+| 🟠 P1 | No onboarding for new users | UX | Medium |
+| 🟠 P1 | No "My Campaigns" / pending campaign tracking | UX | Medium |
+| 🟡 P2 | `comments` FK constraints missing | DB | Small (migration) |
+| 🟡 P2 | Missing composite indexes | DB | Small (migration) |
+| 🟡 P2 | Image transform via Supabase CDN | Perf | Small |
+| 🟡 P2 | No staging environment | DevOps | Medium |
+| 🟡 P2 | Proof upload status not visible after submit | UX | Small |
+| 🟡 P2 | User soft-delete (no history loss on deletion) | DB | Large |
+| 🟢 P3 | No address search in campaign creation | UX | Medium |
+| 🟢 P3 | `select("*")` → specific columns | Perf | Small |
+| 🟢 P3 | RSVP count JS aggregation → SQL GROUP BY RPC | DB | Small |
+| 🟢 P3 | No SRI hashes on CDN scripts | Security | Small |
+
+---
+
 ## 🐛 Bug Backlog
 
 Active bugs confirmed by code review. Not yet scheduled for a sprint.
@@ -503,6 +757,16 @@ Active bugs confirmed by code review. Not yet scheduled for a sprint.
 | **`setupGlobalErrorHandling()` is never called** | Medium | `src/services/errorHandler.js:260` | `setupGlobalErrorHandling()` registers `unhandledrejection` and `error` event listeners. It is exported but never imported or called. Unhandled promise rejections are silently swallowed in production with no logging. |
 | **Neighborhood string mismatch — `"Vitosha (VEC)"` vs `"Kv. Vitosha (VEC)"`** | Medium | `src/scripts/dashboard.js:115` vs `src/utils/campaign-filters.js:9` | `dashboard.js` `NEIGHBORHOOD_I18N` maps key `"Vitosha (VEC)"`. `campaign-filters.js`, `neighborhood-stats.js`, and `profile-validator.js` use `"Kv. Vitosha (VEC)"`. These are different strings — the lookup in `localizeNeighborhood()` and `loadLeaderboard()` silently fails for this neighborhood. Whichever string the DB stores, one set of files will never match it. |
 | **`profile.js` line 699 — `addEventListener` without null guard** | Low | `src/scripts/profile.js:699` | `document.getElementById("editProfileForm").addEventListener("submit", handleSaveProfile)` — called at module scope (outside `DOMContentLoaded`). If `#editProfileForm` is missing from the DOM, this throws a `TypeError` that breaks the entire script. Should be `?.addEventListener(...)`. |
+| **`campaign-detail.js` comment post/delete hardcoded EN** | Medium | `src/scripts/campaign-detail.js:1121,1148` | `"Comment posted."` and `"Comment deleted."` are hardcoded English strings shown as toast messages. Keys `campaign.commentPosted` and `campaign.commentDeleted` are missing from all 4 i18n files. BG users see English confirmation on every comment action. |
+| **`campaign-detail.js` null crash on `campaign.creator` after edit** | High | `src/scripts/campaign-detail.js:899,936` | After saving campaign edits, code merges: `campaign = { ...updatedCampaign, creator: campaign.creator }`. If `campaign.creator` is null (deleted user), accessing `campaign.creator.username` on line ~1408 throws `TypeError: Cannot read properties of null`. No null guard exists. |
+| **`rewards.js` RPC result accessed before null check** | Medium | `src/scripts/rewards.js:317–326` | After `purchase_reward` RPC, code checks `if (rpcError)` then immediately reads `result.success` — but if RPC returns `null` data with no error, `result.success` throws. Should guard: `if (!result || !result.success)`. |
+| **`rewards.js` demo mode stale balance after purchase** | Medium | `src/scripts/rewards.js:289–333` | In demo mode, `userProfile.points_balance` is updated locally but not re-fetched. After purchase, the displayed balance is computed from the in-memory object. If two reward purchases happen quickly, the second reads the un-updated balance from closure. Balance shown may be wrong until page reload. |
+| **`create-campaign.js` success message hardcoded BG** | Medium | `src/scripts/create-campaign.js:409,466` | Both create paths (real + demo) show `"Кампанията е създадена успешно!"` as hardcoded Bulgarian. EN users see Bulgarian confirmation after creating a campaign. Should use `t("createCampaign.successMessage")`. |
+| **`create-campaign.js` no debounce on title input → DOM thrash** | Medium | `src/scripts/create-campaign.js:173–177` | `campaignTitleBg` "input" listener fires `checkFormCompletion()` on every keystroke. `checkFormCompletion()` re-renders the full validation checklist (lines 227–273) on each keypress — up to 10 DOM updates per word typed. No debounce applied. Janky on slow devices. |
+| **`rewards.js` out-of-stock button missing `aria-disabled`** | Low | `src/scripts/rewards.js:169–177` | When `quantity_available === 0`, button gets `disabled` attribute but not `aria-disabled="true"`. Screen readers may not announce the disabled state correctly. One attribute addition. |
+| **`campaign-detail.js` Leaflet map popup hardcoded BG** | Low | `src/scripts/campaign-detail.js:127` | `"📍 Избрана локация"` is hardcoded Bulgarian in the Leaflet location picker popup. EN users see Bulgarian label when selecting a campaign location on the map. Key `createCampaign.selectedLocation` missing from all 4 i18n files. |
+| **Dead imports in `campaign-detail.js`** | Low | `src/scripts/campaign-detail.js:5,10` | `compressImage` imported from `storage.js` but never called (compression not wired to the after-photo upload). `showInfoToast` imported from `helpers.js` but never used in the file. Both bloat the bundle and mislead future developers. |
+| **Leaderboard user tab has no pagination — top 20 only** | Low | `src/scripts/dashboard.js:648–651` | User leaderboard query uses `.limit(20)` with no "Load More". Users ranked 21+ are invisible with no indication more exist. Neighbourhood leaderboard has the same cap. Should add "Show more" or at least a "Showing top 20" label. |
 | **`campaign-detail.js` `renderComments()` — username and message unescaped in innerHTML** | High | `src/scripts/campaign-detail.js` (renderComments) | Comment author username and message body are interpolated directly into `innerHTML` without `escapeHTML()`. Comments are user-generated content stored in the DB. A username or message containing `<img onerror="...">` or `<script>` executes in the browser — **Stored XSS**. Both values must be wrapped in `escapeHTML()` before innerHTML insertion. |
 | **`public/service-worker.js` — `caches.open()` not awaited in Network First handler** | Medium | `public/service-worker.js:79–96` | The Network First fetch handler calls `caches.open(CACHE_NAME)` without `await`. The promise is not settled before the handler continues — cache writes and reads may operate on an unresolved cache handle, creating a race condition. Pages may serve stale or empty cache responses inconsistently. The call must be `await caches.open(CACHE_NAME)`. |
 | **HTML pages — inline `onclick` handlers bypass CSP and XSS mitigations** | Medium | `src/pages/dashboard.html`, `src/pages/campaign-detail.html` | `dashboard.html` contains `onclick="showAllCampaigns()"` and `onclick="filterByCategory(this)"`. `campaign-detail.html` contains `onclick="handleLogout()"` and `onclick="handleRsvp()"`. Inline event handlers require `'unsafe-inline'` in CSP `script-src`, weakening XSS protection. The codebase already uses `data-*` + `addEventListener` for admin.js and dashboard.js — this pattern must be applied consistently to all HTML pages. |

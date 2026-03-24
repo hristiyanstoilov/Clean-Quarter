@@ -728,12 +728,19 @@ async function handleDelete() {
 
     const campaignId = getCampaignIdFromUrl();
 
-    // Delete the campaign from database
+    // Delete the campaign from database — scoped to owner to prevent IDOR
     // Note: CASCADE will delete related records
-    const { error: deleteError } = await supabase.from("campaigns").delete().eq("id", campaignId);
+    const { error: deleteError, count } = await supabase
+      .from("campaigns")
+      .delete({ count: "exact" })
+      .eq("id", campaignId)
+      .eq("created_by", currentUser.id);
 
     if (deleteError) {
       throw new Error(`Failed to delete campaign: ${deleteError.message}`);
+    }
+    if (count === 0) {
+      throw new Error("Not authorized to delete this campaign.");
     }
 
     // Success notification
@@ -913,7 +920,7 @@ async function handleSaveCampaign(e) {
 
       toggleEditCampaign();
     } else {
-      // Real mode - update Supabase
+      // Real mode - update Supabase — scoped to owner to prevent IDOR
       const { data, error } = await supabase
         .from("campaigns")
         .update({
@@ -927,9 +934,13 @@ async function handleSaveCampaign(e) {
           updated_at: new Date().toISOString(),
         })
         .eq("id", campaignId)
+        .eq("created_by", currentUser.id)
         .select()
         .single();
 
+      if (error?.code === "PGRST116") {
+        throw new Error("Not authorized to edit this campaign.");
+      }
       if (error) throw error;
 
       // Preserve creator join data when updating campaign state
