@@ -938,10 +938,9 @@ async function handleSaveCampaign(e) {
         .select()
         .single();
 
-      if (!data && !error) {
+      if (error?.code === "PGRST116") {
         throw new Error("Not authorized to edit this campaign.");
       }
-
       if (error) throw error;
 
       // Preserve creator join data when updating campaign state
