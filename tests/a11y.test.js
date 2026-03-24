@@ -1,7 +1,8 @@
+// @vitest-environment jsdom
 /**
  * Accessibility Tests — axe-core static analysis
  *
- * Loads each HTML page into a JSDOM context and runs axe-core against it.
+ * Loads each HTML page into the vitest jsdom environment and runs axe-core.
  * Catches structural a11y violations: missing alt, unlabelled inputs,
  * buttons without accessible names, missing lang/title, invalid ARIA.
  *
@@ -11,8 +12,13 @@
 
 import { readFileSync } from "fs";
 import { resolve } from "path";
-import { describe, it, expect } from "vitest";
-import { JSDOM } from "jsdom";
+import { describe, it, expect, beforeEach } from "vitest";
+import axe from "axe-core";
+
+// Polyfill browser APIs that jsdom doesn't implement but axe-core requires
+if (typeof document !== "undefined" && !document.elementsFromPoint) {
+  document.elementsFromPoint = () => [];
+}
 
 // axe-core + JSDOM can be slow on complex pages — increase timeout to 30s
 const AXE_TIMEOUT = 30_000;
@@ -41,23 +47,20 @@ const AXE_RULES_DISABLED = ["color-contrast", "color-contrast-enhanced"];
 // ─── axe-core runner ──────────────────────────────────────────────────────────
 
 async function runAxe(html) {
-  const dom = new JSDOM(html, { runScripts: "dangerously" });
+  // Load the HTML into the vitest jsdom global document
+  document.open();
+  document.write(html);
+  document.close();
 
-  // Inject axe-core source into the JSDOM window
-  const { default: axe } = await import("axe-core");
-  const script = dom.window.document.createElement("script");
-  script.textContent = axe.source;
-  dom.window.document.head.appendChild(script);
+  // Ensure polyfill is present after document.open/close resets the DOM
+  if (!document.elementsFromPoint) {
+    document.elementsFromPoint = () => [];
+  }
 
-  return new Promise((resolve, reject) => {
-    dom.window.axe.run(
-      dom.window.document,
-      { rules: Object.fromEntries(AXE_RULES_DISABLED.map((id) => [id, { enabled: false }])) },
-      (err, results) => {
-        if (err) reject(err);
-        else resolve(results);
-      }
-    );
+  return axe.run(document, {
+    rules: Object.fromEntries(
+      AXE_RULES_DISABLED.map((id) => [id, { enabled: false }])
+    ),
   });
 }
 

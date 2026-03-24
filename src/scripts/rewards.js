@@ -368,3 +368,15 @@ async function handleLogout() {
 
 // handleBuy is exposed globally because renderRewards() generates onclick="handleBuy(...)" in innerHTML
 window.handleBuy = handleBuy;
+
+// --- Test exports (tree-shaken in production builds) ---
+export { handleBuy };
+export const _setCurrentUser = (u) => {
+  currentUser = u;
+};
+export const _setUserProfile = (p) => {
+  userProfile = p;
+};
+export const _setRewards = (r) => {
+  rewards = r;
+};

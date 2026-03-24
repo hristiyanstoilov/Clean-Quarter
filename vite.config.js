@@ -10,7 +10,7 @@ const injectSwVersion = {
     const swPath = resolve(__dirname, 'dist/service-worker.js');
     if (!existsSync(swPath)) return;
     const version = `v${Date.now()}`;
-    const updated = readFileSync(swPath, 'utf-8').replace('__SW_VERSION__', version);
+    const updated = readFileSync(swPath, 'utf-8').replace(/clean-quarter-v\d+|__SW_VERSION__/, version);
     writeFileSync(swPath, updated);
   },
 };

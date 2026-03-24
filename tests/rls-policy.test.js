@@ -19,7 +19,20 @@ const ADMIN_PASSWORD = process.env.SUPABASE_ADMIN_PASSWORD;
 const canRun = !!(SUPABASE_URL && SUPABASE_ANON_KEY && USER_EMAIL && USER_PASSWORD && ADMIN_EMAIL && ADMIN_PASSWORD);
 
 function makeClient() {
-  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // Each client gets its own isolated in-memory storage so sessions never leak
+  // between userClient, adminClient and anonClient in the same test process.
+  const store = {};
+  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      storage: {
+        getItem:    (key)        => store[key] ?? null,
+        setItem:    (key, value) => { store[key] = value; },
+        removeItem: (key)        => { delete store[key]; },
+      },
+      persistSession:   true,  // write to the per-client store above
+      autoRefreshToken: false, // no background refresh during tests
+    },
+  });
 }
 
 describe.skipIf(!canRun)('RLS Policy Integration Tests (requires real credentials)', () => {
@@ -79,12 +92,16 @@ describe.skipIf(!canRun)('RLS Policy Integration Tests (requires real credential
     });
 
     it('user CANNOT update another profile', async () => {
-      const { error } = await userClient.from('profiles').update({ username: 'hacked' }).eq('id', adminId);
-      // Either error or 0 rows affected — both are correct
-      if (!error) {
-        const { data } = await adminClient.from('profiles').select('username').eq('id', adminId).single();
-        expect(data?.username).not.toBe('hacked');
-      }
+      // Seed a known username so the assertion is not affected by dirty data from previous runs
+      await adminClient.from('profiles').update({ username: 'admin-original' }).eq('id', adminId);
+
+      await userClient.from('profiles').update({ username: 'hacked' }).eq('id', adminId);
+
+      const { data } = await adminClient.from('profiles').select('username').eq('id', adminId).single();
+      expect(data?.username).toBe('admin-original'); // RLS must have blocked the change
+
+      // Cleanup
+      await adminClient.from('profiles').update({ username: 'xarizax' }).eq('id', adminId);
     });
   });
 
@@ -118,10 +135,17 @@ describe.skipIf(!canRun)('RLS Policy Integration Tests (requires real credential
         .from('campaigns').select('id, title').neq('created_by', userId).limit(1).single();
 
       if (otherCampaign) {
+        // Seed a known title so the assertion is not affected by dirty data from previous runs
+        const originalTitle = 'rls-guard-title';
+        await adminClient.from('campaigns').update({ title: originalTitle }).eq('id', otherCampaign.id);
+
         // RLS silently blocks — no error but 0 rows affected; verify title unchanged
         await userClient.from('campaigns').update({ title: 'Hacked' }).eq('id', otherCampaign.id);
         const { data: after } = await adminClient.from('campaigns').select('title').eq('id', otherCampaign.id).single();
-        expect(after?.title).not.toBe('Hacked');
+        expect(after?.title).toBe(originalTitle); // must equal what admin set, not 'Hacked'
+
+        // Cleanup: restore the original title (we overwrote it with a sentinel)
+        await adminClient.from('campaigns').update({ title: otherCampaign.title }).eq('id', otherCampaign.id);
       }
     });
 

@@ -3,7 +3,7 @@
  * Handles offline support, caching, and background sync
  */
 
-const CACHE_NAME = '__SW_VERSION__';
+const CACHE_NAME = 'clean-quarter-v5';
 const STATIC_ASSETS = [
     // Production routes served by the SPA (Vite builds to /dist, Netlify serves from root)
     '/',

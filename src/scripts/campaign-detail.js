@@ -1471,6 +1471,16 @@ async function handleRsvp() {
 /**
  * Handle cancelling RSVP to the current campaign
  */
+// --- Test exports (tree-shaken in production builds) ---
+export { handleJoin, handleUploadPhoto };
+export const _setCurrentUser = (u) => {
+  currentUser = u;
+};
+export const _setUserParticipation = (p) => {
+  userParticipation = p;
+};
+export const _getUserParticipation = () => userParticipation;
+
 async function handleCancelRsvp() {
   const btn = document.getElementById("cancelRsvpBtn");
   try {

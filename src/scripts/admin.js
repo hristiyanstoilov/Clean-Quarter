@@ -1343,3 +1343,12 @@ async function refreshHeatmap() {
   const toggleBtn = document.getElementById("heatmapToggleBtn");
   if (toggleBtn) await toggleHeatmap(toggleBtn);
 }
+
+// --- Test exports (tree-shaken in production builds) ---
+export { handleApprove, handleReject, checkAuth };
+export const _setCurrentUser = (u) => {
+  currentUser = u;
+};
+export const _setPendingParticipations = (p) => {
+  pendingParticipations = p;
+};
