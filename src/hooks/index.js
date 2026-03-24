@@ -291,3 +291,22 @@ export function useThrottle(fn, delay = 300) {
     }
   };
 }
+
+/**
+ * Mark the correct bottom-nav link as active based on the current pathname.
+ * Call once per page after DOMContentLoaded.
+ */
+export function initBottomNav() {
+  const nav = document.getElementById("bottomNav");
+  if (!nav) return;
+  const path = window.location.pathname;
+  nav.querySelectorAll(".bottom-nav__link").forEach((link) => {
+    const href = link.getAttribute("href");
+    const isActive =
+      href &&
+      ((path.startsWith(href) && (href !== "/" || path === "/")) ||
+        (path.startsWith("/campaign") && href === "/dashboard"));
+    link.classList.toggle("bottom-nav__link--active", isActive);
+    link.setAttribute("aria-current", isActive ? "page" : "false");
+  });
+}

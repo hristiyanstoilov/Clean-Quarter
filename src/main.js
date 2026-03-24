@@ -69,8 +69,82 @@ import { saveUser } from "./utils/helpers.js";
 import supabase from "./services/supabase.js";
 import { initPasswordStrengthMeter } from "./components/passwordStrength.js";
 import passwordToggle from "./components/passwordToggle.js";
+import { initializePWA } from "./services/pwa.js";
+import { setupGlobalErrorHandling } from "./services/errorHandler.js";
+import { t } from "./utils/i18n.js";
 // Lazy-load non-critical modules for performance
 let initI18n, setLanguage, applyLanguage;
+
+// Format milliseconds as M:SS countdown string
+function formatCountdown(ms) {
+  const s = Math.max(0, Math.ceil(ms / 1000));
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}:${String(sec).padStart(2, "0")}`;
+}
+
+// Show live-countdown Swal and disable login button until lockout expires
+function showLockoutCountdown(until) {
+  const submitBtn = document.getElementById("loginSubmitBtn");
+  const lockoutMsg = document.getElementById("loginLockoutMsg");
+
+  if (submitBtn) submitBtn.disabled = true;
+
+  function updateMsg() {
+    const remaining = until - Date.now();
+    if (remaining <= 0) {
+      if (submitBtn) submitBtn.disabled = false;
+      if (lockoutMsg) {
+        lockoutMsg.style.display = "none";
+        lockoutMsg.textContent = "";
+      }
+      sessionStorage.removeItem("lockout_until");
+      return;
+    }
+    const timeStr = formatCountdown(remaining);
+    if (lockoutMsg) {
+      lockoutMsg.style.display = "block";
+      lockoutMsg.textContent = (t("auth.rateLimitText") || "Try again in {{time}}.").replace(
+        "{{time}}",
+        timeStr
+      );
+    }
+  }
+
+  updateMsg();
+  const interval = setInterval(() => {
+    if (Date.now() >= until) {
+      clearInterval(interval);
+      updateMsg();
+    } else {
+      updateMsg();
+    }
+  }, 1000);
+
+  Swal.fire({
+    icon: "warning",
+    title: t("auth.rateLimitTitle") || "Temporarily Blocked",
+    html: (t("auth.rateLimitText") || "Try again in {{time}}.").replace(
+      "{{time}}",
+      `<strong id="swalCountdown">${formatCountdown(until - Date.now())}</strong>`
+    ),
+    showConfirmButton: false,
+    timer: Math.max(0, until - Date.now()),
+    timerProgressBar: true,
+    didOpen: () => {
+      const swalEl = document.getElementById("swalCountdown");
+      const swalInterval = setInterval(() => {
+        const remaining = until - Date.now();
+        if (remaining <= 0) {
+          clearInterval(swalInterval);
+          Swal.close();
+          return;
+        }
+        if (swalEl) swalEl.textContent = formatCountdown(remaining);
+      }, 1000);
+    },
+  });
+}
 
 // Initialize auth forms
 function initAuthForms() {
@@ -84,6 +158,11 @@ function initAuthForms() {
       toggleBtnId: "toggleLoginPassword",
       eyeIconId: "loginPasswordEye",
     });
+    // Restore lockout countdown if page was refreshed during an active lockout
+    const savedLockout = Number(sessionStorage.getItem("lockout_until") || 0);
+    if (savedLockout > Date.now()) {
+      showLockoutCountdown(savedLockout);
+    }
   }
 
   if (registerForm) {
@@ -121,11 +200,17 @@ async function handleLogin(e) {
     });
     window.location.href = "/dashboard";
   } catch (error) {
-    await Swal.fire({
-      icon: "error",
-      title: "Login Error",
-      text: error.message,
-    });
+    if (error.isRateLimit) {
+      const until = Date.now() + (error.retryAfterSeconds ?? 900) * 1000;
+      sessionStorage.setItem("lockout_until", String(until));
+      showLockoutCountdown(until);
+    } else {
+      await Swal.fire({
+        icon: "error",
+        title: t("auth.loginErrorTitle"),
+        text: error.message,
+      });
+    }
   }
 }
 
@@ -141,8 +226,8 @@ async function handleRegister(e) {
   if (!email || !password || !passwordConfirm || !neighborhood) {
     await Swal.fire({
       icon: "error",
-      title: "Грешка",
-      text: "Всички полета са задължителни!",
+      title: t("common.error"),
+      text: t("auth.allFieldsRequired"),
     });
     return;
   }
@@ -150,15 +235,15 @@ async function handleRegister(e) {
   if (password !== passwordConfirm) {
     await Swal.fire({
       icon: "error",
-      title: "Грешка",
-      text: "Паролите не съвпадат!",
+      title: t("common.error"),
+      text: t("auth.passwordMismatch"),
     });
     return;
   }
 
   const passwordError = rules.password(password);
   if (passwordError) {
-    await Swal.fire({ icon: "error", title: "Слаба парола", text: passwordError });
+    await Swal.fire({ icon: "error", title: t("auth.weakPasswordTitle"), text: passwordError });
     return;
   }
 
@@ -180,8 +265,8 @@ async function handleRegister(e) {
   } catch (error) {
     await Swal.fire({
       icon: "error",
-      title: "Регистрацията неуспешна",
-      text: error.message || "Възникна грешка.",
+      title: t("auth.registerErrorTitle"),
+      text: error.message,
     });
   }
 }
@@ -204,6 +289,8 @@ window.navigateTo = loadPage;
 
 // Ensure auth forms, i18n, and language selector are initialized on DOMContentLoaded
 document.addEventListener("DOMContentLoaded", async () => {
+  setupGlobalErrorHandling();
+  initializePWA();
   try {
     // Lazy-load i18n module if not already loaded
     if (!initI18n || !setLanguage || !applyLanguage) {

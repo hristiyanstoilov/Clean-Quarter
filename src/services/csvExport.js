@@ -78,7 +78,18 @@ export function exportUsersCsv(users) {
 export function exportParticipationsCsv(participations) {
   const columns = [
     { header: "User", key: "user", format: (r) => r.profiles?.username ?? "" },
-    { header: "Campaign", key: "campaign", format: (r) => r.campaigns?.title ?? "" },
+    {
+      header: "Campaign",
+      key: "campaign",
+      format: (r) => {
+        const title = r.campaigns?.title ?? "";
+        if (typeof title === "object") {
+          const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+          return title[lang] || title.bg || title.en || "";
+        }
+        return title;
+      },
+    },
     { header: "Status", key: "status" },
     {
       header: "Submitted Date",

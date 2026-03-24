@@ -1,5 +1,4 @@
 import supabase from "./supabase.js";
-import { handleError } from "../utils/helpers.js";
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -35,7 +34,6 @@ export async function uploadCampaignPhoto(file, folderName = "photos") {
     if (!publicUrlData?.publicUrl) throw new Error("Upload succeeded but URL is missing");
     return publicUrlData.publicUrl;
   } catch (error) {
-    await handleError("uploadCampaignPhoto", error, "Failed to upload photo. Please try again.");
     throw error;
   }
 }
@@ -53,7 +51,6 @@ export async function deleteCampaignPhoto(filePath) {
     }
     return true;
   } catch (error) {
-    await handleError("deleteCampaignPhoto", error, "Failed to delete photo. Please try again.");
     throw error;
   }
 }
@@ -85,7 +82,6 @@ export async function uploadAvatar(file, userId) {
     if (!publicUrlData?.publicUrl) throw new Error("Upload succeeded but URL is missing");
     return publicUrlData.publicUrl;
   } catch (error) {
-    await handleError("uploadAvatar", error, "Failed to upload avatar. Please try again.");
     throw error;
   }
 }

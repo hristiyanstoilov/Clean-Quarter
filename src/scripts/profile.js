@@ -22,6 +22,7 @@ import {
   unsubscribeFromPush,
 } from "../services/pushNotifications.js";
 import { initNetworkStatusBanner } from "../utils/networkStatus.js";
+import { initBottomNav } from "../hooks/index.js";
 // Global variables
 let currentUser = null;
 let userProfile = null;
@@ -43,8 +44,8 @@ async function handlePasswordRecovery() {
   if (hash.get("error_code") === "otp_expired" || hash.get("error")) {
     await Swal.fire({
       icon: "error",
-      title: "Линкът е изтекъл",
-      text: "Линкът за смяна на парола е изтекъл. Моля, заяви нов.",
+      title: t("auth.resetInvalidTitle"),
+      text: t("auth.resetInvalidText"),
       confirmButtonColor: "#28a745",
     });
     window.location.href = "/";
@@ -52,13 +53,13 @@ async function handlePasswordRecovery() {
   }
 
   const { value: newPassword } = await Swal.fire({
-    title: "Нова парола",
+    title: t("profile.newPassword"),
     html:
-      "<p>Въведи новата си парола:</p>" +
-      '<input type="password" id="recoveryPassword" class="swal2-input" placeholder="Нова парола (мин. 8 символа)">',
+      `<p>${t("profile.newPassword")}:</p>` +
+      `<input type="password" id="recoveryPassword" class="swal2-input" placeholder="${t("auth.newPasswordPlaceholderFull")}">`,
     icon: "info",
     confirmButtonColor: "#28a745",
-    confirmButtonText: "Запази паролата",
+    confirmButtonText: t("auth.savePasswordBtn"),
     showCancelButton: false,
     allowOutsideClick: false,
     preConfirm: () => {
@@ -78,14 +79,14 @@ async function handlePasswordRecovery() {
   if (error) {
     await Swal.fire({
       icon: "error",
-      title: "Грешка",
-      text: error.message || "Неуспешна смяна на парола. Опитайте отново.",
+      title: t("common.error"),
+      text: error.message || t("auth.passwordChangeFailed"),
     });
   } else {
     await Swal.fire({
       icon: "success",
-      title: "Паролата е сменена",
-      text: "Влез с новата си парола.",
+      title: t("auth.passwordChanged"),
+      text: t("auth.passwordChangedText"),
       confirmButtonColor: "#28a745",
       timer: 3000,
       timerProgressBar: true,
@@ -99,6 +100,7 @@ async function handlePasswordRecovery() {
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", async () => {
   initNetworkStatusBanner();
+  initBottomNav();
   initSwalFallback();
 
   // Handle password recovery before anything else — exits early if recovery link detected
@@ -170,6 +172,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         initNotificationBell(storedUser.id);
       });
     }
+
+    // Wire up button event listeners (replaces inline onclick in HTML)
+    document.getElementById("logoutBtn")?.addEventListener("click", (e) => {
+      e.preventDefault();
+      handleLogout();
+    });
+    document.getElementById("editProfileBtn")?.addEventListener("click", toggleEditMode);
+    document.getElementById("cancelEditBtn")?.addEventListener("click", toggleEditMode);
+    document.getElementById("pushToggleBtn")?.addEventListener("click", handlePushToggle);
 
     await checkAuth();
     await loadProfileData();
@@ -248,9 +259,9 @@ async function loadProfileData() {
     document.getElementById("userEmail").textContent = currentUser.email || currentUser.username;
     document.getElementById("emailValue").textContent = currentUser.email || currentUser.username;
     document.getElementById("neighborhoodDisplay").textContent =
-      userProfile.neighborhood || "Not set";
+      userProfile.neighborhood || t("profile.notSet");
     document.getElementById("neighborhoodValue").textContent =
-      userProfile.neighborhood || "Not set";
+      userProfile.neighborhood || t("profile.notSet");
     document.getElementById("pointsDisplay").textContent =
       (userProfile.points_balance || 0) + " ⭐";
     document.getElementById("pointsValue").textContent = userProfile.points_balance || 0;
@@ -271,7 +282,7 @@ async function loadProfileData() {
     await Swal.fire({
       icon: "error",
       title: t("common.error"),
-      text: error.message || "Failed to load profile. Please try again.",
+      text: error.message || t("profile.loadError"),
     });
 
     document.getElementById("loadingState").style.display = "none";
@@ -283,19 +294,18 @@ async function loadProfileData() {
  */
 function displayRank(points) {
   let rank, rankText, emoji;
-  const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
 
   if (points < 50) {
     rank = "bronze";
-    rankText = lang === "en" ? "Bronze" : "Бронз";
+    rankText = t("profile.rankBronze");
     emoji = "🥉";
   } else if (points < 100) {
     rank = "silver";
-    rankText = lang === "en" ? "Silver" : "Сребро";
+    rankText = t("profile.rankSilver");
     emoji = "🥈";
   } else {
     rank = "gold";
-    rankText = lang === "en" ? "Gold" : "Злато";
+    rankText = t("profile.rankGold");
     emoji = "🥇";
   }
 
@@ -303,8 +313,30 @@ function displayRank(points) {
   rankBadge.className = `rank-badge rank-${rank}`;
   rankBadge.innerHTML = `<span>${emoji}</span> ${rankText} (${points} ⭐)`;
 
-  const pointsLabel = lang === "en" ? "points" : "точки";
-  document.getElementById("rankValue").textContent = `${rankText} - ${points} ${pointsLabel}`;
+  document.getElementById("rankValue").textContent =
+    `${rankText} - ${points} ${t("profile.pointsLabel")}`;
+
+  // Rank progression bar
+  const wrap = document.getElementById("rankProgressWrap");
+  const fill = document.getElementById("rankProgressFill");
+  const label = document.getElementById("rankProgressLabel");
+  if (wrap && fill && label) {
+    if (rank === "bronze") {
+      const pct = Math.min((points / 50) * 100, 100);
+      fill.style.width = `${pct}%`;
+      label.textContent = t("profile.rankProgressToSilver").replace("{{n}}", 50 - points);
+      wrap.style.display = "block";
+    } else if (rank === "silver") {
+      const pct = Math.min(((points - 50) / 50) * 100, 100);
+      fill.style.width = `${pct}%`;
+      label.textContent = t("profile.rankProgressToGold").replace("{{n}}", 100 - points);
+      wrap.style.display = "block";
+    } else {
+      fill.style.width = "100%";
+      label.textContent = t("profile.rankProgressMax");
+      wrap.style.display = "block";
+    }
+  }
 }
 
 /**
@@ -333,29 +365,29 @@ async function loadTransactions() {
       document.getElementById("transactionsContainer").innerHTML = `
                   <div class="empty-state">
                       <div class="empty-state-icon">📊</div>
-                      <p>Все още няма транзакции</p>
+                      <p>${t("profile.noTransactionsYet")}</p>
                   </div>
               `;
       return;
     }
 
+    const txLang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+    const txLocale = txLang === "bg" ? "bg-BG" : "en-US";
     let html = `
               <div class="table-container">
                   <table class="table">
                       <thead>
                           <tr>
-                              <th>Дата</th>
-                              <th>Тип</th>
-                              <th>Количество</th>
-                              <th>Причина</th>
+                              <th>${t("profile.date")}</th>
+                              <th>${t("profile.type")}</th>
+                              <th>${t("profile.amount")}</th>
+                              <th>${t("profile.reason")}</th>
                           </tr>
                       </thead>
                       <tbody>
           `;
 
     transactions.forEach((transaction) => {
-      const txLang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
-      const txLocale = txLang === "bg" ? "bg-BG" : "en-US";
       const date = new Date(transaction.created_at).toLocaleDateString(txLocale, {
         year: "numeric",
         month: "short",
@@ -364,8 +396,8 @@ async function loadTransactions() {
 
       const typeBadge =
         transaction.type === "earned"
-          ? '<span class="badge-earned">✓ Спечелени</span>'
-          : '<span class="badge-spent">✗ Изразходвани</span>';
+          ? `<span class="badge-earned">${t("profile.earned")}</span>`
+          : `<span class="badge-spent">${t("profile.spent")}</span>`;
 
       const amount =
         transaction.type === "earned"
@@ -392,7 +424,7 @@ async function loadTransactions() {
   } catch {
     document.getElementById("transactionsContainer").innerHTML = `
               <div class="empty-state" style="color: #dc3545;">
-                  <p>Грешка при зареждане на транзакциите</p>
+                  <p>${t("profile.loadTransactionsError")}</p>
               </div>
           `;
   }
@@ -416,8 +448,8 @@ async function loadParticipations() {
         document.getElementById("participationsContainer").innerHTML = `
                   <div class="empty-state">
                       <div class="empty-state-icon">🎪</div>
-                      <p>Все още не си се присъединил към кампания</p>
-                      <a href="/dashboard" style="color: #28a745; text-decoration: none; font-weight: bold;">Виж кампаниите →</a>
+                      <p>${t("profile.notJoinedYet")}</p>
+                      <a href="/dashboard" style="color: #28a745; text-decoration: none; font-weight: bold;">${t("profile.viewCampaigns") || "View Campaigns →"}</a>
                   </div>
               `;
         return;
@@ -433,6 +465,7 @@ async function loadParticipations() {
                   id,
                   status,
                   created_at,
+                  points_earned,
                   campaigns (
                       id,
                       title,
@@ -449,8 +482,8 @@ async function loadParticipations() {
       document.getElementById("participationsContainer").innerHTML = `
                   <div class="empty-state">
                       <div class="empty-state-icon">🎪</div>
-                      <p>Все още не си се присъединил към кампания</p>
-                      <a href="/dashboard" style="color: #28a745; text-decoration: none; font-weight: bold;">Виж кампаниите →</a>
+                      <p>${t("profile.notJoinedYet")}</p>
+                      <a href="/dashboard" style="color: #28a745; text-decoration: none; font-weight: bold;">${t("profile.viewCampaigns") || "View Campaigns →"}</a>
                   </div>
               `;
       return;
@@ -460,7 +493,7 @@ async function loadParticipations() {
   } catch {
     document.getElementById("participationsContainer").innerHTML = `
               <div class="empty-state" style="color: #dc3545;">
-                  <p>Грешка при зареждане на участията</p>
+                  <p>${t("profile.loadParticipationsError")}</p>
               </div>
           `;
   }
@@ -471,7 +504,9 @@ function renderParticipations(participations) {
 
   participations.forEach((participation) => {
     const campaign = participation.campaigns;
-    const date = new Date(participation.created_at).toLocaleDateString("bg-BG", {
+    const partLang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+    const partLocale = partLang === "bg" ? "bg-BG" : "en-US";
+    const date = new Date(participation.created_at).toLocaleDateString(partLocale, {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -480,29 +515,35 @@ function renderParticipations(participations) {
     let statusBadge = "";
     switch (participation.status) {
       case "joined":
-        statusBadge = '<span class="participation-status status-joined">📝 Присъединил се</span>';
+        statusBadge = `<span class="participation-status status-joined">${t("profile.statusJoined")}</span>`;
         break;
       case "pending":
-        statusBadge = '<span class="participation-status status-pending">⏳ Изчакване</span>';
+        statusBadge = `<span class="participation-status status-pending">${t("profile.statusPending")}</span>`;
         break;
       case "approved":
-        statusBadge = '<span class="participation-status status-approved">✅ Одобрен</span>';
+        statusBadge = `<span class="participation-status status-approved">${t("profile.statusApproved")}</span>`;
         break;
       case "rejected":
-        statusBadge = '<span class="participation-status status-rejected">❌ Отхвърлен</span>';
+        statusBadge = `<span class="participation-status status-rejected">${t("profile.statusRejected")}</span>`;
         break;
     }
+
+    const pointsLine =
+      participation.status === "approved" && participation.points_earned > 0
+        ? `<p><strong>${t("profile.pointsEarned")}</strong> +${participation.points_earned} ⭐</p>`
+        : "";
 
     html += `
                 <div class="participation-item">
                     <div class="participation-header">
-                        <div class="participation-title">${escapeHTML(campaign?.title || "Непозната кампания")}</div>
+                        <div class="participation-title">${escapeHTML(campaign?.title || t("profile.unknownCampaign"))}</div>
                         ${statusBadge}
                     </div>
                     <div class="participation-details">
-                        <p><strong>Квартал:</strong> ${escapeHTML(campaign?.neighborhood || "Неизвестен")}</p>
-                        <p><strong>Дата:</strong> ${date}</p>
-                        <p><strong>Статус:</strong> ${participation.status.charAt(0).toUpperCase() + participation.status.slice(1)}</p>
+                        <p><strong>${t("profile.neighborhoodLabel")}</strong> ${escapeHTML(campaign?.neighborhood || t("profile.unknown"))}</p>
+                        <p><strong>${t("profile.dateLabel")}</strong> ${date}</p>
+                        <p><strong>${t("profile.statusLabel")}</strong> ${participation.status.charAt(0).toUpperCase() + participation.status.slice(1)}</p>
+                        ${pointsLine}
                     </div>
                 </div>
             `;
@@ -578,8 +619,8 @@ async function handleSaveProfile(e) {
   if (!newUsername) {
     await Swal.fire({
       icon: "error",
-      title: "Грешка",
-      text: "Потребителското име е задължително!",
+      title: t("common.error"),
+      text: t("profile.usernameRequired") || "Потребителското име е задължително!",
     });
     return;
   }
@@ -588,7 +629,7 @@ async function handleSaveProfile(e) {
   if (newPassword) {
     const pwError = rules.password(newPassword);
     if (pwError) {
-      await Swal.fire({ icon: "error", title: "Слаба парола", text: pwError });
+      await Swal.fire({ icon: "error", title: t("auth.weakPasswordTitle"), text: pwError });
       return;
     }
   }
@@ -596,8 +637,8 @@ async function handleSaveProfile(e) {
   try {
     // Show loading
     Swal.fire({
-      title: "Запазване...",
-      text: "Моля изчакайте",
+      title: t("profile.saving"),
+      text: t("profile.pleaseWait"),
       allowOutsideClick: false,
       didOpen: () => {
         Swal.showLoading();
@@ -620,7 +661,7 @@ async function handleSaveProfile(e) {
       document.getElementById("neighborhoodValue").textContent = newNeighborhood;
 
       Swal.close();
-      await showSuccessToast("Профилът е обновен успешно!");
+      await showSuccessToast(t("profile.savedSuccess"));
 
       toggleEditMode();
     } else {
@@ -662,15 +703,15 @@ async function handleSaveProfile(e) {
       displayAvatar(getAvatarUrl(userProfile));
 
       Swal.close();
-      await showSuccessToast("Профилът е обновен успешно!");
+      await showSuccessToast(t("profile.savedSuccess"));
 
       toggleEditMode();
     }
   } catch (error) {
     await Swal.fire({
       icon: "error",
-      title: "Грешка",
-      text: error.message || "Грешка при запазване на промените",
+      title: t("common.error"),
+      text: error.message || t("profile.saveError"),
     });
   }
 }
@@ -696,7 +737,7 @@ function displayAvatar(avatarUrl) {
 }
 
 // Add event listener to edit form
-document.getElementById("editProfileForm").addEventListener("submit", handleSaveProfile);
+document.getElementById("editProfileForm")?.addEventListener("submit", handleSaveProfile);
 
 // Avatar file input preview
 const avatarFileInput = document.getElementById("editAvatarFile");
@@ -805,8 +846,3 @@ async function handlePushToggle() {
 
   initPushUI();
 }
-
-// Expose functions to window for onclick handlers
-window.handleLogout = handleLogout;
-window.toggleEditMode = toggleEditMode;
-window.handlePushToggle = handlePushToggle;

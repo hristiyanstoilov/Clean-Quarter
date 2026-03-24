@@ -38,6 +38,11 @@
   status = 200
 
 [[redirects]]
+  from = "/events"
+  to = "/src/pages/events.html"
+  status = 200
+
+[[redirects]]
   from = "/privacy"
   to = "/src/pages/privacy.html"
   status = 200

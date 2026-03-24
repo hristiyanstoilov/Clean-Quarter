@@ -1,6 +1,7 @@
 import supabase from "../services/supabase.js";
 import { initI18n, applyLanguage, t } from "../utils/i18n.js";
 import { rules } from "../services/validation.js";
+import { initPasswordStrengthMeter } from "../components/passwordStrength.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   await initI18n(false);
@@ -45,6 +46,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   document.getElementById("resetPasswordForm").addEventListener("submit", handleResetPassword);
+  initPasswordStrengthMeter({
+    passwordInputId: "newPassword",
+    strengthBarId: "resetPasswordStrength",
+  });
 });
 
 async function handleResetPassword(e) {

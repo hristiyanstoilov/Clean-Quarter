@@ -1,7 +1,8 @@
 import supabase from "./supabase.js";
 import logger from "./logger.js";
-import { showSuccess, showError } from "../utils/helpers.js";
+import { showSuccess } from "../utils/helpers.js";
 import { rules } from "./validation.js";
+import { t } from "../utils/i18n.js";
 
 /**
  * Register a new user with email, password, and metadata (neighborhood)
@@ -65,16 +66,10 @@ export async function register(email, password, options = {}) {
 
     logger.info("✅ Profile created successfully");
 
-    const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
-    await showSuccess(
-      lang === "en" ? "Registration Successful!" : "Регистрацията е успешна!",
-      lang === "en" ? "Your account has been created." : "Акаунтът ти е създаден.",
-      1500
-    );
+    await showSuccess(t("auth.registerSuccessTitle"), t("auth.registerSuccessText"), 1500);
     return authData.user;
   } catch (error) {
     logger.error("❌ Register error:", error);
-    await showError("Registration Error", error);
     throw error;
   }
 }
@@ -93,13 +88,9 @@ export async function login(email, password) {
         p_email: email,
       });
       if (rateData && !rateData.allowed) {
-        const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
-        const err = new Error(
-          lang === "en"
-            ? "Too many login attempts. Please try again in 15 minutes."
-            : "Твърде много опити за вход. Опитайте отново след 15 минути."
-        );
+        const err = new Error(t("auth.tooManyAttempts"));
         err.isRateLimit = true;
+        err.retryAfterSeconds = 15 * 60; // 15-minute rolling window
         throw err;
       }
     } catch (rateLimitError) {
@@ -123,15 +114,13 @@ export async function login(email, password) {
       throw error;
     }
 
-    const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
     await showSuccess(
-      lang === "en" ? "Login Successful!" : "Успешен вход!",
-      lang === "en" ? `Welcome, ${email}` : `Добре дошъл, ${email}`,
+      t("auth.loginSuccessTitle"),
+      t("auth.loginSuccessText").replace("{{email}}", email),
       1500
     );
     return data.user;
   } catch (error) {
-    await showError("Login Error", error);
     throw error;
   }
 }
@@ -146,14 +135,8 @@ export async function logout() {
 
     if (error) throw error;
 
-    const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
-    await showSuccess(
-      lang === "en" ? "Logout Successful" : "Излезе успешно",
-      lang === "en" ? "See you soon!" : "До скоро!",
-      1500
-    );
+    await showSuccess(t("auth.logoutSuccessTitle"), t("auth.logoutSuccessText"), 1500);
   } catch (error) {
-    await showError("Logout Error", error);
     throw error;
   }
 }

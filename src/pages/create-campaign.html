@@ -41,6 +41,9 @@
               <a class="nav-link" href="/dashboard" data-i18n="nav.dashboard">Начало</a>
             </li>
             <li class="nav-item">
+              <a class="nav-link" href="/events" data-i18n="nav.events">Събития</a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link" href="/rewards" data-i18n="nav.rewards">Награди</a>
             </li>
             <li class="nav-item">
@@ -94,7 +97,7 @@
               </select>
             </li>
             <li class="nav-item">
-              <a href="#" class="nav-link" onclick="handleLogout()" data-i18n="nav.logout">Изход</a>
+              <a href="#" class="nav-link" id="logoutBtn" data-i18n="nav.logout">Изход</a>
             </li>
           </ul>
         </div>
@@ -271,5 +274,29 @@
 
     <!-- Main Script -->
     <script type="module" src="../scripts/create-campaign.js"></script>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="bottom-nav" id="bottomNav" aria-label="Mobile navigation">
+      <a class="bottom-nav__link" href="/dashboard">
+        <span class="bottom-nav__icon">🏠</span>
+        <span data-i18n="nav.dashboard">Начало</span>
+      </a>
+      <a class="bottom-nav__link" href="/create-campaign">
+        <span class="bottom-nav__icon">➕</span>
+        <span data-i18n="nav.createCampaign">Нова кампания</span>
+      </a>
+      <a class="bottom-nav__link" href="/events">
+        <span class="bottom-nav__icon">🗓️</span>
+        <span data-i18n="nav.events">Събития</span>
+      </a>
+      <a class="bottom-nav__link" href="/rewards">
+        <span class="bottom-nav__icon">🏆</span>
+        <span data-i18n="nav.rewards">Награди</span>
+      </a>
+      <a class="bottom-nav__link" href="/profile">
+        <span class="bottom-nav__icon">👤</span>
+        <span data-i18n="nav.profile">Профил</span>
+      </a>
+    </nav>
   </body>
 </html>

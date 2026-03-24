@@ -301,7 +301,9 @@ export function formatDate(date, format = "short") {
       long: { year: "numeric", month: "long", day: "numeric", weekday: "long" },
       time: { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" },
     };
-    return dateObj.toLocaleDateString("en-US", options[format] || options.short);
+    const lang = hasLocalStorage() ? localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg" : "en";
+    const locale = lang === "bg" ? "bg-BG" : "en-US";
+    return dateObj.toLocaleDateString(locale, options[format] || options.short);
   } catch (error) {
     logger.error("Error formatting date:", error);
     return "Invalid Date";
@@ -464,7 +466,8 @@ export async function handleError(
   userMessage = "An error occurred. Please try again."
 ) {
   logger.error(`[${context}]`, error);
-  await showError("Error", userMessage);
+  const lang = hasLocalStorage() ? localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg" : "bg";
+  await showError(lang === "en" ? "Error" : "Грешка", userMessage);
 }
 
 /**

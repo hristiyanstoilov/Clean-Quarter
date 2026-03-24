@@ -10,6 +10,7 @@
 
 import supabase from "./supabase.js";
 import { t as i18nT } from "../utils/i18n.js";
+import { escapeHTML } from "../utils/helpers.js";
 
 /**
  * Fetch the latest 20 notifications for a user.
@@ -19,7 +20,7 @@ import { t as i18nT } from "../utils/i18n.js";
 export async function fetchNotifications(userId) {
   const { data, error } = await supabase
     .from("notifications")
-    .select("id, message, type, is_read, campaign_id, created_at")
+    .select("id, message, type, is_read, campaign_id, participation_id, created_at")
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(20);
@@ -149,12 +150,14 @@ export function renderNotifications(notifications, lang, onItemClick) {
       const time = timeAgo(n.created_at, lang);
       const unreadClass = n.is_read ? "" : " notification-item--unread";
       const msg = resolveMessage(n.message);
+      const isLinked = !!(n.campaign_id || n.participation_id);
+      const linkedClass = isLinked ? " notification-item--linked" : "";
       return `
-        <div class="notification-item${unreadClass}" data-id="${n.id}" data-campaign="${n.campaign_id || ""}">
+        <div class="notification-item${unreadClass}${linkedClass}" data-id="${n.id}" data-campaign="${n.campaign_id || ""}" data-participation="${n.participation_id || ""}">
           <span class="notification-icon">${icon}</span>
           <div class="notification-body">
-            <p class="notification-msg">${msg}</p>
-            <span class="notification-time">${time}</span>
+            <p class="notification-msg">${escapeHTML(msg)}</p>
+            <span class="notification-time">${time}${isLinked ? ' <span class="notification-link-arrow">→</span>' : ""}</span>
           </div>
           ${!n.is_read ? '<span class="notification-dot"></span>' : ""}
         </div>`;
@@ -220,9 +223,14 @@ export async function initNotificationBell(userId) {
           el.querySelector(".notification-dot")?.remove();
         }
       }
-      if (notif.campaign_id) {
+      const dest = notif.campaign_id
+        ? `/campaign/${notif.campaign_id}`
+        : notif.participation_id
+          ? "/profile"
+          : null;
+      if (dest) {
         closeDropdown();
-        window.location.href = `/campaign/${notif.campaign_id}`;
+        window.location.href = dest;
       }
     });
   }

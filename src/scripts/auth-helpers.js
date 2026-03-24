@@ -1,5 +1,6 @@
 // Authentication Page Helper Functions
 import supabase from "../services/supabase.js";
+import { t } from "../utils/i18n.js";
 
 /**
  * Handle forgot password link — calls Supabase to send real reset email
@@ -7,23 +8,23 @@ import supabase from "../services/supabase.js";
 export async function handleForgotPassword(e) {
   e.preventDefault();
   await Swal.fire({
-    title: "Забравена парола",
+    title: t("auth.forgotTitle"),
     html:
-      "<p>Въведи своя имейл адрес и ще изпратим линк за възстановяване.</p>" +
-      '<input type="email" id="resetEmail" class="swal2-input" placeholder="your@email.com">',
+      `<p>${t("auth.forgotSubtitle")}</p>` +
+      `<input type="email" id="resetEmail" class="swal2-input" placeholder="${t("auth.emailPlaceholder")}">`,
     icon: "info",
     showCancelButton: true,
     confirmButtonColor: "#28a745",
     cancelButtonColor: "#6c757d",
-    confirmButtonText: "Изпрати линк",
-    cancelButtonText: "Отмяна",
+    confirmButtonText: t("auth.sendResetLink"),
+    cancelButtonText: t("common.cancel"),
   }).then(async (result) => {
     if (result.isConfirmed) {
       const email = document.getElementById("resetEmail").value.trim();
       if (!email) {
         Swal.fire({
-          title: "Грешка",
-          text: "Моля, въведи имейл адрес",
+          title: t("common.error"),
+          text: t("auth.emailRequired"),
           icon: "error",
         });
         return;
@@ -35,14 +36,14 @@ export async function handleForgotPassword(e) {
 
       if (error) {
         Swal.fire({
-          title: "Грешка",
-          text: error.message || "Неуспешно изпращане. Опитайте отново.",
+          title: t("common.error"),
+          text: error.message,
           icon: "error",
         });
       } else {
         Swal.fire({
-          title: "Имейлът е изпратен",
-          text: `Линк за възстановяване беше изпратен на ${email}`,
+          title: t("auth.resetSentTitle"),
+          text: t("auth.resetSentTextFull").replace("{{email}}", email),
           icon: "success",
           confirmButtonColor: "#28a745",
           timer: 3000,

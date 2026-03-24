@@ -42,8 +42,8 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!acceptTerms.checked) {
         e.preventDefault();
         Swal.fire({
-          title: "Грешка",
-          text: "Трябва да приемеш Общите условия и Политиката за поверителност",
+          title: t("common.error"),
+          text: t("auth.acceptTermsRequired"),
           icon: "error",
           confirmButtonColor: "#28a745",
         });
@@ -53,8 +53,8 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!acceptRisk.checked) {
         e.preventDefault();
         Swal.fire({
-          title: "Грешка",
-          text: "Трябва да потвърдиш, че разбираш рисковете и условията на участие",
+          title: t("common.error"),
+          text: t("auth.acceptRiskRequired"),
           icon: "error",
           confirmButtonColor: "#28a745",
         });
@@ -81,19 +81,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-// Register Service Worker for PWA
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("/service-worker.js")
-      .then((registration) => {
-        console.log("[SW] Registered:", registration.scope);
-      })
-      .catch((error) => {
-        console.warn("[SW] Registration failed:", error);
-      });
-  });
-}
-
 // Push notification permission is requested via the toggle in profile.js (handlePushToggle)
 // — never request automatically on page load (browsers block permission prompts without user gesture)
+// Service Worker registration is handled centrally by pwa.js via initializePWA() in main.js

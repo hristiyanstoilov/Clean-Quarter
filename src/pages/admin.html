@@ -47,6 +47,9 @@
               <a class="nav-link" href="/dashboard" data-i18n="nav.dashboard">Начало</a>
             </li>
             <li class="nav-item">
+              <a class="nav-link" href="/events" data-i18n="nav.events">Събития</a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link" href="/rewards" data-i18n="nav.rewards">Награди</a>
             </li>
             <li class="nav-item">
@@ -97,7 +100,7 @@
               </select>
             </li>
             <li class="nav-item">
-              <a href="#" class="nav-link" onclick="handleLogout()" data-i18n="nav.logout">Изход</a>
+              <a href="#" class="nav-link" id="logoutBtn" data-i18n="nav.logout">Изход</a>
             </li>
           </ul>
         </div>
@@ -178,7 +181,7 @@
             <button
               type="button"
               class="btn btn-outline-success btn-sm"
-              onclick="window.exportUsersCsvHandler()"
+              id="exportUsersCsvBtn"
               data-i18n="admin.exportUsersCsv"
             >
               ⬇️ Export Users CSV
@@ -190,7 +193,7 @@
           <div style="margin-top: 2rem">
             <button
               class="btn btn-outline-secondary btn-sm"
-              onclick="window.showRoleLog()"
+              id="showRoleLogBtn"
               data-i18n="admin.showRoleLog"
             >
               Show Role Change Log
@@ -266,7 +269,7 @@
           <button
             type="button"
             class="btn btn-outline-success btn-sm"
-            onclick="window.exportParticipationsCsvHandler()"
+            id="exportParticipationsCsvBtn"
             data-i18n="admin.exportParticipationsCsv"
           >
             ⬇️ Export Participations CSV
@@ -327,7 +330,6 @@
             <button
               class="btn btn-outline-success btn-sm"
               id="heatmapToggleBtn"
-              onclick="toggleHeatmap(this)"
               aria-expanded="false"
               aria-controls="heatmapContainer"
               data-i18n="admin.heatmapShow"
@@ -353,7 +355,7 @@
               </p>
               <button
                 class="btn btn-outline-secondary btn-sm"
-                onclick="refreshHeatmap()"
+                id="refreshHeatmapBtn"
                 data-i18n="admin.heatmapRefresh"
               >
                 🔄 Refresh
@@ -390,12 +392,11 @@
     <div
       id="photoModal"
       class="photo-modal"
-      onclick="closePhotoModal()"
       role="dialog"
       aria-modal="true"
       aria-label="Photo preview"
     >
-      <span class="close" onclick="closePhotoModal()" tabindex="0" role="button" aria-label="Close"
+      <span class="close" id="closePhotoModalBtn" tabindex="0" role="button" aria-label="Close"
         >&times;</span
       >
       <img id="modalPhoto" src="" alt="Full size photo" />
@@ -406,5 +407,29 @@
 
     <!-- Main Script -->
     <script type="module" src="../scripts/admin.js"></script>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="bottom-nav" id="bottomNav" aria-label="Mobile navigation">
+      <a class="bottom-nav__link" href="/dashboard">
+        <span class="bottom-nav__icon">🏠</span>
+        <span data-i18n="nav.dashboard">Начало</span>
+      </a>
+      <a class="bottom-nav__link" href="/create-campaign">
+        <span class="bottom-nav__icon">➕</span>
+        <span data-i18n="nav.createCampaign">Нова кампания</span>
+      </a>
+      <a class="bottom-nav__link" href="/events">
+        <span class="bottom-nav__icon">🗓️</span>
+        <span data-i18n="nav.events">Събития</span>
+      </a>
+      <a class="bottom-nav__link" href="/rewards">
+        <span class="bottom-nav__icon">🏆</span>
+        <span data-i18n="nav.rewards">Награди</span>
+      </a>
+      <a class="bottom-nav__link" href="/profile">
+        <span class="bottom-nav__icon">👤</span>
+        <span data-i18n="nav.profile">Профил</span>
+      </a>
+    </nav>
   </body>
 </html>

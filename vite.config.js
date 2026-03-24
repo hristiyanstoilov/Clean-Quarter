@@ -15,6 +15,7 @@ const devRewrites = {
         '/rewards': '/src/pages/rewards.html',
         '/admin': '/src/pages/admin.html',
         '/privacy': '/src/pages/privacy.html',
+        '/events': '/src/pages/events.html',
       };
       const base = req.url.split('?')[0];
       if (map[base]) {
@@ -55,7 +56,8 @@ export default defineConfig({
         profile: resolve(__dirname, 'src/pages/profile.html'),
         admin: resolve(__dirname, 'src/pages/admin.html'),
         rewards: resolve(__dirname, 'src/pages/rewards.html'),
-        privacy: resolve(__dirname, 'src/pages/privacy.html')
+        privacy: resolve(__dirname, 'src/pages/privacy.html'),
+        events: resolve(__dirname, 'src/pages/events.html')
       },
       plugins: [visualizer({ open: true, filename: 'dist/bundle-stats.html' })]
     }

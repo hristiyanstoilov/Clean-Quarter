@@ -138,6 +138,21 @@ Hardening + platform features before v1.0 declaration.
 
 ---
 
+### March 2026 (Week 5) — UX & Feature Completion
+
+Closed the gap between DB capabilities and UI exposure; mobile UX hardening.
+
+| Feature | Shipped |
+|---------|---------|
+| Before/after comparison slider (clip-path drag) on campaign detail | Mar 23 |
+| Mobile bottom navigation — 5-tab, active state, `initBottomNav()` hook | Mar 23 |
+| Group Events page (`/events`) — My RSVPs + All Upcoming, cancel RSVP | Mar 23 |
+| Dashboard search (server-side `.ilike`, debounced 300ms) + neighborhood filter | Mar 23 |
+| `campaign-filters.js` — added `category` filter + null-safe title search | Mar 23–24 |
+| `initBottomNav()` active state fix for `/campaign/:id` detail pages | Mar 24 |
+
+---
+
 ## 💰 Business Model & Monetization Strategy
 
 > **Current state (Phase 1):** 100% free, grant/public funded. Zero revenue. All rewards are sponsor-donated. Platform adds value but captures none.
@@ -321,16 +336,16 @@ Closing the gap between what the DB supports and what the UI exposes.
 
 | Feature | Effort | Rationale |
 |---------|--------|-----------|
-| **Group Events page** | Medium | `event_rsvps` migration + `events.js` service exist — no HTML page or script. The social "Party Mode" mechanic is the strongest virality driver. Without UI it's dead code. |
-| **Dashboard search & filter** | Small | `campaign-filters.js` exists. Users need live search by title + neighborhood dropdown. At 50+ campaigns discovery breaks. |
+| ~~**Group Events page**~~ | ~~Medium~~ | ✅ Shipped Mar 23 |
+| ~~**Dashboard search & filter**~~ | ~~Small~~ | ✅ Shipped Mar 23 |
 
 #### P1 — High UX value, low effort
 
 | Feature | Effort | Rationale |
 |---------|--------|-----------|
 | **Skeleton loading screens** | Medium | Current UX shows empty space while fetching. Skeleton cards make the app feel faster and production-quality. |
-| **Mobile bottom navigation** | Small | Hamburger works but bottom nav is the mobile standard for civic apps. 4 icons: Home, Map, +Create, Profile. CSS media query only. |
-| **Before/after comparison slider** | Small | Campaign detail page gets a drag-to-compare slider between the campaign's `before_photo_url` and the best approved `after_photo_url`. The single most emotionally powerful proof of impact — zero new infrastructure, photos already exist in Supabase Storage. Pure frontend (CSS clip-path or a lightweight library). |
+| ~~**Mobile bottom navigation**~~ | ~~Small~~ | ✅ Shipped Mar 23 |
+| ~~**Before/after comparison slider**~~ | ~~Small~~ | ✅ Shipped Mar 23 |
 | **Weather forecast on campaign cards** | Small | `weather.js` (Open-Meteo, no API key) is already integrated on the dashboard. Extend it: each campaign card shows the weather forecast for its `scheduled_date`. "Sunny 18°C ☀" vs "Rain expected 🌧" directly affects attendance decisions. Weather data is already being fetched — just surface it on the card. |
 | **Weather on campaign detail page** | Small | Same `weather.js` integration, extended to the campaign detail page to show the full forecast for the exact `scheduled_date` — not just an icon but a 3-day outlook. Users visit the detail page immediately before deciding to join. "Rain expected on Saturday" is the most actionable last-mile info. Currently the detail page shows no weather at all. Zero new infrastructure — one function call from existing `weather.js`. |
 | **Rank tier progression bar on profile** | Small | Profile currently shows rank badge (Bronze/Silver/Gold) but no context. Add a horizontal progress bar: "Silver — 63 pts. 37 more to reach Gold 🥇". The Bronze→Silver threshold is 50 pts and Silver→Gold is 100 pts — already calculated in `displayRank()` at `profile.js:286`. Zero backend. Pure UI addition that converts a static label into a motivational mechanic. |

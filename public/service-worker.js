@@ -5,21 +5,13 @@
 
 const CACHE_NAME = 'clean-quarter-v2';
 const STATIC_ASSETS = [
+    // Production routes served by the SPA (Vite builds to /dist, Netlify serves from root)
     '/',
-    '/index.html',
-    '/src/pages/dashboard.html',
-    '/src/pages/create-campaign.html',
-    '/src/pages/campaign-detail.html',
-    '/src/pages/rewards.html',
-    '/src/pages/profile.html',
-    '/src/pages/admin.html',
-    '/src/style.css',
-    '/src/assets/style.css',
-    '/src/main.js',
-    '/src/services/auth.js',
-    '/src/services/map.js',
-    '/src/services/storage.js',
-    '/src/services/supabase.js'
+    '/dashboard',
+    '/create-campaign',
+    '/rewards',
+    '/profile',
+    '/admin',
     // CDN resources (Bootstrap, Leaflet, SweetAlert2) are intentionally NOT cached
     // so the browser always fetches the latest version from the CDN.
 ];
@@ -83,8 +75,8 @@ self.addEventListener('fetch', (event) => {
                 .then((response) => {
                     // Cache successful API responses
                     if (response && response.status === 200) {
-                        const cache = caches.open(CACHE_NAME);
-                        cache.then((c) => c.put(request, response.clone()));
+                        const responseToCache = response.clone();
+                        caches.open(CACHE_NAME).then((c) => c.put(request, responseToCache));
                     }
                     return response;
                 })
@@ -152,7 +144,7 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
 
-    const urlToOpen = event.notification.data?.url || '/src/pages/dashboard.html';
+    const urlToOpen = event.notification.data?.url || '/dashboard';
 
     event.waitUntil(
         clients.matchAll({
