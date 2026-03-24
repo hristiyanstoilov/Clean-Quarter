@@ -5,7 +5,7 @@ export function initPasswordStrengthMeter({
   passwordInputId = "registerPassword",
   strengthBarId = "registerPasswordStrength",
 } = {}) {
-  document.addEventListener("DOMContentLoaded", function () {
+  function wire() {
     const passwordInput = document.getElementById(passwordInputId);
     const strengthBar = document.getElementById(strengthBarId);
     if (passwordInput && strengthBar) {
@@ -28,5 +28,12 @@ export function initPasswordStrengthMeter({
         }
       });
     }
-  });
+  }
+  // If called before DOMContentLoaded (e.g. at module evaluation time), wait for it.
+  // If called after (e.g. inside a DOMContentLoaded handler), run immediately.
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", wire);
+  } else {
+    wire();
+  }
 }

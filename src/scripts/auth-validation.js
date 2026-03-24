@@ -81,19 +81,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-// Register Service Worker for PWA
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("/service-worker.js")
-      .then((registration) => {
-        console.log("[SW] Registered:", registration.scope);
-      })
-      .catch((error) => {
-        console.warn("[SW] Registration failed:", error);
-      });
-  });
-}
-
 // Push notification permission is requested via the toggle in profile.js (handlePushToggle)
 // — never request automatically on page load (browsers block permission prompts without user gesture)
+// Service Worker registration is handled centrally by pwa.js via initializePWA() in main.js

@@ -90,6 +90,7 @@ export async function login(email, password) {
       if (rateData && !rateData.allowed) {
         const err = new Error(t("auth.tooManyAttempts"));
         err.isRateLimit = true;
+        err.retryAfterSeconds = 15 * 60; // 15-minute rolling window
         throw err;
       }
     } catch (rateLimitError) {

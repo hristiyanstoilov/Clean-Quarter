@@ -2,6 +2,8 @@
  * Profile validation helpers
  */
 
+import { NEIGHBORHOODS } from "../utils/constants.js";
+
 export function validateUsername(username) {
   if (!username || username.length < 3) {
     return { valid: false, error: "Username must be at least 3 characters" };
@@ -19,15 +21,7 @@ export function validateUsername(username) {
 }
 
 export function validateNeighborhood(neighborhood) {
-  const validNeighborhoods = [
-    "Studentski Grad",
-    "Darvenitsa",
-    "Musagenitsa",
-    "Kv. Vitosha (VEC)",
-    "Malinova Dolina",
-  ];
-
-  if (!validNeighborhoods.includes(neighborhood)) {
+  if (!NEIGHBORHOODS.includes(neighborhood)) {
     return { valid: false, error: "Invalid neighborhood selected" };
   }
   return { valid: true };

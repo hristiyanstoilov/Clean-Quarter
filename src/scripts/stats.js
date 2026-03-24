@@ -1,4 +1,5 @@
 import { initI18n, applyLanguage, t } from "../utils/i18n.js";
+import { escapeHTML } from "../utils/helpers.js";
 import { getPublicStats, getNeighborhoodStats, getCategoryStats } from "../services/stats.js";
 
 const CATEGORY_CONFIG = {
@@ -88,12 +89,4 @@ function formatNumber(n) {
 
 function capitalize(str) {
   return str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
-}
-
-function escapeHTML(str) {
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }

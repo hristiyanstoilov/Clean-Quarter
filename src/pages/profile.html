@@ -46,6 +46,9 @@
               >
             </li>
             <li class="nav-item">
+              <a class="nav-link" href="/events" data-i18n="nav.events">Събития</a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link" href="/rewards" data-i18n="nav.rewards">Награди</a>
             </li>
             <li class="nav-item" id="adminNavItem" style="display: none">
@@ -96,7 +99,7 @@
               </select>
             </li>
             <li class="nav-item">
-              <a href="#" class="nav-link" onclick="handleLogout()" data-i18n="nav.logout">Изход</a>
+              <a href="#" class="nav-link" id="logoutBtn" data-i18n="nav.logout">Изход</a>
             </li>
           </ul>
         </div>
@@ -119,6 +122,12 @@
           <div class="avatar-section">
             <div class="avatar" id="avatarDisplay">👤</div>
             <div class="rank-badge" id="rankBadge"></div>
+            <div class="rank-progress-wrap" id="rankProgressWrap" style="display: none">
+              <div class="rank-progress-bar-bg">
+                <div class="rank-progress-bar-fill" id="rankProgressFill"></div>
+              </div>
+              <small class="rank-progress-label" id="rankProgressLabel"></small>
+            </div>
           </div>
           <div class="profile-info">
             <h1 id="userEmail">-</h1>
@@ -132,11 +141,7 @@
                 >0 ⭐</span
               >
             </p>
-            <button
-              class="btn btn-outline-success btn-sm mt-2"
-              onclick="toggleEditMode()"
-              id="editProfileBtn"
-            >
+            <button class="btn btn-outline-success btn-sm mt-2" id="editProfileBtn">
               <span data-i18n="profile.editProfile">✏️ Редактирай профил</span>
             </button>
           </div>
@@ -309,7 +314,7 @@
               <button
                 type="button"
                 class="btn btn-secondary"
-                onclick="toggleEditMode()"
+                id="cancelEditBtn"
                 data-i18n="profile.cancel"
               >
                 ❌ Отказ
@@ -322,12 +327,7 @@
         <div class="section" id="pushNotificationsSection">
           <h2 data-i18n="push.sectionTitle">🔔 Известия</h2>
           <p class="text-muted small" id="pushStatusText" data-i18n="push.statusDefault">—</p>
-          <button
-            id="pushToggleBtn"
-            class="btn btn-outline-success btn-sm"
-            onclick="handlePushToggle()"
-            style="display: none"
-          >
+          <button id="pushToggleBtn" class="btn btn-outline-success btn-sm" style="display: none">
             <span id="pushToggleBtnText" data-i18n="push.enableBtn">Активирай известия</span>
           </button>
           <p
@@ -371,5 +371,29 @@
 
     <!-- Main Script -->
     <script type="module" src="../scripts/profile.js"></script>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="bottom-nav" id="bottomNav" aria-label="Mobile navigation">
+      <a class="bottom-nav__link" href="/dashboard">
+        <span class="bottom-nav__icon">🏠</span>
+        <span data-i18n="nav.dashboard">Начало</span>
+      </a>
+      <a class="bottom-nav__link" href="/create-campaign">
+        <span class="bottom-nav__icon">➕</span>
+        <span data-i18n="nav.createCampaign">Нова кампания</span>
+      </a>
+      <a class="bottom-nav__link" href="/events">
+        <span class="bottom-nav__icon">🗓️</span>
+        <span data-i18n="nav.events">Събития</span>
+      </a>
+      <a class="bottom-nav__link" href="/rewards">
+        <span class="bottom-nav__icon">🏆</span>
+        <span data-i18n="nav.rewards">Награди</span>
+      </a>
+      <a class="bottom-nav__link" href="/profile">
+        <span class="bottom-nav__icon">👤</span>
+        <span data-i18n="nav.profile">Профил</span>
+      </a>
+    </nav>
   </body>
 </html>

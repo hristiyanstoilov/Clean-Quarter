@@ -22,6 +22,7 @@ import {
   unsubscribeFromPush,
 } from "../services/pushNotifications.js";
 import { initNetworkStatusBanner } from "../utils/networkStatus.js";
+import { initBottomNav } from "../hooks/index.js";
 // Global variables
 let currentUser = null;
 let userProfile = null;
@@ -99,6 +100,7 @@ async function handlePasswordRecovery() {
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", async () => {
   initNetworkStatusBanner();
+  initBottomNav();
   initSwalFallback();
 
   // Handle password recovery before anything else — exits early if recovery link detected
@@ -170,6 +172,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         initNotificationBell(storedUser.id);
       });
     }
+
+    // Wire up button event listeners (replaces inline onclick in HTML)
+    document.getElementById("logoutBtn")?.addEventListener("click", (e) => {
+      e.preventDefault();
+      handleLogout();
+    });
+    document.getElementById("editProfileBtn")?.addEventListener("click", toggleEditMode);
+    document.getElementById("cancelEditBtn")?.addEventListener("click", toggleEditMode);
+    document.getElementById("pushToggleBtn")?.addEventListener("click", handlePushToggle);
 
     await checkAuth();
     await loadProfileData();
@@ -304,6 +315,28 @@ function displayRank(points) {
 
   document.getElementById("rankValue").textContent =
     `${rankText} - ${points} ${t("profile.pointsLabel")}`;
+
+  // Rank progression bar
+  const wrap = document.getElementById("rankProgressWrap");
+  const fill = document.getElementById("rankProgressFill");
+  const label = document.getElementById("rankProgressLabel");
+  if (wrap && fill && label) {
+    if (rank === "bronze") {
+      const pct = Math.min((points / 50) * 100, 100);
+      fill.style.width = `${pct}%`;
+      label.textContent = t("profile.rankProgressToSilver").replace("{{n}}", 50 - points);
+      wrap.style.display = "block";
+    } else if (rank === "silver") {
+      const pct = Math.min(((points - 50) / 50) * 100, 100);
+      fill.style.width = `${pct}%`;
+      label.textContent = t("profile.rankProgressToGold").replace("{{n}}", 100 - points);
+      wrap.style.display = "block";
+    } else {
+      fill.style.width = "100%";
+      label.textContent = t("profile.rankProgressMax");
+      wrap.style.display = "block";
+    }
+  }
 }
 
 /**
@@ -432,6 +465,7 @@ async function loadParticipations() {
                   id,
                   status,
                   created_at,
+                  points_earned,
                   campaigns (
                       id,
                       title,
@@ -494,6 +528,11 @@ function renderParticipations(participations) {
         break;
     }
 
+    const pointsLine =
+      participation.status === "approved" && participation.points_earned > 0
+        ? `<p><strong>${t("profile.pointsEarned")}</strong> +${participation.points_earned} ⭐</p>`
+        : "";
+
     html += `
                 <div class="participation-item">
                     <div class="participation-header">
@@ -504,6 +543,7 @@ function renderParticipations(participations) {
                         <p><strong>${t("profile.neighborhoodLabel")}</strong> ${escapeHTML(campaign?.neighborhood || t("profile.unknown"))}</p>
                         <p><strong>${t("profile.dateLabel")}</strong> ${date}</p>
                         <p><strong>${t("profile.statusLabel")}</strong> ${participation.status.charAt(0).toUpperCase() + participation.status.slice(1)}</p>
+                        ${pointsLine}
                     </div>
                 </div>
             `;
@@ -697,7 +737,7 @@ function displayAvatar(avatarUrl) {
 }
 
 // Add event listener to edit form
-document.getElementById("editProfileForm").addEventListener("submit", handleSaveProfile);
+document.getElementById("editProfileForm")?.addEventListener("submit", handleSaveProfile);
 
 // Avatar file input preview
 const avatarFileInput = document.getElementById("editAvatarFile");
@@ -806,8 +846,3 @@ async function handlePushToggle() {
 
   initPushUI();
 }
-
-// Expose functions to window for onclick handlers
-window.handleLogout = handleLogout;
-window.toggleEditMode = toggleEditMode;
-window.handlePushToggle = handlePushToggle;

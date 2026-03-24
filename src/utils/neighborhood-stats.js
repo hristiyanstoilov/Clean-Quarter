@@ -2,13 +2,8 @@
  * Neighborhood statistics utilities
  */
 
-export const NEIGHBORHOODS = [
-  "Studentski Grad",
-  "Darvenitsa",
-  "Musagenitsa",
-  "Kv. Vitosha (VEC)",
-  "Malinova Dolina",
-];
+import { NEIGHBORHOODS } from "./constants.js";
+export { NEIGHBORHOODS };
 
 export function calculateNeighborhoodStats(campaigns) {
   return NEIGHBORHOODS.map((neighborhood) => {

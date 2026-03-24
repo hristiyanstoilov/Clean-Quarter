@@ -3,6 +3,7 @@ import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
 import { escapeHTML, showSuccessToast, showInfoToast, initSwalFallback } from "../utils/helpers.js";
 import { exportUsersCsv, exportParticipationsCsv } from "../services/csvExport.js";
 import { initNetworkStatusBanner } from "../utils/networkStatus.js";
+import { initBottomNav } from "../hooks/index.js";
 import { sendPushToUser } from "../services/pushNotifications.js";
 import { CLEANUP_POINTS } from "../services/points.js";
 import {
@@ -25,6 +26,9 @@ let allParticipationsData = [];
 let pendingCurrentPage = 1;
 const PENDING_PAGE_SIZE = 10;
 
+// Role log cache
+let _roleLogCache = null;
+
 // Heatmap state
 let heatmapMap = null;
 let heatLayer = null;
@@ -33,6 +37,7 @@ let heatmapPoints = null; // cached per session — coordinates don't change aft
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", async () => {
   initNetworkStatusBanner();
+  initBottomNav();
   // Ensure Swal is available even if CDN fails to load
   initSwalFallback();
   try {
@@ -62,6 +67,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         initNotificationBell(currentUser.id);
       });
     }
+
+    // Wire up button event listeners (replaces inline onclick in HTML)
+    document.getElementById("logoutBtn")?.addEventListener("click", (e) => {
+      e.preventDefault();
+      handleLogout();
+    });
+    document.getElementById("exportUsersCsvBtn")?.addEventListener("click", exportUsersCsvHandler);
+    document.getElementById("showRoleLogBtn")?.addEventListener("click", showRoleLog);
+    document
+      .getElementById("exportParticipationsCsvBtn")
+      ?.addEventListener("click", exportParticipationsCsvHandler);
+    const heatmapBtn = document.getElementById("heatmapToggleBtn");
+    heatmapBtn?.addEventListener("click", () => toggleHeatmap(heatmapBtn));
+    document.getElementById("refreshHeatmapBtn")?.addEventListener("click", refreshHeatmap);
+    document.getElementById("photoModal")?.addEventListener("click", (e) => {
+      if (e.target === e.currentTarget) closePhotoModal();
+    });
+    document.getElementById("closePhotoModalBtn")?.addEventListener("click", closePhotoModal);
 
     await loadAdminData();
   } catch {
@@ -213,7 +236,7 @@ async function loadAdminData() {
     await loadAndRenderUsers();
 
     // Preload role log for quick access
-    window._roleLogCache = null;
+    _roleLogCache = null;
     await preloadRoleLog();
 
     // Render pending table
@@ -248,7 +271,7 @@ async function preloadRoleLog() {
     const localUser = localStorage.getItem("user");
     const isDemoMode = localUser && isDemoUser(currentUser);
     if (isDemoMode) {
-      window._roleLogCache = getDemoRoleLog();
+      _roleLogCache = getDemoRoleLog();
     } else {
       // Real mode: fetch from Supabase
       const { data, error } = await supabase
@@ -257,10 +280,10 @@ async function preloadRoleLog() {
         .eq("type", "role_change")
         .order("created_at", { ascending: false });
       if (error) throw new Error(error.message);
-      window._roleLogCache = data || [];
+      _roleLogCache = data || [];
     }
   } catch {
-    window._roleLogCache = [];
+    _roleLogCache = [];
   }
 }
 
@@ -268,7 +291,7 @@ async function preloadRoleLog() {
  * Show role change log in UI
  */
 let _allRoleLogCache = [];
-window.showRoleLog = async function () {
+async function showRoleLog() {
   const container = document.getElementById("roleLogContainer");
   const searchWrapper = document.getElementById("roleLogSearchWrapper");
   if (container.style.display === "block") {
@@ -278,14 +301,14 @@ window.showRoleLog = async function () {
   }
   container.style.display = "block";
   if (searchWrapper) searchWrapper.style.display = "block";
-  let logs = window._roleLogCache;
+  let logs = _roleLogCache;
   if (!logs) {
     await preloadRoleLog();
-    logs = window._roleLogCache;
+    logs = _roleLogCache;
   }
   _allRoleLogCache = logs || [];
   filterRoleLogTable();
-};
+}
 
 window.filterRoleLogTable = function () {
   const container = document.getElementById("roleLogContainer");
@@ -1157,14 +1180,10 @@ async function loadReports() {
         </table>
       </div>`;
 
-    container.addEventListener(
-      "click",
-      (e) => {
-        const btn = e.target.closest("[data-report-id]");
-        if (btn) handleResolveReport(btn.dataset.reportId, btn.dataset.action);
-      },
-      { once: true }
-    );
+    container.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-report-id]");
+      if (btn) handleResolveReport(btn.dataset.reportId, btn.dataset.action);
+    });
   } catch (e) {
     logger.error("Error loading reports:", e);
   }
@@ -1204,12 +1223,10 @@ async function handleResolveReport(reportId, newStatus) {
   await loadReports();
 }
 
-// Expose functions to window for onclick handlers
-window.handleLogout = handleLogout;
+// Expose functions to window for dynamically generated innerHTML onclick handlers
 window.handleApprove = handleApprove;
 window.handleReject = handleReject;
 window.showPhotoModal = showPhotoModal;
-window.closePhotoModal = closePhotoModal;
 window.handleResolveReport = handleResolveReport;
 window.renderPendingTable = renderPendingTable;
 window.pendingPrevPage = function () {
@@ -1227,7 +1244,7 @@ Object.defineProperty(window, "pendingCurrentPage", {
   },
 });
 
-window.exportUsersCsvHandler = function () {
+function exportUsersCsvHandler() {
   const neighborhood = document.getElementById("exportUsersNeighborhoodFilter")?.value || "";
   let users = neighborhood
     ? _allUsersCache.filter((u) => u.neighborhood === neighborhood)
@@ -1237,9 +1254,9 @@ window.exportUsersCsvHandler = function () {
     return;
   }
   exportUsersCsv(users);
-};
+}
 
-window.exportParticipationsCsvHandler = function () {
+function exportParticipationsCsvHandler() {
   const status = document.getElementById("exportParticipationsStatusFilter")?.value || "";
   const from = document.getElementById("exportParticipationsFrom")?.value || "";
   const to = document.getElementById("exportParticipationsTo")?.value || "";
@@ -1252,12 +1269,12 @@ window.exportParticipationsCsvHandler = function () {
     return;
   }
   exportParticipationsCsv(data);
-};
+}
 
 /**
  * Toggle the pollution heatmap on/off
  */
-window.toggleHeatmap = async function (btn) {
+async function toggleHeatmap(btn) {
   const container = document.getElementById("heatmapContainer");
   const isVisible = container.style.display === "block";
 
@@ -1316,13 +1333,13 @@ window.toggleHeatmap = async function (btn) {
     maxZoom: 17,
     gradient: { 0.3: "#3388ff", 0.5: "#28a745", 0.75: "#ffc107", 1.0: "#dc3545" },
   }).addTo(heatmapMap);
-};
+}
 
 /**
  * Clear heatmap cache and re-render with fresh data
  */
-window.refreshHeatmap = async function () {
+async function refreshHeatmap() {
   heatmapPoints = null;
   const toggleBtn = document.getElementById("heatmapToggleBtn");
-  if (toggleBtn) await window.toggleHeatmap(toggleBtn);
-};
+  if (toggleBtn) await toggleHeatmap(toggleBtn);
+}

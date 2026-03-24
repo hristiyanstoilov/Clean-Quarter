@@ -75,6 +75,77 @@ import { t } from "./utils/i18n.js";
 // Lazy-load non-critical modules for performance
 let initI18n, setLanguage, applyLanguage;
 
+// Format milliseconds as M:SS countdown string
+function formatCountdown(ms) {
+  const s = Math.max(0, Math.ceil(ms / 1000));
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}:${String(sec).padStart(2, "0")}`;
+}
+
+// Show live-countdown Swal and disable login button until lockout expires
+function showLockoutCountdown(until) {
+  const submitBtn = document.getElementById("loginSubmitBtn");
+  const lockoutMsg = document.getElementById("loginLockoutMsg");
+
+  if (submitBtn) submitBtn.disabled = true;
+
+  function updateMsg() {
+    const remaining = until - Date.now();
+    if (remaining <= 0) {
+      if (submitBtn) submitBtn.disabled = false;
+      if (lockoutMsg) {
+        lockoutMsg.style.display = "none";
+        lockoutMsg.textContent = "";
+      }
+      sessionStorage.removeItem("lockout_until");
+      return;
+    }
+    const timeStr = formatCountdown(remaining);
+    if (lockoutMsg) {
+      lockoutMsg.style.display = "block";
+      lockoutMsg.textContent = (t("auth.rateLimitText") || "Try again in {{time}}.").replace(
+        "{{time}}",
+        timeStr
+      );
+    }
+  }
+
+  updateMsg();
+  const interval = setInterval(() => {
+    if (Date.now() >= until) {
+      clearInterval(interval);
+      updateMsg();
+    } else {
+      updateMsg();
+    }
+  }, 1000);
+
+  Swal.fire({
+    icon: "warning",
+    title: t("auth.rateLimitTitle") || "Temporarily Blocked",
+    html: (t("auth.rateLimitText") || "Try again in {{time}}.").replace(
+      "{{time}}",
+      `<strong id="swalCountdown">${formatCountdown(until - Date.now())}</strong>`
+    ),
+    showConfirmButton: false,
+    timer: Math.max(0, until - Date.now()),
+    timerProgressBar: true,
+    didOpen: () => {
+      const swalEl = document.getElementById("swalCountdown");
+      const swalInterval = setInterval(() => {
+        const remaining = until - Date.now();
+        if (remaining <= 0) {
+          clearInterval(swalInterval);
+          Swal.close();
+          return;
+        }
+        if (swalEl) swalEl.textContent = formatCountdown(remaining);
+      }, 1000);
+    },
+  });
+}
+
 // Initialize auth forms
 function initAuthForms() {
   const loginForm = document.getElementById("loginForm");
@@ -87,6 +158,11 @@ function initAuthForms() {
       toggleBtnId: "toggleLoginPassword",
       eyeIconId: "loginPasswordEye",
     });
+    // Restore lockout countdown if page was refreshed during an active lockout
+    const savedLockout = Number(sessionStorage.getItem("lockout_until") || 0);
+    if (savedLockout > Date.now()) {
+      showLockoutCountdown(savedLockout);
+    }
   }
 
   if (registerForm) {
@@ -124,11 +200,17 @@ async function handleLogin(e) {
     });
     window.location.href = "/dashboard";
   } catch (error) {
-    await Swal.fire({
-      icon: "error",
-      title: t("auth.loginErrorTitle"),
-      text: error.message,
-    });
+    if (error.isRateLimit) {
+      const until = Date.now() + (error.retryAfterSeconds ?? 900) * 1000;
+      sessionStorage.setItem("lockout_until", String(until));
+      showLockoutCountdown(until);
+    } else {
+      await Swal.fire({
+        icon: "error",
+        title: t("auth.loginErrorTitle"),
+        text: error.message,
+      });
+    }
   }
 }
 

@@ -7,6 +7,7 @@ import { showSuccessToast, initSwalFallback } from "../utils/helpers.js";
 import supabase from "../services/supabase.js";
 import { isDemoUser, addDemoCampaign, addDemoParticipation } from "../utils/demoMode.js";
 import { initNetworkStatusBanner } from "../utils/networkStatus.js";
+import { initBottomNav } from "../hooks/index.js";
 
 // Global variables
 let map = null;
@@ -19,6 +20,7 @@ let currentUser = null;
  */
 window.addEventListener("DOMContentLoaded", async () => {
   initNetworkStatusBanner();
+  initBottomNav();
   initSwalFallback();
   try {
     // Initialize i18n first (realTime = false)
@@ -155,6 +157,12 @@ function initMap() {
  * Setup event listeners
  */
 function setupEventListeners() {
+  // Logout
+  document.getElementById("logoutBtn")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    handleLogout();
+  });
+
   // File input change
   document.getElementById("beforePhoto").addEventListener("change", handleFileSelect);
 
@@ -226,24 +234,20 @@ function checkFormCompletion() {
     startTime,
   });
 
-  // Show helpful message if not complete
-  const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
-  const isBg = lang === "bg";
-
   if (!isComplete) {
     const missing = [];
-    if (!titleBg) missing.push(isBg ? "Заглавие" : "Title");
-    if (!descBg) missing.push(isBg ? "Описание" : "Description");
-    if (!nbh) missing.push(isBg ? "Квартал" : "Neighborhood");
-    if (!hasFile) missing.push(isBg ? "Снимка" : "Photo");
-    if (!hasCoordinates) missing.push(isBg ? "Локация на картата" : "Map location");
-    if (!scheduledDate) missing.push(isBg ? "Дата на почистването" : "Cleanup date");
-    if (!startTime) missing.push(isBg ? "Начален час" : "Start time");
+    if (!titleBg) missing.push(t("createCampaign.fieldTitle"));
+    if (!descBg) missing.push(t("createCampaign.fieldDescription"));
+    if (!nbh) missing.push(t("createCampaign.fieldNeighborhood"));
+    if (!hasFile) missing.push(t("createCampaign.fieldPhoto"));
+    if (!hasCoordinates) missing.push(t("createCampaign.fieldLocation"));
+    if (!scheduledDate) missing.push(t("createCampaign.fieldDate"));
+    if (!startTime) missing.push(t("createCampaign.fieldStartTime"));
 
-    submitBtn.title = (isBg ? "Моля попълнете: " : "Please fill in: ") + missing.join(", ");
+    submitBtn.title = t("createCampaign.fillInPrompt").replace("{{fields}}", missing.join(", "));
     submitBtn.style.cursor = "not-allowed";
   } else {
-    submitBtn.title = isBg ? "Кликни за създаване на кампания" : "Click to create campaign";
+    submitBtn.title = t("createCampaign.clickToCreate");
     submitBtn.style.cursor = "pointer";
   }
 }
@@ -494,6 +498,3 @@ async function handleLogout() {
     // silently ignore
   }
 }
-
-// Expose handleLogout to window for onclick handler
-window.handleLogout = handleLogout;

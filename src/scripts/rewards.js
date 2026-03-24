@@ -8,6 +8,7 @@ import {
   addDemoTransaction,
 } from "../utils/demoMode.js";
 import { initNetworkStatusBanner } from "../utils/networkStatus.js";
+import { initBottomNav } from "../hooks/index.js";
 
 // Global variables
 let currentUser = null;
@@ -17,6 +18,7 @@ let rewards = [];
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", async () => {
   initNetworkStatusBanner();
+  initBottomNav();
   initSwalFallback();
   try {
     // Initialize i18n first (realTime = false)
@@ -45,6 +47,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         initNotificationBell(storedUser.id);
       });
     }
+
+    document.getElementById("logoutBtn")?.addEventListener("click", (e) => {
+      e.preventDefault();
+      handleLogout();
+    });
 
     await checkAuth();
     await loadRewardsData();
@@ -330,7 +337,11 @@ async function handleBuy(rewardId, rewardTitle, rewardCost) {
 
     Swal.close();
 
-    await showSuccessToast(`${rewardTitle} purchased! Balance: ${newPointsBalance} ⭐`);
+    await showSuccessToast(
+      t("rewards.purchaseSuccess")
+        .replace("{{title}}", rewardTitle)
+        .replace("{{balance}}", newPointsBalance)
+    );
 
     // Reload rewards
     document.getElementById("pointsBalance").textContent = newPointsBalance;
@@ -355,6 +366,5 @@ async function handleLogout() {
   }
 }
 
-// Expose functions to window for onclick handlers
-window.handleLogout = handleLogout;
+// handleBuy is exposed globally because renderRewards() generates onclick="handleBuy(...)" in innerHTML
 window.handleBuy = handleBuy;
