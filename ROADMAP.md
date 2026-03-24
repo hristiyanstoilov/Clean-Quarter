@@ -420,6 +420,19 @@ The current top navbar treats all destinations with equal visual weight. Recomme
 | Admin photo modal has no focus trap — Escape may not close it | Medium | Trap focus inside modal, close on Escape |
 | Profile page has no `Back to Dashboard` explicit affordance | Low | Add breadcrumb or back link |
 
+**Additional findings from deep scan (Mar 24, 2026)**
+
+| Issue | Severity | Location |
+|-------|----------|----------|
+| `setupGlobalErrorHandling()` exported but never called — unhandled rejections silently swallowed | High | `src/services/errorHandler.js:260` |
+| `initializePWA()` exported but never called — install prompt, push permission request are dead code | High | `src/services/pwa.js:13` |
+| PWA service worker registered at wrong path `/public/service-worker.js` (should be `/service-worker.js`) — SW never activates | High | `src/services/pwa.js:17` |
+| Double error dialog on login/register/logout — `auth.js` shows Swal then throws, caller shows Swal again | High | `src/services/auth.js:77,134,156` + `src/main.js` |
+| Double error dialog on photo upload — same pattern in `storage.js` | Medium | `src/services/storage.js:38,57,88` |
+| XSS in Leaflet popups — `campaign.title` and `disposal_point.name` inserted via template literal without `escapeHTML()` | High | `src/services/map.js:100–104,176–179` |
+| Neighbourhood string mismatch — `"Vitosha (VEC)"` vs `"Kv. Vitosha (VEC)"` across files — leaderboard lookup silently fails | Medium | `dashboard.js:115` vs `campaign-filters.js:9` |
+| `notifications.js` XSS — legacy DB notification messages (containing usernames) inserted as raw innerHTML | Medium | `src/services/notifications.js:155` |
+
 **Quick wins (< 1 hour each)**
 
 1. `required::after { content: " *"; color: var(--danger-color); }` in `style.css` — marks all required fields
@@ -427,6 +440,9 @@ The current top navbar treats all destinations with equal visual weight. Recomme
 3. Hide notification bell for demo users — 1 `if (isDemoUser())` check in nav init
 4. `loading="lazy"` on all `<img>` in JS-rendered cards — one attribute per template literal
 5. "← Назад към началото" link at top of `create-campaign.html` — 2 lines of HTML
+6. `aria-disabled="true"` on out-of-stock reward buttons — 1 attribute in `rewards.js`
+7. "Showing top 20" label on leaderboard — 1 line of HTML
+8. `?.addEventListener(...)` null guard in `profile.js:699` — 1 character fix
 
 ---
 
@@ -562,6 +578,16 @@ Active bugs confirmed by code review. Not yet scheduled for a sprint.
 | **`setupGlobalErrorHandling()` is never called** | Medium | `src/services/errorHandler.js:260` | `setupGlobalErrorHandling()` registers `unhandledrejection` and `error` event listeners. It is exported but never imported or called. Unhandled promise rejections are silently swallowed in production with no logging. |
 | **Neighborhood string mismatch — `"Vitosha (VEC)"` vs `"Kv. Vitosha (VEC)"`** | Medium | `src/scripts/dashboard.js:115` vs `src/utils/campaign-filters.js:9` | `dashboard.js` `NEIGHBORHOOD_I18N` maps key `"Vitosha (VEC)"`. `campaign-filters.js`, `neighborhood-stats.js`, and `profile-validator.js` use `"Kv. Vitosha (VEC)"`. These are different strings — the lookup in `localizeNeighborhood()` and `loadLeaderboard()` silently fails for this neighborhood. Whichever string the DB stores, one set of files will never match it. |
 | **`profile.js` line 699 — `addEventListener` without null guard** | Low | `src/scripts/profile.js:699` | `document.getElementById("editProfileForm").addEventListener("submit", handleSaveProfile)` — called at module scope (outside `DOMContentLoaded`). If `#editProfileForm` is missing from the DOM, this throws a `TypeError` that breaks the entire script. Should be `?.addEventListener(...)`. |
+| **`campaign-detail.js` comment post/delete hardcoded EN** | Medium | `src/scripts/campaign-detail.js:1121,1148` | `"Comment posted."` and `"Comment deleted."` are hardcoded English strings shown as toast messages. Keys `campaign.commentPosted` and `campaign.commentDeleted` are missing from all 4 i18n files. BG users see English confirmation on every comment action. |
+| **`campaign-detail.js` null crash on `campaign.creator` after edit** | High | `src/scripts/campaign-detail.js:899,936` | After saving campaign edits, code merges: `campaign = { ...updatedCampaign, creator: campaign.creator }`. If `campaign.creator` is null (deleted user), accessing `campaign.creator.username` on line ~1408 throws `TypeError: Cannot read properties of null`. No null guard exists. |
+| **`rewards.js` RPC result accessed before null check** | Medium | `src/scripts/rewards.js:317–326` | After `purchase_reward` RPC, code checks `if (rpcError)` then immediately reads `result.success` — but if RPC returns `null` data with no error, `result.success` throws. Should guard: `if (!result || !result.success)`. |
+| **`rewards.js` demo mode stale balance after purchase** | Medium | `src/scripts/rewards.js:289–333` | In demo mode, `userProfile.points_balance` is updated locally but not re-fetched. After purchase, the displayed balance is computed from the in-memory object. If two reward purchases happen quickly, the second reads the un-updated balance from closure. Balance shown may be wrong until page reload. |
+| **`create-campaign.js` success message hardcoded BG** | Medium | `src/scripts/create-campaign.js:409,466` | Both create paths (real + demo) show `"Кампанията е създадена успешно!"` as hardcoded Bulgarian. EN users see Bulgarian confirmation after creating a campaign. Should use `t("createCampaign.successMessage")`. |
+| **`create-campaign.js` no debounce on title input → DOM thrash** | Medium | `src/scripts/create-campaign.js:173–177` | `campaignTitleBg` "input" listener fires `checkFormCompletion()` on every keystroke. `checkFormCompletion()` re-renders the full validation checklist (lines 227–273) on each keypress — up to 10 DOM updates per word typed. No debounce applied. Janky on slow devices. |
+| **`rewards.js` out-of-stock button missing `aria-disabled`** | Low | `src/scripts/rewards.js:169–177` | When `quantity_available === 0`, button gets `disabled` attribute but not `aria-disabled="true"`. Screen readers may not announce the disabled state correctly. One attribute addition. |
+| **`campaign-detail.js` Leaflet map popup hardcoded BG** | Low | `src/scripts/campaign-detail.js:127` | `"📍 Избрана локация"` is hardcoded Bulgarian in the Leaflet location picker popup. EN users see Bulgarian label when selecting a campaign location on the map. Key `createCampaign.selectedLocation` missing from all 4 i18n files. |
+| **Dead imports in `campaign-detail.js`** | Low | `src/scripts/campaign-detail.js:5,10` | `compressImage` imported from `storage.js` but never called (compression not wired to the after-photo upload). `showInfoToast` imported from `helpers.js` but never used in the file. Both bloat the bundle and mislead future developers. |
+| **Leaderboard user tab has no pagination — top 20 only** | Low | `src/scripts/dashboard.js:648–651` | User leaderboard query uses `.limit(20)` with no "Load More". Users ranked 21+ are invisible with no indication more exist. Neighbourhood leaderboard has the same cap. Should add "Show more" or at least a "Showing top 20" label. |
 | **`campaign-detail.js` `renderComments()` — username and message unescaped in innerHTML** | High | `src/scripts/campaign-detail.js` (renderComments) | Comment author username and message body are interpolated directly into `innerHTML` without `escapeHTML()`. Comments are user-generated content stored in the DB. A username or message containing `<img onerror="...">` or `<script>` executes in the browser — **Stored XSS**. Both values must be wrapped in `escapeHTML()` before innerHTML insertion. |
 | **`public/service-worker.js` — `caches.open()` not awaited in Network First handler** | Medium | `public/service-worker.js:79–96` | The Network First fetch handler calls `caches.open(CACHE_NAME)` without `await`. The promise is not settled before the handler continues — cache writes and reads may operate on an unresolved cache handle, creating a race condition. Pages may serve stale or empty cache responses inconsistently. The call must be `await caches.open(CACHE_NAME)`. |
 | **HTML pages — inline `onclick` handlers bypass CSP and XSS mitigations** | Medium | `src/pages/dashboard.html`, `src/pages/campaign-detail.html` | `dashboard.html` contains `onclick="showAllCampaigns()"` and `onclick="filterByCategory(this)"`. `campaign-detail.html` contains `onclick="handleLogout()"` and `onclick="handleRsvp()"`. Inline event handlers require `'unsafe-inline'` in CSP `script-src`, weakening XSS protection. The codebase already uses `data-*` + `addEventListener` for admin.js and dashboard.js — this pattern must be applied consistently to all HTML pages. |
