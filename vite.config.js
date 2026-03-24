@@ -1,6 +1,19 @@
 import { defineConfig } from 'vite'
 import { resolve } from 'path'
+import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { visualizer } from 'rollup-plugin-visualizer';
+
+// Replaces __SW_VERSION__ in the copied service-worker.js with a build timestamp
+const injectSwVersion = {
+  name: 'inject-sw-version',
+  closeBundle() {
+    const swPath = resolve(__dirname, 'dist/service-worker.js');
+    if (!existsSync(swPath)) return;
+    const version = `v${Date.now()}`;
+    const updated = readFileSync(swPath, 'utf-8').replace('__SW_VERSION__', version);
+    writeFileSync(swPath, updated);
+  },
+};
 
 // Custom plugin: redirect clean URLs to actual HTML files in dev (mirrors Netlify redirects)
 // Uses 302 redirect so the browser resolves relative asset paths correctly
@@ -39,27 +52,34 @@ const devRewrites = {
 };
 
 export default defineConfig({
-  plugins: [devRewrites],
+  plugins: [devRewrites, injectSwVersion],
   server: {
     port: 5173,
     open: true
   },
   build: {
     outDir: 'dist',
-    minify: 'esbuild', // Use esbuild (faster, no extra dependency)
+    minify: 'esbuild',
+    chunkSizeWarningLimit: 700,
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'index.html'),
-        dashboard: resolve(__dirname, 'src/pages/dashboard.html'),
+        main:           resolve(__dirname, 'index.html'),
+        dashboard:      resolve(__dirname, 'src/pages/dashboard.html'),
         createCampaign: resolve(__dirname, 'src/pages/create-campaign.html'),
         campaignDetail: resolve(__dirname, 'src/pages/campaign-detail.html'),
-        profile: resolve(__dirname, 'src/pages/profile.html'),
-        admin: resolve(__dirname, 'src/pages/admin.html'),
-        rewards: resolve(__dirname, 'src/pages/rewards.html'),
-        privacy: resolve(__dirname, 'src/pages/privacy.html'),
-        events: resolve(__dirname, 'src/pages/events.html')
+        profile:        resolve(__dirname, 'src/pages/profile.html'),
+        admin:          resolve(__dirname, 'src/pages/admin.html'),
+        rewards:        resolve(__dirname, 'src/pages/rewards.html'),
+        privacy:        resolve(__dirname, 'src/pages/privacy.html'),
+        events:         resolve(__dirname, 'src/pages/events.html'),
       },
-      plugins: [visualizer({ open: true, filename: 'dist/bundle-stats.html' })]
-    }
-  }
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/@supabase')) return 'vendor-supabase';
+          if (id.includes('node_modules/leaflet'))   return 'vendor-leaflet';
+        },
+      },
+      plugins: [visualizer({ open: false, filename: 'dist/bundle-stats.html' })],
+    },
+  },
 })
