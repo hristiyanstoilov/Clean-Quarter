@@ -347,7 +347,11 @@ async function handleFormSubmit(e) {
     const endTime = document.getElementById("campaignEndTime").value || null;
     const category = document.getElementById("campaignCategory").value || null;
     const maxParticipantsRaw = document.getElementById("campaignMaxParticipants")?.value;
-    const maxParticipants = maxParticipantsRaw ? parseInt(maxParticipantsRaw, 10) : null;
+    const maxParticipantsParsed = parseInt(maxParticipantsRaw, 10);
+    const maxParticipants =
+      maxParticipantsRaw && !isNaN(maxParticipantsParsed) && maxParticipantsParsed >= 1
+        ? maxParticipantsParsed
+        : null;
 
     // Basic validation
     if (

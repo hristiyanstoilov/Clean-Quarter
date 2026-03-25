@@ -889,11 +889,11 @@ function handleShareImpact() {
   const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
   const points = userProfile.points_balance || 0;
   const rank =
-    points >= 500
+    points >= 100
       ? lang === "en"
         ? "Gold"
         : "Злато"
-      : points >= 100
+      : points >= 50
         ? lang === "en"
           ? "Silver"
           : "Сребро"

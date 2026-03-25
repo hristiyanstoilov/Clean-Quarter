@@ -42,18 +42,13 @@ BEGIN
     FROM profiles
    WHERE id = v_user_id;
 
-  -- Update streak
-  IF v_last_date IS NULL OR v_last_date < v_today - interval '1 day' THEN
-    -- Gap > 1 day — reset streak (or start fresh)
-    IF v_last_date = v_today - interval '1 day' THEN
-      v_cur_streak := v_cur_streak + 1;  -- consecutive day
-    ELSE
-      v_cur_streak := 1;  -- reset
-    END IF;
-  END IF;
-  -- If already approved today, don't increment again
+  -- Update streak: consecutive days increment, same day no-op, gap resets
   IF v_last_date = v_today THEN
-    v_cur_streak := v_cur_streak;  -- no change
+    NULL; -- already credited today, no change
+  ELSIF v_last_date = v_today - interval '1 day' THEN
+    v_cur_streak := v_cur_streak + 1; -- consecutive day
+  ELSE
+    v_cur_streak := 1; -- first cleanup or gap → reset
   END IF;
 
   UPDATE profiles
