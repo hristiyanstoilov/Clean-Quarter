@@ -289,8 +289,8 @@ async function handleBuy(rewardId, rewardTitle, rewardCost) {
       },
     });
 
-    // Deduct points from user
-    const newPointsBalance = (userProfile.points_balance || 0) - rewardCost;
+    // Compute expected balance locally (used as fallback; real mode re-fetches from server below)
+    let newPointsBalance = (userProfile.points_balance || 0) - rewardCost;
 
     const isDemo = isDemoUser(currentUser);
 
@@ -336,6 +336,17 @@ async function handleBuy(rewardId, rewardTitle, rewardCost) {
       if (reward && reward.quantity_available !== null) {
         reward.quantity_available -= 1;
       }
+
+      // Re-fetch authoritative balance from server — local computation can be
+      // stale if points were credited concurrently (e.g. admin approval in flight).
+      const { data: freshProfile } = await supabase
+        .from("profiles")
+        .select("points_balance")
+        .eq("id", currentUser.id)
+        .single();
+      if (freshProfile != null) {
+        newPointsBalance = freshProfile.points_balance;
+      }
     }
 
     // Update user profile points
@@ -371,9 +382,6 @@ async function handleLogout() {
     window.location.href = "/";
   }
 }
-
-// handleBuy is exposed globally because renderRewards() generates onclick="handleBuy(...)" in innerHTML
-window.handleBuy = handleBuy;
 
 // --- Test exports (tree-shaken in production builds) ---
 export { handleBuy };

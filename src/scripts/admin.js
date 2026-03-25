@@ -951,7 +951,8 @@ async function handleApprove(participationId, username) {
 
       Swal.close();
 
-      await showSuccessToast(t("admin.approvedTitle"));
+      const pointsMsg = result?.points_awarded ? ` +${result.points_awarded} ⭐` : "";
+      await showSuccessToast(t("admin.approvedTitle") + pointsMsg);
 
       // Send push notification to the user (non-blocking)
       sendPushToUser({
