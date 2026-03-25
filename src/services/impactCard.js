@@ -7,8 +7,9 @@
  * @param {number} params.points
  * @param {number} params.cleanups  - number of approved participations
  * @param {string} params.rank      - Bronze / Silver / Gold
+ * @param {string} [params.lang]    - "bg" (default) or "en"
  */
-export function generateImpactCard({ username, points, cleanups, rank }) {
+export function generateImpactCard({ username, points, cleanups, rank, lang = "bg" }) {
   const W = 800;
   const H = 420;
 
@@ -30,15 +31,32 @@ export function generateImpactCard({ username, points, cleanups, rank }) {
   ctx.fillStyle = "rgba(255,255,255,0.05)";
   ctx.fill();
 
+  const labels =
+    lang === "en"
+      ? {
+          appName: "♻️ Clean Quarter",
+          points: "points",
+          cleanups: "cleanups",
+          rank: "rank",
+          fallbackUser: "User",
+        }
+      : {
+          appName: "♻️ Чист Квартал",
+          points: "точки",
+          cleanups: "почиствания",
+          rank: "ранг",
+          fallbackUser: "Потребител",
+        };
+
   // App name
   ctx.font = "bold 28px sans-serif";
   ctx.fillStyle = "#a8f0c0";
-  ctx.fillText("♻️ Чист Квартал", 48, 64);
+  ctx.fillText(labels.appName, 48, 64);
 
   // Username
   ctx.font = "bold 48px sans-serif";
   ctx.fillStyle = "#ffffff";
-  ctx.fillText(username || "Потребител", 48, 140);
+  ctx.fillText(username || labels.fallbackUser, 48, 140);
 
   // Divider
   ctx.strokeStyle = "rgba(255,255,255,0.2)";
@@ -50,9 +68,9 @@ export function generateImpactCard({ username, points, cleanups, rank }) {
 
   // Stats row
   const stats = [
-    { emoji: "⭐", value: String(points), label: "точки" },
-    { emoji: "🧹", value: String(cleanups), label: "почиствания" },
-    { emoji: "🏅", value: rank, label: "ранг" },
+    { emoji: "⭐", value: String(points), label: labels.points },
+    { emoji: "🧹", value: String(cleanups), label: labels.cleanups },
+    { emoji: "🏅", value: rank, label: labels.rank },
   ];
 
   stats.forEach((s, i) => {

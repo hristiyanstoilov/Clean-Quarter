@@ -352,6 +352,7 @@
     "approvedPhotosGallery": "📸 Before & After — Approved Photos",
     "spotsLeft": "spots left",
     "spotsFull": "Full",
+    "spotsFullMsg": "This campaign is at full capacity. No more participants can join.",
     "bagsCollectedLabel": "Bags of Waste Collected (optional)",
     "bagsCollectedPlaceholder": "e.g. 5"
   },

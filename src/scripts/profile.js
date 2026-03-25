@@ -29,6 +29,7 @@ import { generateImpactCard } from "../services/impactCard.js";
 let currentUser = null;
 let userProfile = null;
 let avatarFile = null;
+let approvedCleanupCount = 0;
 
 /**
  * Handle password recovery flow — triggered when user arrives via reset email link.
@@ -565,6 +566,7 @@ async function loadParticipations() {
 }
 
 function renderParticipations(participations) {
+  approvedCleanupCount = participations.filter((p) => p.status === "approved").length;
   let html = "";
 
   participations.forEach((participation) => {
@@ -900,13 +902,14 @@ function handleShareImpact() {
         : lang === "en"
           ? "Bronze"
           : "Бронз";
-  // Count approved participations from profile data (already loaded)
-  const cleanups = document.querySelectorAll(".participation-status.status-approved").length;
+  // Count approved participations from loaded data
+  const cleanups = approvedCleanupCount;
   generateImpactCard({
     username: userProfile.username || currentUser?.email?.split("@")[0] || "User",
     points,
     cleanups,
     rank,
+    lang,
   });
 }
 

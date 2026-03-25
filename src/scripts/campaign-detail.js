@@ -507,6 +507,20 @@ function showParticipationUI() {
 async function handleJoin() {
   const joinBtn = document.getElementById("joinBtn");
 
+  // Capacity check — block join if campaign is full
+  if (campaign?.max_participants) {
+    const taken = campaign.participation_count || 0;
+    if (taken >= campaign.max_participants) {
+      await Swal.fire({
+        icon: "warning",
+        title: t("campaign.spotsFull"),
+        text: t("campaign.spotsFullMsg") || "",
+        confirmButtonColor: "#28a745",
+      });
+      return;
+    }
+  }
+
   try {
     joinBtn.disabled = true;
 
@@ -620,7 +634,9 @@ async function handleUploadPhoto() {
     const isDemo = isDemoUser(currentUser);
     let photoUrl;
     const bagsRaw = document.getElementById("bagsCollected")?.value;
-    const bagsCollected = bagsRaw ? parseInt(bagsRaw, 10) : null;
+    const bagsParsed = bagsRaw ? parseInt(bagsRaw, 10) : null;
+    const bagsCollected =
+      bagsParsed !== null && !isNaN(bagsParsed) && bagsParsed >= 0 ? bagsParsed : null;
 
     if (isDemo) {
       // Demo mode: convert to data URL instead of uploading to Supabase Storage

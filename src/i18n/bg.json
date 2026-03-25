@@ -352,6 +352,7 @@
     "approvedPhotosGallery": "📸 Преди & след — одобрени снимки",
     "spotsLeft": "места",
     "spotsFull": "Няма места",
+    "spotsFullMsg": "Кампанията вече е запълнена. Не могат да се присъединят повече участници.",
     "bagsCollectedLabel": "Брой торби с отпадъци (по желание)",
     "bagsCollectedPlaceholder": "напр. 5"
   },
