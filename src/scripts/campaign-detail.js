@@ -189,11 +189,12 @@ async function loadCampaignDetail() {
 
       campaignData = data;
 
-      // Fetch participation statistics
+      // Fetch participation statistics (exclude soft-deleted rows to match participation_count trigger)
       const { data: parts, error: participationError } = await supabase
         .from("participations")
         .select("id, status, user_id, after_photo_url")
-        .eq("campaign_id", campaignId);
+        .eq("campaign_id", campaignId)
+        .is("deleted_at", null);
 
       if (participationError) {
         // silently ignore
@@ -569,8 +570,16 @@ async function handleJoin() {
   } catch (error) {
     const isAlreadyJoined =
       error.message?.includes("duplicate") || error.message?.includes("unique");
+    const isFull = error.message?.includes("Campaign is full");
     if (isAlreadyJoined) {
       await showInfoToast(t("campaign.alreadyJoined"));
+    } else if (isFull) {
+      await Swal.fire({
+        icon: "warning",
+        title: t("campaign.spotsFull"),
+        text: t("campaign.spotsFullMsg") || "",
+        confirmButtonColor: "#28a745",
+      });
     } else {
       await Swal.fire({
         icon: "error",
@@ -1327,12 +1336,15 @@ function loadApprovedPhotos(campaignData, participations) {
   if (approved.length === 0) return;
 
   const beforeSrc = campaignData.before_photo_url || "";
+  const beforeEl = beforeSrc
+    ? `<img src="${escapeHTML(beforeSrc)}" alt="Before" loading="lazy" />`
+    : '<div class="photo-placeholder">📷</div>';
   grid.innerHTML = approved
     .map(
       (p) => `
     <div class="photo-gallery-pair">
       <div class="pair-images">
-        <img src="${escapeHTML(beforeSrc)}" alt="Before" loading="lazy" />
+        ${beforeEl}
         <img src="${escapeHTML(p.after_photo_url)}" alt="After" loading="lazy" />
       </div>
       <div class="pair-label">📸 → ✅</div>

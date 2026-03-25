@@ -448,8 +448,6 @@ async function handleFormSubmit(e) {
       const compressedBefore = await compressImage(beforePhotoFile, 1200, 0.75);
       const beforePhotoUrl = await uploadCampaignPhoto(compressedBefore, "before");
 
-      Swal.close();
-
       // Insert campaign into database
       const { data: campaign, error: campaignError } = await supabase
         .from("campaigns")

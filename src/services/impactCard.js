@@ -18,6 +18,11 @@ export function generateImpactCard({ username, points, cleanups, rank, lang = "b
   canvas.height = H;
   const ctx = canvas.getContext("2d");
 
+  if (!ctx) {
+    console.warn("[impactCard] Canvas 2D context not available in this browser.");
+    return;
+  }
+
   // Background gradient
   const grad = ctx.createLinearGradient(0, 0, W, H);
   grad.addColorStop(0, "#1a6b3a");
@@ -89,7 +94,7 @@ export function generateImpactCard({ username, points, cleanups, rank, lang = "b
   // Footer
   ctx.font = "16px sans-serif";
   ctx.fillStyle = "rgba(255,255,255,0.45)";
-  ctx.fillText("cleanquarter.netlify.app", 48, H - 28);
+  ctx.fillText(window.location.hostname, 48, H - 28);
 
   // Download
   const link = document.createElement("a");

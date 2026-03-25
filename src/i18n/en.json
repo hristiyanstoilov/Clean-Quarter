@@ -211,6 +211,7 @@
     "bagsCollected": "Bags:",
     "shareImpact": "📤 Share My Impact",
     "badgesTitle": "🏅 Achievements",
+    "noBadgesYet": "No achievements yet. Join a cleanup to earn your first badge!",
     "streakTitle": "🔥 Cleanup Streak",
     "currentStreak": "Current streak",
     "longestStreak": "Longest streak"
@@ -351,6 +352,7 @@
     "saving": "Saving...",
     "approvedPhotosGallery": "📸 Before & After — Approved Photos",
     "spotsLeft": "spots left",
+    "spotsLeft_one": "spot left",
     "spotsFull": "Full",
     "spotsFullMsg": "This campaign is at full capacity. No more participants can join.",
     "bagsCollectedLabel": "Bags of Waste Collected (optional)",

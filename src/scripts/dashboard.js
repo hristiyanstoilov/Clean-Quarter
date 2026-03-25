@@ -173,6 +173,17 @@ document.addEventListener("DOMContentLoaded", async () => {
       currentNeighborhoodFilter = e.target.value || null;
       loadCampaignsPage(false);
     });
+
+    // Logout button
+    document.getElementById("logoutBtn")?.addEventListener("click", async () => {
+      try {
+        await logout();
+        removeUser();
+        window.location.href = "/";
+      } catch (error) {
+        await handleError("logout", error, "Failed to logout. Please try again.");
+      }
+    });
   } catch (error) {
     console.error("[dashboard] init error:", error);
     const spinner = document.getElementById("loadingSpinner");
@@ -285,7 +296,9 @@ function buildCampaignCard(campaign, rsvpCount = 0, currentLang = "bg") {
     const taken = campaign.participation_count || 0;
     const left = campaign.max_participants - taken;
     if (left <= 5 && left > 0) {
-      spotsLeftBadge = `<span class="spots-left-badge">🔥 ${left} ${t("campaign.spotsLeft") || "места"}</span>`;
+      const spotsLabel =
+        left === 1 ? t("campaign.spotsLeft_one") || "място" : t("campaign.spotsLeft") || "места";
+      spotsLeftBadge = `<span class="spots-left-badge">🔥 ${left} ${spotsLabel}</span>`;
     } else if (left <= 0) {
       spotsLeftBadge = `<span class="spots-left-badge spots-left-badge--full">${t("campaign.spotsFull") || "Няма места"}</span>`;
     }
@@ -732,17 +745,3 @@ async function filterByCategory(btn) {
 
   await loadCampaignsPage(false);
 }
-
-/**
- * Handle logout
- */
-document.getElementById("logoutBtn").addEventListener("click", async () => {
-  try {
-    await logout();
-    removeUser();
-
-    window.location.href = "/";
-  } catch (error) {
-    await handleError("logout", error, "Failed to logout. Please try again.");
-  }
-});

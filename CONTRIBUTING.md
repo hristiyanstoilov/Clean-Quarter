@@ -90,6 +90,17 @@ npm run test:e2e
 npm run playwright:update
 ```
 
+## 🗄️ Database Migrations
+
+Миграциите се прилагат към Supabase prod чрез **Supabase MCP** (не чрез `supabase db push`).
+
+**Важно:** Локалните файлове в `supabase/migrations/` имат различни timestamps от регистрираните в prod `supabase_migrations.schema_migrations`. Това е очаквано поведение — файловете са reference-only за version control. Не използвай `supabase db push` от локалното repo, тъй като ще докладва грешки или ще пропусне вече приложени миграции.
+
+За нова миграция:
+1. Създай `.sql` файл в `supabase/migrations/` с timestamp-prefix
+2. Приложи го чрез Supabase MCP (`apply_migration`)
+3. Провери в prod с `list_migrations`
+
 ## 🐛 Reporting Issues
 
 Ако намериш bug:

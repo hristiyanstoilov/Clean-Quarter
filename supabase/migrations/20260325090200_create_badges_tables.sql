@@ -31,4 +31,6 @@ CREATE TABLE IF NOT EXISTS public.user_badges (
 
 ALTER TABLE public.user_badges ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "user_badges_owner_read" ON public.user_badges FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "user_badges_service_insert" ON public.user_badges FOR INSERT WITH CHECK (true);
+-- Direct API inserts are blocked; only SECURITY DEFINER functions (check_and_award_badges) may insert.
+-- See migration 20260325100100_fix_user_badges_insert_rls.sql for the prod-applied fix.
+CREATE POLICY "user_badges_service_insert" ON public.user_badges FOR INSERT WITH CHECK (false);

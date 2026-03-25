@@ -356,6 +356,8 @@ function displayRank(points) {
 function displayStreak(profile) {
   const current = profile.current_streak || 0;
   const longest = profile.longest_streak || 0;
+  // Hide section entirely for users who have never completed a cleanup (both counters at 0).
+  // A user with longest > 0 but current = 0 (broken streak) still sees their best record.
   if (current === 0 && longest === 0) return;
   const section = document.getElementById("streakSection");
   if (section) {
@@ -384,7 +386,13 @@ async function loadBadges() {
       .eq("user_id", currentUser.id)
       .order("awarded_at", { ascending: true });
 
-    if (error || !data || data.length === 0) return;
+    if (error) return; // silently ignore network/RLS errors
+
+    if (!data || data.length === 0) {
+      grid.innerHTML = `<p class="text-muted small">${t("profile.noBadgesYet") || "Все още няма постижения. Участвай в почистване, за да спечелиш!"}</p>`;
+      section.style.display = "block";
+      return;
+    }
 
     const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
     grid.innerHTML = data
@@ -905,7 +913,8 @@ function handleShareImpact() {
   // Count approved participations from loaded data
   const cleanups = approvedCleanupCount;
   generateImpactCard({
-    username: userProfile.username || currentUser?.email?.split("@")[0] || "User",
+    username:
+      userProfile.username || currentUser?.email?.split("@")[0] || currentUser?.username || "User",
     points,
     cleanups,
     rank,
