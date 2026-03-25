@@ -346,6 +346,8 @@ async function handleFormSubmit(e) {
     const startTime = document.getElementById("campaignStartTime").value;
     const endTime = document.getElementById("campaignEndTime").value || null;
     const category = document.getElementById("campaignCategory").value || null;
+    const maxParticipantsRaw = document.getElementById("campaignMaxParticipants")?.value;
+    const maxParticipants = maxParticipantsRaw ? parseInt(maxParticipantsRaw, 10) : null;
 
     // Basic validation
     if (
@@ -408,6 +410,7 @@ async function handleFormSubmit(e) {
         scheduled_date: scheduledDate,
         start_time: startTime,
         end_time: endTime,
+        max_participants: maxParticipants,
         created_at: new Date().toISOString(),
         participation_count: 0,
       };
@@ -460,6 +463,7 @@ async function handleFormSubmit(e) {
             scheduled_date: scheduledDate,
             start_time: startTime,
             end_time: endTime,
+            max_participants: maxParticipants,
           },
         ])
         .select();

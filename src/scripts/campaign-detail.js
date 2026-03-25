@@ -242,6 +242,9 @@ async function loadCampaignDetail() {
         ?.after_photo_url || null;
     initComparisonSlider(bestAfterPhoto);
 
+    // Load approved photos gallery
+    loadApprovedPhotos(campaign, participations || []);
+
     // Check delete eligibility and show button if applicable
     await checkDeleteEligibility(campaignId, participations || []);
 
@@ -616,6 +619,8 @@ async function handleUploadPhoto() {
 
     const isDemo = isDemoUser(currentUser);
     let photoUrl;
+    const bagsRaw = document.getElementById("bagsCollected")?.value;
+    const bagsCollected = bagsRaw ? parseInt(bagsRaw, 10) : null;
 
     if (isDemo) {
       // Demo mode: convert to data URL instead of uploading to Supabase Storage
@@ -629,18 +634,19 @@ async function handleUploadPhoto() {
       updateDemoParticipation(userParticipation.id, {
         after_photo_url: photoUrl,
         status: "pending",
+        bags_collected: bagsCollected,
       });
     } else {
       // Real mode: upload to Supabase Storage
       const compressedAfter = await compressImage(afterPhotoFile, 1200, 0.75);
       photoUrl = await uploadCampaignPhoto(compressedAfter, "after");
 
+      const updatePayload = { after_photo_url: photoUrl, status: "pending" };
+      if (bagsCollected !== null) updatePayload.bags_collected = bagsCollected;
+
       const { error: updateError } = await supabase
         .from("participations")
-        .update({
-          after_photo_url: photoUrl,
-          status: "pending",
-        })
+        .update(updatePayload)
         .eq("id", userParticipation.id);
 
       if (updateError) {
@@ -1290,6 +1296,33 @@ function showRsvpUI() {
     calBtn.style.display = startMs > Date.now() ? "inline-block" : "none";
   }
 
+  section.style.display = "block";
+}
+
+/**
+ * Render approved before/after photo pairs gallery.
+ */
+function loadApprovedPhotos(campaignData, participations) {
+  const section = document.getElementById("photoGallerySection");
+  const grid = document.getElementById("photoGalleryGrid");
+  if (!section || !grid) return;
+
+  const approved = participations.filter((p) => p.status === "approved" && p.after_photo_url);
+  if (approved.length === 0) return;
+
+  const beforeSrc = campaignData.before_photo_url || "";
+  grid.innerHTML = approved
+    .map(
+      (p) => `
+    <div class="photo-gallery-pair">
+      <div class="pair-images">
+        <img src="${escapeHTML(beforeSrc)}" alt="Before" loading="lazy" />
+        <img src="${escapeHTML(p.after_photo_url)}" alt="After" loading="lazy" />
+      </div>
+      <div class="pair-label">📸 → ✅</div>
+    </div>`
+    )
+    .join("");
   section.style.display = "block";
 }
 

@@ -24,6 +24,7 @@ import {
 import { initNetworkStatusBanner } from "../utils/networkStatus.js";
 import { initBottomNav } from "../hooks/index.js";
 import { initPage } from "../utils/pageInit.js";
+import { generateImpactCard } from "../services/impactCard.js";
 // Global variables
 let currentUser = null;
 let userProfile = null;
@@ -186,6 +187,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("editProfileBtn")?.addEventListener("click", toggleEditMode);
     document.getElementById("cancelEditBtn")?.addEventListener("click", toggleEditMode);
     document.getElementById("pushToggleBtn")?.addEventListener("click", handlePushToggle);
+    document.getElementById("shareImpactBtn")?.addEventListener("click", handleShareImpact);
 
     await checkAuth();
     await loadProfileData();
@@ -274,8 +276,11 @@ async function loadProfileData() {
     // Display rank
     displayRank(userProfile.points_balance || 0);
 
-    // Load transactions and participations in parallel
-    await Promise.all([loadTransactions(), loadParticipations()]);
+    // Display streak
+    displayStreak(userProfile);
+
+    // Load transactions, participations and badges in parallel
+    await Promise.all([loadTransactions(), loadParticipations(), loadBadges()]);
 
     // Show content
     document.getElementById("loadingState").style.display = "none";
@@ -341,6 +346,60 @@ function displayRank(points) {
       label.textContent = t("profile.rankProgressMax");
       wrap.style.display = "block";
     }
+  }
+}
+
+/**
+ * Display streak stats
+ */
+function displayStreak(profile) {
+  const current = profile.current_streak || 0;
+  const longest = profile.longest_streak || 0;
+  if (current === 0 && longest === 0) return;
+  const section = document.getElementById("streakSection");
+  if (section) {
+    document.getElementById("currentStreakValue").textContent = `🔥 ${current}`;
+    document.getElementById("longestStreakValue").textContent = `🏆 ${longest}`;
+    section.style.display = "block";
+  }
+}
+
+/**
+ * Load and display user achievement badges
+ */
+async function loadBadges() {
+  const section = document.getElementById("badgesSection");
+  const grid = document.getElementById("badgesGrid");
+  if (!section || !grid) return;
+
+  if (isDemoUser(currentUser)) return; // no badges in demo mode
+
+  try {
+    const { data, error } = await supabase
+      .from("user_badges")
+      .select(
+        "badge_id, awarded_at, badges(emoji, name_bg, name_en, description_bg, description_en)"
+      )
+      .eq("user_id", currentUser.id)
+      .order("awarded_at", { ascending: true });
+
+    if (error || !data || data.length === 0) return;
+
+    const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+    grid.innerHTML = data
+      .map((ub) => {
+        const b = ub.badges;
+        const name = lang === "en" ? b.name_en : b.name_bg;
+        const desc = lang === "en" ? b.description_en : b.description_bg;
+        return `<div class="badge-chip" title="${escapeHTML(desc || "")}">
+          <span class="badge-emoji">${escapeHTML(b.emoji)}</span>
+          <span class="badge-name">${escapeHTML(name)}</span>
+        </div>`;
+      })
+      .join("");
+    section.style.display = "block";
+  } catch {
+    // silently ignore — badges are non-critical
   }
 }
 
@@ -471,6 +530,7 @@ async function loadParticipations() {
                   status,
                   created_at,
                   points_earned,
+                  bags_collected,
                   campaigns (
                       id,
                       title,
@@ -538,6 +598,11 @@ function renderParticipations(participations) {
         ? `<p><strong>${t("profile.pointsEarned")}</strong> +${participation.points_earned} ⭐</p>`
         : "";
 
+    const bagsLine =
+      participation.bags_collected != null
+        ? `<p><strong>${t("profile.bagsCollected")}</strong> ${participation.bags_collected} 🗑️</p>`
+        : "";
+
     html += `
                 <div class="participation-item">
                     <div class="participation-header">
@@ -549,6 +614,7 @@ function renderParticipations(participations) {
                         <p><strong>${t("profile.dateLabel")}</strong> ${date}</p>
                         <p><strong>${t("profile.statusLabel")}</strong> ${participation.status.charAt(0).toUpperCase() + participation.status.slice(1)}</p>
                         ${pointsLine}
+                        ${bagsLine}
                     </div>
                 </div>
             `;
@@ -813,6 +879,35 @@ async function initPushUI() {
       if (btnText) btnText.textContent = t("push.enableBtn") || "Активирай известия";
     }
   }
+}
+
+/**
+ * Generate and download a shareable impact card for the current user.
+ */
+function handleShareImpact() {
+  if (!userProfile) return;
+  const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+  const points = userProfile.points_balance || 0;
+  const rank =
+    points >= 500
+      ? lang === "en"
+        ? "Gold"
+        : "Злато"
+      : points >= 100
+        ? lang === "en"
+          ? "Silver"
+          : "Сребро"
+        : lang === "en"
+          ? "Bronze"
+          : "Бронз";
+  // Count approved participations from profile data (already loaded)
+  const cleanups = document.querySelectorAll(".participation-status.status-approved").length;
+  generateImpactCard({
+    username: userProfile.username || currentUser?.email?.split("@")[0] || "User",
+    points,
+    cleanups,
+    rank,
+  });
 }
 
 /**

@@ -14,6 +14,13 @@
     "logout": "Logout",
     "language": "Language"
   },
+  "onboarding": {
+    "title": "Welcome to Clean Quarter! 👋",
+    "step1": "Find a campaign near you on the map",
+    "step2": "Join and upload a photo after cleaning",
+    "step3": "Earn points and redeem them for rewards",
+    "dismiss": "Got it, let's get started! 🚀"
+  },
   "events": {
     "title": "Upcoming Events",
     "myUpcoming": "My Upcoming",
@@ -200,7 +207,13 @@
     "savedSuccess": "Profile updated successfully!",
     "saveError": "Failed to save changes.",
     "loadError": "Failed to load profile. Please try again.",
-    "notSet": "Not set"
+    "notSet": "Not set",
+    "bagsCollected": "Bags:",
+    "shareImpact": "📤 Share My Impact",
+    "badgesTitle": "🏅 Achievements",
+    "streakTitle": "🔥 Cleanup Streak",
+    "currentStreak": "Current streak",
+    "longestStreak": "Longest streak"
   },
   "createCampaign": {
     "pageTitle": "Create New Campaign",
@@ -226,7 +239,10 @@
     "fieldDate": "Cleanup date",
     "fieldStartTime": "Start time",
     "fillInPrompt": "Please fill in: {{fields}}",
-    "clickToCreate": "Click to create campaign"
+    "clickToCreate": "Click to create campaign",
+    "maxParticipantsLabel": "Max Participants (optional)",
+    "maxParticipantsPlaceholder": "e.g. 20 (leave blank for unlimited)",
+    "maxParticipantsHint": "Leave blank for unlimited"
   },
   "campaign": {
     "title": "Campaign Details",
@@ -332,7 +348,12 @@
     "alreadyJoined": "You have already joined this campaign.",
     "uploadingPhoto": "Uploading photo...",
     "editRequiredFields": "Title and description are required!",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "approvedPhotosGallery": "📸 Before & After — Approved Photos",
+    "spotsLeft": "spots left",
+    "spotsFull": "Full",
+    "bagsCollectedLabel": "Bags of Waste Collected (optional)",
+    "bagsCollectedPlaceholder": "e.g. 5"
   },
   "stats": {
     "pageTitle": "Community Impact — Clean Quarter",
@@ -538,6 +559,7 @@
     "delete": "Delete",
     "username": "Username",
     "submit": "Submit",
-    "uploadFailed": "Upload failed. Please try again."
+    "uploadFailed": "Upload failed. Please try again.",
+    "backToDashboard": "← Back to Dashboard"
   }
 }

@@ -151,6 +151,13 @@
             <button class="btn btn-outline-success btn-sm mt-2" id="editProfileBtn">
               <span data-i18n="profile.editProfile">✏️ Редактирай профил</span>
             </button>
+            <button
+              class="btn btn-outline-primary btn-sm mt-2 ms-2"
+              id="shareImpactBtn"
+              data-i18n="profile.shareImpact"
+            >
+              📤 Сподели резултатите
+            </button>
           </div>
         </div>
 
@@ -176,6 +183,21 @@
           <div class="info-row">
             <div class="info-label" data-i18n="profile.rankLabel">Rank:</div>
             <div class="info-value"><span id="rankValue">-</span></div>
+          </div>
+        </div>
+
+        <!-- Streak Section -->
+        <div class="section streak-display" id="streakSection" style="display: none">
+          <h2 data-i18n="profile.streakTitle">🔥 Серия от почиствания</h2>
+          <div class="d-flex gap-4 flex-wrap">
+            <div>
+              <div class="streak-value" id="currentStreakValue">0</div>
+              <small class="text-muted" data-i18n="profile.currentStreak">Текуща серия</small>
+            </div>
+            <div>
+              <div class="streak-value" id="longestStreakValue">0</div>
+              <small class="text-muted" data-i18n="profile.longestStreak">Най-дълга серия</small>
+            </div>
           </div>
         </div>
 
@@ -345,6 +367,12 @@
           >
             Браузърът е блокирал известията. Разреши ги от настройките на браузъра.
           </p>
+        </div>
+
+        <!-- Badges Section -->
+        <div class="section" id="badgesSection" style="display: none">
+          <h2 data-i18n="profile.badgesTitle">🏅 Постижения</h2>
+          <div class="badges-grid" id="badgesGrid"></div>
         </div>
 
         <!-- Point Transactions Section -->

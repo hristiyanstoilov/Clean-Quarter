@@ -113,6 +113,9 @@
 
     <!-- Main Container -->
     <div class="container">
+      <a href="/dashboard" class="btn-back" data-i18n="common.backToDashboard"
+        >← Назад към началото</a
+      >
       <h1 class="mb-4" data-i18n="createCampaign.pageTitle">Create New Campaign</h1>
 
       <!-- Campaign Form -->
@@ -122,7 +125,10 @@
         <form id="createCampaignForm">
           <!-- Title -->
           <div class="mb-3">
-            <label for="campaignTitleBg" class="form-label" data-i18n="createCampaign.titleLabel"
+            <label
+              for="campaignTitleBg"
+              class="form-label required"
+              data-i18n="createCampaign.titleLabel"
               >Заглавие</label
             >
             <input
@@ -142,7 +148,7 @@
           <div class="mb-3">
             <label
               for="campaignDescriptionBg"
-              class="form-label"
+              class="form-label required"
               data-i18n="createCampaign.descriptionLabel"
               >Описание</label
             >
@@ -163,7 +169,7 @@
           <div class="mb-3">
             <label
               for="campaignNeighborhood"
-              class="form-label"
+              class="form-label required"
               data-i18n="createCampaign.neighborhoodLabel"
               >Квартал</label
             >
@@ -204,14 +210,17 @@
 
           <!-- Date & Time -->
           <div class="mb-3">
-            <label for="campaignDate" class="form-label" data-i18n="campaign.scheduledDate"
+            <label for="campaignDate" class="form-label required" data-i18n="campaign.scheduledDate"
               >Дата на почистването</label
             >
             <input type="date" id="campaignDate" class="form-control" required />
           </div>
           <div class="mb-3 row g-2">
             <div class="col">
-              <label for="campaignStartTime" class="form-label" data-i18n="campaign.startTime"
+              <label
+                for="campaignStartTime"
+                class="form-label required"
+                data-i18n="campaign.startTime"
                 >Начален час</label
               >
               <input type="time" id="campaignStartTime" class="form-control" required />
@@ -224,9 +233,33 @@
             </div>
           </div>
 
+          <!-- Max Participants (optional) -->
+          <div class="mb-3">
+            <label
+              for="campaignMaxParticipants"
+              class="form-label"
+              data-i18n="createCampaign.maxParticipantsLabel"
+              >Максимален брой участници (по желание)</label
+            >
+            <input
+              type="number"
+              class="form-control"
+              id="campaignMaxParticipants"
+              min="1"
+              data-i18n-placeholder="createCampaign.maxParticipantsPlaceholder"
+              placeholder="напр. 20 (остави празно за неограничено)"
+            />
+            <small class="text-muted" data-i18n="createCampaign.maxParticipantsHint"
+              >Остави празно за неограничено</small
+            >
+          </div>
+
           <!-- Before Photo Upload -->
           <div class="mb-3">
-            <label for="beforePhoto" class="form-label" data-i18n="createCampaign.beforePhotoLabel"
+            <label
+              for="beforePhoto"
+              class="form-label required"
+              data-i18n="createCampaign.beforePhotoLabel"
               >Before Photo</label
             >
             <div class="file-input-wrapper">

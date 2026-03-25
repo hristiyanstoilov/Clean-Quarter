@@ -210,6 +210,7 @@ function renderRewards() {
                               data-reward-title="${escapeHTML(reward.title)}"
                               data-reward-cost="${Number(reward.cost)}"
                               ${buttonDisabled}
+                              ${!canAfford ? 'aria-disabled="true"' : ""}
                           >
                               ${buttonText}
                           </button>

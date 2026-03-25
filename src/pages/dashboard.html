@@ -291,5 +291,40 @@
         <span data-i18n="nav.profile">Профил</span>
       </a>
     </nav>
+
+    <!-- Onboarding overlay — shown once to first-time users -->
+    <div
+      id="onboardingOverlay"
+      class="onboarding-overlay"
+      style="display: none"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="onboardingTitle"
+    >
+      <div class="onboarding-card">
+        <h2 id="onboardingTitle" data-i18n="onboarding.title">Добре дошъл в Чист Квартал! 👋</h2>
+        <div class="onboarding-steps">
+          <div class="onboarding-step">
+            <span class="step-num">1</span>
+            <span data-i18n="onboarding.step1">Намери кампания близо до теб на картата</span>
+          </div>
+          <div class="onboarding-step">
+            <span class="step-num">2</span>
+            <span data-i18n="onboarding.step2">Присъедини се и качи снимка след почистването</span>
+          </div>
+          <div class="onboarding-step">
+            <span class="step-num">3</span>
+            <span data-i18n="onboarding.step3">Спечели точки и ги размени за награди</span>
+          </div>
+        </div>
+        <button
+          class="btn btn-primary w-100"
+          id="onboardingDismissBtn"
+          data-i18n="onboarding.dismiss"
+        >
+          Разбрах, нека започнем! 🚀
+        </button>
+      </div>
+    </div>
   </body>
 </html>

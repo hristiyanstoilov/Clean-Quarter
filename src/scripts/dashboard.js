@@ -61,6 +61,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Require authentication
     requireAuth("/");
 
+    // Onboarding overlay — shown once to first-time users
+    if (!localStorage.getItem("onboarding_done")) {
+      const overlay = document.getElementById("onboardingOverlay");
+      if (overlay) {
+        overlay.style.display = "flex";
+        document.getElementById("onboardingDismissBtn")?.addEventListener("click", () => {
+          localStorage.setItem("onboarding_done", "1");
+          overlay.style.display = "none";
+        });
+      }
+    }
+
     // Role-based UI
     const user = JSON.parse(localStorage.getItem("user"));
     if (user?.role === "admin") {
@@ -268,6 +280,17 @@ function buildCampaignCard(campaign, rsvpCount = 0, currentLang = "bg") {
       ? `<span class="campaign-category-badge">${categoryEmoji} ${escapeHTML(categoryLabel)}</span>`
       : "";
 
+  let spotsLeftBadge = "";
+  if (campaign.max_participants) {
+    const taken = campaign.participation_count || 0;
+    const left = campaign.max_participants - taken;
+    if (left <= 5 && left > 0) {
+      spotsLeftBadge = `<span class="spots-left-badge">🔥 ${left} ${t("campaign.spotsLeft") || "места"}</span>`;
+    } else if (left <= 0) {
+      spotsLeftBadge = `<span class="spots-left-badge spots-left-badge--full">${t("campaign.spotsFull") || "Няма места"}</span>`;
+    }
+  }
+
   return `
     <div class="campaign-card-wrapper">
       <div class="card campaign-card">
@@ -277,7 +300,7 @@ function buildCampaignCard(campaign, rsvpCount = 0, currentLang = "bg") {
             : `<div class="card-img-top bg-secondary" style="height:200px;display:flex;align-items:center;justify-content:center;"><span class="text-white">${t("dashboard.noPhoto")}</span></div>`
         }
         <div class="card-body d-flex flex-column">
-          ${categoryBadge ? `<div class="mb-2">${categoryBadge}</div>` : ""}
+          ${categoryBadge || spotsLeftBadge ? `<div class="mb-2">${categoryBadge}${spotsLeftBadge}</div>` : ""}
           <h5 class="card-title">${escapeHTML(title)}</h5>
           <p class="card-text text-muted mb-1"><small>📍 ${escapeHTML(neighborhood)}</small></p>
           ${scheduledLabel ? `<p class="card-text text-muted mb-1"><small>📅 ${escapeHTML(scheduledLabel)}</small></p>` : ""}
@@ -406,7 +429,7 @@ async function loadCampaignsPage(append = false) {
       let query = supabase
         .from("campaigns")
         .select(
-          "id, title, neighborhood, category, before_photo_url, status, created_at, scheduled_date, start_time, end_time, created_by, creator:profiles!created_by(username)",
+          "id, title, neighborhood, category, before_photo_url, status, created_at, scheduled_date, start_time, end_time, created_by, max_participants, participation_count, creator:profiles!created_by(username)",
           { count: "exact" }
         )
         .eq("status", "active");
