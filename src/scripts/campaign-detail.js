@@ -1470,9 +1470,6 @@ async function handleRsvp() {
   }
 }
 
-/**
- * Handle cancelling RSVP to the current campaign
- */
 export { handleJoin, handleUploadPhoto };
 
 // Test-only helpers — bundler tree-shakes this object because no production

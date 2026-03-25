@@ -257,7 +257,12 @@ export const handleError = (...args) => errorHandler.handle(...args);
 /**
  * Global error handler setup
  */
+let _globalErrorHandlingInitialized = false;
+
 export function setupGlobalErrorHandling() {
+  if (_globalErrorHandlingInitialized) return;
+  _globalErrorHandlingInitialized = true;
+
   // Handle unhandled promise rejections
   window.addEventListener("unhandledrejection", (event) => {
     logger.fatal("Unhandled promise rejection", event.reason);

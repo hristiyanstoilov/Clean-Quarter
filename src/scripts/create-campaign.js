@@ -20,7 +20,7 @@ let currentUser = null;
 /**
  * Initialize the page on load
  */
-window.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", async () => {
   initPage();
   initNetworkStatusBanner();
   initBottomNav();
