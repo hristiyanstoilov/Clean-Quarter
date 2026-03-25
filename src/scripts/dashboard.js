@@ -19,6 +19,7 @@ import { getRsvpCountsForCampaigns } from "../services/events.js";
 import { CLEANUP_POINTS } from "../services/points.js";
 import { initNetworkStatusBanner } from "../utils/networkStatus.js";
 import { initBottomNav } from "../hooks/index.js";
+import { initPage } from "../utils/pageInit.js";
 import { filterCampaigns } from "../utils/campaign-filters.js";
 
 // Pagination state
@@ -39,6 +40,7 @@ let currentSearchTerm = "";
 
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", async () => {
+  initPage();
   initNetworkStatusBanner();
   initBottomNav();
   try {
@@ -71,6 +73,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       import("../services/notifications.js").then(({ initNotificationBell }) => {
         initNotificationBell(user.id);
       });
+    } else {
+      const bell = document.getElementById("notificationBell");
+      if (bell) bell.style.display = "none";
     }
 
     // Default filter to user's neighborhood

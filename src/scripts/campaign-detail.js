@@ -28,6 +28,7 @@ import {
 import { rsvpToCampaign, cancelRsvp, getRsvpCount, getUserRsvp } from "../services/events.js";
 import { initNetworkStatusBanner } from "../utils/networkStatus.js";
 import { initBottomNav } from "../hooks/index.js";
+import { initPage } from "../utils/pageInit.js";
 
 // Global variables
 let campaign = null;
@@ -41,6 +42,7 @@ let userHasRsvpd = false;
 
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", async () => {
+  initPage();
   initNetworkStatusBanner();
   initBottomNav();
   initSwalFallback();

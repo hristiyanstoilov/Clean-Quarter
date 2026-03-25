@@ -69,8 +69,7 @@ import { saveUser } from "./utils/helpers.js";
 import supabase from "./services/supabase.js";
 import { initPasswordStrengthMeter } from "./components/passwordStrength.js";
 import passwordToggle from "./components/passwordToggle.js";
-import { initializePWA } from "./services/pwa.js";
-import { setupGlobalErrorHandling } from "./services/errorHandler.js";
+import { initPage } from "./utils/pageInit.js";
 import { t } from "./utils/i18n.js";
 // Lazy-load non-critical modules for performance
 let initI18n, setLanguage, applyLanguage;
@@ -289,8 +288,7 @@ window.navigateTo = loadPage;
 
 // Ensure auth forms, i18n, and language selector are initialized on DOMContentLoaded
 document.addEventListener("DOMContentLoaded", async () => {
-  setupGlobalErrorHandling();
-  initializePWA();
+  initPage();
   try {
     // Lazy-load i18n module if not already loaded
     if (!initI18n || !setLanguage || !applyLanguage) {

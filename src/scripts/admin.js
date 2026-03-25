@@ -4,6 +4,7 @@ import { escapeHTML, showSuccessToast, showInfoToast, initSwalFallback } from ".
 import { exportUsersCsv, exportParticipationsCsv } from "../services/csvExport.js";
 import { initNetworkStatusBanner } from "../utils/networkStatus.js";
 import { initBottomNav } from "../hooks/index.js";
+import { initPage } from "../utils/pageInit.js";
 import { sendPushToUser } from "../services/pushNotifications.js";
 import { CLEANUP_POINTS } from "../services/points.js";
 import {
@@ -36,6 +37,7 @@ let heatmapPoints = null; // cached per session — coordinates don't change aft
 
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", async () => {
+  initPage();
   initNetworkStatusBanner();
   initBottomNav();
   // Ensure Swal is available even if CDN fails to load

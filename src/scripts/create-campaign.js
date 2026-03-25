@@ -8,6 +8,7 @@ import supabase from "../services/supabase.js";
 import { isDemoUser, addDemoCampaign, addDemoParticipation } from "../utils/demoMode.js";
 import { initNetworkStatusBanner } from "../utils/networkStatus.js";
 import { initBottomNav } from "../hooks/index.js";
+import { initPage } from "../utils/pageInit.js";
 import { isWithinSofia } from "../utils/constants.js";
 
 // Global variables
@@ -20,6 +21,7 @@ let currentUser = null;
  * Initialize the page on load
  */
 window.addEventListener("DOMContentLoaded", async () => {
+  initPage();
   initNetworkStatusBanner();
   initBottomNav();
   initSwalFallback();

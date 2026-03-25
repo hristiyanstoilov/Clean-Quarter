@@ -9,6 +9,7 @@ import {
 } from "../utils/demoMode.js";
 import { initNetworkStatusBanner } from "../utils/networkStatus.js";
 import { initBottomNav } from "../hooks/index.js";
+import { initPage } from "../utils/pageInit.js";
 
 // Global variables
 let currentUser = null;
@@ -17,6 +18,7 @@ let rewards = [];
 
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", async () => {
+  initPage();
   initNetworkStatusBanner();
   initBottomNav();
   initSwalFallback();
@@ -46,6 +48,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       import("../services/notifications.js").then(({ initNotificationBell }) => {
         initNotificationBell(storedUser.id);
       });
+    } else {
+      const bell = document.getElementById("notificationBell");
+      if (bell) bell.style.display = "none";
     }
 
     document.getElementById("logoutBtn")?.addEventListener("click", (e) => {
