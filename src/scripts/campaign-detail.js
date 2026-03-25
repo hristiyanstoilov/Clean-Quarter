@@ -202,13 +202,14 @@ async function loadCampaignDetail() {
         participations = parts;
       }
 
-      // Fetch current user's participation
+      // Fetch current user's active participation (exclude soft-deleted rows)
       const { data: userPartData, error: userPartErr } = await supabase
         .from("participations")
         .select("*")
         .eq("campaign_id", campaignId)
         .eq("user_id", currentUser.id)
-        .single();
+        .is("deleted_at", null)
+        .maybeSingle();
 
       userPartError = userPartErr;
       if (!userPartError) {

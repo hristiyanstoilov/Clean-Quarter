@@ -94,7 +94,7 @@ export function generateImpactCard({ username, points, cleanups, rank, lang = "b
   // Footer
   ctx.font = "16px sans-serif";
   ctx.fillStyle = "rgba(255,255,255,0.45)";
-  ctx.fillText(window.location.hostname, 48, H - 28);
+  ctx.fillText(window.location.hostname || "cleanquarter.netlify.app", 48, H - 28);
 
   // Download
   const link = document.createElement("a");
