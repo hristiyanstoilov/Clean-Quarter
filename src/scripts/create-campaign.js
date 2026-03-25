@@ -16,6 +16,7 @@ let map = null;
 let selectedCoordinates = { lat: null, lng: null };
 let beforePhotoFile = null;
 let currentUser = null;
+let selectionMarker = null;
 
 /**
  * Initialize the page on load
@@ -120,10 +121,10 @@ function initMap() {
     if (selectedCoordinates.lat && selectedCoordinates.lng) {
       map.setView([selectedCoordinates.lat, selectedCoordinates.lng], 16);
       map.invalidateSize();
-      if (window.selectionMarker) {
-        map.removeLayer(window.selectionMarker);
+      if (selectionMarker) {
+        map.removeLayer(selectionMarker);
       }
-      window.selectionMarker = L.marker([selectedCoordinates.lat, selectedCoordinates.lng], {
+      selectionMarker = L.marker([selectedCoordinates.lat, selectedCoordinates.lng], {
         icon: createMarkerIcon("blue"),
       })
         .addTo(map)
@@ -149,10 +150,10 @@ function initMap() {
     document.getElementById("longitude").textContent = lng.toFixed(6);
     document.getElementById("coordinatesDisplay").style.display = "block";
     // Add or update marker
-    if (window.selectionMarker) {
-      map.removeLayer(window.selectionMarker);
+    if (selectionMarker) {
+      map.removeLayer(selectionMarker);
     }
-    window.selectionMarker = L.marker([lat, lng], {
+    selectionMarker = L.marker([lat, lng], {
       icon: createMarkerIcon("blue"),
     })
       .addTo(map)

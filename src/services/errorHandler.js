@@ -259,6 +259,11 @@ export const handleError = (...args) => errorHandler.handle(...args);
  */
 let _globalErrorHandlingInitialized = false;
 
+// Test-only reset — allows re-initialization between test cases
+export const __resetGlobalErrorHandling = () => {
+  _globalErrorHandlingInitialized = false;
+};
+
 export function setupGlobalErrorHandling() {
   if (_globalErrorHandlingInitialized) return;
   _globalErrorHandlingInitialized = true;
