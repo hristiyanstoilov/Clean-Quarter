@@ -483,10 +483,9 @@ function showParticipationUI() {
   uploadSection.style.display = "none";
 
   if (!userParticipation) {
-    // Creator is auto-joined on campaign creation, so no join button for them
-    if (!isCreator) {
-      joinSection.style.display = "block";
-    }
+    // Show join button for everyone without an active participation,
+    // including the creator (their participation may have been soft-deleted by an admin).
+    joinSection.style.display = "block";
   } else {
     // User has joined (includes creator) — show upload section
     uploadSection.style.display = "block";
