@@ -1,6 +1,6 @@
 # Clean Quarter — Roadmap & Engineering Backlog
 
-**Last updated:** 2026-03-22 (architect audit) | **Version:** 1.2-dev | **Live:** https://cleanquarter.netlify.app
+**Last updated:** 2026-03-25 | **Version:** 1.2-dev | **Live:** https://cleanquarter.netlify.app
 
 ---
 
@@ -494,11 +494,83 @@ The current top navbar treats all destinations with equal visual weight. Recomme
 
 ---
 
+### v1.5 — Bulgaria-wide Expansion 🇧🇬 ⚡ HIGH PRIORITY
+
+> **Decision (2026-03-25):** Expand from 5 Sofia neighborhoods to all of Bulgaria.
+> Full implementation plan documented and approved. Requires ~1 sprint.
+> Map tile provider must switch from OSM (dev-only policy) to Stadia Maps (free tier, production-safe) as part of this work.
+
+#### Why now
+The Sofia-only restriction is hardcoded in 3 layers simultaneously (JS constants, DB CHECK constraint, HTML dropdowns). The longer we wait, the more campaigns accumulate under Sofia assumptions. All 18 affected files are mapped — no unknowns.
+
+#### Implementation plan (ordered, no skipping steps)
+
+**Phase 1 — Database (3 migrations, run in order)**
+
+| Migration | File | Change |
+|-----------|------|--------|
+| 1 | `20260325_01_drop_sofia_bounds_constraint.sql` | `DROP CONSTRAINT campaigns_location_within_sofia` — removes the lat/lng hard block |
+| 2 | `20260325_02_add_city_field.sql` | Add `city TEXT NOT NULL DEFAULT 'Sofia'` to `campaigns`; add `city TEXT` to `profiles`; backfill existing 61 campaigns with `'Sofia'`; add indexes on both |
+| 3 | `20260325_03_update_leaderboard_for_cities.sql` | Rebuild `neighborhood_leaderboard` VIEW and `get_public_neighborhood_stats()` function to group by `city + neighborhood` |
+
+**Phase 2 — Shared / Constants (`src/utils/constants.js`)**
+- Remove `SOFIA_BOUNDS`, `isWithinSofia()`
+- Add `BULGARIA_CITIES` array (top 10 cities: Sofia, Plovdiv, Varna, Burgas, Ruse, Stara Zagora, Pleven, Sliven, Dobrich, Shumen)
+- Add `BULGARIA_BOUNDS` (soft — for UX warning only, not blocking)
+- Add `isWithinBulgaria(lat, lng)` — returns `false` only for clearly wrong coords (oceans, other countries)
+
+**Phase 3 — Map infrastructure**
+- `src/services/map.js`: center → Bulgaria center (42.7339, 25.4858), zoom 7; switch tiles to Stadia Maps (requires free API key → `VITE_STADIA_MAPS_KEY` in `.env`)
+- `src/scripts/admin.js:1295`: same tile switch for admin heatmap
+- `src/services/weather.js`: replace hardcoded `SOFIA_LAT/SOFIA_LNG` with dynamic coords from campaign/user location
+
+**Phase 4 — Create Campaign flow**
+- `src/pages/create-campaign.html`: replace 5-item `<select>` with city `<select>` (10 cities) + free-text `<input>` for neighborhood
+- `src/scripts/create-campaign.js`: `isWithinSofia` → `isWithinBulgaria` (soft warning popup, not hard block); add `city` field to Supabase insert
+
+**Phase 5 — Dashboard + Leaderboard**
+- `src/pages/dashboard.html`: add city filter `<select>`; neighborhood filter → text search `<input>`
+- `src/scripts/dashboard.js`: remove `NEIGHBORHOOD_I18N` hardcoded mapping; update leaderboard display to `"Sofia · Studentski Grad"` format; city filter logic
+
+**Phase 6 — Profile**
+- `src/pages/profile.html`: add city `<select>` above neighborhood; neighborhood → `<input type="text">`
+- `src/scripts/profile.js`: read/write `city` to Supabase
+
+**Phase 7 — Admin**
+- `src/scripts/admin.js`: add City column to users table; add city export filter; include city in user search
+
+**Phase 8 — i18n (4 files)**
+
+| Key action | Files |
+|---|---|
+| Remove `campaign.outsideSofia`, `campaign.locationOutsideSofia` | all 4 i18n files |
+| Add `campaign.outsideBulgaria` (soft warning) | all 4 i18n files |
+| Add `campaign.cityLabel` ("Град" / "City") | all 4 i18n files |
+| Remove `neighborhoods.*` object (5 hardcoded names) | all 4 i18n files |
+| Add `leaderboard.cityNeighborhood` ("{{city}} · {{neighborhood}}") | all 4 i18n files |
+| Update landing subtitle ("keeping Sofia clean" → "keeping your city clean") | `en.json` |
+
+**Phase 9 — Tests (3 suites)**
+- `tests/leaderboard.test.js`: add `city` to mock data; test city+neighborhood grouping; remove `NEIGHBORHOOD_I18N` mapping assertions
+- `tests/campaign-categories.test.js`: add `city` field to test campaign objects
+- `tests/create-campaign.test.js`: replace `isWithinSofia` tests with `isWithinBulgaria`; test soft warning behavior
+
+#### Affected files (18 total)
+`constants.js` · `map.js` · `weather.js` · `create-campaign.js` · `create-campaign.html` · `dashboard.js` · `dashboard.html` · `profile.js` · `profile.html` · `admin.js` · `src/i18n/bg.json` · `src/i18n/en.json` · `public/i18n/bg.json` · `public/i18n/en.json` · `leaderboard.test.js` · `campaign-categories.test.js` · `create-campaign.test.js` · 3 SQL migration files
+
+#### External prerequisite
+Register free Stadia Maps account → get API key → add `VITE_STADIA_MAPS_KEY` to `.env` and Netlify environment variables before deploying.
+
+#### Business note
+"Чиста Дървеница" brand name becomes a scaling constraint alongside this work. Recommend scheduling a naming decision (e.g. "Чисто BG") before promoting the Bulgaria-wide feature publicly — the domain and app name tell users this is a single-neighborhood tool.
+
+---
+
 ### v2.0 — Platform Expansion (6–18 months)
 
 | Feature | Priority | Rationale |
 |---------|----------|-----------|
-| Multi-city support | P1 | Architecture supports it today. Remove Sofia-only hardcoding. |
+| Multi-city support | ✅ Moved to v1.5 | See detailed plan above. |
 | Municipality API integration | P1 | Official data feeds + compliance reporting for district government. |
 | **Anonymous illegal dumping map** | P1 | Public layer (no login required): anyone can drop a pin + photo to report illegal dumping. Reports appear on the map as orange markers. Authenticated users can create campaigns targeting these exact locations. This becomes the top-of-funnel: people discover the platform not through word-of-mouth but because they find real problem locations on the map, then register to do something about it. Requires: `dumping_reports` table with `lat`, `lng`, `photo_url`, `status` (reported / campaign_created / resolved), CAPTCHA for anonymous submissions. |
 | **School / university community service integration** | P1 | Schools register as verified organizations. Student participants earn points that are simultaneously logged as volunteer hours. Admin generates a signed "Community Service Certificate" PDF (name, date, campaign, hours). Sofia has 50+ high schools with mandatory volunteer hours for graduation — this is a direct institutional channel that bypasses consumer acquisition entirely. Business model: free for students, 200 лв/year per school subscription for the certificate generation feature. |
