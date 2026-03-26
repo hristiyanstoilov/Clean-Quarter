@@ -3,7 +3,8 @@ import { initializeMap, createMarkerIcon } from "../services/map.js";
 import { uploadCampaignPhoto } from "../services/storage.js";
 import { compressImage } from "../services/compressor.js";
 import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
-import { showSuccessToast, initSwalFallback } from "../utils/helpers.js";
+import { showSuccessToast, initSwalFallback, removeUser } from "../utils/helpers.js";
+import { logout } from "../services/auth.js";
 import supabase from "../services/supabase.js";
 import { isDemoUser, addDemoCampaign, addDemoParticipation } from "../utils/demoMode.js";
 import { initNetworkStatusBanner } from "../utils/networkStatus.js";
@@ -445,6 +446,22 @@ async function handleFormSubmit(e) {
         throw new Error("User not authenticated");
       }
 
+      // Server-side rate limit: max 5 campaigns per 24 hours
+      const { data: rateCheck } = await supabase.rpc("check_campaign_rate_limit", {
+        p_user_id: user.id,
+      });
+      if (rateCheck && !rateCheck.allowed) {
+        await Swal.fire({
+          icon: "warning",
+          title: t("createCampaign.rateLimitTitle"),
+          text: t("createCampaign.rateLimitText"),
+          confirmButtonColor: "#28a745",
+        });
+        submitBtn.disabled = false;
+        spinner.style.display = "none";
+        return;
+      }
+
       const compressedBefore = await compressImage(beforePhotoFile, 1200, 0.75);
       const beforePhotoUrl = await uploadCampaignPhoto(compressedBefore, "before");
 
@@ -473,6 +490,9 @@ async function handleFormSubmit(e) {
       if (campaignError) {
         throw new Error(`Failed to create campaign: ${campaignError.message}`);
       }
+
+      // Record creation for rate limiting (fire-and-forget — non-critical)
+      supabase.rpc("record_campaign_creation", { p_user_id: user.id }).catch(() => {});
 
       // Auto-join creator as first participant
       const { error: participationError } = await supabase.from("participations").insert([
@@ -512,13 +532,10 @@ async function handleFormSubmit(e) {
  */
 async function handleLogout() {
   try {
-    const { error } = await supabase.auth.signOut();
-    if (!error) {
-      localStorage.removeItem("user");
-      window.location.href = "/";
-    } else {
-      throw error;
-    }
+    await logout();
+    removeUser();
+    await showSuccessToast(t("auth.logoutSuccessTitle"), 1000);
+    window.location.href = "/";
   } catch {
     // silently ignore
   }
