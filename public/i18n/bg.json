@@ -214,7 +214,18 @@
     "noBadgesYet": "Все още няма постижения. Участвай в почистване, за да спечелиш!",
     "streakTitle": "🔥 Серия от почиствания",
     "currentStreak": "Текуща серия",
-    "longestStreak": "Най-дълга серия"
+    "longestStreak": "Най-дълга серия",
+    "gdprSection": "🔒 Данни и поверителност",
+    "exportDataBtn": "📥 Изтегли данните ми",
+    "exportDataDesc": "Изтегли всичките си данни в JSON формат (GDPR Член 20).",
+    "exportDataSuccess": "Данните са изтеглени успешно.",
+    "exportDataError": "Грешка при изтегляне на данните.",
+    "deleteAccountBtn": "🗑️ Изтрий акаунта ми",
+    "deleteAccountDesc": "Това действие е необратимо. Всички данни ще бъдат изтрити.",
+    "deleteAccountConfirmTitle": "Сигурен ли си?",
+    "deleteAccountConfirmText": "Всички данни (кампании, участия, снимки) ще бъдат изтрити завинаги. Точките и транзакциите се запазват за финансов одит.",
+    "deleteAccountSuccess": "Акаунтът е изтрит.",
+    "deleteAccountError": "Грешка при изтриване на акаунта. Опитай отново."
   },
   "createCampaign": {
     "pageTitle": "Нова кампания",
@@ -243,7 +254,9 @@
     "clickToCreate": "Кликни за създаване на кампания",
     "maxParticipantsLabel": "Максимален брой участници (по желание)",
     "maxParticipantsPlaceholder": "напр. 20 (остави празно за неограничено)",
-    "maxParticipantsHint": "Остави празно за неограничено"
+    "maxParticipantsHint": "Остави празно за неограничено",
+    "rateLimitTitle": "Лимит за кампании",
+    "rateLimitText": "Можеш да създадеш максимум 5 кампании на ден. Опитай отново утре."
   },
   "campaign": {
     "title": "Детали на кампанията",
@@ -469,6 +482,7 @@
     "rejectedTitle": "Отхвърлено",
     "submissionRejected": "Участието на {{username}} беше отхвърлено.",
     "failedToReject": "Неуспешно отхвърляне. Моля, опитайте отново.",
+    "alreadyProcessed": "Участието вече е обработено (одобрено или отхвърлено).",
     "searchUsers": "Търси потребители...",
     "searchRoleLog": "Търси в историята...",
     "noRoleChanges": "Няма промени на роли.",

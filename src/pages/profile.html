@@ -387,6 +387,36 @@
           </div>
         </div>
 
+        <!-- GDPR: Data & Privacy Section -->
+        <div class="section">
+          <h2 data-i18n="profile.gdprSection">🔒 Данни и поверителност</h2>
+          <p class="text-muted small" data-i18n="profile.exportDataDesc">
+            Изтегли всичките си данни в JSON формат (GDPR Член 20).
+          </p>
+          <button
+            id="exportDataBtn"
+            class="btn btn-outline-secondary btn-sm mb-3"
+            onclick="handleExportData()"
+            data-i18n="profile.exportDataBtn"
+          >
+            📥 Изтегли данните ми
+          </button>
+
+          <hr />
+
+          <p class="text-muted small" data-i18n="profile.deleteAccountDesc">
+            Това действие е необратимо. Всички данни ще бъдат изтрити.
+          </p>
+          <button
+            id="deleteAccountBtn"
+            class="btn btn-outline-danger btn-sm"
+            onclick="handleDeleteAccount()"
+            data-i18n="profile.deleteAccountBtn"
+          >
+            🗑️ Изтрий акаунта ми
+          </button>
+        </div>
+
         <!-- My Participations Section -->
         <div class="section">
           <h2 data-i18n="profile.myParticipations">🤝 My Participations</h2>

@@ -214,7 +214,18 @@
     "noBadgesYet": "No achievements yet. Join a cleanup to earn your first badge!",
     "streakTitle": "🔥 Cleanup Streak",
     "currentStreak": "Current streak",
-    "longestStreak": "Longest streak"
+    "longestStreak": "Longest streak",
+    "gdprSection": "🔒 Data & Privacy",
+    "exportDataBtn": "📥 Download My Data",
+    "exportDataDesc": "Download all your personal data as JSON (GDPR Article 20).",
+    "exportDataSuccess": "Your data has been downloaded.",
+    "exportDataError": "Failed to export data. Please try again.",
+    "deleteAccountBtn": "🗑️ Delete My Account",
+    "deleteAccountDesc": "This action is permanent and cannot be undone.",
+    "deleteAccountConfirmTitle": "Are you sure?",
+    "deleteAccountConfirmText": "All your data (campaigns, participations, photos) will be permanently deleted. Points and transactions are kept for financial audit.",
+    "deleteAccountSuccess": "Account deleted.",
+    "deleteAccountError": "Failed to delete account. Please try again."
   },
   "createCampaign": {
     "pageTitle": "Create New Campaign",
@@ -243,7 +254,9 @@
     "clickToCreate": "Click to create campaign",
     "maxParticipantsLabel": "Max Participants (optional)",
     "maxParticipantsPlaceholder": "e.g. 20 (leave blank for unlimited)",
-    "maxParticipantsHint": "Leave blank for unlimited"
+    "maxParticipantsHint": "Leave blank for unlimited",
+    "rateLimitTitle": "Campaign Limit Reached",
+    "rateLimitText": "You can create a maximum of 5 campaigns per day. Please try again tomorrow."
   },
   "campaign": {
     "title": "Campaign Details",
@@ -469,6 +482,7 @@
     "rejectedTitle": "Rejected",
     "submissionRejected": "{{username}}'s submission was rejected.",
     "failedToReject": "Failed to reject. Please try again.",
+    "alreadyProcessed": "This submission has already been processed (approved or rejected).",
     "searchUsers": "Search users...",
     "searchRoleLog": "Search role log...",
     "noRoleChanges": "No role changes found.",

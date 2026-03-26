@@ -6,9 +6,11 @@ import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
 import {
   escapeHTML,
   showSuccessToast,
+  removeUser,
   initSwalFallback,
   applyPasswordChecklist,
 } from "../utils/helpers.js";
+import { logout } from "../services/auth.js";
 import { rules } from "../services/validation.js";
 import {
   isDemoUser,
@@ -638,13 +640,10 @@ function renderParticipations(participations) {
  */
 async function handleLogout() {
   try {
-    const { error } = await supabase.auth.signOut();
-    if (!error) {
-      localStorage.removeItem("user");
-      window.location.href = "/";
-    } else {
-      throw error;
-    }
+    await logout();
+    removeUser();
+    await showSuccessToast(t("auth.logoutSuccessTitle"), 1000);
+    window.location.href = "/";
   } catch {
     // silently ignore
   }
@@ -921,6 +920,102 @@ function handleShareImpact() {
     lang,
   });
 }
+
+/**
+ * GDPR Article 20 — export all personal data as a JSON file.
+ */
+async function handleExportData() {
+  if (isDemoUser(currentUser)) return;
+  try {
+    const { data, error } = await supabase.rpc("export_user_data", { p_user_id: currentUser.id });
+    if (error) throw error;
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `clean-quarter-data-${new Date().toISOString().slice(0, 10)}.json`;
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showSuccessToast(t("profile.exportDataSuccess"));
+  } catch {
+    Swal.fire({ icon: "error", title: t("common.error"), text: t("profile.exportDataError") });
+  }
+}
+window.handleExportData = handleExportData;
+
+/**
+ * GDPR Article 17 — permanently delete all personal data and photos.
+ */
+async function handleDeleteAccount() {
+  if (isDemoUser(currentUser)) return;
+
+  const confirmed = await Swal.fire({
+    title: t("profile.deleteAccountConfirmTitle"),
+    text: t("profile.deleteAccountConfirmText"),
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#dc3545",
+    cancelButtonColor: "#6c757d",
+    confirmButtonText: t("profile.deleteAccountBtn"),
+    cancelButtonText: t("common.cancel"),
+  });
+  if (!confirmed.isConfirmed) return;
+
+  try {
+    Swal.fire({
+      title: t("profile.pleaseWait"),
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading(),
+    });
+
+    // RPC anonymizes DB data and returns photo URLs for Storage cleanup
+    const { data: photos, error } = await supabase.rpc("delete_user_data", {
+      p_user_id: currentUser.id,
+    });
+    if (error) throw error;
+
+    // Extract storage path from a full Supabase public URL
+    const extractPath = (url, bucket) => {
+      if (!url) return null;
+      const marker = `/storage/v1/object/public/${bucket}/`;
+      const idx = url.indexOf(marker);
+      return idx !== -1 ? url.slice(idx + marker.length) : null;
+    };
+
+    const deletions = [];
+    if (photos?.avatar_url) {
+      const p = extractPath(photos.avatar_url, "avatars");
+      if (p) deletions.push(supabase.storage.from("avatars").remove([p]));
+    }
+    const campaignPaths = (photos?.campaign_photos || [])
+      .map((u) => extractPath(u, "campaign-photos"))
+      .filter(Boolean);
+    const participationPaths = (photos?.participation_photos || [])
+      .map((u) => extractPath(u, "campaign-photos"))
+      .filter(Boolean);
+    const allPhotoPaths = [...campaignPaths, ...participationPaths];
+    if (allPhotoPaths.length)
+      deletions.push(supabase.storage.from("campaign-photos").remove(allPhotoPaths));
+
+    await Promise.allSettled(deletions);
+
+    await logout();
+    removeUser();
+    await Swal.fire({
+      icon: "success",
+      title: t("profile.deleteAccountSuccess"),
+      timer: 2000,
+      showConfirmButton: false,
+    });
+    window.location.href = "/";
+  } catch {
+    Swal.fire({ icon: "error", title: t("common.error"), text: t("profile.deleteAccountError") });
+  }
+}
+window.handleDeleteAccount = handleDeleteAccount;
 
 /**
  * Toggle push subscription on button click (called from onclick in HTML).
