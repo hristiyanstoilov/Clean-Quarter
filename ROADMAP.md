@@ -429,9 +429,9 @@ The current top navbar treats all destinations with equal visual weight. Recomme
 | PWA service worker registered at wrong path `/public/service-worker.js` (should be `/service-worker.js`) — SW never activates | High | `src/services/pwa.js:17` |
 | Double error dialog on login/register/logout — `auth.js` shows Swal then throws, caller shows Swal again | High | `src/services/auth.js:77,134,156` + `src/main.js` |
 | Double error dialog on photo upload — same pattern in `storage.js` | Medium | `src/services/storage.js:38,57,88` |
-| XSS in Leaflet popups — `campaign.title` and `disposal_point.name` inserted via template literal without `escapeHTML()` | High | `src/services/map.js:100–104,176–179` |
+| ~~XSS in Leaflet popups — `campaign.title` and `disposal_point.name` inserted via template literal without `escapeHTML()`~~ | ~~High~~ | ~~`src/services/map.js:100–104,176–179`~~ | ✅ Resolved — `escapeHTML()` applied on all interpolated fields |
 | Neighbourhood string mismatch — `"Vitosha (VEC)"` vs `"Kv. Vitosha (VEC)"` across files — leaderboard lookup silently fails | Medium | `dashboard.js:115` vs `campaign-filters.js:9` |
-| `notifications.js` XSS — legacy DB notification messages (containing usernames) inserted as raw innerHTML | Medium | `src/services/notifications.js:155` |
+| ~~`notifications.js` XSS — legacy DB notification messages (containing usernames) inserted as raw innerHTML~~ | ~~Medium~~ | ~~`src/services/notifications.js:155`~~ | ✅ Resolved — `escapeHTML(msg)` applied |
 
 **Quick wins (< 1 hour each)**
 
@@ -614,10 +614,10 @@ Five deep-dive audits conducted simultaneously: Security Engineer, End User Jour
 
 | Finding | Severity | Location | Attack Scenario |
 |---------|----------|----------|-----------------|
-| Campaign delete has no `created_by` check in query — relies solely on RLS | CRITICAL | `campaign-detail.js:733` | User crafts delete request for any campaign ID via DevTools |
-| Campaign edit missing `.eq("created_by", currentUser.id)` in update query | HIGH | `campaign-detail.js:917–931` | User modifies any campaign's title/status/dates |
-| `admin.js` trusts `localStorage.user.role` for admin access check | HIGH | `admin.js:100–116` | Open DevTools → set `localStorage.user = '{"role":"admin"}'` → full admin panel access |
-| Participation approval/rejection exposed as global window functions | HIGH | `admin.js:~788` | Non-admin calls `window.approveParticipation(id)` directly from console |
+| ~~Campaign delete has no `created_by` check in query — relies solely on RLS~~ | ~~CRITICAL~~ | ~~`campaign-detail.js:733`~~ | ✅ Resolved — `.eq("created_by", currentUser.id)` + `count === 0` guard added |
+| ~~Campaign edit missing `.eq("created_by", currentUser.id)` in update query~~ | ~~HIGH~~ | ~~`campaign-detail.js:917–931`~~ | ✅ Resolved — `.eq("created_by", currentUser.id)` + `PGRST116` guard added |
+| ~~`admin.js` trusts `localStorage.user.role` for admin access check~~ | ~~HIGH~~ | ~~`admin.js:100–116`~~ | ✅ Resolved — `checkAuth()` now throws on access denied (prevents `loadAdminData()` execution); only `demo-*` prefixed IDs use localStorage, real users verified via Supabase |
+| ~~Participation approval/rejection exposed as global window functions~~ | ~~HIGH~~ | ~~`admin.js:~788`~~ | ✅ Resolved — `window.handleApprove`, `window.handleReject`, `window.showPhotoModal`, `window.handleResolveReport` removed; event delegation used throughout |
 | Demo mode always creates user with `role: "admin"` | MEDIUM | `demoMode.js:77–87` | Demo admin executes real admin functions if auth checks are client-only |
 | CSP includes `'unsafe-inline'` for both script-src and style-src | MEDIUM | `netlify.toml:82` | Any DOM XSS can inject inline scripts; CSP provides no protection |
 | No SRI hashes on CDN scripts (SweetAlert2, Bootstrap, Leaflet) | LOW | All HTML pages | CDN compromise injects malicious code into all users |
@@ -760,8 +760,8 @@ Six complete journeys walked: Registration, Campaign Discovery, Proof Upload, Re
 | 🔴 P0 | RLS `participations` USING(true) — privacy violation | DB | Small (SQL) |
 | 🔴 P0 | `get_public_stats()` always returns 0 points | DB | Tiny (1 word fix) |
 | 🔴 P0 | No external error reporting — blind in production | DevOps | Medium |
-| 🔴 P0 | Campaign delete/edit missing creator check in query | Security | Small |
-| 🔴 P0 | `localStorage` admin role trust in `admin.js` | Security | Medium |
+| ~~🔴 P0~~ | ~~Campaign delete/edit missing creator check in query~~ | ~~Security~~ | ✅ Resolved |
+| ~~🔴 P0~~ | ~~`localStorage` admin role trust in `admin.js`~~ | ~~Security~~ | ✅ Resolved |
 | 🟠 P1 | SweetAlert2 render-blocking in `<head>` | Perf | Tiny |
 | 🟠 P1 | Dashboard leaderboard not parallelized | Perf | Small |
 | 🟠 P1 | Admin panel unbounded participations query | DB | Small |
@@ -819,7 +819,7 @@ Active bugs confirmed by code review. Not yet scheduled for a sprint.
 | **`profile.js` `renderParticipations()` hardcodes `"bg-BG"` locale** | Medium | `src/scripts/profile.js:474` | `toLocaleDateString("bg-BG", ...)` — locale is hardcoded regardless of current language. EN users see Bulgarian-formatted dates (e.g. `"15 яну 2026"` instead of `"Jan 15, 2026"`). Should use `lang === "bg" ? "bg-BG" : "en-US"`. |
 | **`profile.js` saving Swal and success toast hardcoded BG** | Low | `src/scripts/profile.js:598–605, 665` | `handleSaveProfile()` loading Swal: `"Запазване..."/"Моля изчакайте"` hardcoded BG. `showSuccessToast("Профилът е обновен успешно!")` hardcoded BG. Should use `t("profile.saving")` / `t("profile.savedSuccess")`. |
 | **`rewards.js` post-purchase success toast hardcoded EN** | Medium | `src/scripts/rewards.js:333` | `showSuccessToast(\`${rewardTitle} purchased! Balance: ${newPointsBalance} ⭐\`)` — hardcoded English. BG users see English confirmation. Should use `t("rewards.purchaseSuccess")` with `{{title}}` and `{{balance}}` interpolation. |
-| **`map.js` XSS via unescaped content in Leaflet popup HTML** | High | `src/services/map.js:100–104, 176–179` | `loadCampaignMarkers()` builds popup HTML with `${campaign.title}` and `${campaign.status}` directly interpolated — no `escapeHTML()`. `loadDisposalPointMarkers()` does the same with `${point.name}` and `${point.description}`. Campaign titles are user-created input. A title containing `<img onerror="...">` would execute in the Leaflet popup. **XSS vector.** |
+| ~~**`map.js` XSS via unescaped content in Leaflet popup HTML**~~ | ~~High~~ | ~~`src/services/map.js:100–104, 176–179`~~ | ✅ Resolved — `escapeHTML()` applied on `title`, `status`, `name`, `description`, `id` in both `loadCampaignMarkers()` and `loadDisposalPointMarkers()` |
 | **`notifications.js` potential XSS in `renderNotifications()`** | Medium | `src/services/notifications.js:155` | `<p class="notification-msg">${msg}</p>` — `msg` is either an i18n string (safe) or a legacy plain-text DB message returned verbatim. DB triggers that wrote messages pre-pipeline included usernames directly: `'Участието ти беше одобрено от ' \|\| username`. If a username contains HTML, it renders unescaped. `msg` should be wrapped in `escapeHTML()` before innerHTML insertion. |
 | **`auth.js` + `main.js` double error dialog on login/register/logout** | High | `src/services/auth.js:77,134,156` + `src/main.js:123–129,180–185` | `auth.js` calls `showError(...)` then `throw error`. The callers in `main.js` catch the re-thrown error and call `Swal.fire()` again. Result: **two sequential error popups** on every login failure, registration failure, and logout error. The `auth.js` service layer must not call Swal — it should throw and let the caller handle the UI. Same root cause as `storage.js` double dialog below. |
 | **`storage.js` double error dialog on photo upload** | Medium | `src/services/storage.js:38,57,88` | `uploadCampaignPhoto()` and `uploadAvatar()` call `handleError()` (which shows a Swal) then `throw error`. `campaign-detail.js` and `profile.js` callers catch the re-thrown error and show a second Swal. Two error popups on every failed upload. Service layer must not show UI — throw only. |
