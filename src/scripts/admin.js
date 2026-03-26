@@ -1,6 +1,13 @@
 import supabase from "../services/supabase.js";
+import { logout } from "../services/auth.js";
 import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
-import { escapeHTML, showSuccessToast, showInfoToast, initSwalFallback } from "../utils/helpers.js";
+import {
+  escapeHTML,
+  showSuccessToast,
+  showInfoToast,
+  initSwalFallback,
+  removeUser,
+} from "../utils/helpers.js";
 import { exportUsersCsv, exportParticipationsCsv } from "../services/csvExport.js";
 import { initNetworkStatusBanner } from "../utils/networkStatus.js";
 import { initBottomNav } from "../hooks/index.js";
@@ -98,7 +105,9 @@ document.addEventListener("DOMContentLoaded", async () => {
  * Check if user is authenticated and has admin role
  */
 async function checkAuth() {
-  // Handle demo mode users only — real users must be verified via Supabase
+  // Handle demo mode users only — real users must be verified via Supabase.
+  // Throws on access denied so the caller (DOMContentLoaded) stops immediately
+  // and loadAdminData() is never reached for non-admins.
   const localUser = localStorage.getItem("user");
   if (localUser) {
     try {
@@ -108,12 +117,15 @@ async function checkAuth() {
         if (currentUser.role === "admin") {
           return; // Demo admin, allow access
         }
-        document.getElementById("loadingState").style.display = "none";
-        document.getElementById("accessDenied").style.display = "block";
-        return;
+        const loadingEl = document.getElementById("loadingState");
+        const accessDeniedEl = document.getElementById("accessDenied");
+        if (loadingEl) loadingEl.style.display = "none";
+        if (accessDeniedEl) accessDeniedEl.style.display = "block";
+        throw new Error("Access denied");
       }
-    } catch {
-      // silently ignore
+    } catch (e) {
+      if (e.message === "Access denied") throw e;
+      // silently ignore JSON parse errors
     }
   }
 
@@ -125,7 +137,7 @@ async function checkAuth() {
 
   if (error || !user) {
     window.location.href = "/";
-    return;
+    throw new Error("Not authenticated");
   }
 
   currentUser = user;
@@ -138,10 +150,11 @@ async function checkAuth() {
     .single();
 
   if (profileError || !profile || profile.role !== "admin") {
-    // User is not an admin, show access denied
-    document.getElementById("loadingState").style.display = "none";
-    document.getElementById("accessDenied").style.display = "block";
-    return;
+    const loadingEl = document.getElementById("loadingState");
+    const accessDeniedEl = document.getElementById("accessDenied");
+    if (loadingEl) loadingEl.style.display = "none";
+    if (accessDeniedEl) accessDeniedEl.style.display = "block";
+    throw new Error("Access denied");
   }
 }
 
@@ -1040,16 +1053,27 @@ async function handleReject(participationId, _username) {
       await showInfoToast(t("admin.rejectedTitle"));
     } else {
       // REAL MODE: Use Supabase
-      const { error: updateError } = await supabase
+      // .eq("status", "pending") ensures we never reject an already-approved row —
+      // defence-in-depth alongside the DB trigger trg_prevent_approved_to_rejected.
+      const { data: updated, error: updateError } = await supabase
         .from("participations")
         .update({
           status: "rejected",
           rejection_reason: rejectionReason,
         })
-        .eq("id", participationId);
+        .eq("id", participationId)
+        .eq("status", "pending")
+        .select("id");
 
       if (updateError) {
+        // P0003 = DB trigger fired (direct API bypass of approved→rejected guard)
+        if (updateError.code === "P0003") {
+          throw new Error(t("admin.alreadyProcessed") || "Участието вече е обработено.");
+        }
         throw new Error(`Failed to reject participation: ${updateError.message}`);
+      }
+      if (!updated || updated.length === 0) {
+        throw new Error(t("admin.alreadyProcessed") || "Участието вече е обработено.");
       }
 
       Swal.close();
@@ -1076,6 +1100,8 @@ async function handleReject(participationId, _username) {
       title: t("common.error"),
       text: error.message || t("admin.failedToReject"),
     });
+    // Refresh table so admin sees current state (e.g. after race condition)
+    loadAdminData();
   }
 }
 
@@ -1084,13 +1110,10 @@ async function handleReject(participationId, _username) {
  */
 async function handleLogout() {
   try {
-    const { error } = await supabase.auth.signOut();
-    if (!error) {
-      localStorage.removeItem("user");
-      window.location.href = "/";
-    } else {
-      throw error;
-    }
+    await logout();
+    removeUser();
+    await showSuccessToast(t("auth.logoutSuccessTitle"), 1000);
+    window.location.href = "/";
   } catch {
     // silently ignore
   }
@@ -1148,8 +1171,8 @@ async function loadReports() {
         return `
           <tr>
             <td>${date}</td>
-            <td>${reporter}</td>
-            <td><strong>${reason}</strong></td>
+            <td>${escapeHTML(reporter)}</td>
+            <td><strong>${escapeHTML(reason)}</strong></td>
             <td>${r.description ? escapeHTML(r.description) : "—"}</td>
             <td>
               <button class="btn btn-sm btn-success me-1"
@@ -1226,12 +1249,10 @@ async function handleResolveReport(reportId, newStatus) {
   await loadReports();
 }
 
-// Expose functions to window for dynamically generated innerHTML onclick handlers
-window.handleApprove = handleApprove;
-window.handleReject = handleReject;
-window.showPhotoModal = showPhotoModal;
-window.handleResolveReport = handleResolveReport;
-window.renderPendingTable = renderPendingTable;
+// Expose pagination helpers to window — called via inline onclick in dynamically
+// generated pagination HTML (pendingPrevPage / pendingNextPage).
+// handleApprove, handleReject, showPhotoModal, handleResolveReport are NOT exposed
+// because they use event delegation and no longer need global window access.
 window.pendingPrevPage = function () {
   pendingCurrentPage--;
   renderPendingTable();

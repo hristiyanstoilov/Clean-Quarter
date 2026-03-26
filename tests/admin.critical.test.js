@@ -198,7 +198,11 @@ describe('handleReject()', () => {
   });
 
   it('real mode: updates participations with status rejected and rejection_reason', async () => {
-    const updateFn = vi.fn(() => ({ eq: vi.fn(() => Promise.resolve({ error: null })) }));
+    // Full chain: .update({...}).eq("id",...).eq("status","pending").select("id")
+    const selectFn = vi.fn(() => Promise.resolve({ data: [{ id: 'p-1' }], error: null }));
+    const eq2Fn = vi.fn(() => ({ select: selectFn }));
+    const eq1Fn = vi.fn(() => ({ eq: eq2Fn }));
+    const updateFn = vi.fn(() => ({ eq: eq1Fn }));
     mockFrom.mockImplementationOnce(() => ({ update: updateFn }));
 
     await handleReject('p-1', 'user');
@@ -209,6 +213,9 @@ describe('handleReject()', () => {
         rejection_reason: 'Foto is blurry',
       })
     );
+    expect(eq1Fn).toHaveBeenCalledWith('id', 'p-1');
+    expect(eq2Fn).toHaveBeenCalledWith('status', 'pending');
+    expect(selectFn).toHaveBeenCalledWith('id');
   });
 
   it('demo mode: calls updateDemoParticipation with rejected status and reason', async () => {
@@ -227,15 +234,24 @@ describe('handleReject()', () => {
   });
 
   it('real mode: shows error dialog when DB update fails', async () => {
+    // Chain must match: .update().eq("id",...).eq("status","pending").select("id")
+    const selectFn = vi.fn(() => Promise.resolve({ data: null, error: { message: 'update error' } }));
+    const eq2Fn = vi.fn(() => ({ select: selectFn }));
+    const eq1Fn = vi.fn(() => ({ eq: eq2Fn }));
     mockFrom.mockImplementationOnce(() => ({
-      update: vi.fn(() => ({ eq: vi.fn(() => Promise.resolve({ error: { message: 'update error' } })) })),
+      update: vi.fn(() => ({ eq: eq1Fn })),
     }));
 
     await handleReject('p-1', 'user');
 
-    const lastCall = global.Swal.fire.mock.calls.at(-1)[0];
-    expect(lastCall.icon).toBe('error');
-    expect(lastCall.text).toContain('update error');
+    // Find the specific error Swal from handleReject — not at(-1), because
+    // the non-blocking loadAdminData() call in catch may add its own Swal.fire
+    // after handleReject returns (async microtask interference in tests).
+    const errorCall = global.Swal.fire.mock.calls
+      .map((c) => c[0])
+      .find((c) => c?.icon === 'error' && String(c?.text).includes('update error'));
+    expect(errorCall).toBeDefined();
+    expect(errorCall.text).toContain('update error');
   });
 });
 
@@ -265,23 +281,23 @@ describe('checkAuth()', () => {
     expect(global.window.location.href).toBe('');
   });
 
-  it('demo non-admin user: shows accessDenied element, no redirect', async () => {
+  it('demo non-admin user: shows accessDenied element, no redirect, throws', async () => {
     global.localStorage.setItem('user', JSON.stringify({ id: 'demo-456', role: 'user' }));
     const accessDeniedEl = { style: { display: '' } };
     global.document.getElementById = vi.fn((id) =>
       id === 'accessDenied' ? accessDeniedEl : { style: {}, disabled: false, textContent: '' }
     );
 
-    await checkAuth();
+    await expect(checkAuth()).rejects.toThrow('Access denied');
 
     expect(accessDeniedEl.style.display).toBe('block');
     expect(mockGetUser).not.toHaveBeenCalled();
   });
 
-  it('real user with no session: redirects to "/"', async () => {
+  it('real user with no session: redirects to "/" and throws', async () => {
     mockGetUser.mockResolvedValue({ data: { user: null }, error: null });
 
-    await checkAuth();
+    await expect(checkAuth()).rejects.toThrow('Not authenticated');
 
     expect(global.window.location.href).toBe('/');
   });
