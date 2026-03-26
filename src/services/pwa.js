@@ -22,10 +22,8 @@ export async function initializePWA() {
     }
   }
 
-  // Request notification permission
-  if (isBrowser() && "Notification" in window && Notification.permission === "default") {
-    Notification.requestPermission();
-  }
+  // Push notification permission is requested only via the explicit toggle
+  // in profile.js — never automatically on page load (browsers block it without user gesture)
 
   // Handle install prompt
   let deferredPrompt;

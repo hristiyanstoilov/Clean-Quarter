@@ -1,16 +1,18 @@
 import supabase from "../services/supabase.js";
 import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
-import { escapeHTML, initSwalFallback } from "../utils/helpers.js";
+import { escapeHTML, initSwalFallback, showSuccessToast } from "../utils/helpers.js";
 import { cancelRsvp } from "../services/events.js";
 import { isDemoUser, getDemoCampaigns, getDemoRsvps, removeDemoRsvp } from "../utils/demoMode.js";
 import { initNetworkStatusBanner } from "../utils/networkStatus.js";
 import { initBottomNav } from "../hooks/index.js";
+import { initPage } from "../utils/pageInit.js";
 
 let currentUser = null;
 
 // ─── Init ──────────────────────────────────────────────────────────────────
 
 document.addEventListener("DOMContentLoaded", async () => {
+  initPage();
   initNetworkStatusBanner();
   initBottomNav();
   initSwalFallback();
@@ -48,6 +50,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const { removeUser } = await import("../utils/helpers.js");
       await logout();
       removeUser();
+      await showSuccessToast(t("auth.logoutSuccessTitle"), 1000);
       window.location.href = "/";
     });
 
