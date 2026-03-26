@@ -10,7 +10,9 @@ import {
   showInfoToast,
   initSwalFallback,
   formatScheduledDate,
+  removeUser,
 } from "../utils/helpers.js";
+import { logout } from "../services/auth.js";
 import {
   isDemoUser,
   getDemoCampaignById,
@@ -508,9 +510,16 @@ function showParticipationUI() {
 async function handleJoin() {
   const joinBtn = document.getElementById("joinBtn");
 
-  // Capacity check — block join if campaign is full
-  if (campaign?.max_participants) {
-    const taken = campaign.participation_count || 0;
+  // Capacity check — re-fetch fresh count to avoid stale page-load data.
+  // Skip for demo users: they have no real Supabase session and demo campaigns
+  // don't enforce capacity via the DB trigger anyway.
+  if (campaign?.max_participants && !isDemoUser(currentUser)) {
+    const { data: freshCampaign } = await supabase
+      .from("campaigns")
+      .select("participation_count")
+      .eq("id", getCampaignIdFromUrl())
+      .single();
+    const taken = freshCampaign?.participation_count ?? campaign.participation_count ?? 0;
     if (taken >= campaign.max_participants) {
       await Swal.fire({
         icon: "warning",
@@ -815,10 +824,13 @@ function cleanupRealtimeChannel() {
  */
 async function handleLogout() {
   cleanupRealtimeChannel();
-  const { error } = await supabase.auth.signOut();
-  if (!error) {
-    localStorage.removeItem("user");
+  try {
+    await logout();
+    removeUser();
+    await showSuccessToast(t("auth.logoutSuccessTitle"), 1000);
     window.location.href = "/";
+  } catch {
+    // silently ignore
   }
 }
 

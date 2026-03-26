@@ -1,6 +1,5 @@
 import supabase from "./supabase.js";
 import logger from "./logger.js";
-import { showSuccess } from "../utils/helpers.js";
 import { rules } from "./validation.js";
 import { t } from "../utils/i18n.js";
 
@@ -66,7 +65,6 @@ export async function register(email, password, options = {}) {
 
     logger.info("✅ Profile created successfully");
 
-    await showSuccess(t("auth.registerSuccessTitle"), t("auth.registerSuccessText"), 1500);
     return authData.user;
   } catch (error) {
     logger.error("❌ Register error:", error);
@@ -114,11 +112,6 @@ export async function login(email, password) {
       throw error;
     }
 
-    await showSuccess(
-      t("auth.loginSuccessTitle"),
-      t("auth.loginSuccessText").replace("{{email}}", email),
-      1500
-    );
     return data.user;
   } catch (error) {
     throw error;
@@ -132,11 +125,10 @@ export async function login(email, password) {
 export async function logout() {
   try {
     const { error } = await supabase.auth.signOut();
-
     if (error) throw error;
-
-    await showSuccess(t("auth.logoutSuccessTitle"), t("auth.logoutSuccessText"), 1500);
+    logger.info("✅ Logout successful");
   } catch (error) {
+    logger.error("❌ Logout error:", error);
     throw error;
   }
 }

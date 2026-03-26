@@ -13,6 +13,7 @@ import {
   isEmpty,
   escapeHTML,
   formatScheduledDate,
+  showSuccessToast,
 } from "../utils/helpers.js";
 import { isDemoUser, getDemoCampaigns, getDemoRsvps } from "../utils/demoMode.js";
 import { getRsvpCountsForCampaigns } from "../services/events.js";
@@ -179,6 +180,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       try {
         await logout();
         removeUser();
+        await showSuccessToast(t("auth.logoutSuccessTitle"), 1000);
         window.location.href = "/";
       } catch (error) {
         await handleError("logout", error, "Failed to logout. Please try again.");
@@ -306,7 +308,7 @@ function buildCampaignCard(campaign, rsvpCount = 0, currentLang = "bg") {
 
   return `
     <div class="campaign-card-wrapper">
-      <div class="card campaign-card">
+      <div class="card campaign-card" tabindex="0" role="link" aria-label="${escapeHTML(title)}" data-href="/campaign/${campaign.id}">
         ${
           campaign.before_photo_url
             ? `<img src="${campaign.before_photo_url}" class="card-img-top js-campaign-img" loading="lazy" alt="${escapeHTML(title)}">`
@@ -341,6 +343,24 @@ function wireImageFallbacks(container) {
       },
       { once: true }
     );
+  });
+}
+
+function wireCampaignCardNavigation(container) {
+  container.querySelectorAll(".campaign-card[data-href]:not([data-wired])").forEach((card) => {
+    card.dataset.wired = "true";
+    const href = card.dataset.href;
+    card.addEventListener("click", (e) => {
+      // Don't double-navigate if the click was on the <a> button inside
+      if (e.target.closest("a")) return;
+      window.location.href = href;
+    });
+    card.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        window.location.href = href;
+      }
+    });
   });
 }
 
@@ -506,6 +526,7 @@ async function loadCampaignsPage(append = false) {
       campaignsContainer.innerHTML = html;
     }
     wireImageFallbacks(campaignsContainer);
+    wireCampaignCardNavigation(campaignsContainer);
 
     updateLoadMoreUI();
   } catch (error) {

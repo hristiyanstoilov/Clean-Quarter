@@ -65,7 +65,7 @@ window.handleDemoLogin = handleDemoLogin;
 import "./assets/style.css";
 import { login, register } from "./services/auth.js";
 import { rules } from "./services/validation.js";
-import { saveUser } from "./utils/helpers.js";
+import { saveUser, showSuccessToast } from "./utils/helpers.js";
 import supabase from "./services/supabase.js";
 import { initPasswordStrengthMeter } from "./components/passwordStrength.js";
 import passwordToggle from "./components/passwordToggle.js";
@@ -197,6 +197,7 @@ async function handleLogin(e) {
       username: profile?.username,
       neighborhood: profile?.neighborhood,
     });
+    await showSuccessToast(t("auth.loginSuccessTitle"), 1000);
     window.location.href = "/dashboard";
   } catch (error) {
     if (error.isRateLimit) {
@@ -259,7 +260,7 @@ async function handleRegister(e) {
       username: profile?.username,
       neighborhood: profile?.neighborhood,
     });
-
+    await showSuccessToast(t("auth.registerSuccessTitle"), 1000);
     window.location.href = "/dashboard";
   } catch (error) {
     await Swal.fire({

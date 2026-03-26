@@ -1,6 +1,7 @@
 import supabase from "../services/supabase.js";
 import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
-import { escapeHTML, showSuccessToast, initSwalFallback } from "../utils/helpers.js";
+import { escapeHTML, showSuccessToast, initSwalFallback, removeUser } from "../utils/helpers.js";
+import { logout } from "../services/auth.js";
 import {
   isDemoUser,
   getDemoRewards,
@@ -376,10 +377,13 @@ async function handleBuy(rewardId, rewardTitle, rewardCost) {
  * Handle logout
  */
 async function handleLogout() {
-  const { error } = await supabase.auth.signOut();
-  if (!error) {
-    localStorage.removeItem("user");
+  try {
+    await logout();
+    removeUser();
+    await showSuccessToast(t("auth.logoutSuccessTitle"), 1000);
     window.location.href = "/";
+  } catch {
+    // silently ignore
   }
 }
 
