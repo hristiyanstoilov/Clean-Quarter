@@ -126,6 +126,13 @@ export async function unsubscribeFromPush(userId) {
  */
 export async function sendPushToUser({ userId, title, body, url = "/dashboard" }) {
   try {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("notifications_enabled")
+      .eq("id", userId)
+      .single();
+    if (profile?.notifications_enabled === false) return;
+
     const { error } = await supabase.functions.invoke("send-push-notification", {
       body: { user_id: userId, title, body, url },
     });

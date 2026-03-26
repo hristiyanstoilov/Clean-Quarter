@@ -34,6 +34,19 @@ Deno.serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
+    // Respect the user's notification preference
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("notifications_enabled")
+      .eq("id", user_id)
+      .single();
+    if (profile?.notifications_enabled === false) {
+      return new Response(JSON.stringify({ sent: 0, skipped: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     const { data: subscriptions, error } = await supabaseAdmin
       .from("push_subscriptions")
       .select("endpoint, p256dh, auth")
