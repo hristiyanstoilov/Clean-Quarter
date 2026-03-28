@@ -72,6 +72,22 @@ export function subscribeToNotifications(userId, callback) {
 
 // ─── Message resolver ─────────────────────────────────────────────────────────
 
+// Human-readable fallbacks used when i18n hasn't loaded yet.
+// Keyed by the i18n key stored in the notification's JSON message.
+const NOTIFICATION_FALLBACK = {
+  "notification.participationApproved": (d) =>
+    `Участието ти беше одобрено! Спечели ${d.points ?? ""} точки.`,
+  "notification.participationRejected": (d) =>
+    `Участието ти беше отхвърлено. Причина: ${d.reason ?? ""}`,
+  "notification.campaignJoin": (d) =>
+    `${d.username ?? ""} се присъедини към твоята кампания "${d.title ?? ""}".`,
+  "notification.campaignCompleted": (d) => `Кампанията "${d.title ?? ""}" приключи!`,
+  "notification.pointsEarned": (d) => `Спечели ${d.points ?? ""} точки!`,
+  "notification.newComment": (d) =>
+    `${d.username ?? ""} коментира твоята кампания "${d.title ?? ""}".`,
+  "notification.reportResolved": () => "Твоят сигнал беше прегледан и решен.",
+};
+
 /**
  * Resolve a notification message for display.
  * New messages are stored as JSON {"key":"notification.X","param1":"..."}
@@ -103,11 +119,15 @@ function resolveMessage(message) {
   // Step 2: translate — isolated catch so a translation failure never returns raw JSON
   try {
     const translated = i18nT(data.key, data);
-    // If i18n returned the key itself (not found / not loaded), fall back to key string
-    return translated !== data.key ? translated : data.key;
+    if (translated !== data.key) return translated;
   } catch {
-    return data.key; // worst case: show the key, not the raw JSON blob
+    // fall through to hardcoded fallback below
   }
+
+  // Step 3: i18n not loaded or key missing — use hardcoded BG fallback
+  const fallback = NOTIFICATION_FALLBACK[data.key];
+  if (fallback) return fallback(data);
+  return data.key; // last resort: show the key, not raw JSON
 }
 
 // ─── Icon helpers ─────────────────────────────────────────────────────────────

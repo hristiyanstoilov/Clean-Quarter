@@ -2,6 +2,7 @@ import { initializeMap, loadMapData } from "../services/map.js";
 import logger from "../services/logger.js";
 import { logout } from "../services/auth.js";
 import { initI18n, applyLanguage, setLanguage, t } from "../utils/i18n.js";
+import { localizeNeighborhood } from "../utils/neighborhoods.js";
 import supabase from "../services/supabase.js";
 import { fetchWeather } from "../services/weather.js";
 import {
@@ -198,34 +199,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-// Maps DB neighborhood keys → i18n keys for localized display
-const NEIGHBORHOOD_I18N = {
-  Darvenitsa: "darvenitsa",
-  "Studentski Grad": "studentskiGrad",
-  "Vitosha (VEC)": "vitoshaVec",
-  "Malinova Dolina": "malinovaDolina",
-  Musagenitsa: "musagenitsa",
-};
-
-/**
- * Translate a raw DB neighborhood value to the current language label.
- */
-function localizeNeighborhood(raw, lang) {
-  if (!raw) return "";
-  // Already a JSON object with bg/en keys
-  if (typeof raw === "object") return raw[lang] || raw.bg || raw.en || raw;
-  // Try JSON parse
-  try {
-    const parsed = JSON.parse(raw);
-    if (typeof parsed === "object") return parsed[lang] || parsed.bg || parsed.en || raw;
-  } catch {
-    /* plain string */
-  }
-  // Plain string key — look up i18n
-  const i18nKey = NEIGHBORHOOD_I18N[raw];
-  if (i18nKey) return t(`neighborhoods.${i18nKey}`) || raw;
-  return raw;
-}
+// localizeNeighborhood is imported from src/utils/neighborhoods.js
 
 /**
  * Build a human-readable countdown label for a campaign's scheduled start.
@@ -644,8 +618,7 @@ async function loadLeaderboard(currentUser) {
 
     const cards = rows.slice(0, 5).map((row, i) => {
       const medal = MEDAL[i] || `${i + 1}.`;
-      const i18nKey = NEIGHBORHOOD_I18N[row.neighborhood];
-      const name = i18nKey ? t(`neighborhoods.${i18nKey}`) || row.neighborhood : row.neighborhood;
+      const name = localizeNeighborhood(row.neighborhood);
       const isYours = row.neighborhood === userNeighborhood;
       const maxPoints = rows[0].total_points || 1;
       const pct = Math.round((row.total_points / maxPoints) * 100);
