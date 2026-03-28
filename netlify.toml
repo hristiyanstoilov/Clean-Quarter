@@ -53,6 +53,16 @@
   status = 200
 
 [[redirects]]
+  from = "/notifications"
+  to = "/src/pages/notifications.html"
+  status = 200
+
+[[redirects]]
+  from = "/terms"
+  to = "/src/pages/terms.html"
+  status = 200
+
+[[redirects]]
   from = "/forgot-password"
   to = "/src/pages/forgot-password.html"
   status = 200

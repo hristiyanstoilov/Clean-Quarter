@@ -1,4 +1,6 @@
 // Handle demo login - for Demo Mode button
+// Note: t() and other i18n imports are hoisted at module level (lines below),
+// but handleDemoLogin is only called at runtime so t() is available.
 let initDemoMode, getDemoUser;
 async function handleDemoLogin(e) {
   if (e) e.preventDefault();
@@ -8,13 +10,6 @@ async function handleDemoLogin(e) {
       initDemoMode = demoMode.initDemoMode;
       getDemoUser = demoMode.getDemoUser;
     }
-    // Get current language before login
-    let lang = "bg";
-    try {
-      lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
-    } catch {}
-    // Set language in localStorage for dashboard and all pages
-    localStorage.setItem("CLEAN_QUARTER_LANGUAGE", lang);
     initDemoMode();
     const demoUser = getDemoUser();
     if (demoUser && demoUser.id) {
@@ -24,38 +19,27 @@ async function handleDemoLogin(e) {
           toast: true,
           position: "top-end",
           icon: "success",
-          title:
-            lang === "en"
-              ? `🎮 Demo Mode Active — Welcome ${demoUser.username}!`
-              : `🎮 Демо режим — Добре дошъл, ${demoUser.username}!`,
+          title: t("auth.demoModeActive", { username: demoUser.username }),
           showConfirmButton: false,
           timer: 2000,
           timerProgressBar: true,
         });
       } else {
-        alert(
-          lang === "en"
-            ? `🎮 Welcome to Demo Mode, ${demoUser.username}!`
-            : `🎮 Добре дошъл в демо режим, ${demoUser.username}!`
-        );
+        alert(t("auth.demoModeWelcome", { username: demoUser.username }));
       }
       window.location.href = "/dashboard";
     } else {
-      throw new Error(lang === "en" ? "Demo user not found" : "Демо потребителят не е намерен");
+      throw new Error(t("auth.demoUserNotFound"));
     }
   } catch (error) {
-    let lang = "bg";
-    try {
-      lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
-    } catch {}
     if (typeof Swal !== "undefined") {
       await Swal.fire({
         icon: "error",
-        title: lang === "en" ? "Error" : "Грешка",
+        title: t("common.error"),
         text: error.message,
       });
     } else {
-      alert((lang === "en" ? "Error: " : "Грешка: ") + error.message);
+      alert(t("common.error") + ": " + error.message);
     }
   }
 }

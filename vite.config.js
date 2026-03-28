@@ -29,6 +29,11 @@ const devRewrites = {
         '/admin': '/src/pages/admin.html',
         '/privacy': '/src/pages/privacy.html',
         '/events': '/src/pages/events.html',
+        '/stats': '/src/pages/stats.html',
+        '/notifications': '/src/pages/notifications.html',
+        '/terms': '/src/pages/terms.html',
+        '/forgot-password': '/src/pages/forgot-password.html',
+        '/reset-password': '/src/pages/reset-password.html',
       };
       const base = req.url.split('?')[0];
       if (map[base]) {
@@ -72,6 +77,11 @@ export default defineConfig({
         rewards:        resolve(__dirname, 'src/pages/rewards.html'),
         privacy:        resolve(__dirname, 'src/pages/privacy.html'),
         events:         resolve(__dirname, 'src/pages/events.html'),
+        stats:          resolve(__dirname, 'src/pages/stats.html'),
+        notifications:  resolve(__dirname, 'src/pages/notifications.html'),
+        terms:          resolve(__dirname, 'src/pages/terms.html'),
+        forgotPassword: resolve(__dirname, 'src/pages/forgot-password.html'),
+        resetPassword:  resolve(__dirname, 'src/pages/reset-password.html'),
       },
       output: {
         manualChunks(id) {
