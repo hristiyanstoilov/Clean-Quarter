@@ -6,78 +6,8 @@
 # VITE_SUPABASE_URL = your_supabase_project_url
 # VITE_SUPABASE_ANON_KEY = your_supabase_anon_key
 
-# Clean URL redirects — specific routes must come before the catch-all
-[[redirects]]
-  from = "/dashboard"
-  to = "/src/pages/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/campaign/:id"
-  to = "/src/pages/campaign-detail.html"
-  status = 200
-
-[[redirects]]
-  from = "/create-campaign"
-  to = "/src/pages/create-campaign.html"
-  status = 200
-
-[[redirects]]
-  from = "/profile"
-  to = "/src/pages/profile.html"
-  status = 200
-
-[[redirects]]
-  from = "/rewards"
-  to = "/src/pages/rewards.html"
-  status = 200
-
-[[redirects]]
-  from = "/admin"
-  to = "/src/pages/admin.html"
-  status = 200
-
-[[redirects]]
-  from = "/events"
-  to = "/src/pages/events.html"
-  status = 200
-
-[[redirects]]
-  from = "/privacy"
-  to = "/src/pages/privacy.html"
-  status = 200
-
-[[redirects]]
-  from = "/stats"
-  to = "/src/pages/stats.html"
-  status = 200
-
-[[redirects]]
-  from = "/notifications"
-  to = "/src/pages/notifications.html"
-  status = 200
-
-[[redirects]]
-  from = "/terms"
-  to = "/src/pages/terms.html"
-  status = 200
-
-[[redirects]]
-  from = "/forgot-password"
-  to = "/src/pages/forgot-password.html"
-  status = 200
-
-[[redirects]]
-  from = "/reset-password"
-  to = "/src/pages/reset-password.html"
-  status = 200
-
-# Catch-all — serves login page for unknown routes
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-  force = false
+# Redirects are defined in public/_redirects (copied to dist/_redirects during build).
+# Netlify processes _redirects first, so all routes are handled there.
 
 # Security headers
 [[headers]]

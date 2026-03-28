@@ -29,6 +29,13 @@ describe("Netlify _redirects — route coverage", () => {
     "/profile",
     "/rewards",
     "/admin",
+    "/events",
+    "/stats",
+    "/notifications",
+    "/terms",
+    "/privacy",
+    "/forgot-password",
+    "/reset-password",
   ];
 
   requiredRoutes.forEach((route) => {
