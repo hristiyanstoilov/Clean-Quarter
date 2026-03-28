@@ -19,8 +19,11 @@ let translationsLoaded = false; // Guard against redundant fetches
  * Pass force=true to reload regardless.
  */
 export async function initI18n(realTime = true, force = false) {
+  if (translationsLoaded && !force) {
+    enableRealTimeSwitch = realTime; // update flag even when skipping fetch
+    return;
+  }
   enableRealTimeSwitch = realTime;
-  if (translationsLoaded && !force) return; // already loaded — skip re-fetch
   try {
     // Load both translation files in parallel
     const [bgData, enData] = await Promise.all([

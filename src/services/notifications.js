@@ -80,14 +80,25 @@ export function subscribeToNotifications(userId, callback) {
  * @returns {string}
  */
 function resolveMessage(message) {
-  // Step 1: try to parse as structured JSON {key, ...params}
+  if (message === null || message === undefined) return "";
+
+  // Supabase JSONB columns may arrive as parsed JS objects (not strings).
+  // Handle that path directly before attempting JSON.parse.
   let data;
-  try {
-    data = JSON.parse(message);
-  } catch {
-    return message; // plain-text legacy message — return as-is
+  if (typeof message === "object") {
+    data = message;
+  } else if (typeof message === "string") {
+    // Step 1: try to parse as structured JSON {key, ...params}
+    try {
+      data = JSON.parse(message);
+    } catch {
+      return message; // plain-text legacy message — return as-is
+    }
+  } else {
+    return String(message);
   }
-  if (!data?.key) return message;
+
+  if (!data?.key) return typeof message === "string" ? message : "";
 
   // Step 2: translate — isolated catch so a translation failure never returns raw JSON
   try {
