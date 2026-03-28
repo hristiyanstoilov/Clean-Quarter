@@ -1,6 +1,6 @@
 # Clean Quarter — Roadmap & Engineering Backlog
 
-**Last updated:** 2026-03-25 | **Version:** 1.2-dev | **Live:** https://cleanquarter.netlify.app
+**Last updated:** 2026-03-28 | **Version:** 1.3-dev | **Live:** https://cleanquarter.netlify.app
 
 ---
 
@@ -150,6 +150,73 @@ Closed the gap between DB capabilities and UI exposure; mobile UX hardening.
 | Dashboard search (server-side `.ilike`, debounced 300ms) + neighborhood filter | Mar 23 |
 | `campaign-filters.js` — added `category` filter + null-safe title search | Mar 23–24 |
 | `initBottomNav()` active state fix for `/campaign/:id` detail pages | Mar 24 |
+
+---
+
+### March 2026 (Week 6) — Security, GDPR & Code Quality Sprint
+
+5-round senior engineering review cycle. Each round: multi-role review (Engineering / QA / BA / UX / DevOps) → fix plan → implementation.
+
+**Security & Rate Limiting**
+
+| Feature | Shipped |
+|---------|---------|
+| Campaign creation rate limit — max 5 per 24h (DB-level RPC, not bypassable) | Mar 26 |
+| `check_campaign_rate_limit` + `record_campaign_creation` RPCs | Mar 26 |
+| First-time creator moderation queue — `pending_review` status for new users | Mar 27 |
+| First-time creator count fixed: only `["active", "completed"]` campaigns count (not pending_review) | Mar 28 |
+| Campaign insert error no longer leaks raw DB message to users | Mar 28 |
+
+**GDPR Compliance**
+
+| Feature | Shipped |
+|---------|---------|
+| GDPR Article 17 — right to erasure (`gdpr_delete_user` RPC, cascades all user data) | Mar 26 |
+| GDPR Article 20 — data portability (JSON export of all user data, profile page) | Mar 26 |
+| Admin audit log — immutable table tracking all admin actions with IP/user-agent | Mar 27 |
+
+**Data Governance**
+
+| Feature | Shipped |
+|---------|---------|
+| Automated data retention policy (`run_data_retention()` PL/pgSQL, pg_cron-ready) | Mar 27 |
+| Notifications: 90-day retention, batch-delete 1000/iteration | Mar 27 |
+| Admin audit log: 180-day retention | Mar 27 |
+| Login attempts: 30-day retention | Mar 27 |
+| Completed campaigns: archived after 365 days | Mar 27 |
+
+**Campaign Features**
+
+| Feature | Shipped |
+|---------|---------|
+| Configurable participation points per campaign (10 / 20 / 30 / 50 ⭐) | Mar 27 |
+| `points_value` column on campaigns table | Mar 27 |
+| `approve_participation` RPC updated to use campaign's `points_value` | Mar 27 |
+
+**Code Quality & UX**
+
+| Fix | Shipped |
+|-----|---------|
+| `btoa()` crash on Cyrillic SVG → `encodeURIComponent()` | Mar 27 |
+| `uploadCampaignPhoto` now returns `{url, path}` for orphan cleanup | Mar 27 |
+| Orphaned photo cleanup on campaign insert failure | Mar 27 |
+| `updateVisualChecklist` fully i18n — removed all hardcoded BG/EN ternaries | Mar 27 |
+| Checklist hidden on page load — only shown after first user interaction | Mar 28 |
+| `uploadStatus` text shown inside button during photo upload | Mar 28 |
+| `pending_review` Swal reframed as success (`icon: "success"`, positive title) | Mar 28 |
+| Map popup and map load error text now use `t()` keys | Mar 28 |
+| `uploadAvatar` extension extraction bug fixed (files without `.` returned wrong extension) | Mar 28 |
+| Storage error dev-prefix `[uploadCampaignPhoto]` stripped before user-visible Swal | Mar 28 |
+| `handleLogout` silent catch → logs + shows error Swal | Mar 28 |
+| `record_campaign_creation` empty `.catch(() => {})` → `console.warn` | Mar 28 |
+| `minlength="5"` on title, `minlength="20"` on description (HTML + JS validation) | Mar 28 |
+| `autoTranslateHint` text corrected — was misleading ("auto-generate English") | Mar 28 |
+| `initMap()` catch — added `console.error` | Mar 28 |
+| `checkAuth()` JSON parse catch — added `console.warn` | Mar 28 |
+| Campaign insert returned no data — now uses i18n error key instead of raw English string | Mar 28 |
+| `previousCampaigns` DB error now checked and throws | Mar 28 |
+| Rate limit early return — removed redundant manual cleanup (finally handles it) | Mar 28 |
+| `.env` and `.env.local` header lines fixed (were missing `#` comment prefix, broke Supabase CLI) | Mar 28 |
 
 ---
 

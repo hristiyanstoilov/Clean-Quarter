@@ -1,6 +1,6 @@
 # CLEAN QUARTER — Enterprise Product Documentation
 
-**Version:** 1.0 | **Date:** March 2026 | **Classification:** Internal
+**Version:** 1.3 | **Date:** March 2026 | **Classification:** Internal
 
 ---
 
@@ -259,18 +259,31 @@ superadmin → admin + cannot be demoted (DB-enforced flag)
 
 ```
 1. Authenticated user → /create-campaign
-2. Fill title (3–100 chars), description (10–1000 chars)
+2. Fill title (min 5, max 100 chars), description (min 20, max 1000 chars)
 3. Select neighborhood from dropdown
-4. Click map to pin exact location → lat/lng captured
-5. Upload before photo (JPEG/PNG/WebP, max 5MB) → stored in Supabase Storage
-6. Submit → campaigns row created (status=active)
-7. Redirect to Dashboard → new marker visible on map
+4. Select category (park / street / water / other) — optional
+5. Set scheduled date + start time (required), end time (optional)
+6. Set max participants (optional, server-enforced capacity)
+7. Select participation points: 10 / 20 / 30 / 50 ⭐ (default 20)
+8. Click map to pin exact location → lat/lng captured (must be within Sofia bounds)
+9. Upload before photo (JPEG/PNG/WebP, max 5MB, compressed client-side before upload)
+10. Submit:
+    - Rate limit check: max 5 campaigns per 24h (DB RPC)
+    - First-time creator: status = 'pending_review' (moderation queue)
+    - Returning creator (≥1 active/completed campaign): status = 'active'
+    - Creator auto-joined as first participant
+11. pending_review → success dialog + await admin approval
+    active → success toast → redirect to Dashboard
 ```
 
 **Failure states handled:**
-- No map pin → blocking validation ("coordinates required")
+- No map pin → blocking validation
+- Location outside Sofia bounding box → client-side + server-side rejection
 - Photo wrong format or oversized → client-side rejection before upload
-- Title/description too short or too long → inline errors
+- Title < 5 chars or description < 20 chars → JS + HTML validation
+- Past date or end time before start time → validation error
+- Rate limit exceeded → warning dialog, no insert
+- Upload fails → orphaned file cleaned up from Storage automatically
 
 ---
 
@@ -355,19 +368,25 @@ superadmin → admin + cannot be demoted (DB-enforced flag)
 
 ### Feature 1: Campaign Management
 
-**Description:** CRUD operations for neighborhood cleanup campaigns with geo-coordinates, photo evidence, and status tracking.
+**Description:** CRUD operations for neighborhood cleanup campaigns with geo-coordinates, photo evidence, status tracking, moderation queue, and configurable points.
 
-**User value:** Residents can discover, join, and organize cleanups with full context (location, before photo, participation count).
+**User value:** Residents can discover, join, and organize cleanups with full context (location, before photo, participation count, scheduled time).
 
 **Business value:** Creates the content inventory that drives platform engagement and verifiable environmental impact data.
 
 **Technical implementation:**
 - Campaigns stored in PostgreSQL with soft-delete (`deleted_at`)
 - Location stored as lat/lng floats — simple but limits geo-query capabilities
-- Status machine: `active → completed | cancelled` (no reversal)
-- Before photo required at creation; after photo uploaded per participant
+- Status machine: `pending_review → active → completed | cancelled | archived`
+- Before photo required at creation; compressed client-side before upload; after photo uploaded per participant
+- First-time creator moderation: new users start in `pending_review` (only counts `active/completed` campaigns, not pending ones)
+- Orphaned storage cleanup: if DB insert fails after upload, photo is removed automatically
+- Rate limit: max 5 campaigns per 24 hours (DB-level RPC)
+- Configurable points per campaign: 10 / 20 / 30 / 50 (creator-selected, validated server-side)
+- Scheduled date + start/end time; end time validated to be after start time
+- Optional capacity (`max_participants`) — DB-enforced
 
-**Dependencies:** Supabase Storage (photos), Leaflet (map display), RLS policies
+**Dependencies:** Supabase Storage (photos), Leaflet (map display), RLS policies, `check_campaign_rate_limit` RPC
 
 **Constraints:** Campaign deletion blocked if external participants exist — protects participation records from orphaning.
 
@@ -375,19 +394,18 @@ superadmin → admin + cannot be demoted (DB-enforced flag)
 
 ### Feature 2: Points Economy
 
-**Description:** 20-point reward per approved cleanup, spendable on business-sponsored rewards.
+**Description:** Configurable-point reward per approved cleanup (10/20/30/50 ⭐), spendable on business-sponsored rewards.
 
-**User value:** Tangible incentive that converts volunteer effort into redeemable goods.
+**User value:** Tangible incentive that converts volunteer effort into redeemable goods. Larger campaigns can now offer more points.
 
-**Business value:** Drives retention (users return to earn more), creates a local loyalty ecosystem.
+**Business value:** Drives retention (users return to earn more), creates a local loyalty ecosystem. Point tiers allow gamification of effort scale.
 
 **Technical implementation:**
-- Points awarded via Supabase RPC `approve_participation()` — atomic, cannot partial-fail
+- Points awarded via Supabase RPC `approve_participation()` — reads `campaigns.points_value`, atomic
 - Immutable audit log via `point_transactions` table (append-only)
 - Balance stored denormalized on `profiles.points_balance` for fast reads
 - Transaction types: `earned | spent | role_change | admin_adjustment`
-
-**Hardcoded constraint:** 20 points per approval — not configurable via UI. Identified as a product rigidity gap in Section 9.
+- `points_value` validated client-side (whitelist: 10/20/30/50) and server-side
 
 **Dependencies:** Admin approval flow, DB triggers, Supabase RPC
 
@@ -468,19 +486,58 @@ superadmin → admin + cannot be demoted (DB-enforced flag)
 
 ### Feature 7: Admin Panel
 
-**Description:** Unified dashboard for participation approval, user management, role assignment, and audit log.
+**Description:** Unified dashboard for participation approval, user management, role assignment, moderation queue, and audit log.
 
 **User value (admin):** Single place to manage all trust and safety operations.
 
-**Business value:** Enables platform operators to maintain points system integrity and reward fairness.
+**Business value:** Enables platform operators to maintain points system integrity, reward fairness, and content moderation.
 
 **Technical implementation:**
 - Role check enforced by both RLS (PostgreSQL) and JS redirect on page load
 - Atomic operations via Supabase RPCs: `approve_participation()`, `set_user_role()`
 - Role change audit log stored in `point_transactions` (type=`role_change`)
+- **Admin audit log** (`admin_audit_log` table): immutable record of all admin actions — participation approvals/rejections, role changes, campaign moderation. Stores `admin_id`, `action`, `target_id`, `ip_address`, `user_agent`, `created_at`. 180-day retention.
+- **Campaign moderation queue**: first-time creator campaigns enter `pending_review` status, visible only to admins via RLS
 - Confirmation dialogs via SweetAlert2 before all destructive actions
 
 **Dependencies:** Supabase RPC, RLS policies, SweetAlert2
+
+---
+
+### Feature 9: GDPR Compliance
+
+**Description:** Platform-level compliance with GDPR Article 17 (erasure) and Article 20 (data portability), accessible from the user's profile page.
+
+**User value:** Users can delete their entire account + all associated data, or export a full JSON copy of their data, in one click.
+
+**Business value:** Required for legal operation in Bulgaria (EU). Reduces compliance risk and builds user trust.
+
+**Technical implementation:**
+- `gdpr_delete_user(p_user_id)` RPC: cascades deletion of participations, campaigns (with Storage cleanup), comments, transactions, notifications, push subscriptions, event RSVPs, reports. Runs as `SECURITY DEFINER` with `service_role` permission.
+- `gdpr_export_user(p_user_id)` RPC: returns a single JSON object with all user data — profile, campaigns, participations, transactions, comments, notifications. User downloads as `clean-quarter-data-export.json`.
+- Both RPCs are rate-limited implicitly (require authenticated session, user can only act on own data via RLS).
+
+**Dependencies:** Supabase RPC, Supabase Storage, profile page UI
+
+---
+
+### Feature 10: Data Retention Policy
+
+**Description:** Automated cleanup of stale platform data via a scheduled PL/pgSQL function, ready for pg_cron on paid Supabase plans.
+
+**Business value:** Prevents unbounded table growth; reduces storage costs; ensures compliance with data minimization principles (GDPR Art. 5).
+
+**Technical implementation:**
+- `run_data_retention()` function (SECURITY DEFINER, service_role only):
+  - Notifications: delete rows older than 90 days (batch 1000/iteration)
+  - Admin audit log: delete rows older than 180 days (batch 1000/iteration)
+  - Login attempts: delete rows older than 30 days (batch 1000/iteration)
+  - Campaigns: archive `completed` campaigns older than 365 days (status → `archived`)
+- All deletions use batch-loop pattern to avoid lock contention on first run
+- pg_cron schedule (Supabase Pro only): `0 3 * * 0` — Sundays at 03:00 UTC
+- On free plan: function is callable manually or via external cron
+
+**Dependencies:** pg_cron (optional), Supabase service_role
 
 ---
 
@@ -614,7 +671,7 @@ superadmin → admin + immutable (cannot be demoted)
 | Notifications | Latest 20 per user | None — truncated query |
 | Admin pending table | No pagination | ~100 pending items |
 | Neighborhoods | 5 (hardcoded array) | Code change required to expand |
-| Points per approval | 20 (hardcoded) | Code change required to adjust |
+| ~~Points per approval~~ | ~~20 (hardcoded)~~ | ✅ Resolved Mar 27 — configurable (10/20/30/50) via `campaigns.points_value` |
 | Storage | Supabase free tier (1GB) | ~10,000 photos at 100KB avg |
 | Realtime connections | 1 channel per active user | Supabase free tier: 200 concurrent |
 
@@ -640,7 +697,7 @@ superadmin → admin + immutable (cannot be demoted)
 | Mechanism | Implementation | Notes |
 |-----------|---------------|-------|
 | SQL injection | Impossible — Supabase client uses parameterized queries exclusively | — |
-| XSS | `escapeHTML()` utility for user content rendered in HTML | Known gaps: `map.js` Leaflet popups and `renderComments()` interpolate user content without escaping — tracked in Bug Backlog |
+| XSS | `escapeHTML()` utility for user content rendered in HTML | ✅ Resolved — `escapeHTML()` applied in `map.js` Leaflet popups and `renderComments()` (confirmed Mar 27) |
 | CSRF | Not applicable — REST API with JWT, no cookie-based sessions | — |
 | Auth bypass | RLS enforced at DB level — JS bypass has zero effect on data | — |
 | Privilege escalation | `is_superadmin` flag prevents top admin demotion | — |
@@ -670,7 +727,7 @@ superadmin → admin + immutable (cannot be demoted)
 | Code organization | Service-oriented — UI (HTML), controllers (scripts/), business logic (services/), utilities (utils/) |
 | Linting | ESLint + Prettier enforced via Husky pre-commit hooks |
 | Test coverage | 973+ tests across 49+ files — unit, integration, RLS policies, E2E (Cypress), a11y (axe-core), visual regression (Playwright) |
-| i18n | All user-facing strings externalized to JSON translation files (known gaps in profile.js, admin.js loadReports, main.js — see Bug Backlog) |
+| i18n | All user-facing strings externalized to JSON translation files | ✅ Gaps in `profile.js` (eye icon aria-label) and `main.js` (demo login strings) resolved Mar 27 |
 | DB versioning | 61 sequential SQL migrations — never edited after applied |
 | Build tooling | Vite with `rollup-plugin-visualizer` for bundle size analysis |
 
@@ -708,7 +765,7 @@ superadmin → admin + immutable (cannot be demoted)
 
 | Constraint | Where it appears | Impact |
 |-----------|-----------------|--------|
-| Fixed 20 points per approval | Hardcoded in `admin.js` and RPC | Cannot reward harder campaigns more |
+| ~~Fixed 20 points per approval~~ | ~~Hardcoded in `admin.js` and RPC~~ | ✅ Resolved Mar 27 — organizers choose 10/20/30/50 ⭐ per campaign |
 | Fixed 5 neighborhoods | Hardcoded array in multiple files | Adding a neighborhood requires code change |
 | ~~Manual Netlify deployment~~ | ~~No CI/CD auto-deploy configured~~ | ✅ Resolved — GitHub → Netlify auto-deploy on push to `main` |
 | ~~Client-side login rate limiting~~ | ~~`auth.js` — not server-enforced~~ | ✅ Resolved — server-side DB-level rate limiting via RPC (shipped Mar 17) |
@@ -742,17 +799,17 @@ superadmin → admin + immutable (cannot be demoted)
 
 | Gap | Impact | Recommendation | Status |
 |-----|--------|----------------|:------:|
-| Points per campaign not configurable | Cannot reward harder/larger cleanups more | Add `points_value` column to `campaigns` table | Open |
+| ~~Points per campaign not configurable~~ | ~~Cannot reward harder/larger cleanups more~~ | ~~Add `points_value` column to `campaigns` table~~ | ✅ Resolved Mar 27 |
 | No reward fulfillment tracking | No way to verify rewards were actually delivered | Add `fulfilled_at`, `fulfilled_by` to `point_transactions` | Open |
 | ~~No campaign categories/types~~ | ~~No segmentation for reporting or discovery~~ | ~~Add `category` enum to `campaigns`~~ | ✅ Resolved Mar 18 — categories + filter UI |
-| No rate limiting on campaign creation | Spam campaigns are technically possible | Add client-side + server-side rate limit | Open |
-| No moderation queue for new campaigns | All campaigns go public immediately | Add `status='pending'` for first-time creators | Open |
-| `admin_adjustment` point type unused | Admins have no recovery path for balance errors (double-approvals, cancelled campaigns) | Build "Adjust Points" UI in admin panel using the existing `point_transactions.type='admin_adjustment'` schema value | Open |
+| ~~No rate limiting on campaign creation~~ | ~~Spam campaigns are technically possible~~ | ~~Add client-side + server-side rate limit~~ | ✅ Resolved Mar 26 — 5 campaigns/24h DB-enforced |
+| ~~No moderation queue for new campaigns~~ | ~~All campaigns go public immediately~~ | ~~Add `status='pending'` for first-time creators~~ | ✅ Resolved Mar 27 — `pending_review` status + admin queue |
+| ~~`admin_adjustment` point type unused~~ | ~~Admins have no recovery path for balance errors~~ | ~~Build "Adjust Points" UI in admin panel~~ | ✅ Resolved Mar 27 — SweetAlert modal + `point_transactions` insert |
 | Push notifications limited to approval/rejection | RSVP confirmations, new neighborhood campaigns, 1h-before reminders, and comment alerts all fire no notification | Extend `pushNotifications.js` + DB triggers to cover all 4 additional event types | Open |
-| `notifications_enabled` field never enforced | Profile toggle exists and is saved but no notification path reads it — users cannot opt out | Read `notifications_enabled` before inserting `notifications` rows and before sending push | Open |
-| Notification bell capped at 20 items | Active users silently lose older notifications; `notification_id` FKs to campaigns/participations never used for deeplinks | Build `/notifications` history page with unlimited scroll and entity deeplinks | Open |
-| Heatmap i18n keys exist but feature is a stub | `heatmapTitle/Show/Hide/Hint` keys are translated but no Leaflet.heat visualization exists | Implement using Leaflet.heat weighted by approved participation count per campaign coordinate | Open |
-| Pollution heatmap missing | Admin i18n has heatmap strings but no rendering code | Implement Leaflet.heat visualization on admin map | Open |
+| ~~`notifications_enabled` field never enforced~~ | ~~Profile toggle exists and is saved but no notification path reads it~~ | ~~Read `notifications_enabled` before inserting `notifications` rows~~ | ✅ Resolved Mar 27 — enforced in JS + DB trigger |
+| ~~Notification bell capped at 20 items~~ | ~~Active users silently lose older notifications; no deeplinks~~ | ~~Build `/notifications` history page with unlimited scroll and entity deeplinks~~ | ✅ Resolved Mar 27 — `/notifications` history page with pagination + deeplinks |
+| ~~Heatmap i18n keys exist but feature is a stub~~ | ~~No Leaflet.heat visualization~~ | ~~Implement Leaflet.heat visualization~~ | ✅ Resolved — Leaflet.heat fully implemented in `admin.js` (confirmed Mar 27) |
+| ~~Pollution heatmap missing~~ | ~~Admin i18n has heatmap strings but no rendering code~~ | ~~Implement Leaflet.heat visualization on admin map~~ | ✅ Resolved — same as above |
 | ~~Rejection reason optional~~ | ~~Unfair rejections with no explanation~~ | ~~Make `rejection_reason` required on reject action~~ | ✅ Resolved — `inputValidator` in UI + DB CHECK constraint |
 | ~~No reward quantity enforcement~~ | ~~`quantity_available` column exists but not decremented on redemption~~ | ~~Wire redemption to decrement quantity~~ | ✅ Resolved — `purchase_reward()` RPC decrements atomically via `FOR UPDATE` |
 | ~~No server-side login rate limiting~~ | ~~Client-side only — bypassable~~ | ~~DB-level rate limit via RPC~~ | ✅ Resolved Mar 17 |
@@ -795,13 +852,13 @@ superadmin → admin + immutable (cannot be demoted)
 
 | Gap | Relevance | Status |
 |-----|-----------|:------:|
-| No GDPR data export | Required under EU law — users can request all their data | Open |
-| No right-to-erasure | `deleted_at` exists but photos remain in Supabase Storage after soft delete | Open |
+| ~~No GDPR data export~~ | ~~Required under EU law — users can request all their data~~ | ✅ Resolved Mar 27 — Article 20 data export RPC |
+| ~~No right-to-erasure~~ | ~~`deleted_at` exists but photos remain in Supabase Storage after soft delete~~ | ✅ Resolved Mar 27 — Article 17 erasure RPC purges storage + all rows |
 | ~~No privacy policy page~~ | ~~Referenced in registration checkbox but `/privacy` route does not exist~~ | ✅ Resolved — `/privacy` page created, BG/EN, linked from registration |
-| No cookie consent banner | Required if analytics or tracking is added | Open |
-| No versioned Terms of Service | Registration checkbox present but no ToS document or version tracking | Open |
-| No data retention policy | Old campaigns, transactions, and notifications are never purged | Open |
-| No audit log for admin actions | Role change log exists; photo approvals/rejections are not independently logged | Open |
+| ~~No cookie consent banner~~ | ~~Required if analytics or tracking is added~~ | ✅ Resolved Mar 27 — GDPR-compliant banner via `cookieConsent.js` |
+| ~~No versioned Terms of Service~~ | ~~Registration checkbox present but no ToS document or version tracking~~ | ✅ Resolved Mar 27 — `/terms` page v1.0, BG/EN, linked from registration |
+| ~~No data retention policy~~ | ~~Old campaigns, transactions, and notifications are never purged~~ | ✅ Resolved Mar 27 — `run_data_retention()` fn + pg_cron schedule (90d notifications, 365d campaigns, 180d audit log, 30d login attempts) |
+| ~~No audit log for admin actions~~ | ~~Role change log exists; photo approvals/rejections are not independently logged~~ | ✅ Resolved Mar 27 — `admin_audit_log` table + RLS + `logAdminAction()` on all key admin actions |
 
 ---
 
@@ -818,7 +875,7 @@ superadmin → admin + immutable (cannot be demoted)
 | Automated Netlify deploy (CI/CD) | ✅ GitHub → Netlify auto-deploy |
 | Server-side login rate limiting | ✅ Mar 17 — DB-level RPC |
 | Admin panel pagination | ✅ Mar 17 |
-| Map marker clustering + heatmap | ✅ Mar 17 — Leaflet.markercluster |
+| Map marker clustering + heatmap | ✅ Mar 17 — Leaflet.markercluster + Leaflet.heat |
 | Campaign categories (park / street / water / other) | ✅ Mar 18 — categories + filter UI |
 | Make rejection reason required | ✅ `inputValidator` + DB CHECK constraint |
 | Reward quantity enforcement | ✅ `purchase_reward()` RPC — atomic decrement |
@@ -826,20 +883,41 @@ superadmin → admin + immutable (cannot be demoted)
 | Privacy policy page | ✅ Mar 14 — `/privacy`, BG/EN |
 | Public stats page (no auth required) | ✅ Mar 20 — `/stats` with 3 RPC-backed charts |
 | Event RSVPs infrastructure | ✅ Mar 20 — `event_rsvps` table + `events.js` service |
+| PWA service worker on all pages | ✅ Mar 27 — `initPage()` called from every page entry point |
+| Cookie consent banner | ✅ Mar 27 — `cookieConsent.js` with localStorage persistence |
+| Notification history page | ✅ Mar 27 — `/notifications` with pagination + deeplinks |
+| `notifications_enabled` enforcement | ✅ Mar 27 — JS + DB trigger both enforce opt-out |
+| Admin point adjustment UI | ✅ Mar 27 — SweetAlert modal, writes to `point_transactions` |
+| Campaign moderation queue | ✅ Mar 27 — `pending_review` status, admin queue, RLS |
+| Admin audit log | ✅ Mar 27 — `admin_audit_log` table + `logAdminAction()` helper |
+| Configurable points per campaign | ✅ Mar 27 — `points_value` (10/20/30/50), RPC updated |
+| GDPR Article 17 (erasure) + Article 20 (export) | ✅ Mar 27 — `delete_user_data()` + `export_user_data()` RPCs |
+| Campaign creation rate limiting | ✅ Mar 26 — 5 campaigns / 24 h, DB-enforced |
+| Terms of Service page | ✅ Mar 27 — `/terms`, bilingual, v1.0 |
+| Data retention policy | ✅ Mar 27 — `run_data_retention()` + pg_cron daily schedule |
+| i18n gaps (main.js demo login, profile.js eye icon) | ✅ Mar 27 — all hardcoded strings replaced with `t()` keys |
 
 ---
 
-### Next — v1.2 (UX Sprint)
+### Shipped — v1.2 (UX Sprint)
 
 **Theme:** Close the gap between what the DB supports and what the UI exposes.
 
-Key items: Group Events page, dashboard search & filter, before/after comparison slider, weather forecasts on campaign cards and detail page, interactive onboarding, campaign capacity + urgency signal, category badges on cards, rank tier progression bar, trending social proof widget, login lockout countdown, skeleton loading, mobile bottom nav.
-
-See [ROADMAP.md § v1.2](../ROADMAP.md) for the full breakdown.
+Shipped Mar 23–24: Group Events page (`/events`), dashboard search & filter (server-side, debounced), before/after comparison slider, mobile bottom navigation (5-tab).
 
 ---
 
-### Growth — v1.3 (3–6 months)
+### Shipped — v1.3 (Security, GDPR & Code Quality)
+
+**Theme:** Production hardening, compliance, and multi-round senior engineering review.
+
+Shipped Mar 26–28: Campaign rate limiting (DB-level), GDPR Article 17 + 20, admin audit log, campaign moderation queue, configurable points, data retention policy, orphaned photo cleanup, checklist UX improvements, i18n consistency, error message hardening, storage upload progress indicator.
+
+See [ROADMAP.md § March 2026 Week 6](../ROADMAP.md) for the full breakdown.
+
+---
+
+### Growth — v1.4 (3–6 months)
 
 **Theme:** Retention mechanics, admin efficiency, and first B2B revenue.
 
@@ -849,7 +927,7 @@ Revenue unlocked: Campaign Boost (5 лв/48h), school institution subscriptions 
 
 ---
 
-### Platform — v2.0 (6–18 months)
+### Platform — v2.0 (12–24 months)
 
 **Theme:** Multi-city expansion, B2B partnerships, institutional integrations.
 
@@ -863,17 +941,23 @@ Revenue unlocked: Corporate ESG subscription (150–500 лв/year), municipality
 
 | Gap | Status |
 |-----|:------:|
-| Configurable points per campaign | Open |
+| ~~Configurable points per campaign~~ | ✅ Resolved Mar 27 |
 | Reward fulfillment tracking | Open — planned v1.3 |
-| GDPR data export + erasure | Open — planned v1.3 |
-| Campaign creation rate limiting | Open |
-| New campaign moderation queue | Open |
-| `admin_adjustment` point correction UI | Open — planned v1.3 |
+| ~~GDPR data export + erasure~~ | ✅ Resolved Mar 27 — Article 17 + Article 20 RPCs |
+| ~~Campaign creation rate limiting~~ | ✅ Resolved Mar 26 |
+| ~~New campaign moderation queue~~ | ✅ Resolved Mar 27 |
+| ~~`admin_adjustment` point correction UI~~ | ✅ Resolved Mar 27 |
 | Analytics (Plausible / PostHog) | Open — planned v1.3 |
 | Error tracking (Sentry) | Open |
-| No cookie consent banner | Open — required before analytics |
-| Versioned Terms of Service | Open |
+| ~~No cookie consent banner~~ | ✅ Resolved Mar 27 |
+| ~~Versioned Terms of Service~~ | ✅ Resolved Mar 27 |
+| ~~Raw DB errors shown to users~~ | ✅ Resolved Mar 28 — `createError` i18n key, dev prefix stripped |
+| ~~Silent catch blocks across page scripts~~ | ✅ Resolved Mar 28 — `console.error`/`console.warn` in all catch paths |
+| ~~Checklist visible on page load (negative first impression)~~ | ✅ Resolved Mar 28 — `hasUserInteracted` flag |
+| ~~Moderation count included pending_review (bypass)~~ | ✅ Resolved Mar 28 — only `["active","completed"]` count |
+| `checkAuth()` trusts localStorage without session verification | Open — mitigated by double-check in handleFormSubmit |
+| `handleFormSubmit` violates SRP (140+ lines) | Open — refactor planned |
 
 ---
 
-*Last revised: 2026-03-22. Business Model section completely revised — replaced inferred 2-tier model with a formal 4-pillar monetization strategy (B2C Freemium, B2B Sponsorships, B2B2G Institutional SaaS, Data & Reports) with revenue estimates per pillar. Sections 7–10 also updated: XSS/login brute-force NFR rows corrected; Section 9 governance gaps augmented; Section 10 roadmap replaced with v1.1 resolved inventory + v1.2/v1.3/v2.0 theme summaries pointing to living ROADMAP.md. All 10 sections reflect current codebase state.*
+*Last revised: 2026-03-27. All 13 open governance/compliance gaps identified in the previous review have been resolved and marked ✅: configurable campaign points, GDPR Article 17 erasure + Article 20 export, campaign rate limiting, moderation queue, admin point adjustment UI, notifications_enabled enforcement, notification history page, cookie consent banner, Terms of Service page, data retention policy (pg_cron), admin audit log, i18n gaps in main.js + profile.js, PWA registration on all pages. Section 10 v1.1 resolved inventory updated accordingly. Only 3 items remain open: push notification expansion to all event types, analytics integration (Plausible/PostHog), and error tracking (Sentry).*
