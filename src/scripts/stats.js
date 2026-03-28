@@ -42,10 +42,14 @@ async function loadStats() {
 }
 
 function renderStatCards(stats) {
-  document.getElementById("statCampaigns").textContent = formatNumber(stats.total_campaigns);
-  document.getElementById("statVolunteers").textContent = formatNumber(stats.total_volunteers);
-  document.getElementById("statCleanups").textContent = formatNumber(stats.total_cleanups);
-  document.getElementById("statPoints").textContent = formatNumber(stats.total_points);
+  const set = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = formatNumber(val);
+  };
+  set("statCampaigns", stats.total_campaigns);
+  set("statVolunteers", stats.total_volunteers);
+  set("statCleanups", stats.total_cleanups);
+  set("statPoints", stats.total_points);
 }
 
 function renderNeighborhoods(neighborhoods) {
@@ -89,7 +93,7 @@ function renderCategories(categories) {
     categories
       .map((c) => {
         const cfg = CATEGORY_CONFIG[c.category] ?? CATEGORY_CONFIG.other;
-        return `<span class="category-badge ${cfg.cls}">${cfg.icon} ${escapeHTML(categoryLabels.get(c.category))} <strong>${c.campaign_count}</strong></span>`;
+        return `<span class="category-badge ${cfg.cls}">${cfg.icon} ${escapeHTML(categoryLabels.get(c.category) ?? c.category)} <strong>${c.campaign_count}</strong></span>`;
       })
       .join("") +
     "</div>";

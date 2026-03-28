@@ -132,6 +132,10 @@ function resolveMessage(message) {
 
 // ─── Icon helpers ─────────────────────────────────────────────────────────────
 
+// NOTE: DB always stores type="approval" for participation notifications (both
+// approved and rejected). The "rejected" key here is never reached via TYPE_ICON[type]
+// — it is only used via explicit TYPE_ICON.rejected returns in iconForNotification,
+// which inspects the i18n key in the message to detect rejection.
 const TYPE_ICON = {
   approval: "✅",
   rejected: "❌",

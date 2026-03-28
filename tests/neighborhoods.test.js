@@ -126,6 +126,15 @@ describe("localizeNeighborhood — unknown / legacy values", () => {
   it("returns raw camelCase for legacy 'studentskiGrad'", () => {
     expect(localizeNeighborhood("studentskiGrad")).toBe("studentskiGrad");
   });
+
+  // BUG: t() returns the i18n key itself (truthy) when translations are not loaded.
+  // "|| raw" is never reached for valid DB values → user sees "neighborhoods.darvenitsa"
+  // instead of the raw "Darvenitsa". Fix: check translated !== i18nKeyPath.
+  it("returns raw DB value (not i18n key) for valid neighborhood when i18n not loaded", () => {
+    expect(localizeNeighborhood("Darvenitsa")).toBe("Darvenitsa");
+    expect(localizeNeighborhood("Studentski Grad")).toBe("Studentski Grad");
+    expect(localizeNeighborhood("Vitosha (VEC)")).toBe("Vitosha (VEC)");
+  });
 });
 
 // ─── localizeNeighborhood — translation (integration) ────────────────────────

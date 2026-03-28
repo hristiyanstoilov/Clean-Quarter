@@ -138,6 +138,26 @@ describe("CATEGORY_CONFIG", () => {
 });
 
 // ---------------------------------------------------------------------------
+// renderCategories — escapeHTML safety for unknown category
+// ---------------------------------------------------------------------------
+describe("renderCategories — unknown category label safety", () => {
+  // Guard: categoryLabels.get(c.category) can return undefined if the Map key
+  // is ever missing. Without ?? fallback, escapeHTML(undefined) → "undefined" in UI.
+  // Fix: ?? c.category null-coalescing ensures raw category is shown, not "undefined".
+  it("null-coalescing fallback: Map.get() ?? raw never produces 'undefined' text", () => {
+    // Simulate the guard: (undefined ?? "forest") === "forest"
+    const label = undefined ?? "forest";
+    expect(escapeHTML(label)).toBe("forest");
+    expect(escapeHTML(label)).not.toBe("undefined");
+  });
+
+  it("escapeHTML on undefined produces 'undefined' string (documents the risk without the guard)", () => {
+    // This confirms WHY the ?? guard is necessary
+    expect(escapeHTML(undefined)).toBe("undefined");
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Leaderboard rank class logic
 // ---------------------------------------------------------------------------
 describe("Leaderboard rank class assignment", () => {

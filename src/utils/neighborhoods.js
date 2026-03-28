@@ -2,7 +2,7 @@
  * Neighborhoods — single source of truth
  *
  * ALL valid neighborhood values used in the system are defined here.
- * dashboard.js, stats.js, and HTML dropdowns all derive from this list.
+ * dashboard.js, stats.js, HTML dropdowns, and DB CHECK CONSTRAINTs all derive from this list.
  *
  * To add a new neighborhood:
  *   1. Add an entry to NEIGHBORHOODS below
@@ -28,10 +28,10 @@ const _NEIGHBORHOOD_I18N = Object.fromEntries(NEIGHBORHOODS.map((n) => [n.value,
 
 /**
  * Translate a raw DB neighborhood value to the current language label.
- * Falls back to the raw value if no mapping is found.
+ * Falls back to the raw DB value if translations are not loaded or key is missing.
  *
- * The second argument is accepted but ignored — t() is imported directly
- * from i18n.js so callers don't need to pass it.
+ * Uses the same "translated !== key" pattern as resolveMessage to distinguish
+ * "translation found" from "t() returned the key itself (not loaded)".
  *
  * @param {string} raw - Raw value from DB (e.g. "Darvenitsa")
  * @returns {string}
@@ -39,6 +39,10 @@ const _NEIGHBORHOOD_I18N = Object.fromEntries(NEIGHBORHOODS.map((n) => [n.value,
 export function localizeNeighborhood(raw) {
   if (!raw) return "";
   const i18nKey = _NEIGHBORHOOD_I18N[raw];
-  if (i18nKey) return t(`neighborhoods.${i18nKey}`) || raw;
+  if (i18nKey) {
+    const keyPath = `neighborhoods.${i18nKey}`;
+    const translated = t(keyPath);
+    return translated !== keyPath ? translated : raw;
+  }
   return raw;
 }
