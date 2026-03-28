@@ -198,6 +198,14 @@ export function updateBadge(count) {
  * @param {string} userId
  */
 export async function initNotificationBell(userId) {
+  // Respect the user's notification preference — if disabled, hide the bell entirely
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("notifications_enabled")
+    .eq("id", userId)
+    .single();
+  if (profile && profile.notifications_enabled === false) return;
+
   const navItem = document.getElementById("notificationNavItem");
   if (navItem) navItem.style.display = "block";
 
