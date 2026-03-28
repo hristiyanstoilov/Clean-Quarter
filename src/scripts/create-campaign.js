@@ -19,15 +19,19 @@ let beforePhotoFile = null;
 let currentUser = null;
 let selectionMarker = null;
 
+const VALID_POINTS_VALUES = [10, 20, 30, 50];
+let hasUserInteracted = false;
+let isRedirecting = false;
+
 /**
  * Initialize the page on load
  */
 document.addEventListener("DOMContentLoaded", async () => {
-  initPage();
-  initNetworkStatusBanner();
-  initBottomNav();
-  initSwalFallback();
   try {
+    initPage();
+    initNetworkStatusBanner();
+    initBottomNav();
+    initSwalFallback();
     // Initialize i18n first (realTime = false)
     await initI18n(false);
     applyLanguage(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg");
@@ -61,17 +65,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     setTimeout(() => {
       try {
         initMap();
-      } catch {
+      } catch (e) {
+        console.error("Map init failed:", e);
         const mapEl = document.getElementById("map");
         if (mapEl) {
           mapEl.style.cssText =
             "display:flex;align-items:center;justify-content:center;background:#f8f9fa;color:#6c757d;font-size:0.9rem;";
-          mapEl.textContent = "Картата не може да се зареди. Проверете интернет връзката.";
+          mapEl.textContent = t("createCampaign.mapLoadError");
         }
       }
     }, 300);
-  } catch {
-    // silently ignore
+  } catch (e) {
+    console.error("Page init failed:", e);
   }
 });
 
@@ -85,8 +90,8 @@ async function checkAuth() {
     try {
       currentUser = JSON.parse(localUser);
       return;
-    } catch {
-      // silently ignore
+    } catch (e) {
+      console.warn("Failed to parse localStorage user:", e);
     }
   }
 
@@ -129,7 +134,7 @@ function initMap() {
         icon: createMarkerIcon("blue"),
       })
         .addTo(map)
-        .bindPopup("📍 Избрана локация")
+        .bindPopup(t("createCampaign.selectedLocationPopup"))
         .openPopup();
       map.invalidateSize();
     }
@@ -158,7 +163,7 @@ function initMap() {
       icon: createMarkerIcon("blue"),
     })
       .addTo(map)
-      .bindPopup("📍 Избрана локация")
+      .bindPopup(t("createCampaign.selectedLocationPopup"))
       .openPopup();
     map.setView([lat, lng], 16);
     map.invalidateSize();
@@ -183,11 +188,29 @@ function setupEventListeners() {
   document.getElementById("createCampaignForm").addEventListener("submit", handleFormSubmit);
 
   // Enable submit button when all fields are filled
-  document.getElementById("campaignTitleBg").addEventListener("input", checkFormCompletion);
-  document.getElementById("campaignDescriptionBg").addEventListener("input", checkFormCompletion);
-  document.getElementById("campaignNeighborhood").addEventListener("change", checkFormCompletion);
-  document.getElementById("campaignDate").addEventListener("change", checkFormCompletion);
-  document.getElementById("campaignStartTime").addEventListener("change", checkFormCompletion);
+  const markInteracted = () => {
+    hasUserInteracted = true;
+  };
+  document.getElementById("campaignTitleBg").addEventListener("input", () => {
+    markInteracted();
+    checkFormCompletion();
+  });
+  document.getElementById("campaignDescriptionBg").addEventListener("input", () => {
+    markInteracted();
+    checkFormCompletion();
+  });
+  document.getElementById("campaignNeighborhood").addEventListener("change", () => {
+    markInteracted();
+    checkFormCompletion();
+  });
+  document.getElementById("campaignDate").addEventListener("change", () => {
+    markInteracted();
+    checkFormCompletion();
+  });
+  document.getElementById("campaignStartTime").addEventListener("change", () => {
+    markInteracted();
+    checkFormCompletion();
+  });
 
   // Set min date to today
   const todayStr = new Date().toISOString().split("T")[0];
@@ -198,20 +221,24 @@ function setupEventListeners() {
  * Handle file selection for before photo
  */
 function handleFileSelect(e) {
+  hasUserInteracted = true;
   beforePhotoFile = e.target.files[0];
-  const fileName = beforePhotoFile ? beforePhotoFile.name : "No file chosen";
+  const preview = document.getElementById("beforePhotoPreview");
 
-  document.getElementById("beforePhotoName").textContent = fileName;
+  document.getElementById("beforePhotoName").textContent = beforePhotoFile
+    ? beforePhotoFile.name
+    : t("campaign.noFileChosen");
 
-  // Show preview
   if (beforePhotoFile) {
     const reader = new FileReader();
     reader.onload = (event) => {
-      const preview = document.getElementById("beforePhotoPreview");
       preview.src = event.target.result;
       preview.style.display = "block";
     };
     reader.readAsDataURL(beforePhotoFile);
+  } else {
+    preview.src = "";
+    preview.style.display = "none";
   }
 
   checkFormCompletion();
@@ -224,7 +251,7 @@ function checkFormCompletion() {
   const titleBg = document.getElementById("campaignTitleBg").value.trim();
   const descBg = document.getElementById("campaignDescriptionBg").value.trim();
   const nbh = document.getElementById("campaignNeighborhood").value;
-  const hasFile = beforePhotoFile !== null;
+  const hasFile = !!beforePhotoFile;
   const hasCoordinates = selectedCoordinates.lat !== null && selectedCoordinates.lng !== null;
 
   const scheduledDate = document.getElementById("campaignDate").value;
@@ -269,43 +296,27 @@ function checkFormCompletion() {
  * Update visual checklist showing what's complete and what's missing
  */
 function updateVisualChecklist(status) {
-  const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
-  const isBg = lang === "bg";
-
-  let checklist = document.getElementById("requirementsChecklist");
-
-  // Create checklist if it doesn't exist
-  if (!checklist) {
-    checklist = document.createElement("div");
-    checklist.id = "requirementsChecklist";
-    checklist.style.cssText =
-      "background: #fff3cd; padding: 1rem; border-radius: 6px; margin-bottom: 1rem; border-left: 4px solid #ffc107;";
-
-    const submitSection = document.querySelector(".btn-submit").parentElement;
-    submitSection.insertBefore(checklist, submitSection.firstChild);
-  }
+  const checklist = document.getElementById("requirementsChecklist");
+  if (!checklist || !hasUserInteracted) return;
+  checklist.style.display = "block";
 
   const items = [
-    { key: "titleBg", label: isBg ? "📝 Заглавие" : "📝 Title" },
-    { key: "descBg", label: isBg ? "📄 Описание" : "📄 Description" },
-    { key: "nbh", label: isBg ? "📍 Квартал" : "📍 Neighborhood" },
-    { key: "hasFile", label: isBg ? "📸 Снимка" : "📸 Photo" },
-    { key: "hasCoordinates", label: isBg ? "🗺️ Локация на картата" : "🗺️ Map location" },
-    { key: "scheduledDate", label: isBg ? "📅 Дата на почистването" : "📅 Cleanup date" },
-    { key: "startTime", label: isBg ? "🕐 Начален час" : "🕐 Start time" },
+    { key: "titleBg", label: t("createCampaign.checklistTitle") },
+    { key: "descBg", label: t("createCampaign.checklistDescription") },
+    { key: "nbh", label: t("createCampaign.checklistNeighborhood") },
+    { key: "hasFile", label: t("createCampaign.checklistPhoto") },
+    { key: "hasCoordinates", label: t("createCampaign.checklistLocation") },
+    { key: "scheduledDate", label: t("createCampaign.checklistDate") },
+    { key: "startTime", label: t("createCampaign.checklistStartTime") },
   ];
 
   const completed = items.filter((item) => status[item.key]).length;
   const total = items.length;
 
-  const headingText = isBg ? "📋 Задължителни полета" : "📋 Required Fields";
-  const readyText = isBg ? "✅ Готово за изпращане!" : "✅ Ready to submit!";
-  const incompleteText = isBg ? "⚠️ Непълно" : "⚠️ Incomplete";
-
   checklist.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-      <h6 style="margin: 0; color: #856404; font-weight: bold;">${headingText} (${completed}/${total})</h6>
-      <span style="font-size: 0.9rem; color: #856404;">${completed === total ? readyText : incompleteText}</span>
+      <h6 style="margin: 0; color: #856404; font-weight: bold;">${t("createCampaign.checklistHeading")} (${completed}/${total})</h6>
+      <span style="font-size: 0.9rem; color: #856404;">${completed === total ? t("createCampaign.checklistReady") : t("createCampaign.checklistIncomplete")}</span>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.4rem; font-size: 0.9rem;">
       ${items
@@ -331,6 +342,7 @@ async function handleFormSubmit(e) {
 
   const submitBtn = document.getElementById("submitBtn");
   const spinner = document.getElementById("loadingSpinner");
+  const uploadStatus = document.getElementById("uploadStatus");
 
   try {
     // Disable submit button and show spinner
@@ -353,6 +365,8 @@ async function handleFormSubmit(e) {
       maxParticipantsRaw && !isNaN(maxParticipantsParsed) && maxParticipantsParsed >= 1
         ? maxParticipantsParsed
         : null;
+    const rawPoints = parseInt(document.getElementById("campaignPointsValue")?.value || "20", 10);
+    const pointsValue = VALID_POINTS_VALUES.includes(rawPoints) ? rawPoints : 20;
 
     // Basic validation
     if (
@@ -365,20 +379,31 @@ async function handleFormSubmit(e) {
       !scheduledDate ||
       !startTime
     ) {
-      throw new Error("Моля попълнете всички полета и изберете локация на картата");
+      throw new Error(t("createCampaign.fillAllFields"));
+    }
+
+    // Minimum length validation
+    if (titleBg.length < 5) {
+      throw new Error(t("createCampaign.titleTooShort"));
+    }
+    if (descBg.length < 20) {
+      throw new Error(t("createCampaign.descriptionTooShort"));
     }
 
     // Geographic validation — coordinates must be within Sofia
     if (!isWithinSofia(lat, lng)) {
-      throw new Error(
-        t("campaign.locationOutsideSofia") || "Изберете локация в границите на София"
-      );
+      throw new Error(t("campaign.outsideSofia"));
     }
 
     // Date validation — cannot be in the past
     const today = new Date().toISOString().split("T")[0];
     if (scheduledDate < today) {
-      throw new Error(t("campaign.pastDateError") || "Датата не може да е в миналото");
+      throw new Error(t("campaign.pastDateError"));
+    }
+
+    // Time range validation — end time must be after start time
+    if (endTime && endTime <= startTime) {
+      throw new Error(t("campaign.endTimeBeforeStartError"));
     }
 
     // Check if we're in demo mode
@@ -389,16 +414,15 @@ async function handleFormSubmit(e) {
       // DEMO MODE: Create campaign in localStorage
       const newCampaignId = "demo_" + Date.now();
 
-      // Create demo photo URL (SVG data URL)
+      // Create demo photo URL (SVG data URI — encodeURIComponent avoids btoa Cyrillic crash)
       const beforePhotoUrl =
-        "data:image/svg+xml;base64," +
-        btoa(`
-                  <svg xmlns="http://www.w3.org/2000/svg" width="400" height="300">
-                      <rect width="400" height="300" fill="#90EE90"/>
-                      <text x="200" y="150" font-size="24" text-anchor="middle" fill="#333">Before Photo</text>
-                      <text x="200" y="180" font-size="16" text-anchor="middle" fill="#666">${titleBg}</text>
-                  </svg>
-              `);
+        "data:image/svg+xml;charset=utf-8," +
+        encodeURIComponent(
+          `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300">
+            <rect width="400" height="300" fill="#90EE90"/>
+            <text x="200" y="150" font-size="24" text-anchor="middle" fill="#333">Before Photo (Demo)</text>
+          </svg>`
+        );
 
       const newCampaign = {
         id: newCampaignId,
@@ -416,6 +440,7 @@ async function handleFormSubmit(e) {
         start_time: startTime,
         end_time: endTime,
         max_participants: maxParticipants,
+        points_value: pointsValue,
         created_at: new Date().toISOString(),
         participation_count: 0,
       };
@@ -433,7 +458,7 @@ async function handleFormSubmit(e) {
         created_at: new Date().toISOString(),
       });
 
-      await showSuccessToast("Кампанията е създадена успешно!");
+      await showSuccessToast(t("createCampaign.successToast"));
 
       window.location.href = "/dashboard";
     } else {
@@ -443,13 +468,17 @@ async function handleFormSubmit(e) {
         error: userError,
       } = await supabase.auth.getUser();
       if (userError || !user) {
-        throw new Error("User not authenticated");
+        throw new Error(t("createCampaign.notAuthenticated"));
       }
 
       // Server-side rate limit: max 5 campaigns per 24 hours
-      const { data: rateCheck } = await supabase.rpc("check_campaign_rate_limit", {
-        p_user_id: user.id,
-      });
+      const { data: rateCheck, error: rateError } = await supabase.rpc(
+        "check_campaign_rate_limit",
+        {
+          p_user_id: user.id,
+        }
+      );
+      if (rateError) throw new Error(t("common.error"));
       if (rateCheck && !rateCheck.allowed) {
         await Swal.fire({
           icon: "warning",
@@ -457,13 +486,27 @@ async function handleFormSubmit(e) {
           text: t("createCampaign.rateLimitText"),
           confirmButtonColor: "#28a745",
         });
-        submitBtn.disabled = false;
-        spinner.style.display = "none";
         return;
       }
 
+      uploadStatus.textContent = t("createCampaign.uploadingPhoto");
+      uploadStatus.style.display = "block";
       const compressedBefore = await compressImage(beforePhotoFile, 1200, 0.75);
-      const beforePhotoUrl = await uploadCampaignPhoto(compressedBefore, "before");
+      const { url: beforePhotoUrl, path: beforePhotoPath } = await uploadCampaignPhoto(
+        compressedBefore,
+        "before"
+      );
+      uploadStatus.style.display = "none";
+
+      // First-time creator check: if user has no previously approved/active campaigns,
+      // put the campaign into moderation queue instead of making it immediately public.
+      const { count: previousCampaigns, error: countError } = await supabase
+        .from("campaigns")
+        .select("id", { count: "exact", head: true })
+        .eq("created_by", user.id)
+        .in("status", ["active", "completed"]);
+      if (countError) throw new Error(t("createCampaign.createError"));
+      const campaignStatus = previousCampaigns > 0 ? "active" : "pending_review";
 
       // Insert campaign into database
       const { data: campaign, error: campaignError } = await supabase
@@ -478,21 +521,35 @@ async function handleFormSubmit(e) {
             created_by: user.id,
             neighborhood: nbhBg,
             category: category,
-            status: "active",
+            status: campaignStatus,
             scheduled_date: scheduledDate,
             start_time: startTime,
             end_time: endTime,
             max_participants: maxParticipants,
+            points_value: pointsValue,
           },
         ])
         .select();
 
       if (campaignError) {
-        throw new Error(`Failed to create campaign: ${campaignError.message}`);
+        // Clean up the already-uploaded photo to avoid orphaned storage files
+        supabase.storage
+          .from("campaign-photos")
+          .remove([beforePhotoPath])
+          .catch((e) => console.warn("Orphan photo cleanup failed:", e.message));
+        console.error("Campaign insert failed:", campaignError);
+        throw new Error(t("createCampaign.createError"));
+      }
+
+      if (!campaign?.length) {
+        console.error("Campaign insert returned no data", { campaignStatus, userId: user.id });
+        throw new Error(t("createCampaign.createError"));
       }
 
       // Record creation for rate limiting (fire-and-forget — non-critical)
-      supabase.rpc("record_campaign_creation", { p_user_id: user.id }).catch(() => {});
+      supabase
+        .rpc("record_campaign_creation", { p_user_id: user.id })
+        .catch((e) => console.warn("Rate limit recording failed:", e.message));
 
       // Auto-join creator as first participant
       const { error: participationError } = await supabase.from("participations").insert([
@@ -508,22 +565,37 @@ async function handleFormSubmit(e) {
         console.warn("Could not auto-join creator:", participationError.message);
       }
 
-      await showSuccessToast("Кампанията е създадена успешно!");
+      if (campaignStatus === "pending_review") {
+        await Swal.fire({
+          icon: "success",
+          title: t("createCampaign.pendingReviewTitle"),
+          text: t("createCampaign.pendingReviewText"),
+          confirmButtonColor: "#28a745",
+          confirmButtonText: t("common.great"),
+        });
+      } else {
+        await showSuccessToast(t("createCampaign.successToast"));
+      }
 
       // Redirect to dashboard
+      isRedirecting = true;
       window.location.href = "/dashboard";
     }
   } catch (error) {
+    const userMsg =
+      (error.message || "").replace(/^\[.*?\]\s*/, "") || t("createCampaign.createError");
     await Swal.fire({
       icon: "error",
       title: t("common.error"),
-      text: error.message || t("createCampaign.createError"),
+      text: userMsg,
     });
   } finally {
     // Re-enable submit button and hide spinner
     submitBtn.disabled = false;
     spinner.style.display = "none";
-    checkFormCompletion();
+    uploadStatus.style.display = "none";
+    uploadStatus.textContent = "";
+    if (!isRedirecting) checkFormCompletion();
   }
 }
 
@@ -536,7 +608,12 @@ async function handleLogout() {
     removeUser();
     await showSuccessToast(t("auth.logoutSuccessTitle"), 1000);
     window.location.href = "/";
-  } catch {
-    // silently ignore
+  } catch (e) {
+    console.error("Logout failed:", e);
+    await Swal.fire({
+      icon: "error",
+      title: t("common.error"),
+      text: t("auth.logoutError"),
+    });
   }
 }

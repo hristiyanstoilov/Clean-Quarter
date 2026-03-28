@@ -137,6 +137,8 @@
               id="campaignTitleBg"
               placeholder="напр. Почистване на парка в неделя"
               data-i18n-placeholder="createCampaign.titlePlaceholder"
+              minlength="5"
+              maxlength="100"
               required
             />
             <small class="text-muted" data-i18n="createCampaign.autoTranslateHint"
@@ -158,6 +160,8 @@
               rows="4"
               placeholder="Опишете зоната за почистване..."
               data-i18n-placeholder="createCampaign.descriptionPlaceholder"
+              minlength="20"
+              maxlength="1000"
               required
             ></textarea>
             <small class="text-muted" data-i18n="createCampaign.autoTranslateHint"
@@ -254,6 +258,34 @@
             >
           </div>
 
+          <!-- Points Value -->
+          <div class="mb-3">
+            <label
+              for="campaignPointsValue"
+              class="form-label"
+              data-i18n="createCampaign.pointsValueLabel"
+            >
+              Точки за участие
+            </label>
+            <select class="form-select" id="campaignPointsValue">
+              <option value="10" data-i18n="createCampaign.pointsOption10">
+                10 ⭐ — малко почистване
+              </option>
+              <option value="20" selected data-i18n="createCampaign.pointsOption20">
+                20 ⭐ — стандартно (по подразбиране)
+              </option>
+              <option value="30" data-i18n="createCampaign.pointsOption30">
+                30 ⭐ — голямо почистване
+              </option>
+              <option value="50" data-i18n="createCampaign.pointsOption50">
+                50 ⭐ — мащабна акция
+              </option>
+            </select>
+            <small class="text-muted" data-i18n="createCampaign.pointsValueHint">
+              Колко точки да получат участниците при одобрение
+            </small>
+          </div>
+
           <!-- Before Photo Upload -->
           <div class="mb-3">
             <label
@@ -300,12 +332,27 @@
 
       <!-- Submit Button -->
       <div class="form-section">
+        <div
+          id="requirementsChecklist"
+          style="
+            display: none;
+            background: #fff3cd;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #ffc107;
+          "
+        ></div>
         <button type="submit" class="btn-submit" id="submitBtn" form="createCampaignForm" disabled>
           <span data-i18n="campaign.create">Create Campaign</span>
           <span class="loading-spinner" id="loadingSpinner">
             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
           </span>
         </button>
+        <p
+          id="uploadStatus"
+          style="display: none; font-size: 0.85rem; color: #6c757d; margin-top: 0.5rem"
+        ></p>
       </div>
     </div>
 
