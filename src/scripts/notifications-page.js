@@ -154,7 +154,8 @@ async function loadNotifications() {
 
   if (offset === 0) {
     const list = document.getElementById("notificationsList");
-    list.innerHTML = `<p class="text-muted text-center py-4">${t("notifications.empty")}</p>`;
+    if (list)
+      list.innerHTML = `<p class="text-muted text-center py-4">${t("notifications.empty")}</p>`;
   }
 }
 
