@@ -91,7 +91,7 @@ describe("Navigation Links — every internal href has a declared route", () => 
         console.error(`\n[${name}] Links to undeclared route(s):`);
         unknown.forEach((h) => console.error(`  ✗ href="${h}"`));
         console.error(
-          `\n  Fix: add the route to public/_redirects AND to KNOWN_ROUTES in navigation-links.test.js\n`
+          `\n  Fix: add the route to public/_redirects — KNOWN_ROUTES is auto-derived from it.\n`
         );
       }
 

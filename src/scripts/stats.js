@@ -50,6 +50,7 @@ function renderStatCards(stats) {
 
 function renderNeighborhoods(neighborhoods) {
   const container = document.getElementById("neighborhoodList");
+  if (!container) return;
   if (!neighborhoods.length) return;
 
   const participantsLabel = t("leaderboard.participants") || "participants";
@@ -73,15 +74,22 @@ function renderNeighborhoods(neighborhoods) {
 
 function renderCategories(categories) {
   const container = document.getElementById("categoryList");
+  if (!container) return;
   if (!categories.length) return;
+
+  const categoryLabels = new Map(
+    categories.map((c) => [
+      c.category,
+      t(`campaign.category${capitalize(c.category)}`) || c.category,
+    ])
+  );
 
   container.innerHTML =
     '<div class="d-flex flex-wrap gap-1 mt-1">' +
     categories
       .map((c) => {
         const cfg = CATEGORY_CONFIG[c.category] ?? CATEGORY_CONFIG.other;
-        const label = t(`campaign.category${capitalize(c.category)}`) || c.category;
-        return `<span class="category-badge ${cfg.cls}">${cfg.icon} ${escapeHTML(label)} <strong>${c.campaign_count}</strong></span>`;
+        return `<span class="category-badge ${cfg.cls}">${cfg.icon} ${escapeHTML(categoryLabels.get(c.category))} <strong>${c.campaign_count}</strong></span>`;
       })
       .join("") +
     "</div>";

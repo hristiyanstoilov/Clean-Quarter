@@ -116,6 +116,16 @@ describe("Notifications service — icon logic", () => {
   it("falls back to 🔔 for unknown types", () => {
     expect(svcSrc).toContain('"🔔"');
   });
+
+  it("iconForNotification guards against JSONB object input before JSON.parse", () => {
+    // Bug: when Supabase returns message as a parsed JS object (JSONB),
+    // JSON.parse(objectValue) throws a SyntaxError which is silently caught,
+    // causing rejection notifications to show ✅ instead of ❌.
+    // Fix: add typeof === "object" guard identical to resolveMessage's guard.
+    const fnMatch = svcSrc.match(/function iconForNotification[\s\S]*?\n\}/);
+    expect(fnMatch).not.toBeNull();
+    expect(fnMatch[0]).toContain('typeof message');
+  });
 });
 
 describe("Notifications service — timeAgo formatting", () => {

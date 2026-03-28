@@ -140,17 +140,22 @@ const TYPE_ICON = {
 };
 
 function iconForNotification(type, message) {
-  // Structured JSON messages: check the i18n key for rejection
-  try {
-    const data = JSON.parse(message);
-    if (data?.key === "notification.participationRejected") return TYPE_ICON.rejected;
-  } catch {}
-  // Legacy plain-text fallback
-  if (type === "approval" && message && message.toLowerCase().includes("отхвърл")) {
-    return TYPE_ICON.rejected;
+  // Structured JSON messages: check the i18n key for rejection.
+  // Supabase JSONB columns may arrive as parsed JS objects — guard before JSON.parse.
+  let data;
+  if (typeof message === "object" && message !== null) {
+    data = message;
+  } else {
+    try {
+      data = JSON.parse(message);
+    } catch {}
   }
-  if (type === "approval" && message && message.toLowerCase().includes("rejected")) {
-    return TYPE_ICON.rejected;
+  if (data?.key === "notification.participationRejected") return TYPE_ICON.rejected;
+
+  // Legacy plain-text fallback
+  if (type === "approval" && message && typeof message === "string") {
+    if (message.toLowerCase().includes("отхвърл")) return TYPE_ICON.rejected;
+    if (message.toLowerCase().includes("rejected")) return TYPE_ICON.rejected;
   }
   return TYPE_ICON[type] || "🔔";
 }
@@ -179,9 +184,9 @@ function timeAgo(dateStr, lang) {
  */
 export function renderNotifications(notifications, lang, onItemClick) {
   const list = document.getElementById("notificationList");
-  const emptyMsg = i18nT("notifications.empty");
   if (!list) return;
 
+  const emptyMsg = i18nT("notifications.empty") || "Нямате известия";
   if (!notifications.length) {
     list.innerHTML = `<p class="notification-empty">${emptyMsg}</p>`;
     return;
