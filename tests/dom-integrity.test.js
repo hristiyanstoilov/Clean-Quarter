@@ -58,7 +58,7 @@ const pages = [
     name: "Admin",
     html: "src/pages/admin.html",
     js: "src/scripts/admin.js",
-    optionalIds: [],
+    optionalIds: ["swal-points-amount", "swal-points-reason"],
   },
 ];
 
