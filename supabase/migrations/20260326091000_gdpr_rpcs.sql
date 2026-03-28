@@ -54,7 +54,7 @@ BEGIN
     'comments', (
       SELECT COALESCE(jsonb_agg(row_to_json(c)), '[]'::jsonb)
       FROM (
-        SELECT id, campaign_id, content, created_at
+        SELECT id, campaign_id, text AS content, created_at
         FROM comments
         WHERE user_id = p_user_id AND deleted_at IS NULL
         ORDER BY created_at
@@ -111,7 +111,7 @@ BEGIN
   WHERE created_by = p_user_id AND deleted_at IS NULL;
 
   -- Soft-delete participations
-  UPDATE participations SET deleted_at = NOW(), deleted_by = p_user_id
+  UPDATE participations SET deleted_at = NOW()
   WHERE user_id = p_user_id AND deleted_at IS NULL;
 
   -- Soft-delete comments
