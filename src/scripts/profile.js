@@ -145,9 +145,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (passwordInput.type === "password") {
         passwordInput.type = "text";
         eyeIcon.textContent = "🙈";
+        eyeIcon.setAttribute("aria-label", t("common.hidePassword"));
       } else {
         passwordInput.type = "password";
         eyeIcon.textContent = "👁️";
+        eyeIcon.setAttribute("aria-label", t("common.showPassword"));
       }
     });
   }

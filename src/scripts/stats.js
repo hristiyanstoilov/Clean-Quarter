@@ -1,6 +1,7 @@
 import { initI18n, applyLanguage, t } from "../utils/i18n.js";
 import { escapeHTML } from "../utils/helpers.js";
 import { getPublicStats, getNeighborhoodStats, getCategoryStats } from "../services/stats.js";
+import { initPage } from "../utils/pageInit.js";
 
 const CATEGORY_CONFIG = {
   park: { icon: "🌳", cls: "cat-park" },
@@ -12,6 +13,7 @@ const CATEGORY_CONFIG = {
 const RANK_CLS = ["rank-1", "rank-2", "rank-3"];
 
 document.addEventListener("DOMContentLoaded", async () => {
+  initPage();
   await initI18n(false);
   applyLanguage(localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg");
   await loadStats();

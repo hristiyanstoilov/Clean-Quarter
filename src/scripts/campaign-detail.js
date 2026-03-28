@@ -673,7 +673,11 @@ async function handleUploadPhoto() {
     } else {
       // Real mode: upload to Supabase Storage
       const compressedAfter = await compressImage(afterPhotoFile, 1200, 0.75);
-      photoUrl = await uploadCampaignPhoto(compressedAfter, "after");
+      const { url: afterPhotoUrl, path: afterPhotoPath } = await uploadCampaignPhoto(
+        compressedAfter,
+        "after"
+      );
+      photoUrl = afterPhotoUrl;
 
       const updatePayload = { after_photo_url: photoUrl, status: "pending" };
       if (bagsCollected !== null) updatePayload.bags_collected = bagsCollected;
@@ -684,6 +688,11 @@ async function handleUploadPhoto() {
         .eq("id", userParticipation.id);
 
       if (updateError) {
+        // Clean up the already-uploaded photo to avoid orphaned storage files
+        supabase.storage
+          .from("campaign-photos")
+          .remove([afterPhotoPath])
+          .catch((e) => console.warn("Orphan photo cleanup failed:", e.message));
         throw new Error(`Failed to update participation: ${updateError.message}`);
       }
     }
