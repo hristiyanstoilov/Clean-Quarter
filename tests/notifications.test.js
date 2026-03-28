@@ -22,6 +22,7 @@ import { describe, it, expect } from "vitest";
 const ROOT = resolve(process.cwd());
 
 const svcSrc = readFileSync(resolve(ROOT, "src/services/notifications.js"), "utf-8");
+const helpersSrc = readFileSync(resolve(ROOT, "src/services/notifications.helpers.js"), "utf-8");
 
 // ─── Source-level static checks ──────────────────────────────────────────────
 
@@ -95,36 +96,34 @@ describe("Notifications service — badge logic", () => {
 });
 
 describe("Notifications service — icon logic", () => {
+  // Icon logic lives in notifications.helpers.js (imported by notifications.js)
   it("maps approval type to ✅ icon", () => {
-    expect(svcSrc).toContain('approval: "✅"');
+    expect(helpersSrc).toContain('approval: "✅"');
   });
 
   it("maps points type to ⭐ icon", () => {
-    expect(svcSrc).toContain('points: "⭐"');
+    expect(helpersSrc).toContain('points: "⭐"');
   });
 
   it("maps campaign_update type to 📢 icon", () => {
-    expect(svcSrc).toContain('campaign_update: "📢"');
+    expect(helpersSrc).toContain('campaign_update: "📢"');
   });
 
   it("detects rejected approval by checking message content", () => {
     // Approval + "отхвърл" in message → ❌ icon
-    expect(svcSrc).toContain('"отхвърл"');
-    expect(svcSrc).toContain('"rejected"');
+    expect(helpersSrc).toContain('"отхвърл"');
+    expect(helpersSrc).toContain('"rejected"');
   });
 
   it("falls back to 🔔 for unknown types", () => {
-    expect(svcSrc).toContain('"🔔"');
+    expect(helpersSrc).toContain('"🔔"');
   });
 
-  it("iconForNotification guards against JSONB object input before JSON.parse", () => {
-    // Bug: when Supabase returns message as a parsed JS object (JSONB),
-    // JSON.parse(objectValue) throws a SyntaxError which is silently caught,
-    // causing rejection notifications to show ✅ instead of ❌.
-    // Fix: add typeof === "object" guard identical to resolveMessage's guard.
-    const fnMatch = svcSrc.match(/function iconForNotification[\s\S]*?\n\}/);
+  it("iconForNotification guards against JSONB object input via parseMessageData", () => {
+    // parseMessageData handles the typeof guard — iconForNotification delegates to it.
+    const fnMatch = helpersSrc.match(/function iconForNotification[\s\S]*?\n\}/);
     expect(fnMatch).not.toBeNull();
-    expect(fnMatch[0]).toContain('typeof message');
+    expect(fnMatch[0]).toContain('parseMessageData');
   });
 });
 
@@ -345,7 +344,8 @@ describe("Notification triggers — use json_build_object (i18n format)", () => 
 
   it("resolveMessage helper is present in notifications service", () => {
     expect(svcSrc).toContain("resolveMessage");
-    expect(svcSrc).toContain("JSON.parse");
+    // JSON.parse lives in helpers (parseMessageData); resolveMessage delegates to it
+    expect(svcSrc).toContain("parseMessageData");
     expect(svcSrc).toContain("data.key");
   });
 
@@ -404,12 +404,13 @@ describe("Rejection notification — trigger and icon", () => {
   });
 
   it("iconForNotification detects rejection via JSON key", () => {
-    expect(svcSrc).toContain("notification.participationRejected");
-    expect(svcSrc).toContain("TYPE_ICON.rejected");
+    // iconForNotification lives in notifications.helpers.js
+    expect(helpersSrc).toContain("notification.participationRejected");
+    expect(helpersSrc).toContain("TYPE_ICON.rejected");
   });
 
   it("iconForNotification still has legacy plain-text fallback", () => {
-    expect(svcSrc).toContain('"отхвърл"');
-    expect(svcSrc).toContain('"rejected"');
+    expect(helpersSrc).toContain('"отхвърл"');
+    expect(helpersSrc).toContain('"rejected"');
   });
 });

@@ -2,6 +2,11 @@ import { initPage } from "../utils/pageInit.js";
 import { initI18n, t, applyLanguage } from "../utils/i18n.js";
 import supabase from "../services/supabase.js";
 import { escapeHTML } from "../utils/helpers.js";
+import {
+  parseMessageData,
+  TYPE_ICON,
+  iconForNotification,
+} from "../services/notifications.helpers.js";
 
 const PAGE_SIZE = 30;
 let offset = 0;
@@ -64,21 +69,11 @@ async function fetchPage(userId, from) {
 }
 
 function resolveMessage(message) {
-  try {
-    const data = JSON.parse(message);
-    if (data && data.key) return t(data.key, data);
-  } catch {}
-  return message;
-}
-
-const TYPE_ICON = { approval: "✅", rejected: "❌", points: "⭐", campaign_update: "📢" };
-
-function iconFor(type, message) {
-  try {
-    const data = JSON.parse(message);
-    if (data?.key === "notification.participationRejected") return TYPE_ICON.rejected;
-  } catch {}
-  return TYPE_ICON[type] || "🔔";
+  const data = parseMessageData(message);
+  if (data === null) return typeof message === "string" ? message : String(message ?? "");
+  if (!data.key) return typeof message === "string" ? message : "";
+  const translated = t(data.key, data);
+  return translated !== data.key ? translated : data.key;
 }
 
 function timeLabel(dateStr) {
@@ -99,7 +94,7 @@ function timeLabel(dateStr) {
 function renderItems(notifications) {
   const list = document.getElementById("notificationsList");
   notifications.forEach((n) => {
-    const icon = iconFor(n.type, n.message);
+    const icon = iconForNotification(n.type, n.message);
     const msg = resolveMessage(n.message);
     const time = timeLabel(n.created_at);
     const unreadClass = n.is_read ? "" : " notification-item--unread";

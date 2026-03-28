@@ -11,6 +11,7 @@
 import supabase from "./supabase.js";
 import { t as i18nT } from "../utils/i18n.js";
 import { escapeHTML } from "../utils/helpers.js";
+import { parseMessageData, TYPE_ICON, iconForNotification } from "./notifications.helpers.js";
 
 /**
  * Fetch the latest 20 notifications for a user.
@@ -98,23 +99,15 @@ const NOTIFICATION_FALLBACK = {
 function resolveMessage(message) {
   if (message === null || message === undefined) return "";
 
-  // Supabase JSONB columns may arrive as parsed JS objects (not strings).
-  // Handle that path directly before attempting JSON.parse.
-  let data;
-  if (typeof message === "object") {
-    data = message;
-  } else if (typeof message === "string") {
-    // Step 1: try to parse as structured JSON {key, ...params}
-    try {
-      data = JSON.parse(message);
-    } catch {
-      return message; // plain-text legacy message — return as-is
-    }
-  } else {
-    return String(message);
+  // Normalize JSONB (object or JSON string) → structured data object
+  const data = parseMessageData(message);
+
+  // Plain-text legacy message (parseMessageData returns null for non-JSON strings)
+  if (data === null) {
+    return typeof message === "string" ? message : String(message);
   }
 
-  if (!data?.key) return typeof message === "string" ? message : "";
+  if (!data.key) return typeof message === "string" ? message : "";
 
   // Step 2: translate — isolated catch so a translation failure never returns raw JSON
   try {
@@ -128,40 +121,6 @@ function resolveMessage(message) {
   const fallback = NOTIFICATION_FALLBACK[data.key];
   if (fallback) return fallback(data);
   return data.key; // last resort: show the key, not raw JSON
-}
-
-// ─── Icon helpers ─────────────────────────────────────────────────────────────
-
-// NOTE: DB always stores type="approval" for participation notifications (both
-// approved and rejected). The "rejected" key here is never reached via TYPE_ICON[type]
-// — it is only used via explicit TYPE_ICON.rejected returns in iconForNotification,
-// which inspects the i18n key in the message to detect rejection.
-const TYPE_ICON = {
-  approval: "✅",
-  rejected: "❌",
-  points: "⭐",
-  campaign_update: "📢",
-};
-
-function iconForNotification(type, message) {
-  // Structured JSON messages: check the i18n key for rejection.
-  // Supabase JSONB columns may arrive as parsed JS objects — guard before JSON.parse.
-  let data;
-  if (typeof message === "object" && message !== null) {
-    data = message;
-  } else {
-    try {
-      data = JSON.parse(message);
-    } catch {}
-  }
-  if (data?.key === "notification.participationRejected") return TYPE_ICON.rejected;
-
-  // Legacy plain-text fallback
-  if (type === "approval" && message && typeof message === "string") {
-    if (message.toLowerCase().includes("отхвърл")) return TYPE_ICON.rejected;
-    if (message.toLowerCase().includes("rejected")) return TYPE_ICON.rejected;
-  }
-  return TYPE_ICON[type] || "🔔";
 }
 
 function timeAgo(dateStr, lang) {
@@ -261,7 +220,7 @@ export async function initNotificationBell(userId) {
   const navItem = document.getElementById("notificationNavItem");
   if (navItem) navItem.style.display = "block";
 
-  const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+  let lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
   let _notifications = [];
 
   async function loadAndRender() {
@@ -330,6 +289,20 @@ export async function initNotificationBell(userId) {
   // Realtime: re-fetch when a new notification arrives
   const channel = subscribeToNotifications(userId, () => loadAndRender());
 
-  // Clean up the Realtime channel when the page unloads to avoid connection leaks
-  window.addEventListener("beforeunload", () => channel.unsubscribe(), { once: true });
+  // Keep lang in sync when the user switches language without a page reload
+  function onLanguageChanged(e) {
+    lang = e.detail?.lang || localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+    renderNotifications(_notifications, lang, () => {});
+  }
+  window.addEventListener("languageChanged", onLanguageChanged);
+
+  // Clean up the Realtime channel and language listener when the page unloads
+  window.addEventListener(
+    "beforeunload",
+    () => {
+      channel.unsubscribe();
+      window.removeEventListener("languageChanged", onLanguageChanged);
+    },
+    { once: true }
+  );
 }
