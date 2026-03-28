@@ -235,6 +235,18 @@
             </div>
             <div id="roleLogContainer" style="display: none; margin-top: 1rem"></div>
           </div>
+
+          <!-- Admin Audit Log -->
+          <div style="margin-top: 2rem">
+            <button
+              class="btn btn-outline-secondary btn-sm"
+              id="showAuditLogBtn"
+              data-i18n="admin.showAuditLog"
+            >
+              📋 Show Audit Log
+            </button>
+            <div id="auditLogContainer" style="display: none; margin-top: 1rem"></div>
+          </div>
         </div>
 
         <!-- Statistics Cards -->
@@ -318,6 +330,14 @@
 
           <div id="pendingTableContainer">
             <!-- Table will be inserted here -->
+          </div>
+        </div>
+
+        <!-- Campaign Moderation Queue -->
+        <div class="pending-section" id="campaignModerationSection">
+          <h2 data-i18n="admin.campaignModeration">🔍 Campaign Moderation Queue</h2>
+          <div id="campaignModerationContainer">
+            <!-- Pending campaign reviews will be inserted here -->
           </div>
         </div>
 

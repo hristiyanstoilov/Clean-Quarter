@@ -39,6 +39,33 @@ let _roleLogCache = null;
 
 // Heatmap state
 let heatmapMap = null;
+
+// ─── Admin Audit Log ──────────────────────────────────────────────────────────
+
+/**
+ * Write a record to admin_audit_log (fire-and-forget — non-critical).
+ * @param {string} action     e.g. 'approve_participation'
+ * @param {string} targetType e.g. 'participation'
+ * @param {string} targetId
+ * @param {string} [reason]
+ * @param {object} [meta]
+ */
+function logAdminAction(action, targetType, targetId, reason, meta) {
+  if (!currentUser?.id || isDemoUser(currentUser)) return;
+  supabase
+    .from("admin_audit_log")
+    .insert({
+      admin_id: currentUser.id,
+      action,
+      target_type: targetType,
+      target_id: String(targetId),
+      reason: reason || null,
+      meta: meta || null,
+    })
+    .then(({ error }) => {
+      if (error) console.warn("Audit log write failed:", error.message);
+    });
+}
 let heatLayer = null;
 let heatmapPoints = null; // cached per session — coordinates don't change after campaign creation
 
@@ -84,6 +111,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
     document.getElementById("exportUsersCsvBtn")?.addEventListener("click", exportUsersCsvHandler);
     document.getElementById("showRoleLogBtn")?.addEventListener("click", showRoleLog);
+    document.getElementById("showAuditLogBtn")?.addEventListener("click", toggleAuditLog);
     document
       .getElementById("exportParticipationsCsvBtn")
       ?.addEventListener("click", exportParticipationsCsvHandler);
@@ -260,6 +288,9 @@ async function loadAdminData() {
     // Load reports
     await loadReports();
 
+    // Load campaign moderation queue
+    await loadCampaignModerationQueue();
+
     // Show admin content
     document.getElementById("loadingState").style.display = "none";
     document.getElementById("adminContent").style.display = "block";
@@ -306,6 +337,53 @@ async function preloadRoleLog() {
  * Show role change log in UI
  */
 let _allRoleLogCache = [];
+async function toggleAuditLog() {
+  const container = document.getElementById("auditLogContainer");
+  if (!container) return;
+  if (container.style.display === "block") {
+    container.style.display = "none";
+    return;
+  }
+  container.style.display = "block";
+  container.innerHTML = `<p class="text-muted small">${t("common.loading") || "Loading…"}</p>`;
+
+  if (isDemoUser(currentUser)) {
+    container.innerHTML = `<p class="text-muted small">${t("admin.auditLogEmpty") || "No audit log entries."}</p>`;
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from("admin_audit_log")
+    .select("action, target_type, target_id, reason, created_at")
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (error || !data?.length) {
+    container.innerHTML = `<p class="text-muted small">${t("admin.auditLogEmpty") || "No audit log entries."}</p>`;
+    return;
+  }
+
+  let html = `<div class="table-responsive"><table class="table table-sm table-hover">
+    <thead><tr>
+      <th>${t("admin.roleLogDate") || "Date"}</th>
+      <th>${t("admin.auditLogAction") || "Action"}</th>
+      <th>${t("admin.auditLogTarget") || "Target"}</th>
+      <th>${t("admin.auditLogReason") || "Reason"}</th>
+    </tr></thead><tbody>`;
+
+  data.forEach((row) => {
+    html += `<tr>
+      <td><small>${row.created_at ? new Date(row.created_at).toLocaleString() : "-"}</small></td>
+      <td><code style="font-size:0.75rem">${escapeHTML(row.action)}</code></td>
+      <td><small>${escapeHTML(row.target_type)}: ${escapeHTML(row.target_id.slice(0, 8))}…</small></td>
+      <td><small>${escapeHTML(row.reason || "-")}</small></td>
+    </tr>`;
+  });
+
+  html += "</tbody></table></div>";
+  container.innerHTML = html;
+}
+
 async function showRoleLog() {
   const container = document.getElementById("roleLogContainer");
   const searchWrapper = document.getElementById("roleLogSearchWrapper");
@@ -513,6 +591,23 @@ window.filterUserTable = function () {
       `;
     }
 
+    // Adjust points button — available for all non-self users
+    if (!isSelf) {
+      html += `
+        <button
+          class='btn btn-outline-primary btn-sm ms-1 js-user-action'
+          data-action='adjustPoints'
+          data-user-id='${escapeHTML(user.id)}'
+          data-user-name='${escapeHTML(user.username || user.email)}'
+          data-user-points='${points}'
+          aria-label='Adjust points for ${escapeHTML(user.username || user.email)}'
+          title='${t("admin.adjustPoints") || "Adjust Points"}'
+        >
+          ⚖️
+        </button>
+      `;
+    }
+
     html += `
         </td>
       </tr>
@@ -530,9 +625,11 @@ window.filterUserTable = function () {
 
   container.querySelectorAll(".js-user-action").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const { action, userId, userName } = btn.dataset;
+      const { action, userId, userName, userPoints } = btn.dataset;
       if (action === "removeAdmin") window.removeAdmin(userId, userName);
       if (action === "makeAdmin") window.makeAdmin(userId, userName);
+      if (action === "adjustPoints")
+        window.adjustPoints(userId, userName, parseInt(userPoints, 10) || 0);
     });
   });
 };
@@ -696,6 +793,78 @@ window.removeAdmin = async function (userId, username) {
       icon: "error",
       title: t("common.error") || "Error",
       text: error.message || "Failed to remove admin privileges.",
+    });
+  }
+};
+
+/**
+ * Adjust a user's point balance (admin_adjustment)
+ */
+window.adjustPoints = async function (userId, username, currentPoints) {
+  const result = await Swal.fire({
+    title: t("admin.adjustPointsTitle", { username }) || `Adjust Points — ${username}`,
+    html: `
+      <p style="margin-bottom:0.5rem;font-size:0.9rem;color:#6c757d">
+        ${t("common.currentPoints") || "Current balance"}: <strong>${currentPoints}</strong>
+      </p>
+      <input id="swal-points-amount" type="number" class="swal2-input" placeholder="${t("admin.adjustPointsAmount") || "Amount (positive or negative)"}" />
+      <input id="swal-points-reason" type="text" class="swal2-input" placeholder="${t("admin.adjustPointsReason") || "Reason (required)"}" maxlength="200" />
+    `,
+    confirmButtonText: t("admin.adjustPointsConfirm") || "Save",
+    confirmButtonColor: "#28a745",
+    showCancelButton: true,
+    cancelButtonColor: "#6c757d",
+    cancelButtonText: t("common.cancel") || "Cancel",
+    preConfirm: () => {
+      const amount = parseInt(document.getElementById("swal-points-amount").value, 10);
+      const reason = document.getElementById("swal-points-reason").value.trim();
+      if (!amount || amount === 0) {
+        Swal.showValidationMessage(
+          t("admin.adjustPointsInvalidAmount") || "Enter a valid non-zero amount."
+        );
+        return false;
+      }
+      if (!reason) {
+        Swal.showValidationMessage(t("admin.adjustPointsReasonRequired") || "Reason is required.");
+        return false;
+      }
+      return { amount, reason };
+    },
+  });
+
+  if (!result.isConfirmed) return;
+  const { amount, reason } = result.value;
+
+  try {
+    const { error: txError } = await supabase.from("point_transactions").insert({
+      user_id: userId,
+      points: amount,
+      type: "admin_adjustment",
+      description: reason,
+      created_at: new Date().toISOString(),
+    });
+    if (txError) throw new Error(txError.message);
+
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update({ points_balance: currentPoints + amount })
+      .eq("id", userId);
+    if (profileError) throw new Error(profileError.message);
+
+    await showSuccessToast(
+      t("admin.adjustPointsSuccess", { username, amount: amount > 0 ? `+${amount}` : amount }) ||
+        `${username}'s points adjusted by ${amount}.`
+    );
+    logAdminAction("adjust_points", "user", userId, reason, {
+      amount,
+      previous_balance: currentPoints,
+    });
+    await loadAndRenderUsers();
+  } catch (err) {
+    await Swal.fire({
+      icon: "error",
+      title: t("common.error") || "Error",
+      text: err.message || t("admin.adjustPointsError") || "Error adjusting points.",
     });
   }
 };
@@ -967,6 +1136,11 @@ async function handleApprove(participationId, username) {
       const pointsMsg = result?.points_awarded ? ` +${result.points_awarded} ⭐` : "";
       await showSuccessToast(t("admin.approvedTitle") + pointsMsg);
 
+      logAdminAction("approve_participation", "participation", participationId, null, {
+        points_awarded: result?.points_awarded,
+        campaign_id: participation.campaign_id,
+      });
+
       // Send push notification to the user (non-blocking)
       sendPushToUser({
         userId: participation.user_id,
@@ -1079,6 +1253,10 @@ async function handleReject(participationId, _username) {
       Swal.close();
 
       await showInfoToast(t("admin.rejectedTitle"));
+
+      logAdminAction("reject_participation", "participation", participationId, rejectionReason, {
+        campaign_id: participation.campaign_id,
+      });
 
       // Send push notification to the user (non-blocking)
       sendPushToUser({
@@ -1293,6 +1471,126 @@ function exportParticipationsCsvHandler() {
     return;
   }
   exportParticipationsCsv(data);
+}
+
+/**
+ * Load and render campaigns awaiting moderation (status = 'pending_review')
+ */
+async function loadCampaignModerationQueue() {
+  const container = document.getElementById("campaignModerationContainer");
+  if (!container) return;
+
+  let campaigns = [];
+
+  if (isDemoUser(currentUser)) {
+    // Demo mode: show nothing (no pending_review campaigns in demo data)
+    campaigns = [];
+  } else {
+    const { data, error } = await supabase
+      .from("campaigns")
+      .select(
+        "id, title, description, neighborhood, category, created_by, creator_username, scheduled_date, created_at"
+      )
+      .eq("status", "pending_review")
+      .order("created_at", { ascending: true });
+    if (error) {
+      container.innerHTML = `<p class="text-danger small">${escapeHTML(error.message)}</p>`;
+      return;
+    }
+    campaigns = data || [];
+  }
+
+  if (!campaigns.length) {
+    container.innerHTML = `<p class="text-muted">${t("admin.campaignModerationEmpty") || "No campaigns awaiting approval."}</p>`;
+    return;
+  }
+
+  const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+
+  let html = `<div class="table-responsive"><table class="table table-sm table-hover">
+    <thead><tr>
+      <th>${t("admin.campaign") || "Campaign"}</th>
+      <th>${t("admin.neighborhood") || "Neighborhood"}</th>
+      <th>${t("admin.username") || "Creator"}</th>
+      <th>${t("admin.submitted") || "Submitted"}</th>
+      <th>${t("admin.actions") || "Actions"}</th>
+    </tr></thead><tbody>`;
+
+  campaigns.forEach((c) => {
+    let neighborhood = c.neighborhood || "-";
+    if (typeof neighborhood === "string" && neighborhood.startsWith("{")) {
+      try {
+        neighborhood = JSON.parse(neighborhood)[lang] || "-";
+      } catch {}
+    }
+    html += `<tr>
+      <td><strong>${escapeHTML(c.title ? (typeof c.title === "string" && c.title.startsWith("{") ? JSON.parse(c.title)[lang] || c.title : c.title) : "-")}</strong></td>
+      <td>${escapeHTML(neighborhood)}</td>
+      <td>${escapeHTML(c.creator_username || "-")}</td>
+      <td><small>${c.created_at ? new Date(c.created_at).toLocaleDateString() : "-"}</small></td>
+      <td>
+        <button class="btn btn-success btn-sm js-moderation-action" data-action="approveCampaign" data-id="${escapeHTML(c.id)}">
+          ${t("admin.approveCampaign") || "Approve"}
+        </button>
+        <button class="btn btn-danger btn-sm ms-1 js-moderation-action" data-action="rejectCampaign" data-id="${escapeHTML(c.id)}">
+          ${t("admin.rejectCampaign") || "Reject"}
+        </button>
+      </td>
+    </tr>`;
+  });
+
+  html += "</tbody></table></div>";
+  container.innerHTML = html;
+  applyLanguage(lang);
+
+  container.querySelectorAll(".js-moderation-action").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const { action, id } = btn.dataset;
+      if (action === "approveCampaign") await approveCampaign(id);
+      if (action === "rejectCampaign") await rejectCampaignModeration(id);
+    });
+  });
+}
+
+async function approveCampaign(campaignId) {
+  const { error } = await supabase
+    .from("campaigns")
+    .update({ status: "active" })
+    .eq("id", campaignId)
+    .eq("status", "pending_review");
+  if (error) {
+    await Swal.fire({ icon: "error", title: t("common.error"), text: error.message });
+    return;
+  }
+  await showSuccessToast(t("admin.campaignApproved") || "Campaign approved and is now public.");
+  logAdminAction("approve_campaign", "campaign", campaignId);
+  await loadCampaignModerationQueue();
+}
+
+async function rejectCampaignModeration(campaignId) {
+  const result = await Swal.fire({
+    title: t("admin.rejectCampaign") || "Reject Campaign",
+    input: "text",
+    inputLabel: t("admin.rejectionReason") || "Rejection reason",
+    inputValidator: (v) => !v && (t("admin.rejectionReasonRequired") || "Reason is required"),
+    showCancelButton: true,
+    confirmButtonColor: "#dc3545",
+    cancelButtonColor: "#6c757d",
+  });
+  if (!result.isConfirmed) return;
+
+  const { error } = await supabase
+    .from("campaigns")
+    .update({ status: "cancelled" })
+    .eq("id", campaignId)
+    .eq("status", "pending_review");
+  if (error) {
+    await Swal.fire({ icon: "error", title: t("common.error"), text: error.message });
+    return;
+  }
+  await showSuccessToast(t("admin.campaignRejected") || "Campaign rejected.");
+  logAdminAction("reject_campaign", "campaign", campaignId, result.value);
+  await loadCampaignModerationQueue();
 }
 
 /**
