@@ -80,11 +80,23 @@ export function subscribeToNotifications(userId, callback) {
  * @returns {string}
  */
 function resolveMessage(message) {
+  // Step 1: try to parse as structured JSON {key, ...params}
+  let data;
   try {
-    const data = JSON.parse(message);
-    if (data && data.key) return i18nT(data.key, data);
-  } catch {}
-  return message;
+    data = JSON.parse(message);
+  } catch {
+    return message; // plain-text legacy message — return as-is
+  }
+  if (!data?.key) return message;
+
+  // Step 2: translate — isolated catch so a translation failure never returns raw JSON
+  try {
+    const translated = i18nT(data.key, data);
+    // If i18n returned the key itself (not found / not loaded), fall back to key string
+    return translated !== data.key ? translated : data.key;
+  } catch {
+    return data.key; // worst case: show the key, not the raw JSON blob
+  }
 }
 
 // ─── Icon helpers ─────────────────────────────────────────────────────────────

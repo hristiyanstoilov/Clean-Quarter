@@ -11,12 +11,16 @@ export function getLanguage() {
 let currentLanguage = null;
 let translations = {};
 let enableRealTimeSwitch = true; // Set to false to disable real-time switching
+let translationsLoaded = false; // Guard against redundant fetches
 
 /**
- * Initialize i18n - load language files
+ * Initialize i18n - load language files.
+ * Idempotent: re-fetch is skipped if translations were already loaded successfully.
+ * Pass force=true to reload regardless.
  */
-export async function initI18n(realTime = true) {
+export async function initI18n(realTime = true, force = false) {
   enableRealTimeSwitch = realTime;
+  if (translationsLoaded && !force) return; // already loaded — skip re-fetch
   try {
     // Load both translation files in parallel
     const [bgData, enData] = await Promise.all([
@@ -28,6 +32,7 @@ export async function initI18n(realTime = true) {
       bg: bgData,
       en: enData,
     };
+    translationsLoaded = true;
 
     // Lazy-load language from localStorage if not set
     if (!currentLanguage) {
@@ -50,7 +55,13 @@ export async function initI18n(realTime = true) {
     // Don't apply language here - let caller decide
   } catch (error) {
     logger.error("❌ Failed to load translations:", error);
+    // translations stays {} — callers must handle keys being returned as-is
   }
+}
+
+/** Returns true if translations were loaded successfully. */
+export function isI18nLoaded() {
+  return translationsLoaded;
 }
 
 /**
@@ -134,6 +145,9 @@ export function applyLanguage(lang) {
     elements.forEach((element) => {
       const key = element.getAttribute("data-i18n");
       const translated = t(key, lang);
+      // Only overwrite if a real translation was found (not the raw key fallback).
+      // This preserves the HTML default text when translations haven't loaded yet.
+      if (translated === key) return;
       if (element.hasAttribute("title")) {
         element.setAttribute("title", translated);
       } else {
@@ -145,7 +159,7 @@ export function applyLanguage(lang) {
     placeholderElements.forEach((element) => {
       const key = element.getAttribute("data-i18n-placeholder");
       const translated = t(key, lang);
-      element.setAttribute("placeholder", translated);
+      if (translated !== key) element.setAttribute("placeholder", translated);
     });
     // Update language selector
     const langSelector = document.getElementById("languageSelector");
