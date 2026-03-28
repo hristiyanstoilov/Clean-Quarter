@@ -11,7 +11,12 @@
 import supabase from "./supabase.js";
 import { t as i18nT } from "../utils/i18n.js";
 import { escapeHTML } from "../utils/helpers.js";
-import { parseMessageData, TYPE_ICON, iconForNotification } from "./notifications.helpers.js";
+import {
+  parseMessageData,
+  TYPE_ICON,
+  iconForNotification,
+  NOTIFICATION_FALLBACK,
+} from "./notifications.helpers.js";
 
 /**
  * Fetch the latest 20 notifications for a user.
@@ -72,22 +77,6 @@ export function subscribeToNotifications(userId, callback) {
 }
 
 // ─── Message resolver ─────────────────────────────────────────────────────────
-
-// Human-readable fallbacks used when i18n hasn't loaded yet.
-// Keyed by the i18n key stored in the notification's JSON message.
-const NOTIFICATION_FALLBACK = {
-  "notification.participationApproved": (d) =>
-    `Участието ти беше одобрено! Спечели ${d.points ?? ""} точки.`,
-  "notification.participationRejected": (d) =>
-    `Участието ти беше отхвърлено. Причина: ${d.reason ?? ""}`,
-  "notification.campaignJoin": (d) =>
-    `${d.username ?? ""} се присъедини към твоята кампания "${d.title ?? ""}".`,
-  "notification.campaignCompleted": (d) => `Кампанията "${d.title ?? ""}" приключи!`,
-  "notification.pointsEarned": (d) => `Спечели ${d.points ?? ""} точки!`,
-  "notification.newComment": (d) =>
-    `${d.username ?? ""} коментира твоята кампания "${d.title ?? ""}".`,
-  "notification.reportResolved": () => "Твоят сигнал беше прегледан и решен.",
-};
 
 /**
  * Resolve a notification message for display.
@@ -220,8 +209,37 @@ export async function initNotificationBell(userId) {
   const navItem = document.getElementById("notificationNavItem");
   if (navItem) navItem.style.display = "block";
 
+  const btn = document.getElementById("notificationBtn");
+  const dropdown = document.getElementById("notificationDropdown");
+
   let lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
   let _notifications = [];
+
+  function closeDropdown() {
+    if (dropdown) dropdown.style.display = "none";
+  }
+
+  async function handleNotifClick(notif) {
+    if (!notif.is_read) {
+      await markAsRead(notif.id);
+      notif.is_read = true;
+      updateBadge(_notifications.filter((n) => !n.is_read).length);
+      const el = document.querySelector(`[data-id="${notif.id}"]`);
+      if (el) {
+        el.classList.remove("notification-item--unread");
+        el.querySelector(".notification-dot")?.remove();
+      }
+    }
+    const dest = notif.campaign_id
+      ? `/campaign/${notif.campaign_id}`
+      : notif.participation_id
+        ? "/profile"
+        : null;
+    if (dest) {
+      closeDropdown();
+      window.location.href = dest;
+    }
+  }
 
   async function loadAndRender() {
     try {
@@ -231,37 +249,10 @@ export async function initNotificationBell(userId) {
     }
     const unread = _notifications.filter((n) => !n.is_read).length;
     updateBadge(unread);
-    renderNotifications(_notifications, lang, async (notif) => {
-      if (!notif.is_read) {
-        await markAsRead(notif.id);
-        notif.is_read = true;
-        updateBadge(_notifications.filter((n) => !n.is_read).length);
-        const el = document.querySelector(`[data-id="${notif.id}"]`);
-        if (el) {
-          el.classList.remove("notification-item--unread");
-          el.querySelector(".notification-dot")?.remove();
-        }
-      }
-      const dest = notif.campaign_id
-        ? `/campaign/${notif.campaign_id}`
-        : notif.participation_id
-          ? "/profile"
-          : null;
-      if (dest) {
-        closeDropdown();
-        window.location.href = dest;
-      }
-    });
+    renderNotifications(_notifications, lang, handleNotifClick);
   }
 
   await loadAndRender();
-
-  const btn = document.getElementById("notificationBtn");
-  const dropdown = document.getElementById("notificationDropdown");
-
-  function closeDropdown() {
-    if (dropdown) dropdown.style.display = "none";
-  }
 
   if (btn && dropdown) {
     btn.addEventListener("click", (e) => {
@@ -282,7 +273,7 @@ export async function initNotificationBell(userId) {
       await markAllAsRead(userId);
       _notifications.forEach((n) => (n.is_read = true));
       updateBadge(0);
-      renderNotifications(_notifications, lang, () => {});
+      renderNotifications(_notifications, lang, handleNotifClick);
     });
   }
 
@@ -292,7 +283,7 @@ export async function initNotificationBell(userId) {
   // Keep lang in sync when the user switches language without a page reload
   function onLanguageChanged(e) {
     lang = e.detail?.lang || localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
-    renderNotifications(_notifications, lang, () => {});
+    renderNotifications(_notifications, lang, handleNotifClick);
   }
   window.addEventListener("languageChanged", onLanguageChanged);
 

@@ -6,6 +6,28 @@
  */
 
 /**
+ * Human-readable BG fallbacks used when i18n hasn't loaded yet.
+ * Keyed by the i18n key stored in the notification's JSON message.
+ */
+export const NOTIFICATION_FALLBACK = {
+  "notification.participationApproved": (d) =>
+    d.points
+      ? `Участието ти беше одобрено! Спечели ${d.points} точки.`
+      : "Участието ти беше одобрено!",
+  "notification.participationRejected": (d) =>
+    d.reason
+      ? `Участието ти беше отхвърлено. Причина: ${d.reason}`
+      : "Участието ти беше отхвърлено.",
+  "notification.campaignJoin": (d) =>
+    `${d.username ?? ""} се присъедини към твоята кампания "${d.title ?? ""}".`,
+  "notification.campaignCompleted": (d) => `Кампанията "${d.title ?? ""}" приключи!`,
+  "notification.pointsEarned": (d) => (d.points ? `Спечели ${d.points} точки!` : "Спечели точки!"),
+  "notification.newComment": (d) =>
+    `${d.username ?? ""} коментира твоята кампания "${d.title ?? ""}".`,
+  "notification.reportResolved": () => "Твоят сигнал беше прегледан и решен.",
+};
+
+/**
  * Normalize a notification message to a structured data object.
  *
  * Handles four input types that Supabase can produce:

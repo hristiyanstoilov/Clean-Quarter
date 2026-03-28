@@ -1,12 +1,16 @@
 /**
  * Notification Helpers — Behavioral Tests
  *
- * Tests parseMessageData and iconForNotification as exported pure functions.
- * These were previously private in notifications.js and only testable via
- * source-level regex analysis — now tested behaviorally.
+ * Tests parseMessageData, iconForNotification, and NOTIFICATION_FALLBACK
+ * as exported pure functions. Testable without DOM or Supabase dependencies.
  */
 
-import { parseMessageData, TYPE_ICON, iconForNotification } from "../src/services/notifications.helpers.js";
+import {
+  parseMessageData,
+  TYPE_ICON,
+  iconForNotification,
+  NOTIFICATION_FALLBACK,
+} from "../src/services/notifications.helpers.js";
 import { describe, it, expect } from "vitest";
 
 // ─── parseMessageData ─────────────────────────────────────────────────────────
@@ -133,5 +137,75 @@ describe("iconForNotification — edge cases", () => {
 
   it("returns 📢 for campaign_update type", () => {
     expect(iconForNotification("campaign_update", null)).toBe("📢");
+  });
+});
+
+// ─── NOTIFICATION_FALLBACK ────────────────────────────────────────────────────
+
+describe("NOTIFICATION_FALLBACK — structure", () => {
+  it("covers all 7 notification keys", () => {
+    const keys = [
+      "notification.participationApproved",
+      "notification.participationRejected",
+      "notification.campaignJoin",
+      "notification.campaignCompleted",
+      "notification.pointsEarned",
+      "notification.newComment",
+      "notification.reportResolved",
+    ];
+    keys.forEach((k) => expect(NOTIFICATION_FALLBACK).toHaveProperty(k));
+  });
+
+  it("all values are functions", () => {
+    Object.values(NOTIFICATION_FALLBACK).forEach((fn) =>
+      expect(typeof fn).toBe("function")
+    );
+  });
+});
+
+describe("NOTIFICATION_FALLBACK — participationApproved", () => {
+  const fn = NOTIFICATION_FALLBACK["notification.participationApproved"];
+
+  it("includes points when present", () => {
+    expect(fn({ points: 20 })).toContain("20");
+    expect(fn({ points: 20 })).toContain("точки");
+  });
+
+  it("omits points clause when points is falsy", () => {
+    const result = fn({});
+    expect(result).not.toContain("Спечели");
+    expect(result).toContain("одобрено");
+  });
+});
+
+describe("NOTIFICATION_FALLBACK — participationRejected", () => {
+  const fn = NOTIFICATION_FALLBACK["notification.participationRejected"];
+
+  it("includes reason when present", () => {
+    expect(fn({ reason: "Too late" })).toContain("Too late");
+    expect(fn({ reason: "Too late" })).toContain("Причина");
+  });
+
+  it("omits 'Причина:' clause when reason is absent", () => {
+    const result = fn({});
+    expect(result).not.toContain("Причина");
+    expect(result).toContain("отхвърлено");
+  });
+
+  it("omits 'Причина:' clause when reason is null", () => {
+    expect(fn({ reason: null })).not.toContain("Причина");
+  });
+});
+
+describe("NOTIFICATION_FALLBACK — pointsEarned", () => {
+  const fn = NOTIFICATION_FALLBACK["notification.pointsEarned"];
+
+  it("includes points when present", () => {
+    expect(fn({ points: 15 })).toContain("15");
+  });
+
+  it("graceful when points is absent", () => {
+    expect(() => fn({})).not.toThrow();
+    expect(fn({})).toContain("точки");
   });
 });

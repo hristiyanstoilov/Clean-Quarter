@@ -4,8 +4,8 @@ import supabase from "../services/supabase.js";
 import { escapeHTML } from "../utils/helpers.js";
 import {
   parseMessageData,
-  TYPE_ICON,
   iconForNotification,
+  NOTIFICATION_FALLBACK,
 } from "../services/notifications.helpers.js";
 
 const PAGE_SIZE = 30;
@@ -73,11 +73,13 @@ function resolveMessage(message) {
   if (data === null) return typeof message === "string" ? message : String(message ?? "");
   if (!data.key) return typeof message === "string" ? message : "";
   const translated = t(data.key, data);
-  return translated !== data.key ? translated : data.key;
+  if (translated !== data.key) return translated;
+  const fallback = NOTIFICATION_FALLBACK[data.key];
+  if (fallback) return fallback(data);
+  return data.key;
 }
 
-function timeLabel(dateStr) {
-  const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+function timeLabel(dateStr, lang) {
   const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
   if (lang === "en") {
     if (diff < 60) return "just now";
@@ -93,10 +95,12 @@ function timeLabel(dateStr) {
 
 function renderItems(notifications) {
   const list = document.getElementById("notificationsList");
+  if (!list) return;
+  const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
   notifications.forEach((n) => {
     const icon = iconForNotification(n.type, n.message);
     const msg = resolveMessage(n.message);
-    const time = timeLabel(n.created_at);
+    const time = timeLabel(n.created_at, lang);
     const unreadClass = n.is_read ? "" : " notification-item--unread";
     const dest = n.campaign_id
       ? `/campaign/${n.campaign_id}`
@@ -141,11 +145,11 @@ async function loadNotifications() {
   const allLoadedMsg = document.getElementById("allLoadedMsg");
 
   if (items.length < PAGE_SIZE) {
-    loadMoreBtn.style.display = "none";
-    if (offset > 0) allLoadedMsg.style.display = "block";
+    if (loadMoreBtn) loadMoreBtn.style.display = "none";
+    if (offset > 0 && allLoadedMsg) allLoadedMsg.style.display = "block";
   } else {
-    loadMoreBtn.style.display = "inline-block";
-    allLoadedMsg.style.display = "none";
+    if (loadMoreBtn) loadMoreBtn.style.display = "inline-block";
+    if (allLoadedMsg) allLoadedMsg.style.display = "none";
   }
 
   if (offset === 0) {
