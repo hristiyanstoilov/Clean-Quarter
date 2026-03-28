@@ -3,7 +3,7 @@ import { readFileSync } from "fs";
 
 const privacyHtml = readFileSync("src/pages/privacy.html", "utf-8");
 const indexHtml = readFileSync("index.html", "utf-8");
-const netlifyToml = readFileSync("netlify.toml", "utf-8");
+const redirects = readFileSync("public/_redirects", "utf-8");
 const viteConfig = readFileSync("vite.config.js", "utf-8");
 
 describe("Privacy page — file structure", () => {
@@ -33,9 +33,8 @@ describe("Privacy page — file structure", () => {
 });
 
 describe("Privacy page — routing", () => {
-  it("netlify.toml has /privacy redirect", () => {
-    expect(netlifyToml).toContain('from = "/privacy"');
-    expect(netlifyToml).toContain('to = "/src/pages/privacy.html"');
+  it("public/_redirects has /privacy redirect", () => {
+    expect(redirects).toMatch(/\/privacy\s+\/src\/pages\/privacy\.html/);
   });
 
   it("vite.config.js includes privacy as build entry", () => {

@@ -172,16 +172,14 @@ describe("index.html — Forgot Password link", () => {
 // netlify.toml — redirects exist
 // ---------------------------------------------------------------------------
 
-describe("netlify.toml — forgot/reset redirects", () => {
-  const toml = readFileSync(resolve(ROOT, "netlify.toml"), "utf-8");
+describe("public/_redirects — forgot/reset redirects", () => {
+  const redirects = readFileSync(resolve(ROOT, "public/_redirects"), "utf-8");
 
   it('has redirect for /forgot-password → forgot-password.html', () => {
-    expect(toml).toContain('from = "/forgot-password"');
-    expect(toml).toContain('to = "/src/pages/forgot-password.html"');
+    expect(redirects).toMatch(/\/forgot-password\s+\/src\/pages\/forgot-password\.html/);
   });
 
   it('has redirect for /reset-password → reset-password.html', () => {
-    expect(toml).toContain('from = "/reset-password"');
-    expect(toml).toContain('to = "/src/pages/reset-password.html"');
+    expect(redirects).toMatch(/\/reset-password\s+\/src\/pages\/reset-password\.html/);
   });
 });
