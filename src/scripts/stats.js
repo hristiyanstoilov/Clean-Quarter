@@ -3,6 +3,22 @@ import { escapeHTML } from "../utils/helpers.js";
 import { getPublicStats, getNeighborhoodStats, getCategoryStats } from "../services/stats.js";
 import { initPage } from "../utils/pageInit.js";
 
+// Maps DB neighborhood values → i18n keys (mirrors dashboard.js)
+const NEIGHBORHOOD_I18N = {
+  Darvenitsa: "darvenitsa",
+  "Studentski Grad": "studentskiGrad",
+  "Vitosha (VEC)": "vitoshaVec",
+  "Malinova Dolina": "malinovaDolina",
+  Musagenitsa: "musagenitsa",
+};
+
+function localizeNeighborhood(raw) {
+  if (!raw) return "";
+  const i18nKey = NEIGHBORHOOD_I18N[raw];
+  if (i18nKey) return t(`neighborhoods.${i18nKey}`) || raw;
+  return raw;
+}
+
 const CATEGORY_CONFIG = {
   park: { icon: "🌳", cls: "cat-park" },
   street: { icon: "🛣️", cls: "cat-street" },
@@ -58,7 +74,7 @@ function renderNeighborhoods(neighborhoods) {
       return `
         <div class="leaderboard-row">
           <div class="leaderboard-rank ${rankCls}">${i + 1}</div>
-          <div class="leaderboard-name">${escapeHTML(n.neighborhood)}</div>
+          <div class="leaderboard-name">${escapeHTML(localizeNeighborhood(n.neighborhood))}</div>
           <div class="text-end">
             <div class="leaderboard-points">${formatNumber(n.total_points)} ${t("leaderboard.points") || "pts"}</div>
             <div class="leaderboard-participants">${formatNumber(n.participant_count)} ${participantsLabel}</div>
