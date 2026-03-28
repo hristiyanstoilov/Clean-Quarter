@@ -178,6 +178,7 @@ Additional tables: comments · notifications · reports
 DB constraints:
 - `campaigns.end_time > start_time` (CHECK)
 - `participations` unique per (user_id, campaign_id)
+- `profiles.neighborhood` and `campaigns.neighborhood` must match known values (CHECK)
 - Login rate limiting via `check_login_rate_limit` RPC
 ```
 
@@ -201,6 +202,7 @@ DB constraints:
 | `trigger_point_transaction_on_approval` | `participations` UPDATE | Creates `point_transactions` row when status → `approved` |
 | `enforce_participation_integrity` | `participations` UPDATE | Blocks users from self-approving or changing `points_earned` |
 | `trigger_notify_participation_approved` | `participations` UPDATE | Creates notification when approved |
+| `trigger_notify_participation_rejected` | `participations` UPDATE | Creates notification when rejected (includes reason) |
 | `trigger_notify_campaign_join` | `participations` INSERT | Notifies campaign creator of new participant |
 
 ---
@@ -330,6 +332,8 @@ Enforced in `src/services/validation.js` and checked live in forms.
 │   │   ├── profile.js
 │   │   ├── admin.js
 │   │   ├── rewards.js
+│   │   ├── stats.js                # Public statistics page
+│   │   ├── notifications-page.js   # Full notifications page with pagination
 │   │   └── auth-helpers.js         # Forgot password, terms modal
 │   │
 │   ├── services/                   # Business logic & API calls
@@ -337,6 +341,8 @@ Enforced in `src/services/validation.js` and checked live in forms.
 │   │   ├── auth.js                 # Login, register, logout, session (+ server-side rate limiting)
 │   │   ├── map.js                  # Leaflet map initialisation, markers & clustering
 │   │   ├── notifications.js        # Notification bell — fetch, render, realtime
+│   │   ├── notifications.helpers.js# Pure helpers shared by bell + notifications page
+│   │   ├── stats.js                # Public statistics queries
 │   │   ├── points.js               # Points calculation logic
 │   │   ├── storage.js              # Photo upload to Supabase Storage
 │   │   ├── validation.js           # Form validation (password, fields)
@@ -349,7 +355,8 @@ Enforced in `src/services/validation.js` and checked live in forms.
 │   │
 │   ├── utils/                      # Utility functions
 │   │   ├── i18n.js                 # Internationalisation (BG/EN switching)
-│   │   ├── helpers.js              # formatDate, debounce, etc.
+│   │   ├── helpers.js              # formatDate, debounce, escapeHTML, etc.
+│   │   ├── neighborhoods.js        # Single source of truth for neighborhood data
 │   │   ├── env.js                  # Environment variable access
 │   │   └── demoMode.js             # Offline/demo mode (localStorage)
 │   │
@@ -377,7 +384,7 @@ Enforced in `src/services/validation.js` and checked live in forms.
 │       └── rewards.css
 │
 ├── supabase/
-│   ├── migrations/                 # 45 timestamped SQL migration files
+│   ├── migrations/                 # 101 timestamped SQL migration files
 │   │                               # (mirror of what is applied in Supabase)
 │   ├── schema.sql                  # Full schema snapshot (reference only)
 │   └── seed.sql                    # Development seed data
@@ -414,7 +421,11 @@ Enforced in `src/services/validation.js` and checked live in forms.
 | Rewards | `/rewards` | Authenticated | Browse and redeem rewards with points |
 | Forgot Password | `/forgot-password` | Everyone | Request password reset email |
 | Reset Password | `/reset-password` | Everyone | Set new password via email link |
-| Privacy Policy | `/privacy` | Everyone | Privacy policy and terms of use |
+| Stats | `/stats` | Everyone | Public platform statistics — campaign counts, neighborhood leaderboard, category breakdown |
+| Notifications | `/notifications` | Authenticated | Full notifications history with pagination (30 per page) |
+| Events | `/events` | Authenticated | Upcoming cleanup events calendar |
+| Privacy Policy | `/privacy` | Everyone | Privacy policy |
+| Terms | `/terms` | Everyone | Terms of use |
 | Demo Mode | N/A (localStorage) | Everyone | Full platform simulation — no account or internet required |
 
 ### Global UI features (present on all pages)
@@ -448,7 +459,7 @@ SUPABASE_ADMIN_EMAIL=admin@example.com
 SUPABASE_ADMIN_PASSWORD=password
 ```
 
-Current coverage: **530 tests · 42 test files** (1 real-DB integration test skipped without `.env.test`)
+Current coverage: **1,097 tests · 56 test files** (1 real-DB integration test skipped without `.env.test`)
 
 ### E2E tests (Cypress)
 

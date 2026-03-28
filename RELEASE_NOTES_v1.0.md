@@ -20,7 +20,12 @@
 - ✅ Bilingual UI — Bulgarian / English (custom i18n module)
 - ✅ Demo mode — full offline simulation via localStorage (no account required)
 - ✅ PWA support — service worker, offline fallback, installable
-- ✅ Privacy Policy page
+- ✅ Privacy Policy and Terms of Use pages
+- ✅ Public statistics page (`/stats`) — campaign counts, neighborhood leaderboard, category breakdown
+- ✅ Full notifications page (`/notifications`) — paginated history (30 per page)
+- ✅ Events page (`/events`)
+- ✅ GDPR Article 17 right to erasure and Article 20 data export
+- ✅ Campaign creation rate limiting (5 campaigns per 24 hours per user)
 
 ### Technical Stack
 
@@ -35,16 +40,16 @@
 ### Database
 
 - 10 tables: profiles, campaigns, participations, rewards, point_transactions, comments, notifications, reports, disposal_points + auth.users (managed by Supabase)
-- 45 migration files applied in chronological order
+- 101 migration files applied in chronological order
 - Row Level Security (RLS) on all tables
-- DB-level constraints: `end_time > start_time`, unique participation per user/campaign, rejection reason enforced
+- DB-level constraints: `end_time > start_time`, unique participation per user/campaign, rejection reason enforced, neighborhood CHECK constraint on profiles and campaigns
 - Server-side login rate limiting via `check_login_rate_limit` RPC
-- 5 DB triggers: profile creation on signup, point transaction on approval, participation integrity, approval notification, join notification
+- 6 DB triggers: profile creation on signup, point transaction on approval, participation integrity, approval notification, rejection notification (with reason), join notification
 
 ### Testing
 
-- **530 unit + integration tests** — all passing
-- **42 test files** (Vitest)
+- **1,097 unit + integration tests** — all passing
+- **56 test files** (Vitest)
 - Demo mode compatibility tested
 - RLS policy integration tests (require `.env.test` with real DB credentials)
 

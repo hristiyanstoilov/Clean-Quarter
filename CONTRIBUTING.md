@@ -1,80 +1,90 @@
 # Contributing to Clean Quarter
 
-Благодарим за интереса към проекта! Всеки принос е ценен.
+Thank you for your interest in the project! Every contribution is welcome.
 
-## 🚀 Как да допринесеш
+## How to Contribute
 
-### 1. Fork и Clone
+### 1. Fork and Clone
+
 ```bash
-# Fork repo-то в GitHub
-# След това клонирай локално
+# Fork the repo on GitHub, then clone locally
 git clone https://github.com/YOUR_USERNAME/Clean-Quarter.git
 cd Clean-Quarter
 ```
 
 ### 2. Setup
+
 ```bash
 npm install
 npm run dev
 ```
 
-### 3. Създай Branch
+### 3. Create a Branch
+
 ```bash
 git checkout -b feature/your-feature-name
 ```
 
-### 4. Направи промени
-- Следвай съществуващия код стил
-- Добави коментари на български или английски
-- Тествай локално (npm run test)
+### 4. Make Changes
+
+- Follow the existing code style
+- Add comments in English
+- Test locally (`npm run test`)
 
 ### 5. Commit
+
 ```bash
 git add .
 git commit -m "feat: add your feature description"
 ```
 
 **Commit message format:**
-- `feat:` за нови функционалности
-- `fix:` за bugfix-ове
-- `docs:` за документация
-- `test:` за тестове
-- `style:` за CSS/UI промени
-- `refactor:` за рефакторинг
+- `feat:` for new features
+- `fix:` for bug fixes
+- `docs:` for documentation
+- `test:` for tests
+- `style:` for CSS/UI changes
+- `refactor:` for refactoring
 
-### 6. Push и PR
+### 6. Push and Open a PR
+
 ```bash
 git push origin feature/your-feature-name
 ```
 
-Отвори Pull Request в GitHub с описание на промените.
+Open a Pull Request on GitHub with a description of your changes.
 
-## 📋 Code Guidelines
+---
+
+## Code Guidelines
 
 ### JavaScript
-- ES6+ синтаксис (async/await, arrow functions)
-- Type="module" в HTML скриптове
-- Избягвай глобални променливи
-- Документирай публични функции
+
+- ES6+ syntax (async/await, arrow functions)
+- `type="module"` on HTML script tags
+- Avoid global variables
+- Document public functions with JSDoc
 
 ### HTML/CSS
+
 - Semantic HTML5
 - Bootstrap 5 utility classes
 - Mobile-first responsive design
 - Accessibility (ARIA labels)
 
 ### Testing
-- Unit + integration tests за utils/services (Vitest) — 973+ теста, всички трябва да минават
-- E2E tests за критични флоуве (Cypress — включително file upload и mobile touch)
-- Accessibility tests (axe-core — 55 теста, блокира на critical violations)
-- Visual regression (Playwright — 2% pixel tolerance)
-- Demo mode compatibility
-- Нови features изискват тестове преди merge
 
-## 🧪 Running Tests
+- Unit + integration tests for utils/services (Vitest) — **1,097+ tests, all must pass**
+- Accessibility tests (axe-core — 55 tests, blocks on critical violations)
+- Demo mode compatibility
+- New features require tests before merge
+
+---
+
+## Running Tests
 
 ```bash
-# Lint (трябва да е 0 warnings преди всичко)
+# Lint (must be 0 warnings before anything else)
 npm run lint
 
 # Unit + integration tests
@@ -85,56 +95,59 @@ npm run test:e2e:headless
 
 # E2E tests (interactive)
 npm run test:e2e
-
-# Visual regression baseline update (само след intentional UI промени)
-npm run playwright:update
 ```
-
-## 🗄️ Database Migrations
-
-Миграциите се прилагат към Supabase prod чрез **Supabase MCP** (не чрез `supabase db push`).
-
-**Важно:** Локалните файлове в `supabase/migrations/` имат различни timestamps от регистрираните в prod `supabase_migrations.schema_migrations`. Това е очаквано поведение — файловете са reference-only за version control. Не използвай `supabase db push` от локалното repo, тъй като ще докладва грешки или ще пропусне вече приложени миграции.
-
-За нова миграция:
-1. Създай `.sql` файл в `supabase/migrations/` с timestamp-prefix
-2. Приложи го чрез Supabase MCP (`apply_migration`)
-3. Провери в prod с `list_migrations`
-
-## 🐛 Reporting Issues
-
-Ако намериш bug:
-1. Провери дали вече не е репортван в Issues
-2. Създай нов Issue с:
-   - Описание на проблема
-   - Стъпки за репродукция
-   - Screenshot (ако е визуален проблем)
-   - Browser/OS версия
-
-## 💡 Feature Requests
-
-Имаш идея за нова функционалност?
-1. Отвори Discussion или Issue
-2. Обясни use case-а
-3. Предложи имплементация (опционално)
-
-## 📖 Documentation
-
-При промени в API или major features:
-- Обнови README.md
-- Добави/обнови JSDoc коментари
-- Добави примери в docs/
-
-## ✅ Code Review Process
-
-1. Автоматични проверки (CI/CD) трябва да минат
-2. Поне един reviewer одобрява
-3. Merge to main след одобрение
-
-## 🙏 Благодарности
-
-Специални благодарности на всички contributors! Вижте пълния списък в [Contributors](https://github.com/hristiyanstoilov/Clean-Quarter/graphs/contributors).
 
 ---
 
-**Въпроси?** Отвори Discussion или намери контакт в README.
+## Database Migrations
+
+Migrations are applied to Supabase prod via **Supabase MCP** (`apply_migration`), not via `supabase db push`.
+
+**Important:** Local files in `supabase/migrations/` may have different timestamps than those registered in prod `supabase_migrations.schema_migrations`. This is expected — the files are reference-only for version control. Do not use `supabase db push` from the local repo, as it may report errors or skip already-applied migrations.
+
+To add a new migration:
+1. Create a `.sql` file in `supabase/migrations/` with a timestamp prefix
+2. Apply it via Supabase MCP (`apply_migration`)
+3. Verify in prod with `list_migrations`
+
+---
+
+## Reporting Issues
+
+If you find a bug:
+1. Check if it has already been reported in Issues
+2. Open a new Issue with:
+   - Description of the problem
+   - Steps to reproduce
+   - Screenshot (if it's a visual issue)
+   - Browser/OS version
+
+---
+
+## Feature Requests
+
+Have an idea for a new feature?
+1. Open a Discussion or Issue
+2. Explain the use case
+3. Propose an implementation (optional)
+
+---
+
+## Documentation
+
+When changing an API or adding major features:
+- Update `README.md`
+- Add/update JSDoc comments
+- Add examples in `docs/`
+
+---
+
+## Code Review Process
+
+1. Automated checks (CI/CD) must pass
+2. At least one reviewer approves
+3. Merge to main after approval
+
+---
+
+**Questions?** Open a Discussion or find contact info in the README.
