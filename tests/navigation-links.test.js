@@ -13,7 +13,7 @@
  *   - href="#"               → anchor-only, skip
  *   - href="/campaign/..."   → dynamic route, valid if /campaign/:id declared
  *   - href="http(s)://..."   → external, skip
- *   - everything else        → must appear in the KNOWN_ROUTES set below
+ *   - everything else        → must appear in KNOWN_ROUTES (derived from _redirects)
  */
 
 import { readFileSync } from "fs";
@@ -23,23 +23,19 @@ import { describe, it, expect } from "vitest";
 const ROOT = resolve(process.cwd());
 
 // ---------------------------------------------------------------------------
-// Source of truth: all clean-URL routes served by the app.
-// Keep in sync with public/_redirects.
+// Source of truth: derived from public/_redirects (single source of truth).
+// Adding a route to _redirects is enough — no need to update this file.
 // ---------------------------------------------------------------------------
+const redirectsContent = readFileSync(resolve(ROOT, "public/_redirects"), "utf-8");
+
 const KNOWN_ROUTES = new Set([
-  "/",
-  "/dashboard",
-  "/create-campaign",
-  "/profile",
-  "/rewards",
-  "/admin",
-  "/events",
-  "/stats",
-  "/notifications",
-  "/terms",
-  "/privacy",
-  "/forgot-password",
-  "/reset-password",
+  "/", // root is always valid but never appears as a redirect rule
+  ...redirectsContent
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith("#"))
+    .map((l) => l.split(/\s+/)[0])
+    .filter((r) => r !== "/*" && !r.includes(":")),
 ]);
 
 // Routes with dynamic segments (prefix check is enough)
@@ -105,37 +101,16 @@ describe("Navigation Links — every internal href has a declared route", () => 
 });
 
 // ---------------------------------------------------------------------------
-// Cross-check: every route in _redirects (except catch-all) appears in KNOWN_ROUTES
+// Sanity check: _redirects has at least the minimum expected routes
 // ---------------------------------------------------------------------------
-describe("_redirects ↔ KNOWN_ROUTES are in sync", () => {
-  const redirectsContent = readFileSync(resolve(ROOT, "public/_redirects"), "utf-8");
-
-  // Extract "from" paths (first token on each line, skip catch-all and dynamic)
-  const declaredRoutes = redirectsContent
-    .split("\n")
-    .map((l) => l.trim())
-    .filter((l) => l && !l.startsWith("#"))
-    .map((l) => l.split(/\s+/)[0])
-    .filter((r) => r !== "/*" && !r.includes(":"));
-
-  it("every static route in _redirects is in KNOWN_ROUTES", () => {
-    const missing = declaredRoutes.filter((r) => !KNOWN_ROUTES.has(r));
-    if (missing.length > 0) {
-      console.error("\nRoutes in _redirects but missing from KNOWN_ROUTES:");
-      missing.forEach((r) => console.error(`  ✗ ${r}`));
-      console.error("\n  Fix: add them to KNOWN_ROUTES in navigation-links.test.js\n");
-    }
-    expect(missing).toEqual([]);
+describe("_redirects sanity check", () => {
+  it("declares at least 12 static routes (catches accidental deletions)", () => {
+    // KNOWN_ROUTES includes "/" (not a redirect rule) — dynamic routes with ":" are excluded
+    const staticRouteCount = KNOWN_ROUTES.size - 1;
+    expect(staticRouteCount).toBeGreaterThanOrEqual(12);
   });
 
-  it("every static route in KNOWN_ROUTES (except /) is in _redirects", () => {
-    const withoutRoot = [...KNOWN_ROUTES].filter((r) => r !== "/");
-    const missing = withoutRoot.filter((r) => !redirectsContent.includes(r));
-    if (missing.length > 0) {
-      console.error("\nRoutes in KNOWN_ROUTES but missing from _redirects:");
-      missing.forEach((r) => console.error(`  ✗ ${r}`));
-      console.error("\n  Fix: add them to public/_redirects\n");
-    }
-    expect(missing).toEqual([]);
+  it("has a catch-all /* rule", () => {
+    expect(redirectsContent).toMatch(/^\/\*/m);
   });
 });

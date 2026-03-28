@@ -52,16 +52,18 @@ function renderNeighborhoods(neighborhoods) {
   const container = document.getElementById("neighborhoodList");
   if (!neighborhoods.length) return;
 
+  const participantsLabel = t("leaderboard.participants") || "participants";
+  const pointsLabel = t("leaderboard.points") || "pts";
+
   container.innerHTML = neighborhoods
     .map((n, i) => {
       const rankCls = RANK_CLS[i] ?? "rank-other";
-      const participantsLabel = t("leaderboard.participants") || "participants";
       return `
         <div class="leaderboard-row">
           <div class="leaderboard-rank ${rankCls}">${i + 1}</div>
           <div class="leaderboard-name">${escapeHTML(localizeNeighborhood(n.neighborhood))}</div>
           <div class="text-end">
-            <div class="leaderboard-points">${formatNumber(n.total_points)} ${t("leaderboard.points") || "pts"}</div>
+            <div class="leaderboard-points">${formatNumber(n.total_points)} ${pointsLabel}</div>
             <div class="leaderboard-participants">${formatNumber(n.participant_count)} ${participantsLabel}</div>
           </div>
         </div>`;
