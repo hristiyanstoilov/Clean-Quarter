@@ -69,7 +69,8 @@ async function fetchPage(userId, from) {
 }
 
 function resolveMessage(message) {
-  const data = parseMessageData(message);
+  const lang = localStorage.getItem("CLEAN_QUARTER_LANGUAGE") || "bg";
+  const data = parseMessageData(message, lang);
   if (data === null) return typeof message === "string" ? message : String(message ?? "");
   if (!data.key) return typeof message === "string" ? message : "";
   const translated = t(data.key, data);

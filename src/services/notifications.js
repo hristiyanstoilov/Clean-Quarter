@@ -9,11 +9,10 @@
  */
 
 import supabase from "./supabase.js";
-import { t as i18nT } from "../utils/i18n.js";
+import { t as i18nT, getCurrentLanguage } from "../utils/i18n.js";
 import { escapeHTML } from "../utils/helpers.js";
 import {
   parseMessageData,
-  TYPE_ICON,
   iconForNotification,
   NOTIFICATION_FALLBACK,
 } from "./notifications.helpers.js";
@@ -89,7 +88,8 @@ function resolveMessage(message) {
   if (message === null || message === undefined) return "";
 
   // Normalize JSONB (object or JSON string) → structured data object
-  const data = parseMessageData(message);
+  const lang = getCurrentLanguage();
+  const data = parseMessageData(message, lang);
 
   // Plain-text legacy message (parseMessageData returns null for non-JSON strings)
   if (data === null) {

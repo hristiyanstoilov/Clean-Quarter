@@ -36,20 +36,56 @@ export const NOTIFICATION_FALLBACK = {
  *   JSON string       → parsed object
  *   plain-text string → null   (caller should treat as legacy message)
  *
+ * Some campaign titles are stored as multilingual JSON strings
+ * (e.g. title: '{"bg":"...","en":"..."}') — these are resolved to the
+ * requested language so downstream code always gets plain text.
+ *
  * @param {*} message
+ * @param {string} [lang="bg"]  Language code for multilingual field resolution
  * @returns {object|null}
  */
-export function parseMessageData(message) {
+export function parseMessageData(message, lang = "bg") {
   if (message === null || message === undefined) return null;
-  if (typeof message === "object") return message;
-  if (typeof message === "string") {
+
+  let data;
+  if (typeof message === "object") {
+    data = message;
+  } else if (typeof message === "string") {
     try {
-      return JSON.parse(message);
+      data = JSON.parse(message);
     } catch {
       return null; // plain-text legacy message
     }
+  } else {
+    return null;
   }
-  return null;
+
+  // Only process plain objects (not arrays, etc.)
+  if (Array.isArray(data) || data === null || typeof data !== "object") return data;
+
+  // Resolve any multilingual JSON strings embedded as param values
+  // (e.g. title: '{"bg":"Чистене...","en":"Cleanup..."}')
+  // Only create a copy if we actually find multilingual fields to normalize.
+  let result = null;
+  for (const [k, v] of Object.entries(data)) {
+    if (typeof v === "string" && v.startsWith("{")) {
+      try {
+        const parsed = JSON.parse(v);
+        if (
+          parsed &&
+          typeof parsed === "object" &&
+          !Array.isArray(parsed) &&
+          (parsed.bg || parsed.en)
+        ) {
+          if (!result) result = { ...data };
+          result[k] = parsed[lang] || parsed.bg || parsed.en || v;
+        }
+      } catch {
+        // not multilingual JSON — leave as-is
+      }
+    }
+  }
+  return result ?? data;
 }
 
 // NOTE: DB always stores type="approval" for participation notifications (both
