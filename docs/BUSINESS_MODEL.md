@@ -11,7 +11,7 @@ Each idea is rated on two axes:
 
 - **Implementation Type:** `CODE` (buildable in the codebase), `BD` (requires business development / partnerships / contracts), `OPS` (operational/logistics), or a combination
 - **Effort:** `XS` (< 1 day), `S` (1–3 days), `M` (1–2 weeks), `L` (1–2 months), `XL` (3+ months)
-- **Time to First Revenue:** how fast from decision to first лв received
+- **Time to First Revenue:** how fast from decision to first € received
 
 ---
 
@@ -23,10 +23,10 @@ These can be built entirely within the existing codebase. No contracts, no exter
 
 ### 1. Green Wallet (Points → NGO Donations)
 
-**What it is:** "Donate my points" button on the rewards page. User selects a verified NGO (WWF Bulgaria, Balkani Wildlife Society) and donates accumulated points. Platform converts at 100 pts = 1 лв, collects donations monthly, transfers to NGO minus 5–8% platform fee.
+**What it is:** "Donate my points" button on the rewards page. User selects a verified NGO (WWF Bulgaria, Balkani Wildlife Society) and donates accumulated points. Platform converts at 200 pts = €1, collects donations monthly, transfers to NGO minus 5–8% platform fee.
 
 **Revenue model:** 5–8% fee on total donations processed.
-**Revenue estimate:** If 200 users donate avg. 500 pts (= 5 лв) = 1,000 лв donated → **50–80 лв/month**. Grows with user base. Small but zero-cost.
+**Revenue estimate:** If 200 users donate avg. 500 pts (= €2.50) = €500 donated → **€25–40/month**. Grows with user base. Small but zero-cost.
 
 | What | Type | Effort |
 |------|------|--------|
@@ -44,9 +44,9 @@ These can be built entirely within the existing codebase. No contracts, no exter
 
 ### 2. Campaign Pledge Drive
 
-**What it is:** Organizer sets a pledge threshold on their campaign: "If 30 people RSVP, Kaufland donates 500 лв in rewards." Campaign card shows live progress bar. When threshold is hit, platform notifies the sponsor and holds them to the pledge.
+**What it is:** Organizer sets a pledge threshold on their campaign: "If 30 people RSVP, Kaufland donates €250 in rewards." Campaign card shows live progress bar. When threshold is hit, platform notifies the sponsor and holds them to the pledge.
 
-**Revenue model:** 10% platform fee on fulfilled pledge value (= 50 лв from a 500 лв pledge).
+**Revenue model:** 10% platform fee on fulfilled pledge value (= €25 from a €250 pledge).
 
 | What | Type | Effort |
 |------|------|--------|
@@ -66,15 +66,15 @@ These can be built entirely within the existing codebase. No contracts, no exter
 
 **What it is:** A one-click PDF report formatted for EU grant applications (Horizon Europe, Green Deal, Interreg). Contains: volunteer hours (participants × campaign duration), unique volunteers, neighborhoods covered, before/after photo evidence, cleanup frequency trend, waste estimated (kg).
 
-**Revenue model:** 300 лв/report OR 1,500 лв/year unlimited subscription (for NGOs that apply multiple times/year).
-**Revenue estimate:** 10 NGOs × 300 лв = **3,000 лв/year** initially. 200+ eligible NGOs in Sofia.
+**Revenue model:** €150/report OR €750/year unlimited subscription (for NGOs that apply multiple times/year).
+**Revenue estimate:** 10 NGOs × €150 = **€1,500/year** initially. 200+ eligible NGOs in Sofia.
 
 | What | Type | Effort |
 |------|------|--------|
 | PDF template (PDFKit or jsPDF) with EU grant sections | CODE | M |
 | Data aggregation queries (volunteer hours, kg, neighborhood map) | CODE | S |
 | Admin: "Generate Grant Report" for specific date range + neighborhoods | CODE | S |
-| Stripe payment before download (300 лв/report) | CODE | S (reuses Boost Stripe integration) |
+| Stripe payment before download (€150/report) | CODE | S (reuses Boost Stripe integration) |
 | DB: `grant_reports` (generated_at, date_range, paid_at, ngо_id) | CODE | XS |
 | Sales outreach to NGOs | BD | ongoing |
 
@@ -103,10 +103,10 @@ These can be built entirely within the existing codebase. No contracts, no exter
 
 **Revenue model:**
 - Free: 100 req/day, 30-day history
-- Starter (50 лв/month): 1,000 req/day, 1-year history
-- Pro (200 лв/month): unlimited, real-time, batch export
+- Starter (€25/month): 1,000 req/day, 1-year history
+- Pro (€100/month): unlimited, real-time, batch export
 
-**Revenue estimate:** 5 Starter + 2 Pro subscribers = **650 лв/month = 7,800 лв/year.**
+**Revenue estimate:** 5 Starter + 2 Pro subscribers = **€330/month = €4,000/year.**
 
 | What | Type | Effort |
 |------|------|--------|
@@ -123,16 +123,16 @@ These can be built entirely within the existing codebase. No contracts, no exter
 
 ### 6. LinkedIn Verifiable Micro-credentials
 
-**What it is:** After 5 / 25 / 50 cleanups, user can claim a verifiable credential that gets added to their LinkedIn profile (Skills & Certifications section). In-platform badge is free; the official credential is 10–20 лв.
+**What it is:** After 5 / 25 / 50 cleanups, user can claim a verifiable credential that gets added to their LinkedIn profile (Skills & Certifications section). In-platform badge is free; the official credential is €5–€10.
 
-**Revenue model:** 10–20 лв per credential issuance.
-**Revenue estimate:** 100 credentials/year × 15 лв = **1,500 лв/year.**
+**Revenue model:** €5–€10 per credential issuance.
+**Revenue estimate:** 100 credentials/year × €8 = **€800/year.**
 
 | What | Type | Effort |
 |------|------|--------|
 | LinkedIn API integration (OAuth + Certifications API) | CODE | M |
 | Profile page: "Claim Credential" button at milestone | CODE | S |
-| Stripe: 10–20 лв payment before issuance | CODE | XS (reuses Stripe) |
+| Stripe: €5–€10 payment before issuance | CODE | XS (reuses Stripe) |
 | Credential record in DB | CODE | XS |
 
 **Total code effort: 2–3 weeks.** LinkedIn API is well-documented. High perceived value for young users.
@@ -145,10 +145,10 @@ These can be built entirely within the existing codebase. No contracts, no exter
 
 ### 7. "Clean Quarter Pro" Freemium Membership
 
-**What it is:** Paid tier (5 лв/month or 50 лв/year) unlocking: 24h early reward access, Pro badge, private campaigns, impact PDF export, recurring campaign creation. Built on Stripe Checkout + webhook.
+**What it is:** Paid tier (€2.50/month or €25/year) unlocking: 24h early reward access, Pro badge, private campaigns, impact PDF export, recurring campaign creation. Built on Stripe Checkout + webhook.
 
 **Revenue model:** Subscription revenue.
-**Revenue estimate:** 500 users × 5% conversion × 50 лв/year = **1,250 лв/year** at current scale. Scales linearly with user growth.
+**Revenue estimate:** 500 users × 5% conversion × €25/year = **€640/year** at current scale. Scales linearly with user growth.
 
 | What | Type | Effort |
 |------|------|--------|
@@ -166,7 +166,7 @@ These can be built entirely within the existing codebase. No contracts, no exter
 
 ### 8. Corporate Volunteer Day — Automated Report
 
-**What it is:** Company runs a cleanup event on the platform. After completion, platform auto-generates a branded "Volunteer Day Report" PDF: date, location, participant count, photos, impact metrics. Priced at 300–1,000 лв per event.
+**What it is:** Company runs a cleanup event on the platform. After completion, platform auto-generates a branded "Volunteer Day Report" PDF: date, location, participant count, photos, impact metrics. Priced at €150–€500 per event.
 
 **Revenue model:** Per-event fee.
 
@@ -175,7 +175,7 @@ These can be built entirely within the existing codebase. No contracts, no exter
 | Campaign type flag: `is_corporate_event` (boolean) | CODE | XS |
 | Corporate branding on campaign card (logo upload) | CODE | S |
 | Post-completion PDF report generator (same engine as Grant Report) | CODE | S (reuses PDF engine) |
-| Stripe: one-time payment (300–1,000 лв) gated before report download | CODE | XS |
+| Stripe: one-time payment (€150–€500) gated before report download | CODE | XS |
 | Admin: corporate campaign management | CODE | S |
 | Sales outreach to HR departments | BD | ongoing |
 
@@ -185,7 +185,7 @@ These can be built entirely within the existing codebase. No contracts, no exter
 
 ### 9. Physical "Impact Certificate" — Print-on-Demand
 
-**What it is:** At milestone (10/25/50 cleanups), user orders a personalized printed A4 certificate. Platform generates PDF, sends to print-on-demand service (Canva Print, Vistaprint API, or local BG printer), ships via Econt/Speedy. 15–20 лв including shipping.
+**What it is:** At milestone (10/25/50 cleanups), user orders a personalized printed A4 certificate. Platform generates PDF, sends to print-on-demand service (Canva Print, Vistaprint API, or local BG printer), ships via Econt/Speedy. €8–€10 including shipping.
 
 **Revenue model:** Product margin (~30–40%) + shipping.
 
@@ -193,7 +193,7 @@ These can be built entirely within the existing codebase. No contracts, no exter
 |------|------|--------|
 | Milestone detection + "Order Certificate" CTA in profile | CODE | S |
 | Certificate PDF generation (personalized, branded) | CODE | S (reuses PDF engine) |
-| Stripe: 15–20 лв payment | CODE | XS |
+| Stripe: €8–€10 payment | CODE | XS |
 | Integration with print-on-demand API OR manual print queue | CODE/OPS | S |
 | Econt API: create shipment, send tracking to user | CODE | M |
 | Shipping address collection UI | CODE | S |
@@ -204,7 +204,7 @@ These can be built entirely within the existing codebase. No contracts, no exter
 
 ### 10. "Adopt a Spot" — Corporate Location Sponsorship
 
-**What it is:** Company pays 500–2,000 лв/year to adopt a map location. Gets logo on map pin, monthly before/after photo report email, priority cleanup campaigns at that location. Admin panel: manage adopted locations, generate monthly reports.
+**What it is:** Company pays €250–€1,000/year to adopt a map location. Gets logo on map pin, monthly before/after photo report email, priority cleanup campaigns at that location. Admin panel: manage adopted locations, generate monthly reports.
 
 **Revenue model:** Annual subscription per location.
 
@@ -234,7 +234,7 @@ These features have straightforward code implementations, but the real work is *
 2. **Code work (2–3 weeks):** Municipality-specific dashboard (monthly reports, hazardous waste routing, verified cleanup data formatted for official use).
 3. **Contract work:** Standard public procurement or direct service agreement (lawyer needed).
 
-**Revenue potential:** 20,000–40,000 лв/year per district. **Game-changer if closed.**
+**Revenue potential:** €10,000–€20,000/year per district. **Game-changer if closed.**
 **Realistic timeline:** First contract Q4 2026 at earliest.
 
 ---
@@ -244,9 +244,9 @@ These features have straightforward code implementations, but the real work is *
 **What it needs:**
 1. **BD work:** Contact school directors or student affairs offices at 5 Sofia high schools. Pitch free pilot year.
 2. **Code work (1–2 weeks):** School admin account, volunteer hours logging, signed PDF certificate generation, class leaderboard.
-3. **Pricing:** 200 лв/year per school after free pilot.
+3. **Pricing:** €100/year per school after free pilot.
 
-**Revenue potential:** 50 schools × 200 лв = 10,000 лв/year ARR.
+**Revenue potential:** 50 schools × €100 = €5,000/year ARR.
 **First BD target:** SU "Kliment Ohridski" student volunteer programs (large, has existing volunteer hour requirements).
 
 ---
@@ -256,14 +256,14 @@ These features have straightforward code implementations, but the real work is *
 **What it needs:**
 1. **BD work:** Target companies with published sustainability reports (A1, Vivacom, Kaufland BG, Lidl BG). Approach their CSR/Sustainability Manager.
 2. **Code work (1 week):** Corporate team account, ESG PDF report after each team cleanup.
-3. **Pricing:** 150–500 лв/year per team.
+3. **Pricing:** €75–€250/year per team.
 
 ---
 
 ### 14. HOA / Building Management (домоуправители)
 
 **What it needs:**
-1. **BD work:** Contact 3–5 property management companies (Bulgarian Properties management arm, Era BG). Pitch "building cleanup subscription" 200 лв/year.
+1. **BD work:** Contact 3–5 property management companies (Bulgarian Properties management arm, Era BG). Pitch "building cleanup subscription" €100/year.
 2. **Code work (2–3 days):** Building-tagged campaigns, quarterly impact PDF for tenant noticeboard.
 
 ---
@@ -279,7 +279,7 @@ These features have straightforward code implementations, but the real work is *
 ### 16. Employer Benefit via HR Platforms
 
 **What it needs:**
-1. **BD work:** Apply to be listed on Worksmile and/or Edenred Benefits catalogue. Both have online partner application forms. Bulk pricing negotiation (40 лв/employee vs. 50 лв direct).
+1. **BD work:** Apply to be listed on Worksmile and/or Edenred Benefits catalogue. Both have online partner application forms. Bulk pricing negotiation (€20/employee vs. €25 direct).
 2. **Code work:** Company license management (admin creates sub-accounts for employees) — 1 week.
 
 ---
@@ -288,17 +288,17 @@ These features have straightforward code implementations, but the real work is *
 
 ### 17. Monthly "Volunteer Box" Subscription
 
-**What it is:** 20 лв/month box with cleanup supplies + local eco-brand coupon.
+**What it is:** €10/month box with cleanup supplies + local eco-brand coupon.
 **Implementation:** Pure logistics and supply chain. No meaningful new code beyond a "subscribe" Stripe billing page.
 
 **Steps:**
 1. Source suppliers: biodegradable bags (ЕкоПак-approved supplier), gloves (bulk from Praktiker/OBI B2B), grabber tool, reflective vest.
-2. Negotiate with 2–3 local eco-brands for coupon inclusion (they pay 50–100 лв/month for inclusion in 200 boxes = great ROI for them).
+2. Negotiate with 2–3 local eco-brands for coupon inclusion (they pay €25–€50/month for inclusion in 200 boxes = great ROI for them).
 3. Econt Fulfillment contract (they offer warehousing + monthly subscription delivery for e-commerce).
 4. Design and print the "Volunteer of the Month" card (monthly, personalized).
 5. Launch with pre-orders: need 50 subscribers to be economically viable.
 
-**Break-even:** 50 subscribers at 20 лв = 1,000 лв/month, minus ~12 лв COGS = **400 лв/month margin.** At 200 subscribers: **1,600 лв/month.**
+**Break-even:** 50 subscribers at €10 = €500/month, minus ~€6 COGS = **€200/month margin.** At 200 subscribers: **€800/month.**
 
 ---
 
@@ -313,10 +313,10 @@ These features have straightforward code implementations, but the real work is *
 | Urban Innovative Actions (UIA) | up to 5M EUR | Annual | ✅ Scalable civic tech for cities |
 | EEA Grants Bulgaria (NGO fund) | 10,000–250,000 EUR | Annual | ✅ Civil society environmental projects |
 | Horizon Europe (Digital Society) | 500,000–2M EUR | Rolling | ⚠️ Needs research partner |
-| Bulgarian OPEND (EU Structural Funds) | 50,000–200,000 BGN | Annual | ✅ Digital transformation for civil society |
+| Bulgarian OPEND (EU Structural Funds) | €25,000–€100,000 | Annual | ✅ Digital transformation for civil society |
 
 **Implementation:** Partner with an experienced EU grant consultant (8–15% success fee, no upfront cost). Platform provides impact data; consultant writes the application.
-**Realistic outcome:** 1 successful grant = 50,000–200,000 лв. Changes the financial picture entirely.
+**Realistic outcome:** 1 successful grant = €25,000–€100,000. Changes the financial picture entirely.
 
 ---
 
@@ -326,7 +326,7 @@ These features have straightforward code implementations, but the real work is *
 1. Contact Sofia Municipality Tourism directorate or Visit Sofia (публично дружество).
 2. Pitch: "I Cleaned Sofia" experience for eco-tourists — 1-day campaign, local guide, certificate.
 3. Platform co-branded in their "Sustainable Sofia" marketing materials.
-4. Revenue: 3,000–5,000 лв/year sponsorship OR referral fee per tourist booking.
+4. Revenue: €1,500–€2,500/year sponsorship OR referral fee per tourist booking.
 
 **Code needed:** Practically none — just a landing page in English and a special "tourist-friendly" campaign category.
 
@@ -335,7 +335,7 @@ These features have straightforward code implementations, but the real work is *
 ### 20. Neighborhood Activation Consulting Service
 
 **What it is:** Platform team (founder + 1 community manager) run a 90-day neighborhood onboarding: organize first 5 campaigns, facilitate first organizers, guarantee 50+ unique volunteers.
-**Price:** 3,000–5,000 лв per neighborhood.
+**Price:** €1,500–€2,500 per neighborhood.
 **Code needed:** None — sells the existing platform + community expertise.
 **Target:** Residential developments, shopping centers, university campuses.
 
@@ -347,7 +347,7 @@ These features have straightforward code implementations, but the real work is *
 
 ### 21. "Neighborhood Restaurant Week" — Weekly Local Business Sponsor Slot
 
-Restaurants pay 50–200 лв/week to be featured as the week's cleanup sponsor. All participants in any cleanup that week get a discount coupon from that restaurant (e.g., "15% off at Divaka this week — just for Clean Quarter volunteers"). Implementation: new `weekly_sponsor` table + banner on dashboard. Closes the loop between cleanup effort and immediate local reward. Revenue: **4 weeks × 100 лв = 400 лв/month** from 1 restaurant. At 3 concurrent restaurants: 1,200 лв/month.
+Restaurants pay €25–€100/week to be featured as the week's cleanup sponsor. All participants in any cleanup that week get a discount coupon from that restaurant (e.g., "15% off at Divaka this week — just for Clean Quarter volunteers"). Implementation: new `weekly_sponsor` table + banner on dashboard. Closes the loop between cleanup effort and immediate local reward. Revenue: **4 weeks × €50 = €200/month** from 1 restaurant. At 3 concurrent restaurants: €600/month.
 
 **Code effort: S (2–3 days).** No external integration. Revenue starts from outreach to first restaurant.
 
@@ -355,7 +355,7 @@ Restaurants pay 50–200 лв/week to be featured as the week's cleanup sponsor.
 
 ### 22. "Adopt a Tree" — Urban Greening Companion Feature
 
-Residents adopt and maintain a specific city tree via the platform. Sofia has ~200,000 street trees, many unmaintained. Registered tree adopters receive care reminders (seasonal), log maintenance activities (watering, debris clearing), and earn points. Partnership with Sofia Green System (ОП Озеленяване, Sofia Municipality). Revenue: 20 лв/tree/year adoption fee to a co-managed fund (municipality + platform split). **Expands the platform's mission beyond litter — positions it as the complete urban civic stewardship app.**
+Residents adopt and maintain a specific city tree via the platform. Sofia has ~200,000 street trees, many unmaintained. Registered tree adopters receive care reminders (seasonal), log maintenance activities (watering, debris clearing), and earn points. Partnership with Sofia Green System (ОП Озеленяване, Sofia Municipality). Revenue: €10/tree/year adoption fee to a co-managed fund (municipality + platform split). **Expands the platform's mission beyond litter — positions it as the complete urban civic stewardship app.**
 
 **Code effort: M (2 weeks) — new entity type (trees) with map pins, care log, adopt flow.**
 **BD:** Agreement with Sofia Green System for official data (tree registry with GPS coordinates).
@@ -364,7 +364,7 @@ Residents adopt and maintain a specific city tree via the platform. Sofia has ~2
 
 ### 23. Media Content Subscription — Weekly "Story of the Week"
 
-Platform auto-generates a weekly content package: best before/after photo pair of the week + stats + human-interest angle, formatted for publication. Sold to local BG news sites (Dnes.bg, Blitz.bg, Sofia Live, OFFNews) as a weekly content subscription: **500 лв/month per outlet**.
+Platform auto-generates a weekly content package: best before/after photo pair of the week + stats + human-interest angle, formatted for publication. Sold to local BG news sites (Dnes.bg, Blitz.bg, Sofia Live, OFFNews) as a weekly content subscription: **€250/month per outlet**.
 
 They get: authentic, verified, hyperlocal environmental content (rare and valuable).
 Platform gets: revenue + PR + backlinks + SEO.
@@ -376,7 +376,7 @@ Platform gets: revenue + PR + backlinks + SEO.
 
 ### 24. "Gamification for Recycling" Pilot with Екопак
 
-Екопак Bulgaria manages nationwide packaging recycling infrastructure. They have drop-off points across Sofia but zero community engagement. Pitch: platform provides gamification layer on top of their recycling infrastructure — residents earn points for verified recycling drop-offs (verified via QR code scan at Екопак stations). Platform charges Екопак **5,000–15,000 лв/year** for the integration.
+Екопак Bulgaria manages nationwide packaging recycling infrastructure. They have drop-off points across Sofia but zero community engagement. Pitch: platform provides gamification layer on top of their recycling infrastructure — residents earn points for verified recycling drop-offs (verified via QR code scan at Екопак stations). Platform charges Екопак **€2,500–€7,500/year** for the integration.
 
 **This is the first concrete GaaS (Gamification-as-a-Service) use case — directly validates the long-term v3.0 platform thesis.** If this works with Екопак, it works with blood donation, food banks, and every other civic infrastructure operator.
 
@@ -418,9 +418,9 @@ HIGH VALUE, MEDIUM EFFORT (Do second)
 
 HIGH VALUE, HIGH EFFORT (Do with investment)
 ┌─────────────────────────────────────────────────────┐
-│ • Municipal SLA (BD-heavy, 20-40K лв/district)      │
+│ • Municipal SLA (BD-heavy, €10K–€20K/district)      │
 │ • School Certificates (BD + 1–2 weeks code)         │
-│ • Volunteer Box (logistics, 4K лв/month at scale)   │
+│ • Volunteer Box (logistics, €2K/month at scale)   │
 │ • LinkedIn Credentials (2–3 weeks)                  │
 │ • Gamification for Екопак (1–2 months, GaaS proof)  │
 └─────────────────────────────────────────────────────┘
@@ -456,7 +456,7 @@ STRATEGIC / LONG-TERM (Do after proof of concept)
 | W9–10 | Restaurant Week Sponsor feature | CODE | Dev |
 | W9–10 | Outreach to 3 local restaurants | BD | Founder |
 
-**Q2 2026 Revenue Target: ~3,000–5,000 лв**
+**Q2 2026 Revenue Target: ~€1,500–€2,500**
 
 ---
 
@@ -473,7 +473,7 @@ STRATEGIC / LONG-TERM (Do after proof of concept)
 | First school pilot outreach (5 Sofia high schools) | BD | ongoing |
 | First corporate ESG prospect meetings | BD | ongoing |
 
-**Q3 2026 Revenue Target: ~8,000–15,000 лв**
+**Q3 2026 Revenue Target: ~€4,000–€8,000**
 
 ---
 
@@ -490,7 +490,7 @@ STRATEGIC / LONG-TERM (Do after proof of concept)
 | Municipal pilot proposal (Darvenitsa district) | BD | 1–2 months negotiation |
 | Close first 3 school subscriptions | BD | ongoing |
 
-**Q4 2026 Revenue Target: ~20,000–30,000 лв cumulative**
+**Q4 2026 Revenue Target: ~€10,000–€15,000 cumulative**
 
 ---
 
@@ -506,7 +506,7 @@ STRATEGIC / LONG-TERM (Do after proof of concept)
 | Employer Benefits via HR platforms | BD |
 | Екопак GaaS pilot | BD + CODE |
 
-**2027 Revenue Target: ~80,000–120,000 лв ARR**
+**2027 Revenue Target: ~€40,000–€60,000 ARR**
 
 ---
 
