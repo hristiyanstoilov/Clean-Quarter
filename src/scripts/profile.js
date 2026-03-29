@@ -855,6 +855,13 @@ async function initPushUI() {
     return;
   }
 
+  // t() returns the key itself when i18n hasn't loaded — || fallback won't help
+  // because the key string is truthy. Use tr() to fall back correctly.
+  const tr = (key, fallback) => {
+    const v = t(key);
+    return v !== key ? v : fallback;
+  };
+
   const { permission, subscribed } = await getPushStatus();
 
   const statusEl = document.getElementById("pushStatusText");
@@ -863,31 +870,31 @@ async function initPushUI() {
   const deniedHint = document.getElementById("pushDeniedHint");
 
   if (permission === "unsupported") {
-    if (statusEl) statusEl.textContent = t("push.unsupported") || "Браузърът не поддържа известия.";
+    if (statusEl) statusEl.textContent = tr("push.unsupported", "Браузърът не поддържа известия.");
     return;
   }
 
   if (permission === "denied") {
-    if (statusEl) statusEl.textContent = t("push.denied") || "Известията са блокирани.";
+    if (statusEl) statusEl.textContent = tr("push.denied", "Известията са блокирани.");
     if (deniedHint) deniedHint.style.display = "block";
     return;
   }
 
   if (subscribed) {
-    if (statusEl) statusEl.textContent = t("push.enabled") || "Push известията са активни ✅";
+    if (statusEl) statusEl.textContent = tr("push.enabled", "Push известията са активни ✅");
     if (btn) {
       btn.style.display = "inline-block";
       btn.className = "btn btn-outline-danger btn-sm";
       if (btnText) btnText.setAttribute("data-i18n", "push.disableBtn");
-      if (btnText) btnText.textContent = t("push.disableBtn") || "Деактивирай известия";
+      if (btnText) btnText.textContent = tr("push.disableBtn", "Деактивирай известия");
     }
   } else {
-    if (statusEl) statusEl.textContent = t("push.disabled") || "Push известията са изключени.";
+    if (statusEl) statusEl.textContent = tr("push.disabled", "Push известията са изключени.");
     if (btn) {
       btn.style.display = "inline-block";
       btn.className = "btn btn-outline-success btn-sm";
       if (btnText) btnText.setAttribute("data-i18n", "push.enableBtn");
-      if (btnText) btnText.textContent = t("push.enableBtn") || "Активирай известия";
+      if (btnText) btnText.textContent = tr("push.enableBtn", "Активирай известия");
     }
   }
 }
