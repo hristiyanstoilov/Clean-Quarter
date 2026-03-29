@@ -3,7 +3,7 @@
  * Handles offline support, caching, and background sync
  */
 
-const CACHE_NAME = 'clean-quarter-v6';
+const CACHE_NAME = 'clean-quarter-v7';
 const STATIC_ASSETS = [
     // Production routes served by the SPA (Vite builds to /dist, Netlify serves from root)
     '/',
@@ -65,6 +65,22 @@ self.addEventListener('fetch', (event) => {
     // Service worker fetch() is governed by connect-src CSP, not img-src/style-src,
     // so intercepting external requests causes 503 errors.
     if (url.origin !== self.location.origin) {
+        return;
+    }
+
+    // i18n files - always Network First (never serve stale translations from cache)
+    if (url.pathname.startsWith('/i18n/')) {
+        event.respondWith(
+            fetch(request)
+                .then((response) => {
+                    if (response && response.status === 200) {
+                        const responseToCache = response.clone();
+                        caches.open(CACHE_NAME).then((c) => c.put(request, responseToCache));
+                    }
+                    return response;
+                })
+                .catch(() => caches.match(request))
+        );
         return;
     }
 
