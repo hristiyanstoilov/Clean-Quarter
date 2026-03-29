@@ -1,6 +1,6 @@
 # QA Test Coverage Report
 **Clean Quarter Application**
-**Report Date:** 2026-03-22
+**Report Date:** 2026-03-28
 **Testing Framework:** Vitest (unit + integration) · Cypress (E2E) · Playwright (visual regression) · axe-core (a11y)
 
 ---
@@ -9,8 +9,8 @@
 
 | Metric | Value |
 |--------|-------|
-| Unit + Integration Tests | **973+ passing** |
-| Test Files | **49+ Vitest files** |
+| Unit + Integration Tests | **1,097+ passing** |
+| Test Files | **56+ Vitest files** |
 | Real-DB Integration | 2 tests (require `.env.test`) |
 | E2E Test Files | 4 Cypress spec files (+ file upload + mobile touch) |
 | Accessibility Tests | 55 axe-core tests (blocks on critical violations) |
@@ -43,7 +43,8 @@
 ### Notifications
 | File | Tests | Coverage |
 |------|-------|----------|
-| `tests/notifications.test.js` | 100 | fetch, render, mark-as-read, realtime, badge count |
+| `tests/notifications.test.js` | 114 | fetch, render, mark-as-read, realtime, badge count |
+| `tests/notifications.helpers.test.js` | 14 | NOTIFICATION_FALLBACK structure, participationApproved/Rejected with/without optional fields, pointsEarned |
 
 ### Validation
 | File | Tests | Coverage |
@@ -132,7 +133,7 @@
 ## Running Tests
 
 ```bash
-# All tests (860)
+# All tests (1,097)
 npm test
 
 # Single file

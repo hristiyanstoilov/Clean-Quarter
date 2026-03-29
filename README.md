@@ -384,7 +384,7 @@ Enforced in `src/services/validation.js` and checked live in forms.
 │       └── rewards.css
 │
 ├── supabase/
-│   ├── migrations/                 # 101 timestamped SQL migration files
+│   ├── migrations/                 # 102 timestamped SQL migration files
 │   │                               # (mirror of what is applied in Supabase)
 │   ├── schema.sql                  # Full schema snapshot (reference only)
 │   └── seed.sql                    # Development seed data
@@ -489,6 +489,9 @@ Full enterprise-grade documentation is available in [`docs/PRODUCT_DOCUMENTATION
 
 ## Contributing
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full contribution guide — branching strategy, commit conventions, test requirements, and code review process.
+
+**Quick start:**
 1. Create a branch: `git checkout -b feature/your-feature`
 2. Commit with clear messages following the existing style
 3. Open a pull request against `main`

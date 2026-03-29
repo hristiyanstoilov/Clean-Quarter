@@ -1,10 +1,149 @@
 # Clean Quarter — Roadmap & Engineering Backlog
 
+**Last updated:** 2026-03-28 | **Version:** 1.4-dev | **Live:** https://cleanquarter.netlify.app
+
+---
+
+## Table of Contents
+
+1. [🎯 Priority Queue](#-priority-queue--what-to-work-on-next) — **Start here. What to work on next.**
+2. [Legend](#legend) — Status symbols, priority levels, effort scale
+3. [✅ Shipped — Delivery History](#-shipped--delivery-history) — Full changelog by month
+4. [💰 Business Model & Monetization Strategy](#-business-model--monetization-strategy)
+5. [🔨 Product Backlog](#-product-backlog) — v1.2 / v1.3 / v1.5 / v2.0 feature backlog
+6. [🔍 Multi-Role Audit](#-multi-role-audit--mar-24-2026) — Security, UX, DevOps, Perf, DB findings
+7. [🐛 Bug Backlog](#-bug-backlog) — Historical bug log (open bugs → Priority Queue)
+8. [🔧 Tech Debt Backlog](#-tech-debt-backlog) — Historical debt log (open items → Priority Queue)
+9. [❌ Rejected Features](#-rejected-features) — Evaluated and explicitly excluded
+10. [📋 Reference](#-reference) — DB index review
+
+---
+
+## 🎯 Priority Queue — What to Work on Next
+
+> **How to use:** Pick by Type first (🔐 before 🐛 before ✨), then by Priority within the type, then by Effort if you have limited time.
+> **Update this table** whenever you finish a task or discover a new important item. Everything else in this file is archive/reference.
+
+## 🎯 Priority Queue — What to Work on Next
+
+> **How to use:** Pick by Type first (🔐 before 🐛 before ✨), then by Priority within the type, then by Effort if you have limited time.
+> **Update this table** whenever you finish a task or discover a new important item. Everything else in this file is archive/reference.
+
+**Effort scale:** XS < 1h · S ½ day · M 1–2 days · L 3–5 days · XL 1 week+
+
+---
+
+### 🔐 Security
+
+| Priority | Task | Role | Effort | Notes |
+|----------|------|------|--------|-------|
+| P0 | Stored XSS — `renderComments()` inserts username + message into `innerHTML` without `escapeHTML()` | Security | S | `campaign-detail.js` — user-controlled content → wrap both values in `escapeHTML()` |
+| P0 | 3 `SECURITY DEFINER` functions missing `SET search_path = public` | DB | XS | Migration `20260320122510` — `get_public_stats()`, `get_public_category_stats()`, `get_public_neighborhood_stats()` — add via new migration |
+| P0 | RLS `participations` policy uses `USING(true)` — all participation records visible to all users | DB | XS | Privacy violation — add user-scoped `USING (auth.uid() = user_id)` policy |
+| P1 | Inline `onclick` handlers in `admin.js` reports section bypass CSP | Security | S | `admin.js:1130,1135` — migrate to `data-*` + `addEventListener` (same fix already applied to approve/reject buttons) |
+| P1 | Inline `onclick` handlers in `campaign-detail.js` comment delete button | Security | XS | `campaign-detail.js:1020` — migrate to `data-comment-id` + event delegation |
+| P1 | `notifications.js` — legacy DB messages with usernames inserted as raw `innerHTML` | Security | XS | `notifications.js:155` — wrap `msg` in `escapeHTML()` |
+| P2 | No SRI hashes on CDN scripts (Bootstrap, Leaflet, SweetAlert2) | Security | S | Add `integrity` + `crossorigin` attributes to all external `<script>` and `<link>` tags |
+
+---
+
+### 🐛 Bug
+
+| Priority | Task | Role | Effort | Notes |
+|----------|------|------|--------|-------|
+| P0 | `get_public_stats()` always returns 0 points — stats page shows nothing | DB | XS | `20260320122510` migration — likely column name or cast mismatch |
+| P0 | `pwa.js` registers SW at wrong path `/public/service-worker.js` — SW never activates | DevOps | XS | Should be `/service-worker.js` — Vite copies `public/` to `dist/` root |
+| P0 | Double error dialog on login/register/logout — `auth.js` shows Swal then throws, caller shows Swal again | Frontend | S | `auth.js:77,134,156` + `main.js` — service layer must throw only, UI handled by caller |
+| P0 | Double error dialog on photo upload — same pattern in `storage.js` | Frontend | S | `storage.js:38,57,88` — same fix as auth.js |
+| P1 | `setupGlobalErrorHandling()` exported but never called — unhandled rejections silently swallowed in prod | Backend | XS | `errorHandler.js:260` — call from `main.js` or each page entry point |
+| P1 | `initializePWA()` exported but never called — install prompt + push permission are dead code | DevOps | XS | `pwa.js:13` — call from each page entry point |
+| P1 | `profile.js` — transaction table, participations tab, password recovery all hardcoded BG | Frontend | M | `profile.js:46–92, 332–383, 394–505` — affects all EN users on Profile page |
+| P1 | `auth.js` 4 functions use inline `localStorage` ternaries instead of `t()` | Frontend | S | `auth.js:68,96,126,149` — same pattern fixed in `rewards.js`, `create-campaign.js` |
+| P1 | `admin.js` `loadReports()` — entire reports tab uses inline ternaries, never `t()` | Frontend | S | `admin.js:1082–1192` — most-used admin workflow, affects all EN admins |
+| P1 | `main.js` login/register dialogs hardcoded BG — EN users see Bulgarian validation errors | Frontend | S | `main.js:124,143,151,161,181` |
+| P1 | `campaign-detail.js` null crash on `campaign.creator` after edit | Frontend | XS | `campaign-detail.js:899,936` — add null guard before `campaign.creator.username` access |
+| P1 | Neighbourhood string mismatch — `"Vitosha (VEC)"` vs `"Kv. Vitosha (VEC)"` — leaderboard lookup silently fails | Backend | S | `dashboard.js:115` vs `campaign-filters.js:9` — needs single shared constant |
+| P2 | `auth-helpers.js` `handleForgotPassword()` fully hardcoded BG | Frontend | S | `auth-helpers.js:9–53` — EN users see BG forgot-password dialog |
+| P2 | `profile.js` `handlePasswordRecovery()` fully hardcoded BG | Frontend | S | `profile.js:46–92` |
+| P2 | `rewards.js` RPC result accessed before null check — throws if RPC returns null data | Frontend | XS | `rewards.js:317–326` — guard `if (!result || !result.success)` |
+| P2 | `dashboard.js` leaderboard calls `t(i18nKey)` without `neighborhoods.` prefix — returns undefined | Frontend | XS | `dashboard.js:484` — use `localizeNeighborhood()` helper already at line 135 |
+| P2 | `caches.open()` not awaited in SW Network First handler — race condition | DevOps | XS | `public/service-worker.js:79–96` |
+| P2 | `helpers.js` `formatDate()` hardcodes `"en-US"` locale — BG users see English-formatted dates | Frontend | XS | `helpers.js:304` |
+| P2 | `helpers.js` `handleError()` hardcodes `"Error"` title — BG users see English | Frontend | XS | `helpers.js:467` — use `t("common.error")` |
+| P3 | Campaign cards not keyboard accessible — no `tabindex`, no `role`, no Enter handler | UX | M | `dashboard.js` DOM injection — critical for WCAG compliance |
+| P3 | `profile.js:699` `addEventListener` without null guard — throws if `#editProfileForm` missing | Frontend | XS | Change to `?.addEventListener(...)` |
+| P3 | `stats.js` local `escapeHTML()` missing `'` escape — inconsistency with `helpers.js` | Security | XS | Import from `../utils/helpers.js` instead |
+
+---
+
+### ✨ Feature
+
+| Priority | Task | Role | Effort | Notes |
+|----------|------|------|--------|-------|
+| P1 | Interactive onboarding for first-time users — 3-step overlay, shown once (localStorage flag) | UX | S | Data all exists — zero backend, pure frontend |
+| P1 | 24h before-campaign push notification — reduce RSVP→attendance dropout | Backend | S | Push infra exists — one Supabase Edge Function or pg_cron trigger |
+| P2 | Push notifications expansion — RSVP confirmations, new neighbourhood campaigns, comment alerts | Backend | M | Extend `pushNotifications.js` + DB triggers |
+| P2 | Reward fulfillment tracking — `fulfilled_at`, `fulfilled_by` on `point_transactions` | DB | S | New migration + admin UI column |
+| P2 | Analytics integration (Plausible or PostHog) | DevOps | M | Privacy-compliant, EU-hosted (Plausible) or self-hostable (PostHog) |
+| P2 | Error tracking (Sentry free tier) | DevOps | S | Install SDK + call `setupGlobalErrorHandling()` (already implemented — just unwired) |
+| P2 | Rank tier progression bar on Profile — "37 more pts to Gold" | Frontend | XS | Data in `displayRank()` at `profile.js:286` — zero backend |
+| P2 | "Level up" celebration Swal when rank threshold crossed | Frontend | S | Client-side threshold check + localStorage flag to prevent repeat |
+| P2 | Login lockout countdown UI — "Try again in 4 minutes" | Frontend | XS | RPC already returns `remaining` — just not surfaced |
+| P3 | Weather forecast on campaign cards (Open-Meteo, no API key) | Frontend | S | `weather.js` already integrated on dashboard — extend to cards |
+| P3 | Campaign capacity urgency signal — "3 spots left!" | Frontend | XS | Column `max_participants` exists in DB — just not surfaced on card |
+| P3 | Points earned displayed per participation on Profile | Frontend | XS | `participations.points_earned` exists in DB — just not queried |
+
+---
+
+### 🎨 Design
+
+| Priority | Task | Role | Effort | Notes |
+|----------|------|------|--------|-------|
+| P1 | Notification bell + language toggle always visible outside hamburger collapse | Frontend | XS | Pin to navbar right at all breakpoints — affects every mobile session |
+| P1 | Leaderboard: card layout on mobile (<768px) vs table on desktop | Frontend | S | Pure CSS `@media` change — no JS needed |
+| P2 | Points burst animation when `pointsEarned` notification arrives | Frontend | S | CSS keyframes — +N pts float up from navbar badge. Zero backend. |
+| P2 | Campaign filter bar sticky + last filter persisted in `sessionStorage` | Frontend | M | Most-visited page — filters surviving scroll reduces re-work |
+| P2 | "Your Balance" sticky bar on Rewards page + progress to next reward | Frontend | S | Increases reward engagement — data already available |
+| P2 | Next badge progress bar on Profile — "3 of 5 campaigns completed" | Frontend | S | Data in `user_badges` + `check_and_award_badges_rpc` |
+| P2 | Rewards page: lock icon overlay on unaffordable rewards (greyed, not hidden) | Frontend | XS | Shows aspirational items — motivates earning |
+| P3 | Notifications page: group by date ("Today" / "This week" / "Earlier") | Frontend | S | Improves scannability for active users |
+| P3 | Hide notification bell for demo users (false affordance) | Frontend | XS | 1 `if (isDemoUser())` check in nav init |
+| P3 | Rewards page empty state — blank grid shown if no rewards exist | Frontend | XS | 5 lines HTML + show/hide in `rewards.js` |
+
+---
+
+### 🔧 Tech Debt
+
+| Priority | Task | Role | Effort | Notes |
+|----------|------|------|--------|-------|
+| P1 | Consolidate `checkAuth()` — 5 different implementations across page scripts | Backend | M | Extract to `src/utils/auth.js` as single `requireAuth()` — security fix in one place propagates to all |
+| P1 | Deduplicate i18n source — `src/i18n/` and `public/i18n/` are manually-synced | Backend | S | Remove `src/i18n/`, use only `public/i18n/` — every change currently requires 4 files |
+| P1 | `NEIGHBORHOODS` constant in 3 files with key mismatch — single source of truth needed | Backend | S | `campaign-filters.js`, `neighborhood-stats.js`, `profile-validator.js` — extract to `src/utils/constants.js` |
+| P1 | `pwa.js` dead module — exported functions never imported by any page | Backend | S | Either wire up `initializePWA()` across all pages or delete the file |
+| P2 | Replace `location.reload()` on language switch — destroys unsaved form data | Frontend | M | Use `applyLanguage()` + component re-render |
+| P2 | Extract DOMContentLoaded i18n boilerplate duplicated in 15+ page scripts | Backend | M | Single `initPage()` call in `src/utils/pageInit.js` |
+| P2 | Delete dead stubs — `api/client.js` (`apiFetch` always returns `{ok:true}`), `hooks/index.js` | Backend | XS | Confirmed by grep — nothing imports them |
+| P2 | Normalize campaign title format — JSON object vs plain string inconsistency | DB | M | Direct cause of `csvExport.js` raw JSON bug |
+| P2 | `events.js` repeated dynamic imports — `await import("./supabase.js")` in every function | Backend | XS | Import once at module top level |
+| P3 | `languageChanged` custom event dispatched but never consumed | Backend | XS | Wire to replace `location.reload()` hack or remove |
+| P3 | `store.js` `notify()` logs full state on every change at INFO level | Backend | XS | Change to `logger.debug()` |
+| P3 | `rewards.js` `window.handleBuy` dead global after refactor to event delegation | Backend | XS | Remove `window.handleBuy` assignment at line 360 |
+
+---
+
+*Last updated: 2026-03-28. To keep this useful: mark items ✅ when done and add new items as you discover them.*
+
+---
+
+ean Quarter — Roadmap & Engineering Backlog
+
 **Last updated:** 2026-03-28 | **Version:** 1.3-dev | **Live:** https://cleanquarter.netlify.app
 
 ---
 
 ## Legend
+
+**Status symbols:**
 
 | Symbol | Meaning |
 |--------|---------|
@@ -13,6 +152,27 @@
 | 🗓️ | Scheduled |
 | 💡 | Under evaluation |
 | ❌ | Rejected |
+
+**Priority Queue levels (used in 🎯 section above):**
+
+| Level | Meaning |
+|-------|---------|
+| P0 | Fix now — security issue or production breakage |
+| P1 | This sprint — high impact, affects many users |
+| P2 | Next sprint — important but not urgent |
+| P3 | Backlog — nice to have, low risk of staying forever |
+
+**Priority Queue types:**
+
+| Type | Meaning |
+|------|---------|
+| 🔐 Security | Vulnerabilities, XSS, auth issues, RLS gaps |
+| 🐛 Bug | Broken functionality, wrong output, crashes |
+| ✨ Feature | New user-facing value |
+| 🎨 Design | UX/UI improvements, mobile, gamification |
+| 🔧 Debt | Internal quality, duplication, dead code |
+
+**Effort scale:** XS < 1h · S ½ day · M 1–2 days · L 3–5 days · XL 1 week+
 
 ---
 
@@ -850,7 +1010,7 @@ Six complete journeys walked: Registration, Campaign Discovery, Proof Upload, Re
 
 ## 🐛 Bug Backlog
 
-Active bugs confirmed by code review. Not yet scheduled for a sprint.
+> **Note:** All open bugs are tracked in [🎯 Priority Queue](#-priority-queue--what-to-work-on-next) above — that is the authoritative list for day-to-day work. This section is historical reference for context and rationale.
 
 | Bug | Severity | Location | Notes |
 |-----|----------|----------|-------|
@@ -921,6 +1081,8 @@ Active bugs confirmed by code review. Not yet scheduled for a sprint.
 ---
 
 ## 🔧 Tech Debt Backlog
+
+> **Note:** Open tech debt items are tracked in [🎯 Priority Queue](#-priority-queue--what-to-work-on-next) above. This section provides extended rationale and context.
 
 | Item | Priority | Notes |
 |------|----------|-------|

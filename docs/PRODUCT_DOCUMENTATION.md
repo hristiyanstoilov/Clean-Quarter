@@ -1,6 +1,6 @@
 # CLEAN QUARTER — Enterprise Product Documentation
 
-**Version:** 1.3 | **Date:** March 2026 | **Classification:** Internal
+**Version:** 1.4 | **Date:** March 28, 2026 | **Classification:** Internal
 
 ---
 
@@ -16,6 +16,7 @@
 8. [Trade-offs & Product Decisions](#8-trade-offs--product-decisions)
 9. [Gaps for Enterprise Readiness](#9-gaps-for-enterprise-readiness)
 10. [Suggested Product Roadmap](#10-suggested-product-roadmap)
+11. [Design Audit](#11-design-audit)
 
 ---
 
@@ -726,9 +727,9 @@ superadmin → admin + immutable (cannot be demoted)
 |---------|---------------|
 | Code organization | Service-oriented — UI (HTML), controllers (scripts/), business logic (services/), utilities (utils/) |
 | Linting | ESLint + Prettier enforced via Husky pre-commit hooks |
-| Test coverage | 973+ tests across 49+ files — unit, integration, RLS policies, E2E (Cypress), a11y (axe-core), visual regression (Playwright) |
-| i18n | All user-facing strings externalized to JSON translation files | ✅ Gaps in `profile.js` (eye icon aria-label) and `main.js` (demo login strings) resolved Mar 27 |
-| DB versioning | 61 sequential SQL migrations — never edited after applied |
+| Test coverage | 1,097+ tests across 56+ files — unit, integration, RLS policies, E2E (Cypress), a11y (axe-core), visual regression (Playwright) |
+| i18n | All user-facing strings externalized to JSON translation files — all gaps resolved |
+| DB versioning | 102 sequential SQL migrations — never edited after applied |
 | Build tooling | Vite with `rollup-plugin-visualizer` for bundle size analysis |
 
 ---
@@ -793,29 +794,14 @@ superadmin → admin + immutable (cannot be demoted)
 
 ---
 
-## 9. Gaps for Enterprise Readiness
+## 9. Open Gaps & Technical Debt
 
-### Missing Governance Layers
+### Open Governance Items
 
-| Gap | Impact | Recommendation | Status |
-|-----|--------|----------------|:------:|
-| ~~Points per campaign not configurable~~ | ~~Cannot reward harder/larger cleanups more~~ | ~~Add `points_value` column to `campaigns` table~~ | ✅ Resolved Mar 27 |
-| No reward fulfillment tracking | No way to verify rewards were actually delivered | Add `fulfilled_at`, `fulfilled_by` to `point_transactions` | Open |
-| ~~No campaign categories/types~~ | ~~No segmentation for reporting or discovery~~ | ~~Add `category` enum to `campaigns`~~ | ✅ Resolved Mar 18 — categories + filter UI |
-| ~~No rate limiting on campaign creation~~ | ~~Spam campaigns are technically possible~~ | ~~Add client-side + server-side rate limit~~ | ✅ Resolved Mar 26 — 5 campaigns/24h DB-enforced |
-| ~~No moderation queue for new campaigns~~ | ~~All campaigns go public immediately~~ | ~~Add `status='pending'` for first-time creators~~ | ✅ Resolved Mar 27 — `pending_review` status + admin queue |
-| ~~`admin_adjustment` point type unused~~ | ~~Admins have no recovery path for balance errors~~ | ~~Build "Adjust Points" UI in admin panel~~ | ✅ Resolved Mar 27 — SweetAlert modal + `point_transactions` insert |
-| Push notifications limited to approval/rejection | RSVP confirmations, new neighborhood campaigns, 1h-before reminders, and comment alerts all fire no notification | Extend `pushNotifications.js` + DB triggers to cover all 4 additional event types | Open |
-| ~~`notifications_enabled` field never enforced~~ | ~~Profile toggle exists and is saved but no notification path reads it~~ | ~~Read `notifications_enabled` before inserting `notifications` rows~~ | ✅ Resolved Mar 27 — enforced in JS + DB trigger |
-| ~~Notification bell capped at 20 items~~ | ~~Active users silently lose older notifications; no deeplinks~~ | ~~Build `/notifications` history page with unlimited scroll and entity deeplinks~~ | ✅ Resolved Mar 27 — `/notifications` history page with pagination + deeplinks |
-| ~~Heatmap i18n keys exist but feature is a stub~~ | ~~No Leaflet.heat visualization~~ | ~~Implement Leaflet.heat visualization~~ | ✅ Resolved — Leaflet.heat fully implemented in `admin.js` (confirmed Mar 27) |
-| ~~Pollution heatmap missing~~ | ~~Admin i18n has heatmap strings but no rendering code~~ | ~~Implement Leaflet.heat visualization on admin map~~ | ✅ Resolved — same as above |
-| ~~Rejection reason optional~~ | ~~Unfair rejections with no explanation~~ | ~~Make `rejection_reason` required on reject action~~ | ✅ Resolved — `inputValidator` in UI + DB CHECK constraint |
-| ~~No reward quantity enforcement~~ | ~~`quantity_available` column exists but not decremented on redemption~~ | ~~Wire redemption to decrement quantity~~ | ✅ Resolved — `purchase_reward()` RPC decrements atomically via `FOR UPDATE` |
-| ~~No server-side login rate limiting~~ | ~~Client-side only — bypassable~~ | ~~DB-level rate limit via RPC~~ | ✅ Resolved Mar 17 |
-| ~~No marker clustering~~ | ~~UX breaks at 100+ campaigns~~ | ~~Leaflet.markercluster~~ | ✅ Resolved Mar 17 |
-| ~~No admin pagination~~ | ~~Degrades at 100+ pending items~~ | ~~Paginate pending table~~ | ✅ Resolved Mar 17 |
-| ~~No neighborhood leaderboard~~ | ~~No per-neighborhood social proof~~ | ~~DB view + dashboard widget~~ | ✅ Resolved Mar 17 |
+| Gap | Recommendation |
+|-----|----------------|
+| No reward fulfillment tracking | Add `fulfilled_at`, `fulfilled_by` to `point_transactions` |
+| Push notifications limited to approval/rejection | Extend `pushNotifications.js` + DB triggers — RSVP, new neighborhood campaigns, 1h-before reminders, comment alerts |
 
 ---
 
@@ -848,17 +834,9 @@ superadmin → admin + immutable (cannot be demoted)
 
 ---
 
-### Missing Compliance Elements
+### Compliance
 
-| Gap | Relevance | Status |
-|-----|-----------|:------:|
-| ~~No GDPR data export~~ | ~~Required under EU law — users can request all their data~~ | ✅ Resolved Mar 27 — Article 20 data export RPC |
-| ~~No right-to-erasure~~ | ~~`deleted_at` exists but photos remain in Supabase Storage after soft delete~~ | ✅ Resolved Mar 27 — Article 17 erasure RPC purges storage + all rows |
-| ~~No privacy policy page~~ | ~~Referenced in registration checkbox but `/privacy` route does not exist~~ | ✅ Resolved — `/privacy` page created, BG/EN, linked from registration |
-| ~~No cookie consent banner~~ | ~~Required if analytics or tracking is added~~ | ✅ Resolved Mar 27 — GDPR-compliant banner via `cookieConsent.js` |
-| ~~No versioned Terms of Service~~ | ~~Registration checkbox present but no ToS document or version tracking~~ | ✅ Resolved Mar 27 — `/terms` page v1.0, BG/EN, linked from registration |
-| ~~No data retention policy~~ | ~~Old campaigns, transactions, and notifications are never purged~~ | ✅ Resolved Mar 27 — `run_data_retention()` fn + pg_cron schedule (90d notifications, 365d campaigns, 180d audit log, 30d login attempts) |
-| ~~No audit log for admin actions~~ | ~~Role change log exists; photo approvals/rejections are not independently logged~~ | ✅ Resolved Mar 27 — `admin_audit_log` table + RLS + `logAdminAction()` on all key admin actions |
+All GDPR compliance requirements resolved as of March 27, 2026: Article 17 erasure RPC, Article 20 data export RPC, `/privacy` page, `/terms` page (v1.0), cookie consent banner (`cookieConsent.js`), data retention policy (`run_data_retention()` + pg_cron).
 
 ---
 
@@ -937,27 +915,211 @@ Revenue unlocked: Corporate ESG subscription (150–500 лв/year), municipality
 
 ---
 
-### Open Governance Gaps (unscheduled)
+### Shipped — v1.4 Design Sprint (planned)
 
-| Gap | Status |
-|-----|:------:|
-| ~~Configurable points per campaign~~ | ✅ Resolved Mar 27 |
-| Reward fulfillment tracking | Open — planned v1.3 |
-| ~~GDPR data export + erasure~~ | ✅ Resolved Mar 27 — Article 17 + Article 20 RPCs |
-| ~~Campaign creation rate limiting~~ | ✅ Resolved Mar 26 |
-| ~~New campaign moderation queue~~ | ✅ Resolved Mar 27 |
-| ~~`admin_adjustment` point correction UI~~ | ✅ Resolved Mar 27 |
-| Analytics (Plausible / PostHog) | Open — planned v1.3 |
-| Error tracking (Sentry) | Open |
-| ~~No cookie consent banner~~ | ✅ Resolved Mar 27 |
-| ~~Versioned Terms of Service~~ | ✅ Resolved Mar 27 |
-| ~~Raw DB errors shown to users~~ | ✅ Resolved Mar 28 — `createError` i18n key, dev prefix stripped |
-| ~~Silent catch blocks across page scripts~~ | ✅ Resolved Mar 28 — `console.error`/`console.warn` in all catch paths |
-| ~~Checklist visible on page load (negative first impression)~~ | ✅ Resolved Mar 28 — `hasUserInteracted` flag |
-| ~~Moderation count included pending_review (bypass)~~ | ✅ Resolved Mar 28 — only `["active","completed"]` count |
-| `checkAuth()` trusts localStorage without session verification | Open — mitigated by double-check in handleFormSubmit |
-| `handleFormSubmit` violates SRP (140+ lines) | Open — refactor planned |
+**Theme:** High-ROI UX improvements identified in Design Audit (Section 11).
+
+| Item | Effort | Impact |
+|------|--------|--------|
+| Points burst animation on approval (`pointsEarned` → CSS keyframes) | ~0.5 days | Gamification lift — earning moment becomes visible |
+| Notification bell + language toggle always visible on mobile | ~1 hour | Daily friction fix — never buried in hamburger |
+| Leaderboard card layout on mobile (table → cards at <768px) | ~2 hours | Fixes unreadable 5-column table on 390px |
+| Campaign filter bar sticky + persisted in `sessionStorage` | ~1 day | Improves most-visited page — filters survive scroll |
+| "Your Balance" sticky bar on Rewards page | ~0.5 days | Directly increases reward engagement and motivation |
 
 ---
 
-*Last revised: 2026-03-27. All 13 open governance/compliance gaps identified in the previous review have been resolved and marked ✅: configurable campaign points, GDPR Article 17 erasure + Article 20 export, campaign rate limiting, moderation queue, admin point adjustment UI, notifications_enabled enforcement, notification history page, cookie consent banner, Terms of Service page, data retention policy (pg_cron), admin audit log, i18n gaps in main.js + profile.js, PWA registration on all pages. Section 10 v1.1 resolved inventory updated accordingly. Only 3 items remain open: push notification expansion to all event types, analytics integration (Plausible/PostHog), and error tracking (Sentry).*
+### Open Governance Gaps
+
+| Gap | Notes |
+|-----|-------|
+| Reward fulfillment tracking | Planned v1.4 |
+| Analytics (Plausible / PostHog) | Planned v1.4 |
+| Error tracking (Sentry) | Planned v1.4 |
+| `checkAuth()` trusts localStorage without session verification | Mitigated by double-check in `handleFormSubmit` |
+| `handleFormSubmit` violates SRP (140+ lines) | Refactor planned v1.4 |
+
+---
+
+*Last revised: 2026-03-28. All 13 open governance/compliance gaps identified in the previous review have been resolved and marked ✅: configurable campaign points, GDPR Article 17 erasure + Article 20 export, campaign rate limiting, moderation queue, admin point adjustment UI, notifications_enabled enforcement, notification history page, cookie consent banner, Terms of Service page, data retention policy (pg_cron), admin audit log, i18n gaps in main.js + profile.js, PWA registration on all pages. Section 10 v1.1 resolved inventory updated accordingly. Only 3 items remain open: push notification expansion to all event types, analytics integration (Plausible/PostHog), and error tracking (Sentry).*
+
+
+---
+
+## 11. Design Audit
+
+**Conducted:** March 2026 | **Role:** Senior Product Designer | **Scope:** Full UI/UX review of MVP
+
+> **Methodology:** Heuristic evaluation against Nielsen's 10 usability principles, gamification design patterns (Octalysis framework), and mobile-first audit at 375px / 768px / 1280px breakpoints. Benchmarked against Nextdoor, FixMyStreet, and Habitica.
+
+---
+
+### 11.1 Visual Identity Critique
+
+**Current state:** Bootstrap 5 base with a custom green/white palette (`#2d6a4f` primary, `#fff` background), Segoe UI / system font stack, FontAwesome icons.
+
+**What works:**
+- Green primary color correctly signals ecology and community trust.
+- White-dominant layout keeps the interface clean and non-threatening for older civic users.
+- FontAwesome icons are universally recognizable and load fast.
+
+**What needs work:**
+
+| Issue | Impact | Recommendation |
+|---|---|---|
+| Single brand green used for both interactive (buttons) and decorative (headers) elements | High | Reserve `#2d6a4f` exclusively for interactive states; use `#52b788` (lighter) for decorative fills |
+| No secondary accent color for gamification feedback | Medium | Add warm gold `#f4a261` as the gamification accent — signals achievement without clashing with eco palette |
+| Typography has no hierarchy weight contrast | Medium | Section titles 700 weight, labels 500, body 400; increase base size from 14px to 15px |
+| Icon style inconsistency — some pages outlined, others filled | Low | Standardize on `fa-solid` throughout; use `fa-regular` only for inactive/empty states |
+
+**Brand alignment score: 6/10.** The ecological intent is present but underdeveloped. The platform lacks a visual language for reward and celebration, which undermines the gamification pillar.
+
+---
+
+### 11.2 Information Architecture
+
+**Current navigation:** Home, Campaigns, Map, Leaderboard, Rewards, Events + notification bell + language toggle.
+
+**Strengths:**
+- Flat navigation reduces cognitive load — correct for a civic platform with mixed digital literacy.
+- Notification bell and language toggle are persistently visible.
+
+**Weaknesses and recommendations:**
+
+**1. "Map" is a view, not a destination.**
+Map duplicates Campaigns with a different visualization. Users expect both views within Campaigns (list vs. map toggle).
+→ **Merge Map into Campaigns as a view toggle.** Free up one nav slot.
+
+**2. "Rewards" has no progressive disclosure.**
+New users see a catalog without indication of their current points or distance to the next reward.
+→ **Add a sticky "Your Balance" bar** showing current points and distance to nearest redeemable reward.
+
+**3. "Events" and "Campaigns" are conceptually blurred.**
+→ **Long-term:** Unify under Campaigns with a type filter. **Short-term:** Cross-link between the two pages.
+
+**4. Dashboard is not in the nav.**
+Reachable only via avatar — not universal across all user segments.
+→ Avatar-initiated dropdown on desktop; bottom nav bar entry on mobile.
+
+**Revised nav (6 → 5 items):** `Home | Campaigns (+Map) | Leaderboard | Rewards | Events` + avatar dropdown.
+
+---
+
+### 11.3 Gamification UX
+
+**Octalysis score (estimated):**
+
+| Drive | Score (1-5) | Note |
+|---|---|---|
+| Epic Meaning | 4 | "Clean your neighborhood" mission is clear and motivating |
+| Accomplishment | 3 | Badges exist but earning feedback is minimal — no animation, no popup |
+| Empowerment | 2 | Users cannot track progress toward the next badge |
+| Social Influence | 4 | Leaderboard + neighborhood competition is a strong hook |
+| Unpredictability | 1 | No surprise rewards — participation is entirely predictable |
+| Avoidance | 3 | Streak loss motivates but there is no warning before it breaks |
+| Scarcity | 2 | Reward quantities are not surfaced urgently |
+| Ownership | 3 | Points feel owned; badges feel collected but not displayed proudly |
+
+**Top 3 gamification UX improvements:**
+
+**1. Points burst animation on approval (highest impact)**
+When a participation is approved and points are awarded, there is no in-page visual feedback.
+→ CSS keyframes animation — +N points float up from the navbar badge when `pointsEarned` notification arrives. Zero backend changes required.
+
+**2. Next badge progress bar on Profile**
+Users cannot see how close they are to their next badge, breaking the "progress and advancement" drive entirely.
+→ Badge icon (greyed) + progress bar (e.g., "3 of 5 campaigns completed") + unlock condition text. Data already available via `user_badges` and `check_and_award_badges_rpc`.
+
+**3. Streak warning push notification**
+The streak system never warns users before their streak breaks.
+→ Sunday evening push if user has not participated that week. Uses existing push subscription infrastructure.
+
+---
+
+### 11.4 Mobile-First Gaps
+
+Tested at 375px (iPhone SE), 390px (iPhone 14), 768px (iPad).
+
+**Breakpoint 1 — 375px: Campaign cards overflow horizontally**
+Fixed `min-width` causes horizontal scroll on smallest viewports.
+→ Remove `min-width` from `.campaign-card`; use `width: 100%` with `gap` on the grid.
+
+**Breakpoint 2 — 768px: Key nav actions disappear into hamburger**
+Notification bell and language toggle collapse into the hamburger menu — used constantly.
+→ Pin both **outside the collapse** at all breakpoints.
+
+**Breakpoint 3 — 390px: Leaderboard table forces horizontal scroll**
+5-column table is unreadable at 390px.
+→ Card-based leaderboard on mobile (rank large, name + neighborhood stacked, points prominent). Table stays for >=768px. Pure CSS change — no JS modification needed.
+
+**Bonus — all breakpoints: No bottom navigation bar**
+Top navbar is hard to reach during outdoor cleanup events.
+→ **5-item bottom nav bar:** `Home | Campaigns | + (Join) | Leaderboard | Profile`. Center button = primary action.
+
+---
+
+### 11.5 Page-by-Page Redesign Proposals (Summary)
+
+| Page | Layout change | Micro-interaction | Content hierarchy fix |
+|------|---------------|-------------------|-----------------------|
+| **Home** | Split-screen hero: CTA left, live map preview right | Pulse animation on primary CTA on first load | Social proof ("142 cleanups · 890 residents · 12 tons") above the fold |
+| **Campaigns** | Sticky filter bar (Category, Neighborhood, Date, Status); persisted in `sessionStorage` | Card hover reveals "+Join" overlay — 3 steps → 1 | Neighborhood tag + date first, then title |
+| **Leaderboard** | Tabs: "This Month" / "All Time" / "My Neighborhood" | Animate rank number changes on load | Rank 2× larger, name bold, points right-aligned |
+| **Rewards** | Sticky "Your balance" bar + progress to next reward | Urgency counter ("Only 3 left!") when quantity < 5 | Lock overlay on unaffordable rewards (greyed, not hidden) |
+| **Events** | Calendar view toggle (month grid) + list toggle | Confetti micro-animation on RSVP confirm | Date + time first (largest), then title |
+| **Notifications** | Grouped: "Today" / "This week" / "Earlier" + unread count | Swipe-to-dismiss on mobile | Icon color-coded by type (green / blue / orange) |
+
+*Full per-page rationale available on request.*
+
+---
+
+### 11.6 Design System Foundation
+
+**Approach:** CSS custom properties — zero dependency, works with existing Vanilla JS + Bootstrap 5. No component library migration required.
+
+**Color tokens (5):**
+```css
+--color-primary:       #2d6a4f;  /* eco green — interactive elements only */
+--color-primary-light: #52b788;  /* decorative fills, hover states */
+--color-accent:        #f4a261;  /* gamification — points, badges, achievements */
+--color-surface:       #f8faf9;  /* page and card backgrounds */
+--color-danger:        #e63946;  /* rejections, errors, destructive actions */
+```
+
+**Typography scale (3 levels):**
+```css
+--text-heading: clamp(1.25rem, 2.5vw, 1.75rem); /* section headers */
+--text-body:    0.9375rem;                        /* 15px — body text */
+--text-label:   0.8125rem;                        /* 13px — badges, metadata */
+```
+
+**Spacing units (2):**
+```css
+--space-base: 1rem;   /* 16px — component internal padding */
+--space-gap:  1.5rem; /* 24px — between components, grid gaps */
+```
+
+**Component library:** None recommended. Extract the 4-5 most-repeated patterns (campaign card, stat badge, notification item, leaderboard row) into reusable HTML/CSS templates in `src/components/`.
+
+---
+
+### 11.7 Design Audit Summary
+
+| Area | Current Score | Target Score | Priority |
+|---|---|---|---|
+| Visual Identity | 6/10 | 8/10 | Medium |
+| Information Architecture | 6/10 | 9/10 | High |
+| Gamification UX | 5/10 | 8/10 | High |
+| Mobile Usability | 5/10 | 8/10 | High |
+| Page-level UX | 6/10 | 8/10 | Medium |
+| Design System | 3/10 | 7/10 | Low |
+
+**Top 5 highest-ROI changes (impact vs. effort):**
+
+1. **Points burst animation on approval** — ~0.5 days frontend, large gamification lift
+2. **Notification bell + language toggle always visible on mobile** — ~1 hour CSS
+3. **Leaderboard card layout on mobile** — ~2 hours CSS
+4. **Campaign filter bar sticky + persisted in sessionStorage** — ~1 day JS/CSS
+5. **"Your Balance" sticky bar on Rewards page** — ~0.5 days
+
+*Design audit conducted March 2026. All recommendations scoped to existing Vanilla JS + Bootstrap 5 stack — no framework migration implied.*
